@@ -160,6 +160,8 @@ main(int argc, char **argv)
 	hgd_open_db();
 	hgd_play_loop();
 
+	argc = argc; argv = argv;
+
 	hgd_exit_nicely(EXIT_SUCCESS);
 	exit (EXIT_SUCCESS); /* NOREACH */
 }
