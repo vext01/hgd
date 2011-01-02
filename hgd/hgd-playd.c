@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <err.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <sqlite3.h>
 
@@ -51,6 +54,8 @@ hgd_open_db()
 		    __func__, sqlite3_errmsg(db));
 		hgd_exit_nicely(EXIT_FAILURE);
 	}
+
+	return SQLITE_OK;
 }
 
 void
@@ -75,7 +80,8 @@ hgd_play_track(struct hgd_playlist_item *t)
 
 	if (!fork()) {
 		/* child - your the d00d who will play this track */
-		execlp("mplayer", "mplayer", "-quiet", t->filename, NULL);
+		execlp("mplayer", "mplayer", "-quiet",
+		    t->filename, (char *) NULL);
 
 		/* if we get here, the shit hit the fan with execlp */
 		warn("execlp() failed");
@@ -99,6 +105,11 @@ int
 hgd_get_next_track_cb(void *na, int argc, char **data, char **names)
 {
 	struct hgd_playlist_item	*t;
+
+	/* silence compiler */
+	na = na;
+	argc = argc;
+	names = names;
 
 	/* populate a struct that we pick up later */
 	t = xmalloc(sizeof(t));
@@ -146,12 +157,9 @@ hgd_play_loop()
 int
 main(int argc, char **argv)
 {
-	char			*err;
-	char			*sql = "SELECT * FROM tbl;";
-
 	hgd_open_db();
-
 	hgd_play_loop();
 
 	hgd_exit_nicely(EXIT_SUCCESS);
+	exit (EXIT_SUCCESS); /* NOREACH */
 }
