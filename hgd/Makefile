@@ -1,4 +1,4 @@
-CFLAGS=`pkg-config --cflags sqlite3`
+CFLAGS=`pkg-config --cflags sqlite3` -Wall -Wextra
 LDFLAGS=`pkg-config --libs sqlite3`
 
 .PHONY: all
