@@ -118,7 +118,7 @@ hgd_sock_recv_line(int fd)
 	char			*msg, *full_msg = NULL, *tmp;
 
 	do {
-		msg = xmalloc(HGD_LINE_CHUNK);
+		msg = xmalloc(HGD_LINE_CHUNK + 1); /* \0 */
 		recvd = recv(fd, msg, HGD_LINE_CHUNK, 0);
 
 		if (recvd < 0) {
@@ -128,6 +128,7 @@ hgd_sock_recv_line(int fd)
 		}
 
 		DPRINTF("%s: got %d bytes\n", __func__, (int) recvd);
+		msg[recvd] = 0; /* terminate */
 
 		if (full_msg != NULL) {
 			/* reallocate */
