@@ -46,11 +46,6 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 
 	DPRINTF("%s: servicing client\n", __func__);
 
-	/* look up some kind of identifier for this client */
-	//found_name = getnameinfo((struct sockaddr *) cli_addr,
-	 //   cli_addr->sa_len, cli_host, HOST_NAME_MAX, cli_serv,
-	  //  HOST_NAME_MAX, NI_NAMEREQD | NI_NOFQDN);
-	  //
 	found_name = getnameinfo((struct sockaddr *) cli_addr,
 	    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host), cli_serv,
 	    sizeof(cli_serv), NI_NAMEREQD | NI_NOFQDN);
