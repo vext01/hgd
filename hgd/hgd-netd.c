@@ -82,6 +82,7 @@ hgd_listen_loop()
 	struct sockaddr_in	addr, cli_addr;
 	int			cli_fd, child_pid;
 	socklen_t		cli_addr_len;
+	int			sockopt = 1;
 
 	DPRINTF("%s: setting up socket\n", __func__);
 
@@ -90,6 +91,12 @@ hgd_listen_loop()
 
 	if ((svr_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		errx(EXIT_FAILURE, "%s: socket(): ", __func__);
+
+	/* allow socket to be re-used right away after we exit */
+	if (setsockopt(svr_fd, SOL_SOCKET, SO_REUSEADDR,
+		     &sockopt, sizeof(sockopt)) < 0) {
+		warn("%s: cannot set SO_REUSEADDR", __func__);
+	}
 
 	/* configure socket */
 	memset(&addr, 0, sizeof(addr));
@@ -128,7 +135,6 @@ hgd_listen_loop()
 			DPRINTF("%s: client service complete\n", __func__);
 			shutdown(cli_fd, SHUT_RDWR);
 			close(cli_fd);
-			//close(svr_fd);
 			exit (EXIT_SUCCESS); /* client is done */
 		}
 		DPRINTF("%s: client servicer PID = '%d'\n",
