@@ -12,12 +12,10 @@
 
 #include "hgd.h"
 
-char				*db_path = HGD_DFL_DB_PATH, *sql_err;
-char				*mplayer_pid_path = HGD_DFL_MPLAYER_PID_PATH;
-struct hgd_playlist_item	*next_track;
+int				db_open = 0;
 sqlite3				*db = NULL;
-uint8_t				db_open = 0, hgd_debug = 1;
-int				sql_res;
+struct hgd_playlist_item	*next_track;
+char				*db_path = HGD_DFL_DB_PATH;
 
 void
 hgd_exit_nicely(int status)
@@ -28,42 +26,12 @@ hgd_exit_nicely(int status)
 	exit (status);
 }
 
-/* Open, create and initialise database */
-int
-hgd_open_db()
-{
-	/* open the database */
-	if (sqlite3_open(db_path, &db)) {
-		fprintf(stderr, "%s: can't open db: %s\n",
-		    __func__, sqlite3_errmsg(db));
-		hgd_exit_nicely(EXIT_FAILURE);
-	}
-
-	db_open = 1;
-
-	sql_res = sqlite3_exec(db,
-	    "CREATE TABLE IF NOT EXISTS playlist ("
-	    "id INTEGER PRIMARY KEY,"
-	    "filename VARCHAR(50),"
-	    "user VARCHAR(15),"
-	    "playing INTEGER,"
-	    "finished INTEGER)",
-	    NULL, NULL, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't initialise db: %s\n",
-		    __func__, sqlite3_errmsg(db));
-		hgd_exit_nicely(EXIT_FAILURE);
-	}
-
-	return SQLITE_OK;
-}
 
 void
 hgd_play_track(struct hgd_playlist_item *t)
 {
-	int			status = 0;
-	char			*q;
+	int			status = 0, sql_res;
+	char			*q, *sql_err;
 
 	DPRINTF("%s: playing '%s' for '%s'\n", __func__, t->filename, t->user);
 
@@ -128,6 +96,9 @@ hgd_get_next_track_cb(void *na, int argc, char **data, char **names)
 void
 hgd_play_loop()
 {
+	int			sql_res;
+	char			*sql_err;
+
 	/* forever play songs */
 	DPRINTF("%s: starting play loop\n", __func__);
 	while (1) {
@@ -158,7 +129,7 @@ hgd_play_loop()
 int
 main(int argc, char **argv)
 {
-	hgd_open_db();
+	db = hgd_open_db(db_path);
 	hgd_play_loop();
 
 	argc = argc; argv = argv;
