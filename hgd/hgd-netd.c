@@ -99,12 +99,6 @@ hgd_listen_loop()
 	if (bind(svr_fd, (struct sockaddr *) &addr, sizeof(addr)) < 0)
 		errx(EXIT_FAILURE, "%s: bind to port %d", __func__, port);
 
-	/*
-	int oval = 1;
-	if (setsockopt(svr_fd, SOL_SOCKET, SO_REUSEADDR, &oval, sizeof(oval)) < 0)
-		warnx("gah");
-	*/
-
 	if (listen(svr_fd, sock_backlog) < 0)
 		errx(EXIT_FAILURE, "%s: listen", __func__);
 
@@ -114,7 +108,7 @@ hgd_listen_loop()
 
 		DPRINTF("%s: waiting for client connection\n", __func__);
 
-		cli_addr_len = sizeof(cli_addr_len);
+		cli_addr_len = sizeof(cli_addr);
 		cli_fd = accept(svr_fd, (struct sockaddr *) &cli_addr,
 		    &cli_addr_len);
 
