@@ -17,6 +17,11 @@
 #define HGD_DFL_PORT		6633
 #define HGD_DFL_BACKLOG		5
 
+/* XXX autogunk this at some stage */
+#define HGD_VERSION		"0.1"
+#define HGD_GREET		"HGD-" HGD_VERSION " :: " __DATE__ " " __TIME__
+#define HGD_BYE			"Catch you later d00d!"
+
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
@@ -73,6 +78,12 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	} else
 		DPRINTF("%s: accepted connection from unknown client\n",
 		    __func__);
+
+	/* oh hai */
+	hgd_sock_send_line(cli_fd, HGD_GREET);
+
+	/* laters */
+	hgd_sock_send_line(cli_fd, HGD_BYE);
 }
 
 /* main loop that deals with network requests */
