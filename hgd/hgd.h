@@ -4,6 +4,8 @@
 #define HGD_DFL_DB_PATH		"/home/edd/hgd.db"
 #define HGD_DFL_MPLAYER_PID_PATH "/home/edd/hgd_mplayer.pid"
 
+#include <stdint.h>
+
 struct hgd_playlist_item {
 	int			id;
 	char			*filename;
