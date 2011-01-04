@@ -28,6 +28,7 @@ hgd_kill_sighandler(int sig)
 {
 	sig = sig;
 
+	shutdown(svr_fd, SHUT_RDWR);
 	if (svr_fd >= 0)
 		close(svr_fd);
 
@@ -125,8 +126,9 @@ hgd_listen_loop()
 		if (!child_pid) {
 			hgd_service_client(cli_fd, &cli_addr);
 			DPRINTF("%s: client service complete\n", __func__);
-			close(svr_fd);
+			shutdown(cli_fd, SHUT_RDWR);
 			close(cli_fd);
+			//close(svr_fd);
 			exit (EXIT_SUCCESS); /* client is done */
 		}
 		DPRINTF("%s: client servicer PID = '%d'\n",
