@@ -26,18 +26,21 @@ int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 
+sqlite3				*db;
+char				*db_path = HGD_DFL_DB_PATH;
+
 /* die nicely, closing socket */
 void
 hgd_kill_sighandler(int sig)
 {
 	sig = sig;
 
+	sqlite3_close(db);
 	shutdown(svr_fd, SHUT_RDWR);
 	if (svr_fd >= 0)
 		close(svr_fd);
 
 	exit (EXIT_SUCCESS);
-
 }
 
 /* return some kind of host identifier, free when done */
@@ -89,22 +92,85 @@ hgd_sock_error_response(int fd, char *msg)
 }
 
 int
+hgd_get_playing_track_cb(void *arg, int argc, char **data, char **names)
+{
+	struct hgd_playlist_item	**ret, *t;
+
+	/* silence compiler */
+	argc = argc;
+	names = names;
+
+	/* populate a struct that we pick up later */
+	t = xmalloc(sizeof(t));
+	t->id = atoi(data[0]);
+	t->filename = strdup(data[1]);
+	t->user = strdup(data[2]);
+	t->playing = 0;
+	t->finished = 0;
+
+	ret = (struct hgd_playlist_item **) arg;
+	*ret = t;
+
+	return SQLITE_OK;
+}
+
+
+
+/*
+ * respond to client what is currently playing.
+ *
+ * response:
+ * ok|0				nothing playing
+ * ok|1|id|filename|user	track is playing
+ * err|...			failure
+ */
+int
 hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 {
-	DPRINTF("%s: YAY\n", __func__);
-	args = args;
-	hgd_sock_send_line(sess->sock_fd, "Not implemented");
+	struct hgd_playlist_item	*playing = NULL;
+	char			*sql_err, *reply;
+	int			 sql_res;
+
+	DPRINTF("%s:\n", __func__);
+	args = args; /* silence compiler */
+
+	sql_res = sqlite3_exec(db,
+	    "SELECT id, filename, user "
+	    "FROM playlist WHERE playing=1 LIMIT 1",
+	    hgd_get_playing_track_cb, &playing, &sql_err);
+
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't get playing track: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		hgd_sock_error_response(sess->sock_fd, "err|sql");
+		return SQLITE_ERROR;
+	}
+
+	if (playing == NULL)
+		hgd_sock_send_line(sess->sock_fd, "ok|0");
+	else {
+		xasprintf(&reply, "ok|1|%d|%s|%s",
+		    playing->id, playing->filename, playing->user);
+		hgd_sock_send_line(sess->sock_fd, reply);
+		free(reply);
+	}
+
 	return 0;
 }
 
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
+	/* cmd,		n_args,	handler_function	*/
 	{"np",		0,	hgd_cmd_now_playing},
+	/*{"vo",	0,	hgd_cmd_vote_off},	*/
+	/*{"ls",	0,	hgd_cmd_playlist},	*/
+	/*{"q",		1,	hgd_cmd_queue},		*/
 	{"bye",		0,	NULL},	/* bye is special */
 	{NULL,		0,	NULL}	/* terminate */
 };
 
-#define	HGD_MAX_PROTO_TOKS	9
+/* enusure atleast 1 more than the commamd with the most args */
+#define	HGD_MAX_PROTO_TOKS	2
 uint8_t
 hgd_parse_line(struct hgd_session *sess, char *line)
 {
@@ -277,6 +343,12 @@ main(int argc, char **argv)
 	if (argc > 1)
 		port = atoi(argv[1]);
 
+	db = hgd_open_db(db_path);
+	if (db == NULL)
+		return (EXIT_FAILURE);
+
 	hgd_listen_loop();
+	sqlite3_close(db);
+
 	return (EXIT_SUCCESS);
 }
