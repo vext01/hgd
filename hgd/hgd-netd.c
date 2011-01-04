@@ -25,7 +25,6 @@
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
-uint8_t				hgd_debug = 1;
 
 /* die nicely, closing socket */
 void
