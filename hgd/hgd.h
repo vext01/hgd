@@ -17,6 +17,19 @@ struct hgd_playlist_item {
 	uint8_t			 finished;
 };
 
+struct hgd_session {
+	int			sock_fd;
+	struct sockaddr_in	*cli_addr;
+	char			*cli_str;
+	char			*user;
+};
+
+struct hgd_cmd_despatch {
+	char			*cmd;
+	uint8_t			n_args;
+	int			(*handler)(struct hgd_session *, char **);
+};
+
 /* simple debug facility */
 #define DPRINTF(x...)           do { if (hgd_debug)		\
 					    fprintf(stderr, x); } while (0)

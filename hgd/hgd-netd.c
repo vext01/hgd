@@ -40,15 +40,14 @@ hgd_kill_sighandler(int sig)
 
 }
 
-/* when a client is accepted, we go here */
-void
-hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
+/* return some kind of host identifier, free when done */
+char *
+hgd_identify_client(struct sockaddr_in *cli_addr)
 {
 	char			cli_host[NI_MAXHOST];
 	char			cli_serv[NI_MAXSERV];
+	char			*ret = NULL;
 	int			found_name;
-
-	cli_fd = cli_fd; /* for now silence compiler */
 
 	DPRINTF("%s: servicing client\n", __func__);
 
@@ -56,33 +55,148 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host), cli_serv,
 	    sizeof(cli_serv), NI_NAMEREQD | NI_NOFQDN);
 
-	if (found_name != 0) {
-		DPRINTF("%s: client hostname *not* found: %s\n",
-		    __func__, gai_strerror(found_name));
+	if (found_name == 0)
+		goto found; /* found a hostname */
 
-		/* fine, so we try to get an IP instead */
-		found_name = getnameinfo((struct sockaddr *) cli_addr,
-		    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host),
-		    cli_serv, sizeof(cli_serv), NI_NUMERICHOST);
+	DPRINTF("%s: client hostname *not* found: %s\n",
+	    __func__, gai_strerror(found_name));
 
-		if (found_name != 0) {
-			fprintf(stderr, "%s: cannot identify client ip: %s\n",
-			    __func__,  gai_strerror(found_name));
-		}
+	found_name = getnameinfo((struct sockaddr *) cli_addr,
+	    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host),
+	    cli_serv, sizeof(cli_serv), NI_NUMERICHOST);
+
+	if (found_name == 0)
+		goto found; /* found an IP address */
+
+	fprintf(stderr, "%s: cannot identify client ip: %s\n",
+	    __func__,  gai_strerror(found_name));
+	return NULL;
+
+found:
+	/* good, we got an identifier name/ip */
+	xasprintf(&ret, "%s", cli_host);
+	return ret;
+}
+
+void
+hgd_sock_error_response(int fd, char *msg)
+{
+	char			*buf;
+
+	xasprintf(&buf, "err|%s", msg);
+	hgd_sock_send_line(fd, msg);
+	free(buf);
+}
+
+int
+hgd_cmd_now_playing(struct hgd_session *sess, char **args)
+{
+	DPRINTF("%s: YAY\n", __func__);
+	args = args;
+	hgd_sock_send_line(sess->sock_fd, "Not implemented");
+	return 0;
+}
+
+/* lookup table for command handlers */
+struct hgd_cmd_despatch		cmd_despatches[] = {
+	{"np",		0,	hgd_cmd_now_playing},
+	{"bye",		0,	NULL},	/* bye is special */
+	{NULL,		0,	NULL}	/* terminate */
+};
+
+#define	HGD_MAX_PROTO_TOKS	9
+uint8_t
+hgd_parse_line(struct hgd_session *sess, char *line)
+{
+	char			*tokens[HGD_MAX_PROTO_TOKS];
+	char			*next = line, *p;
+	uint8_t			n_toks = 0;
+	struct hgd_cmd_despatch *desp, *correct_desp;
+	uint8_t			bye = 0;
+
+	/* strip the line of \r\n */
+	for (p = line; *p != NULL; p++) {
+		if ((*p == '\r') || (*p == '\n'))
+			*p = NULL;
 	}
 
-	if (found_name == 0) {
-		DPRINTF("%s: accepted connection from client '%s'\n",
-		    __func__, cli_host);
+	/* tokenise */
+	do {
+		tokens[n_toks] = strdup(strsep(&next, "|"));
+		DPRINTF("%s: tok %d: %s\n", __func__, n_toks, tokens[n_toks]);
+	} while ((n_toks++ < HGD_MAX_PROTO_TOKS) && (next != NULL));
+
+	DPRINTF("%s: got %d tokens\n", __func__, n_toks);
+	if ((n_toks == 0) || (strlen(tokens[0]) == 0)) {
+		hgd_sock_error_response(sess->sock_fd, "no_tokens_sent");
+		return 0;
+	}
+
+	/* now we look up which function to call */
+	correct_desp = NULL;
+	for (desp = cmd_despatches; desp->cmd != NULL; desp ++) {
+
+		if (strcmp(desp->cmd, tokens[0]) != 0)
+			continue;
+
+		if (n_toks - 1 != desp->n_args)
+			continue;
+
+		/* command is valid \o/ */
+		correct_desp = desp;
+		break;
+	}
+
+	if (correct_desp != NULL) {
+		DPRINTF("%s: despatching '%s' handler\n", __func__, tokens[0]);
+		if (strcmp(correct_desp->cmd, "bye") != 0)
+			correct_desp->handler(sess, &tokens[1]);
+		else
+			bye = 1;
 	} else
-		DPRINTF("%s: accepted connection from unknown client\n",
-		    __func__);
+		hgd_sock_error_response(sess->sock_fd, "invalid_command");
+
+
+	/* free tokens */
+	for (; n_toks > 0; )
+		free(tokens[--n_toks]);
+
+	return bye;
+}
+
+void
+hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
+{
+	struct hgd_session	 sess;
+	char			*recv_line;
+	uint8_t			 exit;
+
+	sess.cli_str = hgd_identify_client(cli_addr);
+	sess.sock_fd = cli_fd;
+	sess.cli_addr = cli_addr;
+	sess.user = NULL;
+
+	if (sess.cli_str == NULL)
+		xasprintf(&sess.cli_str, "unknown"); /* shouldn't happen */
+
+	DPRINTF("%s: client connection: '%s'\n", __func__, sess.cli_str);
 
 	/* oh hai */
 	hgd_sock_send_line(cli_fd, HGD_GREET);
 
+	/* main command recieve loop */
+	exit = 0;
+	do {
+		recv_line = hgd_sock_recv_line(sess.sock_fd);
+		exit = hgd_parse_line(&sess, recv_line);
+		free(recv_line);
+	} while (!exit);
+
 	/* laters */
 	hgd_sock_send_line(cli_fd, HGD_BYE);
+
+	/* free up the hgd_session members */
+	free(sess.cli_str);
 }
 
 /* main loop that deals with network requests */
@@ -90,7 +204,7 @@ void
 hgd_listen_loop()
 {
 	struct sockaddr_in	addr, cli_addr;
-	int			cli_fd, child_pid;
+	int			cli_fd, child_pid = 0;
 	socklen_t		cli_addr_len;
 	int			sockopt = 1;
 
@@ -134,8 +248,6 @@ hgd_listen_loop()
 			warn("%s: server failed to accept", __func__);
 			continue;
 		}
-
-		printf("Handling client %s\n", inet_ntoa(cli_addr.sin_addr));
 
 		/* ok, let's deal with that request then */
 		child_pid = fork();
