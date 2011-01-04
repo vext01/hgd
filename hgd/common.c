@@ -175,7 +175,7 @@ hgd_open_db(char *db_path)
 		sqlite3_close(db);
 		return NULL;
 	}
-
+	DPRINTF("%s: database open\n", __func__);
 	return db;
 }
 
