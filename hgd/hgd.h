@@ -44,7 +44,7 @@ int				 xasprintf(char **buf, char *fmt, ...);
 /* socket ops */
 void				 hgd_sock_send(int fd, char *msg);
 void				 hgd_sock_send_line(int fd, char *msg);
-char				*hgd_sock_recv(int fd, ssize_t len);
+char				*hgd_sock_recv_bin(int fd, ssize_t len);
 char				*hgd_sock_recv_line(int fd);
 
 /* misc */

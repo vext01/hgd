@@ -173,13 +173,16 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
  * after 'ok...'
  * client then sends 'size' bytes of the media to queue
  */
+#define HGD_BINARY_RECV_SZ	(2 << 8)
 int
 hgd_cmd_queue(struct hgd_session *sess, char **args)
 {
-	char			*filename = args[0], *payload;
+	char			*filename = args[0], *payload = NULL;
 	size_t			bytes = atoi(args[1]);
-	char			*unique_fn;
-	int			f = -1;
+	char			*unique_fn, *sql, *sql_err;
+	int			f = -1, sql_res;
+	size_t			bytes_recvd = 0, to_write;
+	ssize_t			write_ret;
 
 	if (bytes == 0) {
 		hgd_sock_send_line(sess->sock_fd, "err|size");
@@ -194,10 +197,6 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	/* prepare to recieve the media file and stash away */
 	xasprintf(&unique_fn, "%s/%s.XXXXXXXX", filestore_path, filename);
 
-
-	hgd_sock_send_line(sess->sock_fd, "ok...");
-	payload = hgd_sock_recv(sess->sock_fd, bytes);
-
 	f = mkstemp(unique_fn);
 	if (!f) {
 		warn("%s: mkstemp()", __func__);
@@ -205,17 +204,57 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		goto clean;
 	}
 
+	hgd_sock_send_line(sess->sock_fd, "ok...");
+
 	DPRINTF("%s: recieving %d byte payload '%s' from %s into %s\n",
 	    __func__, (int) bytes, filename, sess->user, unique_fn);
 
-	if (write(f, payload, bytes) == -1) {
-		fprintf(stderr, "%s: failed to write %d bytes\n",
-		    __func__, (int) bytes);
-		hgd_sock_send_line(sess->sock_fd, "err|internal");
+	/* recieve bytes in small chunks so that we dont use moar RAM */
+	while (bytes_recvd != bytes) {
+
+		if (bytes - bytes_recvd < HGD_BINARY_RECV_SZ)
+			to_write = bytes - bytes_recvd;
+		else
+			to_write = HGD_BINARY_RECV_SZ;
+
+		payload = NULL;
+
+		DPRINTF("%s: waiting for chunk of length %d bytes\n",
+		    __func__, (int) to_write);
+
+		payload = hgd_sock_recv_bin(sess->sock_fd, to_write);
+
+		write_ret = write(f, payload, to_write);
+		if (write_ret < 0) {
+			warn("%s: failed to write %d bytes",
+			    __func__, (int) to_write);
+			hgd_sock_send_line(sess->sock_fd, "err|internal");
+			goto clean;
+		}
+
+		bytes_recvd += to_write;
+		DPRINTF("%s: recieved binary chunk of length %d bytes\n",
+		    __func__, (int) to_write);
+		DPRINTF("%s: expecting a further %d bytes\n",
+		    __func__, (int) (bytes - bytes_recvd));
+
+		free(payload);
+	}
+	payload = NULL;
+
+	xasprintf(&sql,
+	    "INSERT INTO playlist (filename, user, playing, finished)"
+	    "VALUES ('%s', '%s', 0, 0)", unique_fn, sess->user);
+
+	/* insert into database */
+	sql_res = sqlite3_exec(db, sql, NULL, NULL, &sql_err);
+
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't get playing track: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		hgd_sock_send_line(sess->sock_fd, "err|sql");
 		goto clean;
 	}
-
-	/* XXX insert into database */
 
 	hgd_sock_send_line(sess->sock_fd, "ok");
 
@@ -224,6 +263,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 clean:
 	if (f == -1)
 		close(f);
+	if (payload)
+		free(payload);
 	free(payload);
 	free(unique_fn);
 

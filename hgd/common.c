@@ -78,13 +78,22 @@ hgd_sock_send_line(int fd, char *msg)
 }
 
 /* recieve a specific size, free when done */
+/* XXX set a timeout */
 char *
-hgd_sock_recv(int fd, ssize_t len)
+hgd_sock_recv_bin(int fd, ssize_t len)
 {
 	ssize_t			recvd_tot = 0, recvd;
-	char			*msg, *full_msg = NULL, *tmp;
+	char			*msg, *full_msg = NULL;
+
+	full_msg = xmalloc(len);
+	msg = full_msg;
 
 	while (recvd_tot != len) {
+		recvd = recv(fd, msg, len - recvd_tot, 0);
+		msg += recvd;
+		recvd_tot += recvd;
+	}
+#if 0
 		msg = xmalloc(len - recvd_tot);
 		recvd = recv(fd, msg, len - recvd_tot, 0);
 
@@ -105,6 +114,7 @@ hgd_sock_recv(int fd, ssize_t len)
 		recvd_tot += recvd;
 		free(msg);
 	}
+#endif
 
 	return full_msg;
 }
