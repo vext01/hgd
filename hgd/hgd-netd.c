@@ -28,6 +28,7 @@ int				svr_fd = -1;
 
 sqlite3				*db;
 char				*db_path = HGD_DFL_DB_PATH;
+char				*filestore_path = HGD_DFL_FILESTORE_PATH;
 
 /* die nicely, closing socket */
 void
@@ -81,16 +82,6 @@ found:
 	return ret;
 }
 
-void
-hgd_sock_error_response(int fd, char *msg)
-{
-	char			*buf;
-
-	xasprintf(&buf, "err|%s", msg);
-	hgd_sock_send_line(fd, msg);
-	free(buf);
-}
-
 int
 hgd_get_playing_track_cb(void *arg, int argc, char **data, char **names)
 {
@@ -114,8 +105,6 @@ hgd_get_playing_track_cb(void *arg, int argc, char **data, char **names)
 	return SQLITE_OK;
 }
 
-
-
 /*
  * respond to client what is currently playing.
  *
@@ -127,7 +116,7 @@ hgd_get_playing_track_cb(void *arg, int argc, char **data, char **names)
 int
 hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 {
-	struct hgd_playlist_item	*playing = NULL;
+	struct hgd_playlist_item *playing = NULL;
 	char			*sql_err, *reply;
 	int			 sql_res;
 
@@ -142,7 +131,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	if (sql_res != SQLITE_OK) {
 		fprintf(stderr, "%s: can't get playing track: %s\n",
 		    __func__, sqlite3_errmsg(db));
-		hgd_sock_error_response(sess->sock_fd, "err|sql");
+		hgd_sock_send_line(sess->sock_fd, "err|sql");
 		return SQLITE_ERROR;
 	}
 
@@ -158,19 +147,103 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	return 0;
 }
 
+int
+hgd_cmd_user(struct hgd_session *sess, char **args)
+{
+	DPRINTF("%s: user on host '%s' identified as %s\n",
+	    __func__, sess->cli_str, args[0]);
+
+	sess->user = strdup(args[0]);
+	hgd_sock_send_line(sess->sock_fd, "ok");
+
+	return 0;
+}
+
+/*
+ * queue a track
+ *
+ * args: filename|size
+ * reponses
+ * ok...			ok and waiting for payload
+ * ok				ok and payload accepted
+ * err|size			size arg was weird
+ * err|user_not_identified	user did not identify
+ * err|internal			something else went wrong
+ *
+ * after 'ok...'
+ * client then sends 'size' bytes of the media to queue
+ */
+int
+hgd_cmd_queue(struct hgd_session *sess, char **args)
+{
+	char			*filename = args[0], *payload;
+	size_t			bytes = atoi(args[1]);
+	char			*unique_fn;
+	int			f = -1;
+
+	if (bytes == 0) {
+		hgd_sock_send_line(sess->sock_fd, "err|size");
+		return -1;
+	}
+
+	if (sess->user == NULL) {
+		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
+		return -1;
+	}
+
+	/* prepare to recieve the media file and stash away */
+	xasprintf(&unique_fn, "%s/%s.XXXXXXXX", filestore_path, filename);
+
+
+	hgd_sock_send_line(sess->sock_fd, "ok...");
+	payload = hgd_sock_recv(sess->sock_fd, bytes);
+
+	f = mkstemp(unique_fn);
+	if (!f) {
+		warn("%s: mkstemp()", __func__);
+		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		goto clean;
+	}
+
+	DPRINTF("%s: recieving %d byte payload '%s' from %s into %s\n",
+	    __func__, (int) bytes, filename, sess->user, unique_fn);
+
+	if (write(f, payload, bytes) == -1) {
+		fprintf(stderr, "%s: failed to write %d bytes\n",
+		    __func__, (int) bytes);
+		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		goto clean;
+	}
+
+	/* XXX insert into database */
+
+	hgd_sock_send_line(sess->sock_fd, "ok");
+
+	DPRINTF("%s: transfer complete\n", __func__);
+
+clean:
+	if (f == -1)
+		close(f);
+	free(payload);
+	free(unique_fn);
+
+	return 0;
+}
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	handler_function	*/
 	{"np",		0,	hgd_cmd_now_playing},
 	/*{"vo",	0,	hgd_cmd_vote_off},	*/
 	/*{"ls",	0,	hgd_cmd_playlist},	*/
-	/*{"q",		1,	hgd_cmd_queue},		*/
+	{"user",	1,	hgd_cmd_user},
+	{"q",		2,	hgd_cmd_queue},
 	{"bye",		0,	NULL},	/* bye is special */
 	{NULL,		0,	NULL}	/* terminate */
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
-#define	HGD_MAX_PROTO_TOKS	2
+#define	HGD_MAX_PROTO_TOKS	3
 uint8_t
 hgd_parse_line(struct hgd_session *sess, char *line)
 {
@@ -194,7 +267,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	DPRINTF("%s: got %d tokens\n", __func__, n_toks);
 	if ((n_toks == 0) || (strlen(tokens[0]) == 0)) {
-		hgd_sock_error_response(sess->sock_fd, "no_tokens_sent");
+		hgd_sock_send_line(sess->sock_fd, "err|no_tokens_sent");
 		return 0;
 	}
 
@@ -220,7 +293,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		else
 			bye = 1;
 	} else
-		hgd_sock_error_response(sess->sock_fd, "invalid_command");
+		hgd_sock_send_line(sess->sock_fd, "err|invalid_command");
 
 
 	/* free tokens */
@@ -263,6 +336,8 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 
 	/* free up the hgd_session members */
 	free(sess.cli_str);
+	if (sess.user)
+		free(sess.user);
 }
 
 /* main loop that deals with network requests */
