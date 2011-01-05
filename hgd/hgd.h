@@ -1,8 +1,9 @@
 #ifndef __HGD_H
 #define __HGD_H
 
-#define HGD_DFL_DB_PATH		"/home/edd/hgd.db"
-#define HGD_DFL_MPLAYER_PID_PATH "/home/edd/hgd_mplayer.pid"
+#define HGD_DFL_DB_PATH			"/home/edd/hgd.db"
+#define HGD_DFL_MPLAYER_PID_PATH	"/home/edd/hgd_mplayer.pid"
+#define HGD_DFL_FILESTORE_PATH		"/home/edd/hgd_store"
 
 #include <stdint.h>
 #include <sqlite3.h>
