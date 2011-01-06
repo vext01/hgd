@@ -14,13 +14,10 @@
 
 #include "hgd.h"
 
-#define HGD_DFL_PORT		6633
-#define HGD_DFL_BACKLOG		5
-
 /* XXX autogunk this at some stage */
 #define HGD_VERSION		"0.1"
-#define HGD_GREET		"HGD-" HGD_VERSION " :: " __DATE__ " " __TIME__
-#define HGD_BYE			"Catch you later d00d!"
+#define HGD_GREET		"ok|HGD-" HGD_VERSION
+#define HGD_BYE			"ok|Catch you later d00d!"
 
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
@@ -196,10 +193,11 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	/* prepare to recieve the media file and stash away */
 	xasprintf(&unique_fn, "%s/%s.XXXXXXXX", filestore_path, filename);
+	DPRINTF("%s: template for filestore is '%s'\n", __func__, unique_fn);
 
 	f = mkstemp(unique_fn);
-	if (!f) {
-		warn("%s: mkstemp()", __func__);
+	if (f < 0) {
+		warn("%s: mkstemp: %s", __func__, filestore_path);
 		hgd_sock_send_line(sess->sock_fd, "err|internal");
 		goto clean;
 	}
@@ -225,6 +223,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		payload = hgd_sock_recv_bin(sess->sock_fd, to_write);
 
 		write_ret = write(f, payload, to_write);
+
+		/* what if write returns less than the chunk XXX? */
 		if (write_ret < 0) {
 			warn("%s: failed to write %d bytes",
 			    __func__, (int) to_write);
@@ -458,6 +458,8 @@ main(int argc, char **argv)
 	/* getopt XXX */
 	if (argc > 1)
 		port = atoi(argv[1]);
+
+	/* XXX create filestore if not existing */
 
 	db = hgd_open_db(db_path);
 	if (db == NULL)

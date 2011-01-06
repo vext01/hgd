@@ -3,7 +3,9 @@
 
 #define HGD_DFL_DB_PATH			"/home/edd/hgd.db"
 #define HGD_DFL_MPLAYER_PID_PATH	"/home/edd/hgd_mplayer.pid"
-#define HGD_DFL_FILESTORE_PATH		"/home/edd/hgd_store"
+#define HGD_DFL_FILESTORE_PATH		"/home/edd/hgd_filestore"
+#define HGD_DFL_PORT			6633
+#define HGD_DFL_BACKLOG			5
 
 #include <stdint.h>
 #include <sqlite3.h>
@@ -18,6 +20,7 @@ struct hgd_playlist_item {
 	uint8_t			 finished;
 };
 
+/* server side client info */
 struct hgd_session {
 	int			sock_fd;
 	struct sockaddr_in	*cli_addr;
@@ -25,10 +28,18 @@ struct hgd_session {
 	char			*user;
 };
 
+/* server command despatch */
 struct hgd_cmd_despatch {
 	char			*cmd;
 	uint8_t			n_args;
 	int			(*handler)(struct hgd_session *, char **);
+};
+
+/* client request despatch */
+struct hgd_req_despatch {
+	char			*req;
+	uint8_t			n_args;
+	int			(*handler)(char **);
 };
 
 /* simple debug facility */
@@ -46,6 +57,7 @@ void				 hgd_sock_send(int fd, char *msg);
 void				 hgd_sock_send_line(int fd, char *msg);
 char				*hgd_sock_recv_bin(int fd, ssize_t len);
 char				*hgd_sock_recv_line(int fd);
+void				hgd_sock_send_bin(int, char *, ssize_t);
 
 /* misc */
 sqlite3				*hgd_open_db(char *);
