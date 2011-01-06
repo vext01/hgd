@@ -48,7 +48,31 @@ xasprintf(char **buf, char *fmt, ...)
 	return ret;
 }
 
-/* send a raw message onto the network */
+/* XXX code review these functions, they are dirty */
+
+/* send binary over the socket */
+void
+hgd_sock_send_bin(int fd, char *msg, ssize_t sz)
+{
+	ssize_t		tot_sent = 0, sent;
+	char		*next = msg;
+
+	while (tot_sent != sz) {
+		sent = send(fd, next, sz - tot_sent, 0);
+
+		if (sent < 0) {
+			fprintf(stderr, "%s: send failed\n", __func__);
+			sent = 0;
+			continue;
+		} else
+			DPRINTF("%s: sent %d bytes\n", __func__, (int) sent);
+
+		msg += sent;
+		tot_sent += sent;
+	}
+}
+
+/* send a message onto the network */
 void
 hgd_sock_send(int fd, char *msg)
 {
@@ -64,6 +88,8 @@ hgd_sock_send(int fd, char *msg)
 		}
 		sent_tot += sent;
 	}
+
+	DPRINTF("%s: sent %d bytes\n", __func__, (int) len);
 }
 
 /* send a \r\n terminated line */
@@ -75,6 +101,8 @@ hgd_sock_send_line(int fd, char *msg)
 	xasprintf(&term, "%s\r\n", msg);
 	hgd_sock_send(fd, term);
 	free(term);
+
+	DPRINTF("%s: sent line: %s\n", __func__, msg);
 }
 
 /* recieve a specific size, free when done */
@@ -93,28 +121,6 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 		msg += recvd;
 		recvd_tot += recvd;
 	}
-#if 0
-		msg = xmalloc(len - recvd_tot);
-		recvd = recv(fd, msg, len - recvd_tot, 0);
-
-		if (recvd < 0) {
-			warn("%s: recv\n", __func__);
-			free(msg);
-			continue;
-		}
-
-		if (full_msg != NULL) {
-			/* reallocate */
-			tmp = full_msg;
-			xasprintf(&full_msg, "%s%s", full_msg, msg);
-			free(tmp);
-		} else /* first time round */
-			full_msg = strdup(msg);
-
-		recvd_tot += recvd;
-		free(msg);
-	}
-#endif
 
 	return full_msg;
 }
@@ -132,7 +138,7 @@ hgd_sock_recv_line(int fd)
 		recvd = recv(fd, msg, HGD_LINE_CHUNK, 0);
 
 		if (recvd < 0) {
-			warn("%s: recv\n", __func__);
+			warn("%s: recv", __func__);
 			free(msg);
 			continue;
 		}
