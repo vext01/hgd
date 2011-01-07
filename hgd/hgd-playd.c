@@ -43,6 +43,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	if (sql_res != SQLITE_OK) {
 		fprintf(stderr, "%s: can't initialise db: %s\n",
 		    __func__, sqlite3_errmsg(db));
+		sqlite3_free(sql_err);
 		hgd_exit_nicely(EXIT_FAILURE);
 	}
 
@@ -65,6 +66,12 @@ hgd_play_track(struct hgd_playlist_item *t)
 	xasprintf(&q,
 	    "UPDATE playlist SET playing=0, finished=1 WHERE id=%d", t->id);
 	sql_res = sqlite3_exec(db, q, NULL, NULL, &sql_err);
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't initialise db: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		sqlite3_free(sql_err);
+	}
+
 	free(q);
 
 	hgd_free_playlist_item(t);
@@ -112,6 +119,7 @@ hgd_play_loop()
 		if (sql_res != SQLITE_OK) {
 			fprintf(stderr, "%s: can't get next track: %s\n",
 			    __func__, sqlite3_errmsg(db));
+			sqlite3_free(sql_err);
 			hgd_exit_nicely(EXIT_FAILURE);
 		}
 

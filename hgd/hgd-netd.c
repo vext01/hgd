@@ -130,6 +130,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 		fprintf(stderr, "%s: can't get playing track: %s\n",
 		    __func__, sqlite3_errmsg(db));
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		sqlite3_free(sql_err);
 		return SQLITE_ERROR;
 	}
 
@@ -258,6 +259,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		fprintf(stderr, "%s: can't get playing track: %s\n",
 		    __func__, sqlite3_errmsg(db));
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		sqlite3_free(sql_err);
 		goto clean;
 	}
 
@@ -340,6 +342,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 		fprintf(stderr, "%s: can't get playing track: %s\n",
 		    __func__, sqlite3_errmsg(db));
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		sqlite3_free(sql_err);
 		return (-1);
 	}
 
