@@ -271,12 +271,101 @@ clean:
 	return 0;
 }
 
+struct hgd_playlist {
+	unsigned int n_items;
+	struct hgd_playlist_item **items;
+};
+
+int
+hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
+{
+	struct hgd_playlist		*list;
+	struct hgd_playlist_item	*item;
+
+	/* shaddap gcc */
+	argc = argc;
+	names = names;
+
+	list = (struct hgd_playlist *) arg;
+
+	item = xmalloc(sizeof(struct hgd_playlist_item));
+
+	item->id = atoi(data[0]);
+	item->filename = strdup(data[1]);
+	item->user = strdup(data[2]);
+	item->playing = NULL;	/* don't need in netd */
+	item->finished = NULL;	/* don't need in netd */
+
+	/* remove unique string from filename, only playd uses that */
+	item->filename[strlen(item->filename) - 9] = NULL;
+
+	list->items = xrealloc(list->items,
+	    sizeof(struct hgd_playlist_item *) * list->n_items + 1);
+	list->items[list->n_items] = item;
+
+	list->n_items ++;
+
+	return (SQLITE_OK);
+}
+
+/*
+ * report back items in the playlist
+ */
+int
+hgd_cmd_playlist(struct hgd_session *sess, char **args)
+{
+	int			sql_res;
+	char			*sql_err, *resp;
+	struct hgd_playlist	list;
+	unsigned int		i;
+
+	/* shhh */
+	args = args;
+
+	list.n_items = 0;
+	list.items = NULL;
+
+	DPRINTF("%s: playlist request: %d\n", __func__, list.n_items);
+
+	sql_res = sqlite3_exec(db,
+	    "SELECT id, filename, user FROM playlist WHERE finished=0",
+	    hgd_get_playlist_cb, &list, &sql_err);
+
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't get playing track: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		return (-1);
+	}
+
+	DPRINTF("%s: playlist request: %d items\n", __func__, list.n_items);
+
+	/* and respond to client */
+	xasprintf(&resp, "ok|%d", list.n_items);
+	hgd_sock_send_line(sess->sock_fd, resp);
+	free(resp);
+
+	for (i = 0; i < list.n_items; i++) {
+		xasprintf(&resp, "%d|%s|%s", list.items[i]->id,
+		    list.items[i]->filename, list.items[i]->user);
+		hgd_sock_send_line(sess->sock_fd, resp);
+		free(resp);
+	}
+
+	/* free up */
+	for (i = 0; i < list.n_items; i ++) {
+		free(list.items[i]);
+	}
+
+	return (0);
+}
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	handler_function	*/
 	{"np",		0,	hgd_cmd_now_playing},
 	/*{"vo",	0,	hgd_cmd_vote_off},	*/
-	/*{"ls",	0,	hgd_cmd_playlist},	*/
+	{"ls",		0,	hgd_cmd_playlist},
 	{"user",	1,	hgd_cmd_user},
 	{"q",		2,	hgd_cmd_queue},
 	{"bye",		0,	NULL},	/* bye is special */
@@ -432,7 +521,7 @@ hgd_listen_loop()
 		}
 
 		/* ok, let's deal with that request then */
-		child_pid = fork();
+		//child_pid = fork();
 
 		if (!child_pid) {
 			hgd_service_client(cli_fd, &cli_addr);

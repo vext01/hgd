@@ -50,6 +50,7 @@ void				hgd_free_playlist_item(
 
 /* wrappers */
 void				*xmalloc(size_t);
+void				*xrealloc(void *, size_t);
 int				 xasprintf(char **buf, char *fmt, ...);
 
 /* socket ops */

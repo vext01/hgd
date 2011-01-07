@@ -33,6 +33,18 @@ xmalloc(size_t sz)
 	return ptr;
 }
 
+void *
+xrealloc(void *old_p, size_t sz)
+{
+	void			*ptr;
+
+	ptr = realloc(old_p, sz);
+	if (!ptr)
+		fprintf(stderr, "%s: could not reallocate\n", __func__);
+
+	return ptr;
+}
+
 int
 xasprintf(char **buf, char *fmt, ...)
 {
