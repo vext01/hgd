@@ -5,6 +5,7 @@
 #include <err.h>
 #include <unistd.h>
 #include <signal.h>
+#include <libgen.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -174,12 +175,16 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
 int
 hgd_cmd_queue(struct hgd_session *sess, char **args)
 {
-	char			*filename = args[0], *payload = NULL;
+	char			*filename_p = args[0], *payload = NULL;
 	size_t			bytes = atoi(args[1]);
 	char			*unique_fn, *sql, *sql_err;
 	int			f = -1, sql_res;
 	size_t			bytes_recvd = 0, to_write;
 	ssize_t			write_ret;
+	char			*filename;
+
+	/* strip path, we don't care about that */
+	filename = basename(filename_p);
 
 	if (bytes == 0) {
 		hgd_sock_send_line(sess->sock_fd, "err|size");
@@ -244,7 +249,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	xasprintf(&sql,
 	    "INSERT INTO playlist (filename, user, playing, finished)"
-	    "VALUES ('%s', '%s', 0, 0)", unique_fn, sess->user);
+	    "VALUES ('%s', '%s', 0, 0)", basename(unique_fn), sess->user);
 
 	/* insert into database */
 	sql_res = sqlite3_exec(db, sql, NULL, NULL, &sql_err);
@@ -521,7 +526,7 @@ hgd_listen_loop()
 		}
 
 		/* ok, let's deal with that request then */
-		//child_pid = fork();
+		child_pid = fork();
 
 		if (!child_pid) {
 			hgd_service_client(cli_fd, &cli_addr);
