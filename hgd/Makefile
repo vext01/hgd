@@ -7,7 +7,7 @@ all: hgd-playd hgd-netd hgdc
 
 .PHONY: clean
 clean:
-	-rm hgd-playd hgd-netd common.o db.o
+	-rm hgd-playd hgd-netd hgdc common.o db.o
 
 common.o: common.c hgd.h
 db.o: db.c hgd.h
