@@ -1,7 +1,8 @@
 HGD TODO LIST
-$Id: TODO,v 1.1 2011/01/08 01:00:54 eb771 Exp $
+$Id: TODO,v 1.2 2011/01/08 01:15:31 eb771 Exp $
 
  * implement "vote off"
+ * implement unqueue
  * implement rest of client operations.
  * clean get_current_callback arg passing (dont use global)
  * dont unlink played files (optionally)
