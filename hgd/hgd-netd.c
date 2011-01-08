@@ -105,7 +105,7 @@ found:
 }
 
 int
-hgd_get_playing_track_cb(void *arg, int argc, char **data, char **names)
+hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 {
 	struct hgd_playlist_item	**ret, *t;
 
@@ -127,6 +127,28 @@ hgd_get_playing_track_cb(void *arg, int argc, char **data, char **names)
 	return SQLITE_OK;
 }
 
+struct hgd_playlist_item *
+hgd_get_playing_item()
+{
+	struct hgd_playlist_item	*playing = NULL;
+	int				 sql_res;
+	char				*sql_err;
+
+	sql_res = sqlite3_exec(db,
+	    "SELECT id, filename, user "
+	    "FROM playlist WHERE playing=1 LIMIT 1",
+	    hgd_get_playing_item_cb, &playing, &sql_err);
+
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't get playing track: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		sqlite3_free(sql_err);
+		return NULL;
+	}
+
+	return playing;
+}
+
 /*
  * respond to client what is currently playing.
  *
@@ -138,26 +160,17 @@ hgd_get_playing_track_cb(void *arg, int argc, char **data, char **names)
 int
 hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 {
-	struct hgd_playlist_item *playing = NULL;
-	char			*sql_err, *reply;
-	int			 sql_res;
+	struct hgd_playlist_item	*playing = NULL;
+	char				*reply;
 
 	DPRINTF("%s:\n", __func__);
 	args = args; /* silence compiler */
 
-	sql_res = sqlite3_exec(db,
-	    "SELECT id, filename, user "
-	    "FROM playlist WHERE playing=1 LIMIT 1",
-	    hgd_get_playing_track_cb, &playing, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't get playing track: %s\n",
-		    __func__, sqlite3_errmsg(db));
-		hgd_sock_send_line(sess->sock_fd, "err|sql");
-		sqlite3_free(sql_err);
-		return SQLITE_ERROR;
-	}
-
+	/*
+	 * XXX
+	 * can't distinguish between error and nothing playing unfortunately
+	 */
+	playing = hgd_get_playing_item();
 	if (playing == NULL)
 		hgd_sock_send_line(sess->sock_fd, "ok|0");
 	else {
@@ -166,6 +179,8 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 		hgd_sock_send_line(sess->sock_fd, reply);
 		free(reply);
 	}
+
+	free(playing);
 
 	return 0;
 }
@@ -392,11 +407,63 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	return (0);
 }
 
+#define HGD_PID_STR_SZ		10
+int
+hgd_cmd_vote_off(struct hgd_session *sess, char **args)
+{
+	struct hgd_playlist_item	*playing = NULL;
+	char				*pid_path, pid_str[HGD_PID_STR_SZ];
+	pid_t				pid;
+	FILE				*pid_file;
+	size_t				read;
+
+	if (sess->user == NULL) {
+		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
+		return -1;
+	}
+
+	sess = sess; args = args;
+	playing = hgd_get_playing_item();
+	/* XXX check that the song they are voting off is playing */
+	/* XXX check the number of votes */
+	/* XXX make sure user didnt already vote */
+
+	/* kill mplayer then */
+	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+	pid_file = fopen(pid_path, "r");
+	if (pid_file == NULL) {
+		warn("%s: can't find mplayer pid file", __func__);
+		free(pid_path);
+		return -1;
+	}
+
+	free(pid_path);
+	read = fread(pid_str, HGD_PID_STR_SZ, 1, pid_file);
+	if (read == 0) {
+		if (!feof(pid_file)) {
+			warn("%s: can't find pid in pid file", __func__);
+			fclose(pid_file);
+			return -1;
+		}
+	}
+	fclose(pid_file);
+
+	pid = atoi(pid_str);
+	DPRINTF("%s: killing mplayer\n", __func__);
+	if (kill(pid, SIGINT) < 0)
+		warn("%s: can't kill mplayer", __func__);
+
+	hgd_sock_send_line(sess->sock_fd, "ok");
+
+	free(playing);
+	return 0;
+}
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	handler_function	*/
 	{"np",		0,	hgd_cmd_now_playing},
-	/*{"vo",	0,	hgd_cmd_vote_off},	*/
+	{"vo",		1,	hgd_cmd_vote_off},
 	{"ls",		0,	hgd_cmd_playlist},
 	{"user",	1,	hgd_cmd_user},
 	{"q",		2,	hgd_cmd_queue},
