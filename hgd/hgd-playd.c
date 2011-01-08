@@ -45,8 +45,10 @@ hgd_exit_nicely()
 void
 hgd_play_track(struct hgd_playlist_item *t)
 {
-	int			status = 0, sql_res;
+	int			status = 0, sql_res, pid;
 	char			*q, *sql_err;
+	char			*pid_path;
+	FILE			*pid_file;
 
 	DPRINTF("%s: playing '%s' for '%s'\n", __func__, t->filename, t->user);
 
@@ -63,7 +65,8 @@ hgd_play_track(struct hgd_playlist_item *t)
 	}
 
 
-	if (!fork()) {
+	pid = fork();
+	if (!pid) {
 		/* child - your the d00d who will play this track */
 		execlp("mplayer", "mplayer", "-quiet",
 		    t->filename, (char *) NULL);
@@ -72,7 +75,26 @@ hgd_play_track(struct hgd_playlist_item *t)
 		warn("execlp() failed");
 		hgd_exit_nicely();
 	} else {
+		/* we will write away child pid */
+		xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+
+		pid_file = fopen(pid_path, "w");
+		if (pid_file == NULL) {
+			warn("%s: can't open '%s'", __func__, pid_path);
+			free(pid_path);
+			hgd_exit_nicely();
+		}
+
+
+		fprintf(pid_file, "%d", pid);
+		fclose(pid_file);
 		wait(&status);
+		if (unlink(pid_path) < 0) {
+			warn("%s: can't unlink '%s'", __func__, pid_path);
+			free(pid_path);
+			hgd_exit_nicely();
+		}
+		free(pid_path);
 	}
 
 	DPRINTF("%s: finished playing (exit %d)\n", __func__, status);
