@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <err.h>
 #include <unistd.h>
 #include <signal.h>
 #include <libgen.h>
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -24,22 +26,44 @@ int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 
-sqlite3				*db;
-char				*db_path = HGD_DFL_DB_PATH;
-char				*filestore_path = HGD_DFL_FILESTORE_PATH;
+uint8_t				exit_ok = 0;
 
-/* die nicely, closing socket */
+char				*hgd_dir = NULL;
+char				*db_path = NULL;
+char				*filestore_path = NULL;
+sqlite3				*db = NULL;
+
+/*
+ * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
+ * this indicates an error occured or kill signal was caught
+ */
+void
+hgd_exit_nicely()
+{
+	shutdown(svr_fd, SHUT_RDWR);
+
+	if (svr_fd >= 0)
+		close(svr_fd);
+	if (db_path)
+		free(db_path);
+	if (filestore_path)
+		free(filestore_path);
+	if (hgd_dir)
+		free(hgd_dir);
+	if (db)
+		sqlite3_close(db);
+
+	if (exit_ok)
+		exit (EXIT_SUCCESS);
+	else
+		exit (EXIT_FAILURE);
+}
+
 void
 hgd_kill_sighandler(int sig)
 {
 	sig = sig;
-
-	sqlite3_close(db);
-	shutdown(svr_fd, SHUT_RDWR);
-	if (svr_fd >= 0)
-		close(svr_fd);
-
-	exit (EXIT_SUCCESS);
+	hgd_exit_nicely();
 }
 
 /* return some kind of host identifier, free when done */
@@ -552,18 +576,29 @@ main(int argc, char **argv)
 {
 	argc = argc; argv = argv;
 
+	hgd_dir = strdup(HGD_DFL_DIR);
+	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
+	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
+
 	/* getopt XXX */
 	if (argc > 1)
 		port = atoi(argv[1]);
 
-	/* XXX create filestore if not existing */
+	/* make filestore if not existing */
+	if (mkdir(filestore_path, 0700) != 0) {
+		if (errno != EEXIST) {
+			warn("%s", __func__);
+			hgd_exit_nicely();
+		}
+	}
 
 	db = hgd_open_db(db_path);
 	if (db == NULL)
 		return (EXIT_FAILURE);
 
 	hgd_listen_loop();
-	sqlite3_close(db);
 
-	return (EXIT_SUCCESS);
+	exit_ok = 1;
+	hgd_exit_nicely();
+	return (EXIT_SUCCESS); /* NOREACH */
 }
