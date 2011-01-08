@@ -12,20 +12,35 @@
 
 #include "hgd.h"
 
-int				db_open = 0;
+struct hgd_playlist_item	*next_track; /* not need pass as cb arg */
+
+char				*hgd_dir = NULL;
+char				*db_path = NULL;
+char				*filestore_path;
 sqlite3				*db = NULL;
-struct hgd_playlist_item	*next_track;
-char				*db_path = HGD_DFL_DB_PATH;
 
+uint8_t				exit_ok = 0;
+
+/*
+ * clean up, exit. if exit_ok = 0, an error (signal/error)
+ */
 void
-hgd_exit_nicely(int status)
+hgd_exit_nicely()
 {
-	if (db_open)
+	if (db)
 		sqlite3_close(db);
+	if (hgd_dir)
+		free(hgd_dir);
+	if (db_path)
+		free (db_path);
+	if (filestore_path)
+		free(filestore_path);
 
-	exit (status);
+	if (exit_ok)
+		exit (EXIT_SUCCESS);
+	else
+		exit (EXIT_FAILURE);
 }
-
 
 void
 hgd_play_track(struct hgd_playlist_item *t)
@@ -41,10 +56,10 @@ hgd_play_track(struct hgd_playlist_item *t)
 	free(q);
 
 	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't initialise db: %s\n",
+		fprintf(stderr, "%s: set track playing in sql: %s\n",
 		    __func__, sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
-		hgd_exit_nicely(EXIT_FAILURE);
+		hgd_exit_nicely();
 	}
 
 
@@ -55,7 +70,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 
 		/* if we get here, the shit hit the fan with execlp */
 		warn("execlp() failed");
-		hgd_exit_nicely(EXIT_FAILURE);
+		hgd_exit_nicely();
 	} else {
 		wait(&status);
 	}
@@ -90,7 +105,7 @@ hgd_get_next_track_cb(void *na, int argc, char **data, char **names)
 	/* populate a struct that we pick up later */
 	t = xmalloc(sizeof(t));
 	t->id = atoi(data[0]);
-	t->filename = strdup(data[1]);
+	xasprintf(&t->filename, "%s/%s", filestore_path, data[1]);
 	t->user = strdup(data[2]);
 	t->playing = 0;
 	t->finished = 0;
@@ -120,7 +135,7 @@ hgd_play_loop()
 			fprintf(stderr, "%s: can't get next track: %s\n",
 			    __func__, sqlite3_errmsg(db));
 			sqlite3_free(sql_err);
-			hgd_exit_nicely(EXIT_FAILURE);
+			hgd_exit_nicely();
 		}
 
 		if (next_track) {
@@ -137,11 +152,23 @@ hgd_play_loop()
 int
 main(int argc, char **argv)
 {
+	/* i command you to stfu GCC */
+	argc = argc;
+	argv = argv;
+
+	hgd_dir = strdup(HGD_DFL_DIR);
+	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
+	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
+
 	db = hgd_open_db(db_path);
+	if (db == NULL)
+		hgd_exit_nicely();
+
+	/* start */
 	hgd_play_loop();
 
-	argc = argc; argv = argv;
 
-	hgd_exit_nicely(EXIT_SUCCESS);
+	exit_ok = 1;
+	hgd_exit_nicely();
 	exit (EXIT_SUCCESS); /* NOREACH */
 }
