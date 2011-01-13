@@ -40,6 +40,9 @@ sqlite3				*db = NULL;
 void
 hgd_exit_nicely()
 {
+
+	/* XXX remove mplayer PID if existing */
+
 	shutdown(svr_fd, SHUT_RDWR);
 
 	if (svr_fd >= 0)
@@ -107,22 +110,18 @@ found:
 int
 hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 {
-	struct hgd_playlist_item	**ret, *t;
+	struct hgd_playlist_item	*t;
 
 	/* silence compiler */
 	argc = argc;
 	names = names;
 
+	t = (struct hgd_playlist_item *) arg;
+
 	/* populate a struct that we pick up later */
-	t = xmalloc(sizeof(t));
 	t->id = atoi(data[0]);
 	t->filename = strdup(data[1]);
 	t->user = strdup(data[2]);
-	t->playing = 0;
-	t->finished = 0;
-
-	ret = (struct hgd_playlist_item **) arg;
-	*ret = t;
 
 	return SQLITE_OK;
 }
@@ -134,10 +133,12 @@ hgd_get_playing_item()
 	int				 sql_res;
 	char				*sql_err;
 
+	playing = hgd_new_playlist_item();
+
 	sql_res = sqlite3_exec(db,
 	    "SELECT id, filename, user "
 	    "FROM playlist WHERE playing=1 LIMIT 1",
-	    hgd_get_playing_item_cb, &playing, &sql_err);
+	    hgd_get_playing_item_cb, playing, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
 		fprintf(stderr, "%s: can't get playing track: %s\n",
