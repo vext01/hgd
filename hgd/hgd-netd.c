@@ -339,11 +339,11 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 	item->id = atoi(data[0]);
 	item->filename = strdup(data[1]);
 	item->user = strdup(data[2]);
-	item->playing = NULL;	/* don't need in netd */
-	item->finished = NULL;	/* don't need in netd */
+	item->playing = 0;	/* don't need in netd */
+	item->finished = 0;	/* don't need in netd */
 
 	/* remove unique string from filename, only playd uses that */
-	item->filename[strlen(item->filename) - 9] = NULL;
+	item->filename[strlen(item->filename) - 9] = 0;
 
 	list->items = xrealloc(list->items,
 	    sizeof(struct hgd_playlist_item *) * list->n_items + 1);
@@ -483,9 +483,9 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	uint8_t			bye = 0;
 
 	/* strip the line of \r\n */
-	for (p = line; *p != NULL; p++) {
+	for (p = line; *p != 0; p++) {
 		if ((*p == '\r') || (*p == '\n'))
-			*p = NULL;
+			*p = 0;
 	}
 
 	/* tokenise */

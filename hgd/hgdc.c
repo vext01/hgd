@@ -39,13 +39,13 @@ int
 hgd_check_svr_response(char *resp, uint8_t x)
 {
 	int			len, err = 0;
-	char			*trunc;
+	char			*trunc = NULL;
 
 	len = strlen(resp);
 
 	if (hgd_debug) {
 		trunc = strdup(resp);
-		trunc[len - 2] = NULL;
+		trunc[len - 2] = 0; /* remove \r\n */
 		DPRINTF("%s: check reponse '%s'\n", __func__, trunc);
 		free(trunc);
 	} else
@@ -113,7 +113,8 @@ hgd_req_queue(char **args)
 	FILE			*f;
 	struct stat		st;
 	ssize_t			written = 0, fsize, chunk_sz;
-	char			*chunk, *filename = args[0], *q_req, *resp;
+	char			*chunk = NULL, *filename = args[0];
+	char			*q_req, *resp;
 
 	DPRINTF("%s: will queue '%s'\n", __func__, args[0]);
 
