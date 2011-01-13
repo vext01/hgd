@@ -171,17 +171,52 @@ hgd_req_queue(char **args)
 	}
 
 	DPRINTF("%s: transfer complete\n", __func__);
-
 	free(resp);
 
+	return (0);
+}
 
+int
+hgd_req_playlist(char **args)
+{
+	char			*resp, *track_resp, *p;
+	int			n_items, i;
 
-	return 1;
+	args = args; /* shhh */
+
+	hgd_sock_send_line(sock_fd, "ls");
+	resp = hgd_sock_recv_line(sock_fd);
+	if (hgd_check_svr_response(resp, 0) == -1) {
+		free(resp);
+		return -1;
+	}
+
+	for (p = resp; (*p != 0 && *p != '|'); p ++);
+	if (*p != '|') {
+		fprintf(stderr,
+		    "%s: didn't find a argument separator", __func__);
+		free(resp);
+		return -1;
+	}
+
+	n_items = atoi(++p);
+	free(resp);
+
+	DPRINTF("%s: expecting %d items in playlist\n", __func__, n_items);
+	for (i = 0; i < n_items; i++) {
+		track_resp = hgd_sock_recv_line(sock_fd);
+		printf("#%d: %s", i, track_resp);
+		free(track_resp);
+	}
+
+	DPRINTF("%s: done\n", __func__);
+
+	return (0);
 }
 
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
-	/*{"ls",		0,	hgd_req_playlist}, */
+	{"ls",		0,	hgd_req_playlist},
 	/*"np",		0,	hgd_req_now_playing}, */
 	/*"vote-off",	0,	hgd_req_vote_off}, */
 	{"q",		1,	hgd_req_queue},

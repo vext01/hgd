@@ -150,38 +150,39 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 	return full_msg;
 }
 
-/* recieve a line, free when done */
-#define HGD_LINE_CHUNK		128
+/*
+ * recieve a line, free when done
+ * XXX cant fail at the moment - allow failure and update call sites
+ * XXX dont allocate 1 byte at a time - that sucks
+ */
 char *
 hgd_sock_recv_line(int fd)
 {
 	ssize_t			recvd_tot = 0, recvd;
-	char			*msg, *full_msg = NULL, *tmp;
+	char			recv_char, *full_msg = NULL;
+	int			msg_max = 128;
+
+	full_msg = xmalloc(msg_max);
 
 	do {
-		msg = xmalloc(HGD_LINE_CHUNK + 1); /* \0 */
-		recvd = recv(fd, msg, HGD_LINE_CHUNK, 0);
+		/* recieve one byte */
+		recvd = recv(fd, &recv_char, 1, 0);
 
-		if (recvd < 0) {
+		if (recvd != 1) {
 			warn("%s: recv", __func__);
-			free(msg);
-			continue;
+			continue; /* XXX */
 		}
 
-		DPRINTF("%s: got %d bytes\n", __func__, (int) recvd);
-		msg[recvd] = 0; /* terminate */
-
-		if (full_msg != NULL) {
-			/* reallocate */
-			tmp = full_msg;
-			xasprintf(&full_msg, "%s%s", full_msg, msg);
-			free(tmp);
-		} else /* first time round */
-			full_msg = strdup(msg);
+		if (recvd_tot >= msg_max - 1) {
+			msg_max *= 2;
+			full_msg = xrealloc(full_msg, msg_max); // double buffer size
+		}
+		full_msg[recvd_tot] = recv_char;
 
 		recvd_tot += recvd;
-		free(msg);
-	} while ((recvd_tot >= 1) && (full_msg[recvd_tot -1] != '\n'));
+	} while ((recvd_tot >= 1) && recv_char != '\n');
+
+	full_msg[recvd_tot] = 0;
 
 	return full_msg;
 }
