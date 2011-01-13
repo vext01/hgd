@@ -113,7 +113,7 @@ hgd_req_queue(char **args)
 	FILE			*f;
 	struct stat		st;
 	ssize_t			written = 0, fsize, chunk_sz;
-	char			*chunk = NULL, *filename = args[0];
+	char			chunk[HGD_BINARY_SEND_CHUNK], *filename = args[0];
 	char			*q_req, *resp;
 
 	DPRINTF("%s: will queue '%s'\n", __func__, args[0]);
@@ -139,6 +139,7 @@ hgd_req_queue(char **args)
 	}
 	free(resp);
 
+	DPRINTF("%s: opening '%s' for reading\n", __func__, filename);
 	f = fopen(filename, "r");
 	if (f == NULL) {
 		warn("%s: fopen '%s'", __func__, filename);
