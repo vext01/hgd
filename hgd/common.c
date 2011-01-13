@@ -27,10 +27,8 @@ hgd_new_playlist_item()
 
 void hgd_free_playlist_item(struct hgd_playlist_item *i)
 {
-	if (i->filename != NULL) {
-		DPRINTF("[%s]\n", i->filename);
+	if (i->filename != NULL)
 		free(i->filename);
-	}
 	if (i->user != NULL)
 		free(i->user);
 	free(i);

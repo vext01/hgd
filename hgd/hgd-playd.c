@@ -63,7 +63,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 		hgd_exit_nicely();
 	}
 
-
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
