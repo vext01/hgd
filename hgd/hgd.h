@@ -49,6 +49,9 @@ struct hgd_req_despatch {
 /* simple debug facility */
 #define DPRINTF(x...)           do { if (hgd_debug)		\
 					    fprintf(stderr, x); } while (0)
+
+
+struct hgd_playlist_item	*hgd_new_playlist_item();
 void				hgd_free_playlist_item(
 				    struct hgd_playlist_item *);
 

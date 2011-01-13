@@ -120,6 +120,8 @@ hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
 	argc = argc;
 	names = names;
 
+	DPRINTF("%s: track found\n", __func__);
+
 	item_t = (struct hgd_playlist_item *) item;
 
 	/* populate a struct that we pick up later */
@@ -143,8 +145,7 @@ hgd_play_loop()
 	DPRINTF("%s: starting play loop\n", __func__);
 	while (1) {
 
-		track = xmalloc(sizeof(struct hgd_playlist_item));
-		track->filename = NULL;
+		track = hgd_new_playlist_item();
 
 		/* get the next track (if there is one) */
 		sql_res = sqlite3_exec(db,
