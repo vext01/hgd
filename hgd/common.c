@@ -14,6 +14,17 @@
 
 uint8_t				 hgd_debug = 1;
 
+struct hgd_playlist_item *
+hgd_new_playlist_item()
+{
+	struct hgd_playlist_item	*item;
+
+	item = xmalloc(sizeof(struct hgd_playlist_item));
+	memset(item, 0, sizeof(struct hgd_playlist_item));
+
+	return (item);
+}
+
 void hgd_free_playlist_item(struct hgd_playlist_item *i)
 {
 	if (i->filename != NULL) {
@@ -176,3 +187,5 @@ hgd_sock_recv_line(int fd)
 
 	return full_msg;
 }
+
+
