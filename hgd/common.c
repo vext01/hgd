@@ -16,8 +16,12 @@ uint8_t				 hgd_debug = 1;
 
 void hgd_free_playlist_item(struct hgd_playlist_item *i)
 {
-	free(i->filename);
-	free(i->user);
+	if (i->filename != NULL) {
+		DPRINTF("[%s]\n", i->filename);
+		free(i->filename);
+	}
+	if (i->user != NULL)
+		free(i->user);
 	free(i);
 }
 
