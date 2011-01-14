@@ -182,6 +182,11 @@ hgd_sock_recv_line(int fd)
 		recvd_tot += recvd;
 	} while ((recvd_tot >= 1) && recv_char != '\n');
 
+	/* get rid of \r\n */
+	if (full_msg[recvd_tot - 2] == '\r')
+		full_msg[recvd_tot - 2] = 0;
+	full_msg[recvd_tot - 1] = 0;
+
 	full_msg[recvd_tot] = 0;
 
 	return full_msg;
