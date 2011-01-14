@@ -176,11 +176,18 @@ hgd_req_queue(char **args)
 	return (0);
 }
 
+void
+hgd_print_track(char *resp)
+{
+
+}
+
 int
 hgd_req_playlist(char **args)
 {
 	char			*resp, *track_resp, *p;
-	int			n_items, i;
+	int			n_items, i, j, n_toks;
+	char			*tokens[3] = {NULL, NULL, NULL};
 
 	args = args; /* shhh */
 
@@ -205,7 +212,23 @@ hgd_req_playlist(char **args)
 	DPRINTF("%s: expecting %d items in playlist\n", __func__, n_items);
 	for (i = 0; i < n_items; i++) {
 		track_resp = hgd_sock_recv_line(sock_fd);
-		printf("#%d: %s", i, track_resp);
+
+		n_toks = 0;
+		for (j = 0; j < 3; j++)
+			tokens[j] = NULL;
+
+		do {
+			tokens[n_toks] = strdup(strsep(&track_resp, "|"));
+		} while ((n_toks++ < 3) && (track_resp != NULL));
+
+		if (n_toks == 3)
+			printf(" [ #%04d ] '%s' from '%s'\n",
+			    atoi(tokens[0]), tokens[1], tokens[2]);
+		else
+			fprintf(stderr,
+			    "%s: wrong number of tokens from server\n",
+			    __func__);
+
 		free(track_resp);
 	}
 
