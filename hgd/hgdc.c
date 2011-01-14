@@ -179,15 +179,37 @@ hgd_req_queue(char **args)
 void
 hgd_print_track(char *resp)
 {
+	int			n_toks = 0;
+	char			*tokens[3] = {NULL, NULL, NULL};
 
+	do {
+		tokens[n_toks] = strdup(strsep(&resp, "|"));
+	} while ((n_toks++ < 3) && (resp != NULL));
+
+	if (n_toks == 3)
+		printf(" [ #%04d ] '%s' from '%s'\n",
+		    atoi(tokens[0]), tokens[1], tokens[2]);
+	else
+		fprintf(stderr,
+		    "%s: wrong number of tokens from server\n",
+		    __func__);
+}
+
+void
+hgd_hline()
+{
+	int			i;
+
+	for (i = 0; i < 78; i ++)
+		printf("-");
+	printf("\n");
 }
 
 int
 hgd_req_playlist(char **args)
 {
 	char			*resp, *track_resp, *p;
-	int			n_items, i, j, n_toks;
-	char			*tokens[3] = {NULL, NULL, NULL};
+	int			n_items, i;
 
 	args = args; /* shhh */
 
@@ -212,22 +234,13 @@ hgd_req_playlist(char **args)
 	DPRINTF("%s: expecting %d items in playlist\n", __func__, n_items);
 	for (i = 0; i < n_items; i++) {
 		track_resp = hgd_sock_recv_line(sock_fd);
-
-		n_toks = 0;
-		for (j = 0; j < 3; j++)
-			tokens[j] = NULL;
-
-		do {
-			tokens[n_toks] = strdup(strsep(&track_resp, "|"));
-		} while ((n_toks++ < 3) && (track_resp != NULL));
-
-		if (n_toks == 3)
-			printf(" [ #%04d ] '%s' from '%s'\n",
-			    atoi(tokens[0]), tokens[1], tokens[2]);
-		else
-			fprintf(stderr,
-			    "%s: wrong number of tokens from server\n",
-			    __func__);
+		if (i == 0) {
+			hgd_hline();
+			printf("Currently playing with XXX vote-offs:\n");
+			hgd_print_track(track_resp);
+			hgd_hline();
+		} else
+			hgd_print_track(track_resp);
 
 		free(track_resp);
 	}
