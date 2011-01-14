@@ -1,11 +1,13 @@
 HGD TODO LIST
-$Id: TODO,v 1.2 2011/01/08 01:15:31 eb771 Exp $
+$Id: TODO,v 1.3 2011/01/14 02:32:26 eb771 Exp $
 
- * implement "vote off"
+ * finish implementing "vote off"
  * implement unqueue
  * implement rest of client operations.
- * clean get_current_callback arg passing (dont use global)
  * dont unlink played files (optionally)
  * dont drop played files from database (optionally)
  * getopt to both servers (path, dont fork, debug, version)
+ * have playd set all playing to 0 on crash/exit
+ * have netd send whether playd is playing in ls?
+ * authentication
  * man page
