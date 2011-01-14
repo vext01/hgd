@@ -112,6 +112,8 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 {
 	struct hgd_playlist_item	*t;
 
+	DPRINTF("%s: a track is playing\n", __func__);
+
 	/* silence compiler */
 	argc = argc;
 	names = names;
@@ -144,6 +146,12 @@ hgd_get_playing_item()
 		fprintf(stderr, "%s: can't get playing track: %s\n",
 		    __func__, sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
+		hgd_free_playlist_item(playing);
+		return NULL;
+	}
+
+	if (playing->filename == NULL) {
+		hgd_free_playlist_item(playing);
 		return NULL;
 	}
 
@@ -179,9 +187,8 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 		    playing->id, playing->filename, playing->user);
 		hgd_sock_send_line(sess->sock_fd, reply);
 		free(reply);
+		free(playing);
 	}
-
-	free(playing);
 
 	return 0;
 }
