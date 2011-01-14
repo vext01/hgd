@@ -236,8 +236,8 @@ hgd_req_playlist(char **args)
 		track_resp = hgd_sock_recv_line(sock_fd);
 		if (i == 0) {
 			hgd_hline();
-			printf("Currently playing with XXX vote-offs:\n");
 			hgd_print_track(track_resp);
+			printf("           0 votes-offs.\n");
 			hgd_hline();
 		} else
 			hgd_print_track(track_resp);
