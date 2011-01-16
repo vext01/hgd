@@ -415,15 +415,57 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	return (0);
 }
 
+int
+hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
+{
+	int			*num = (int *) arg;
+
+	DPRINTF("%s: couting votes callback\n", __func__);
+
+	/* quiet */
+	argc = argc;
+	names = names;
+
+	*num = atoi(data[0]);
+	return (0);
+}
+
+int
+hgd_get_num_votes()
+{
+	int			sql_res, num = -1;
+	char			*sql, *sql_err;
+
+	DPRINTF("%s: couting votes\n", __func__);
+
+	xasprintf(&sql, "SELECT COUNT (*) FROM votes;");
+	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, &num, &sql_err);
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't get votes: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		sqlite3_free(sql_err);
+		free(sql);
+		return (-1);
+	}
+	free(sql);
+
+	DPRINTF("%s: %d votes so far\n", __func__, num);
+	return num;
+}
+
 #define HGD_PID_STR_SZ		10
 int
 hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
 	struct hgd_playlist_item	*playing = NULL;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
+	char				*sql, *sql_err;
 	pid_t				pid;
 	FILE				*pid_file;
 	size_t				read;
+	int				sql_res, tid = atoi(args[0]);
+
+	DPRINTF("%s: %s wants to kill track %d\n", __func__, sess->user, tid);
 
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
@@ -432,9 +474,54 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	sess = sess; args = args;
 	playing = hgd_get_playing_item();
-	/* XXX check that the song they are voting off is playing */
-	/* XXX check the number of votes */
-	/* XXX make sure user didnt already vote */
+
+	/* is *anything* playing? */
+	if (playing == NULL) {
+		fprintf(stderr,
+		    "%s: no track is playing, can't vote off", __func__);
+		hgd_sock_send_line(sess->sock_fd, "err|not_playing");
+		hgd_free_playlist_item(playing);
+		return (-1);
+	}
+
+	/* is the file they are voting off playing? */
+	if (playing->id != tid) {
+		fprintf(stderr,
+		    "%s: track to vote off isn't playing\n", __func__);
+		hgd_sock_send_line(sess->sock_fd, "err|wrong_track");
+		hgd_free_playlist_item(playing);
+		return (-1);
+	}
+	hgd_free_playlist_item(playing);
+
+	/* insert vote */
+	asprintf(&sql, "INSERT INTO votes (user) VALUES ('%s');", sess->user);
+	sql_res = sqlite3_exec(db, sql, NULL, NULL, &sql_err);
+	free(sql);
+
+	switch (sql_res) {
+	case SQLITE_OK:
+		break;
+	case SQLITE_CONSTRAINT:
+		DPRINTF("%s: user '%s' already voted\n", __func__, sess->user);
+		hgd_sock_send_line(sess->sock_fd, "err|duplicate_vote");
+		sqlite3_free(sql_err);
+		return (-1);
+	default:
+		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		fprintf(stderr, "%s: can't insert vote: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		sqlite3_free(sql_err);
+		return (-1);
+	}
+
+	/* are we at the vote limit yet? */
+	if (hgd_get_num_votes() < HGD_REQUIRED_VOTES) {
+		hgd_sock_send_line(sess->sock_fd, "ok");
+		return 0;
+	}
+
+	DPRINTF("%s: vote limit exceeded - kill track", __func__);
 
 	/* kill mplayer then */
 	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
@@ -461,9 +548,9 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	if (kill(pid, SIGINT) < 0)
 		warn("%s: can't kill mplayer", __func__);
 
+	/* Note: player daemon will empty the votes table */
 	hgd_sock_send_line(sess->sock_fd, "ok");
 
-	free(playing);
 	return 0;
 }
 
@@ -628,7 +715,7 @@ hgd_listen_loop()
 		}
 
 		/* ok, let's deal with that request then */
-		child_pid = fork();
+		//child_pid = fork();
 
 		if (!child_pid) {
 			hgd_service_client(cli_fd, &cli_addr);
