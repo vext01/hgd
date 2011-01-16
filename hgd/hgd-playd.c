@@ -134,12 +134,28 @@ hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
 }
 
 void
+hgd_clear_votes()
+{
+	char			*query = "DELETE FROM votes;", *sql_err;
+	int			sql_res;
+
+	/* mark it as playing in the database */
+	sql_res = sqlite3_exec(db, query, NULL, NULL, &sql_err);
+
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't clear vote list\n", __func__);
+		sqlite3_free(sql_err);
+		hgd_exit_nicely();
+	}
+}
+
+void
 hgd_play_loop()
 {
 	int				sql_res;
 	char				*sql_err;
 	struct hgd_playlist_item	*track;
-	
+
 	/* forever play songs */
 	DPRINTF("%s: starting play loop\n", __func__);
 	while (1) {
@@ -162,6 +178,7 @@ hgd_play_loop()
 		if (track->filename != NULL) {
 			DPRINTF("%s: next track is: '%s'\n",
 			    __func__, track->filename);
+			hgd_clear_votes();
 			hgd_play_track(track);
 		} else {
 			DPRINTF("%s: no tracks to play\n", __func__);
