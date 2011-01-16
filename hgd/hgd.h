@@ -11,6 +11,10 @@
 #define HGD_DFL_PORT			6633
 #define HGD_DFL_BACKLOG			5
 
+/* database schema */
+#define HGD_DBS_FILENAME_LEN		"50"
+#define HGD_DBS_USERNAME_LEN		"15"
+
 #include <stdint.h>
 #include <sqlite3.h>
 
