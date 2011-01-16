@@ -237,7 +237,7 @@ hgd_req_playlist(char **args)
 		if (i == 0) {
 			hgd_hline();
 			hgd_print_track(track_resp);
-			printf("           0 votes-offs.\n");
+			/* printf("           0 votes-offs.\n"); */
 			hgd_hline();
 		} else
 			hgd_print_track(track_resp);
