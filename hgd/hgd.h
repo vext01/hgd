@@ -16,7 +16,7 @@
 #define HGD_DBS_USERNAME_LEN		"15"
 
 /* misc */
-#define HGD_REQUIRED_VOTES		2
+#define HGD_DFL_REQ_VOTES		3
 
 #include <stdint.h>
 #include <sqlite3.h>
