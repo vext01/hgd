@@ -49,9 +49,7 @@ hgd_open_db(char *db_path)
 	DPRINTF("%s: making votes table (if needed)\n", __func__);
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS votes ("
-	    "user VARCHAR(" HGD_DBS_USERNAME_LEN "),"
-	    "track_id INTEGER,"
-	    " PRIMARY KEY (user, track_id))",
+	    "user VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY)",
 	    NULL, NULL, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
