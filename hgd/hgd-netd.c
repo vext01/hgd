@@ -715,7 +715,7 @@ hgd_listen_loop()
 		}
 
 		/* ok, let's deal with that request then */
-		//child_pid = fork();
+		child_pid = fork();
 
 		if (!child_pid) {
 			hgd_service_client(cli_fd, &cli_addr);
