@@ -33,6 +33,8 @@ char				*db_path = NULL;
 char				*filestore_path = NULL;
 sqlite3				*db = NULL;
 
+int				req_votes = HGD_DFL_REQ_VOTES;
+
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
  * this indicates an error occured or kill signal was caught
@@ -516,7 +518,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	/* are we at the vote limit yet? */
-	if (hgd_get_num_votes() < HGD_REQUIRED_VOTES) {
+	if (hgd_get_num_votes() < req_votes) {
 		hgd_sock_send_line(sess->sock_fd, "ok");
 		return 0;
 	}
@@ -733,23 +735,76 @@ hgd_listen_loop()
 	close(svr_fd);
 }
 
+void
+hgd_usage()
+{
+	printf("usage: hgd-netd <options>\n");
+	printf("  -d		set hgd state directory\n");
+	printf("  -h		show this message and exit\n");
+	printf("  -n		set number of votes required to vote-off\n");
+	printf("  -p		set network port number\n");
+	printf("  -v		show version and exit\n");
+}
+
 int
 main(int argc, char **argv)
 {
-	argc = argc; argv = argv;
+	char			ch;
 
 	hgd_dir = strdup(HGD_DFL_DIR);
+
+	DPRINTF("%s: parsing options\n", __func__);
+	while ((ch = getopt(argc, argv, "d:hn:p:v")) != -1) {
+		switch (ch) {
+		case 'd':
+			free(hgd_dir);
+			hgd_dir = strdup(optarg);
+			DPRINTF("%s: set hgd dir to '%s'\n", __func__, hgd_dir);
+			break;
+		case 'n':
+			req_votes = atoi(optarg);
+			DPRINTF("%s: set required-votes to %d\n",
+			    __func__, req_votes);
+			break;
+		case 'p':
+			port = atoi(optarg);
+			DPRINTF("%s: set port to %d\n", __func__, port);
+			break;
+		case 'v':
+			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
+			printf("(C) Edd Barrett 2011\n");
+			exit_ok = 1;
+			hgd_exit_nicely();
+			break;
+		case 'h':
+		default:
+			hgd_usage();
+			exit_ok = 1;
+			hgd_exit_nicely();
+			break;
+		};
+
+		argc -= optind;
+		argv += optind;
+
+	}
+
+	/* set up paths */
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
 
-	/* getopt XXX */
-	if (argc > 1)
-		port = atoi(argv[1]);
+	/* make state dir if not existing */
+	if (mkdir(hgd_dir, 0700) != 0) {
+		if (errno != EEXIST) {
+			warn("%s: %s", __func__, hgd_dir);
+			hgd_exit_nicely();
+		}
+	}
 
 	/* make filestore if not existing */
 	if (mkdir(filestore_path, 0700) != 0) {
 		if (errno != EEXIST) {
-			warn("%s", __func__);
+			warn("%s: %s", __func__, filestore_path);
 			hgd_exit_nicely();
 		}
 	}
