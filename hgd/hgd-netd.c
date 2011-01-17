@@ -732,6 +732,7 @@ hgd_listen_loop()
 
 		if (cli_fd < 0) {
 			warn("%s: server failed to accept", __func__);
+			sleep(1);
 			continue;
 		}
 
