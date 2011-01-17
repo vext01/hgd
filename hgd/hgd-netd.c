@@ -465,7 +465,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	pid_t				pid;
 	FILE				*pid_file;
 	size_t				read;
-	int				sql_res, tid = atoi(args[0]);
+	int				sql_res, tid;
 
 	DPRINTF("%s: %s wants to kill track %d\n", __func__, sess->user, tid);
 
@@ -487,12 +487,15 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	/* is the file they are voting off playing? */
-	if (playing->id != tid) {
-		fprintf(stderr,
-		    "%s: track to vote off isn't playing\n", __func__);
-		hgd_sock_send_line(sess->sock_fd, "err|wrong_track");
-		hgd_free_playlist_item(playing);
-		return (-1);
+	if (args != NULL) { /* null if call from hgd_cmd_vote_off_noargs */
+		tid = atoi(args[0]);
+		if (playing->id != tid) {
+			fprintf(stderr,
+			    "%s: track to vote off isn't playing\n", __func__);
+			hgd_sock_send_line(sess->sock_fd, "err|wrong_track");
+			hgd_free_playlist_item(playing);
+			return (-1);
+		}
 	}
 	hgd_free_playlist_item(playing);
 
@@ -556,11 +559,19 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	return 0;
 }
 
+int
+hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
+{
+	unused = unused;
+	return (hgd_cmd_vote_off(sess, NULL));
+}
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	handler_function	*/
 	{"np",		0,	hgd_cmd_now_playing},
 	{"vo",		1,	hgd_cmd_vote_off},
+	{"vo",		0,	hgd_cmd_vote_off_noarg},
 	{"ls",		0,	hgd_cmd_playlist},
 	{"user",	1,	hgd_cmd_user},
 	{"q",		2,	hgd_cmd_queue},
