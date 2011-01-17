@@ -206,6 +206,24 @@ hgd_hline()
 }
 
 int
+hgd_req_vote_off(char **args)
+{
+	char			*resp;
+
+	args = args; /* sssh */
+
+	hgd_sock_send_line(sock_fd, "vo");
+
+	resp = hgd_sock_recv_line(sock_fd);
+	if (hgd_check_svr_response(resp, 0) == -1) {
+		free(resp);
+		return (-1);
+	}
+
+	return (0);
+}
+
+int
 hgd_req_playlist(char **args)
 {
 	char			*resp, *track_resp, *p;
@@ -254,7 +272,7 @@ hgd_req_playlist(char **args)
 struct hgd_req_despatch req_desps[] = {
 	{"ls",		0,	hgd_req_playlist},
 	/*"np",		0,	hgd_req_now_playing}, */
-	/*"vote-off",	0,	hgd_req_vote_off}, */
+	{"vo",		0,	hgd_req_vote_off},
 	{"q",		1,	hgd_req_queue},
 	{NULL,		0,	NULL} /* terminate */
 };

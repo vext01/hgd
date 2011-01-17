@@ -60,20 +60,6 @@ hgd_open_db(char *db_path)
 		return NULL;
 	}
 
-	DPRINTF("%s: clearing 'playing' flags\n", __func__);
-	sql_res = sqlite3_exec(db, "UPDATE playlist SET playing=0;",
-	    NULL, NULL, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't initialise db: %s\n",
-		    __func__, sqlite3_errmsg(db));
-		sqlite3_close(db);
-		sqlite3_free(sql_err);
-		return NULL;
-	}
-
-	DPRINTF("%s: database open and ready\n", __func__);
-
 	return db;
 }
 

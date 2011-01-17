@@ -191,6 +191,9 @@ hgd_play_loop()
 int
 main(int argc, char **argv)
 {
+	int			sql_res;
+	char			*sql_err;
+
 	/* i command you to stfu GCC */
 	argc = argc;
 	argv = argv;
@@ -202,6 +205,18 @@ main(int argc, char **argv)
 	db = hgd_open_db(db_path);
 	if (db == NULL)
 		hgd_exit_nicely();
+
+	DPRINTF("%s: clearing 'playing' flags\n", __func__);
+	sql_res = sqlite3_exec(db, "UPDATE playlist SET playing=0;",
+	    NULL, NULL, &sql_err);
+
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't initialise db: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		sqlite3_close(db);
+		sqlite3_free(sql_err);
+		return NULL;
+	}
 
 	/* start */
 	hgd_play_loop();
