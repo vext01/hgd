@@ -12,7 +12,7 @@
 
 #include "hgd.h"
 
-uint8_t				 hgd_debug = 0;
+uint8_t				 hgd_debug = 1;
 
 struct hgd_playlist_item *
 hgd_new_playlist_item()
