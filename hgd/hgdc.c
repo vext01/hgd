@@ -299,7 +299,7 @@ hgd_exec_req(int argc, char **argv)
 	}
 
 	DPRINTF("%s: despatching request '%s'\n", __func__, correct_desp->req);
-	correct_desp->handler(&argv[2]);
+	correct_desp->handler(&argv[1]);
 }
 
 int

@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <libgen.h>
+#include <sys/wait.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -673,6 +674,14 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		free(sess.user);
 }
 
+void
+hgd_sigchld(int sig)
+{
+	sig = sig; /* quiet */
+	waitpid(-1, NULL, NULL); /* clear up exit status from proc table */
+	signal(SIGCHLD, hgd_sigchld);
+}
+
 /* main loop that deals with network requests */
 void
 hgd_listen_loop()
@@ -709,6 +718,9 @@ hgd_listen_loop()
 		errx(EXIT_FAILURE, "%s: listen", __func__);
 
 	DPRINTF("%s: socket ready and listening on port %d\n", __func__, port);
+
+	/* setup signal handler */
+	signal(SIGCHLD, hgd_sigchld);
 
 	while (1) {
 
