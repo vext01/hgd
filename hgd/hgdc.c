@@ -17,22 +17,15 @@
 
 #include "hgd.h"
 
-char			*user;
-char			*host = "127.0.0.1";
+char			*user, *host = "127.0.0.1";
 int			 port = HGD_DFL_PORT;
-int			 sock_fd;
-
-void
-hgd_read_config()
-{
-	/* XXX */
-}
+int			 sock_fd, exit_ok = 0;
 
 void
 hgd_exit_nicely()
 {
 	close(sock_fd);
-	exit(EXIT_FAILURE);
+	exit(exit_ok);
 }
 
 int
@@ -75,9 +68,16 @@ hgd_setup_socket()
 {
 	struct sockaddr_in	addr;
 	char			*resp;
+	struct hostent		*he;
+
+	DPRINTF("%s: connecting to %s\n", __func__, host);
+	he = gethostbyname("localhost");
+	if (he != NULL) {
+		host = inet_ntoa(*( struct in_addr*)(he->h_addr_list[0]));
+		DPRINTF("%s: found ip %s\n", __func__, host);
+	}
 
 	/* set up socket address */
-	/* XXX dns */
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(host);
@@ -284,9 +284,9 @@ hgd_exec_req(int argc, char **argv)
 	struct hgd_req_despatch	*desp, *correct_desp = NULL;
 
 	for (desp = req_desps; desp->req != NULL; desp++) {
-		if (strcmp(desp->req, argv[1]) != 0)
+		if (strcmp(desp->req, argv[0]) != 0)
 			continue;
-		if (argc - 2 != desp->n_args)
+		if (argc - 1 != desp->n_args)
 			continue;
 
 		correct_desp = desp; /* found it */
@@ -305,7 +305,7 @@ hgd_exec_req(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-	char			*user_cmd, *resp;
+	char			*user_cmd, *resp, ch;
 
 	if (argc < 2)
 		errx(EXIT_FAILURE, "%s: implement usage XXX", __func__);
@@ -313,6 +313,29 @@ main(int argc, char **argv)
 	user = getenv("USER");
 	if (user == NULL)
 		errx(EXIT_FAILURE, "%s: can't get username", __func__);
+
+	while ((ch = getopt(argc, argv, "hs:v")) != -1) {
+		switch (ch) {
+		case 's':
+			DPRINTF("%s: set server to %s", __func__, optarg);
+			host = optarg;
+			break;
+		case 'v':
+			/* XXX */
+			exit_ok = 1;
+			hgd_exit_nicely();
+			break;
+		case 'h':
+		default:
+			hgd_usage();
+			exit_ok = 1;
+			hgd_exit_nicely();
+			break;
+		};
+	}
+
+	argc -= optind;
+	argv += optind;
 
 	hgd_setup_socket();
 
