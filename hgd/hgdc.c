@@ -45,7 +45,7 @@ hgd_check_svr_response(char *resp, uint8_t x)
 
 	if (hgd_debug) {
 		trunc = strdup(resp);
-		trunc[len - 2] = 0; /* remove \r\n */
+		//trunc[len - 2] = 0; /* remove \r\n */
 		DPRINTF("%s: check reponse '%s'\n", __func__, trunc);
 		free(trunc);
 	} else
