@@ -422,8 +422,6 @@ hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
 {
 	int			*num = (int *) arg;
 
-	DPRINTF("%s: couting votes callback\n", __func__);
-
 	/* quiet */
 	argc = argc;
 	names = names;
@@ -437,8 +435,6 @@ hgd_get_num_votes()
 {
 	int			sql_res, num = -1;
 	char			*sql, *sql_err;
-
-	DPRINTF("%s: couting votes\n", __func__);
 
 	xasprintf(&sql, "SELECT COUNT (*) FROM votes;");
 	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, &num, &sql_err);
