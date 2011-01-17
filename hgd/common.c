@@ -12,7 +12,7 @@
 
 #include "hgd.h"
 
-uint8_t				 hgd_debug = 1;
+uint8_t				 hgd_debug = 0;
 
 struct hgd_playlist_item *
 hgd_new_playlist_item()
@@ -170,7 +170,7 @@ hgd_sock_recv_line(int fd)
 
 		if (recvd != 1) {
 			warn("%s: recv", __func__);
-			continue; /* XXX */
+			return (NULL);
 		}
 
 		if (recvd_tot >= msg_max - 1) {
