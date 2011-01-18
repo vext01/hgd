@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <poll.h>
 
 #include "hgd.h"
 
@@ -26,8 +27,7 @@
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
-
-uint8_t				exit_ok = 0;
+//uint8_t				exit_ok = 0;
 
 char				*hgd_dir = NULL;
 char				*db_path = NULL;
@@ -43,9 +43,11 @@ int				req_votes = HGD_DFL_REQ_VOTES;
 void
 hgd_exit_nicely()
 {
+	if (dying || !exit_ok)
+		fprintf(stderr,
+		    "\n%s: hgd-netd was interrupted or crashed\n", __func__);
 
 	/* XXX remove mplayer PID if existing */
-
 	shutdown(svr_fd, SHUT_RDWR);
 
 	if (svr_fd >= 0)
@@ -59,17 +61,7 @@ hgd_exit_nicely()
 	if (db)
 		sqlite3_close(db);
 
-	if (exit_ok)
-		_exit (EXIT_SUCCESS);
-	else
-		_exit (EXIT_FAILURE);
-}
-
-void
-hgd_kill_sighandler(int sig)
-{
-	sig = sig;
-	hgd_exit_nicely();
+	_exit (!EXIT_SUCCESS);
 }
 
 /* return some kind of host identifier, free when done */
@@ -663,7 +655,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		recv_line = hgd_sock_recv_line(sess.sock_fd);
 		exit = hgd_parse_line(&sess, recv_line);
 		free(recv_line);
-	} while (!exit);
+	} while (!exit && !dying);
 
 	/* laters */
 	hgd_sock_send_line(cli_fd, HGD_BYE);
@@ -677,6 +669,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 void
 hgd_sigchld(int sig)
 {
+	/* XXX is this safe? */
 	sig = sig; /* quiet */
 	waitpid(-1, NULL, NULL); /* clear up exit status from proc table */
 	signal(SIGCHLD, hgd_sigchld);
@@ -689,12 +682,10 @@ hgd_listen_loop()
 	struct sockaddr_in	addr, cli_addr;
 	int			cli_fd, child_pid = 0;
 	socklen_t		cli_addr_len;
-	int			sockopt = 1;
+	int			sockopt = 1, data_ready;
+	struct pollfd		pfd;
 
 	DPRINTF("%s: setting up socket\n", __func__);
-
-	/* if killed, die nicely */
-	signal(SIGKILL, hgd_kill_sighandler);
 
 	if ((svr_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		errx(EXIT_FAILURE, "%s: socket(): ", __func__);
@@ -725,6 +716,27 @@ hgd_listen_loop()
 	while (1) {
 
 		DPRINTF("%s: waiting for client connection\n", __func__);
+
+		/* spin until something is ready */
+		pfd.fd = svr_fd;
+		pfd.events = POLLIN;
+		data_ready = 0;
+
+		while (!dying && !data_ready) {
+			data_ready = poll(&pfd, 1, INFTIM);
+			if (data_ready == -1) {
+				if (errno != EINTR) {
+					warn("%s: poll error\n", __func__);
+					dying = 1;
+				}
+				data_ready = 0;
+			}
+		}
+
+		if (dying) {
+			exit_ok = 0;
+			hgd_exit_nicely();
+		}
 
 		cli_addr_len = sizeof(cli_addr);
 		cli_fd = accept(svr_fd, (struct sockaddr *) &cli_addr,
@@ -771,6 +783,9 @@ int
 main(int argc, char **argv)
 {
 	char			ch;
+
+	/* if killed, die nicely */
+	hgd_register_sig_handlers();
 
 	hgd_dir = strdup(HGD_DFL_DIR);
 

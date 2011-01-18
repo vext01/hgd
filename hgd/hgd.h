@@ -1,7 +1,7 @@
 #ifndef __HGD_H
 #define __HGD_H
 
-/* ports */
+/* paths */
 #define HGD_DFL_DIR			"/var/hgd"
 #define HGD_DB_NAME			"hgd.db"
 #define HGD_MPLAYER_PID_NAME		"mplayer.pid"
@@ -22,6 +22,8 @@
 #include <sqlite3.h>
 
 extern uint8_t			 hgd_debug;
+extern uint8_t			 dying;
+extern uint8_t			 exit_ok;
 
 struct hgd_playlist_item {
 	int			 id;
@@ -73,6 +75,10 @@ void				 hgd_sock_send_line(int fd, char *msg);
 char				*hgd_sock_recv_bin(int fd, ssize_t len);
 char				*hgd_sock_recv_line(int fd);
 void				hgd_sock_send_bin(int, char *, ssize_t);
+
+void				hgd_exit_nicely();
+void				hgd_kill_sighandler(int sig);
+void				hgd_register_sig_handlers();
 
 /* misc */
 sqlite3				*hgd_open_db(char *);

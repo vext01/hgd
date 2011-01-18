@@ -4,15 +4,20 @@
 #include <stdarg.h>
 #include <string.h>
 #include <err.h>
+#include <errno.h>
+#include <signal.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <poll.h>
 
 #include <sqlite3.h>
 
 #include "hgd.h"
 
 uint8_t				 hgd_debug = 0;
+uint8_t				 dying = 0;
+uint8_t				 exit_ok = 0;
 
 struct hgd_playlist_item *
 hgd_new_playlist_item()
@@ -137,6 +142,28 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 {
 	ssize_t			recvd_tot = 0, recvd;
 	char			*msg, *full_msg = NULL;
+	struct pollfd		pfd;
+	int			data_ready = 0;
+
+	/* spin until something is ready */
+	pfd.fd = fd;
+	pfd.events = POLLIN;
+
+	while (!dying && !data_ready) {
+		data_ready = poll(&pfd, 1, INFTIM);
+		if (data_ready == -1) {
+			if (errno != EINTR) {
+				warn("%s: poll error\n", __func__);
+				dying = 1;
+			}
+			data_ready = 0;
+		}
+	}
+
+	if (dying) {
+		exit_ok = 0;
+		hgd_exit_nicely();
+	}
 
 	full_msg = xmalloc(len);
 	msg = full_msg;
@@ -161,6 +188,28 @@ hgd_sock_recv_line(int fd)
 	ssize_t			recvd_tot = 0, recvd;
 	char			recv_char, *full_msg = NULL;
 	int			msg_max = 128;
+	struct pollfd		pfd;
+	int			data_ready = 0;
+
+	/* spin until something is ready */
+	pfd.fd = fd;
+	pfd.events = POLLIN;
+
+	while (!dying && !data_ready) {
+		data_ready = poll(&pfd, 1, INFTIM);
+		if (data_ready == -1) {
+			if (errno != EINTR) {
+				warn("%s: poll error\n", __func__);
+				dying = 1;
+			}
+			data_ready = 0;
+		}
+	}
+
+	if (dying) {
+		exit_ok = 0;
+		hgd_exit_nicely();
+	}
 
 	full_msg = xmalloc(msg_max);
 
@@ -190,6 +239,22 @@ hgd_sock_recv_line(int fd)
 	full_msg[recvd_tot] = 0;
 
 	return full_msg;
+}
+
+void
+hgd_kill_sighandler(int sig)
+{
+	sig = sig; /* quiet */
+	dying = 1;
+}
+
+void
+hgd_register_sig_handlers()
+{
+	signal(SIGKILL, hgd_kill_sighandler);
+	signal(SIGTERM, hgd_kill_sighandler);
+	signal(SIGABRT, hgd_kill_sighandler);
+	signal(SIGINT, hgd_kill_sighandler);
 }
 
 
