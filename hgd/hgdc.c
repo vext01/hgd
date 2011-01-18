@@ -356,7 +356,11 @@ main(int argc, char **argv)
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 
+	DPRINTF("%s: shutdown socket\n", __func__);
+	if (shutdown(sock_fd, SHUT_RDWR) == -1)
+		fprintf(stderr, "%s: can't shutdown socket\n", __func__);
+
 	close(sock_fd);
 
-	exit (EXIT_SUCCESS);
+	_exit (EXIT_SUCCESS);
 }
