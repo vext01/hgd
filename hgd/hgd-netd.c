@@ -48,10 +48,13 @@ hgd_exit_nicely()
 		    "\n%s: hgd-netd was interrupted or crashed\n", __func__);
 
 	/* XXX remove mplayer PID if existing */
-	shutdown(svr_fd, SHUT_RDWR);
 
-	if (svr_fd >= 0)
+	if (svr_fd >= 0) {
 		close(svr_fd);
+		if (shutdown(svr_fd, SHUT_RDWR) == -1)
+			fprintf(stderr,
+			    "%s: can't shutdown socket\n", __func__);
+	}
 	if (db_path)
 		free(db_path);
 	if (filestore_path)
@@ -754,10 +757,21 @@ hgd_listen_loop()
 		if (!child_pid) {
 			hgd_service_client(cli_fd, &cli_addr);
 			DPRINTF("%s: client service complete\n", __func__);
-			shutdown(cli_fd, SHUT_RDWR);
+
+			if (shutdown(cli_fd, SHUT_RDWR) == -1)
+				fprintf(stderr,
+				    "%s: can't shutdown socket\n", __func__);
+
+			/* XXX experimental - probably will be removed */
+			pfd.fd = cli_fd;
+			poll(&pfd, 1, INFTIM);
+
+			/* and we are done with this client */
 			close(cli_fd);
-			close(svr_fd);
-			_exit (EXIT_SUCCESS); /* client is done */
+
+			exit_ok = 1;
+			svr_fd = -1; /* prevent exit from closing svr_fd */
+			hgd_exit_nicely();
 		}
 		DPRINTF("%s: client servicer PID = '%d'\n",
 		    __func__, child_pid);
@@ -765,7 +779,7 @@ hgd_listen_loop()
 	}
 
 	/* NOREACH ATM */
-	close(svr_fd);
+	//close(svr_fd); shutdown()...
 }
 
 void
