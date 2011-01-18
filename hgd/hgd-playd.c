@@ -17,7 +17,7 @@ char				*db_path = NULL;
 char				*filestore_path;
 sqlite3				*db = NULL;
 
-uint8_t				exit_ok = 0;
+//uint8_t				exit_ok = 0;
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -25,6 +25,10 @@ uint8_t				exit_ok = 0;
 void
 hgd_exit_nicely()
 {
+	if (dying || !exit_ok)
+		fprintf(stderr,
+		    "\n%s: hgd-playd was interrupted or crashed\n", __func__);
+
 	if (db)
 		sqlite3_close(db);
 	if (hgd_dir)
@@ -158,7 +162,7 @@ hgd_play_loop()
 
 	/* forever play songs */
 	DPRINTF("%s: starting play loop\n", __func__);
-	while (1) {
+	while (!dying) {
 
 		track = hgd_new_playlist_item();
 
@@ -186,6 +190,9 @@ hgd_play_loop()
 		}
 		hgd_free_playlist_item(track);
 	}
+
+	if (dying)
+		hgd_exit_nicely();
 }
 
 int
@@ -197,6 +204,8 @@ main(int argc, char **argv)
 	/* i command you to stfu GCC */
 	argc = argc;
 	argv = argv;
+
+	hgd_register_sig_handlers();
 
 	hgd_dir = strdup(HGD_DFL_DIR);
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
@@ -221,8 +230,7 @@ main(int argc, char **argv)
 	/* start */
 	hgd_play_loop();
 
-
 	exit_ok = 1;
 	hgd_exit_nicely();
-	exit (EXIT_SUCCESS); /* NOREACH */
+	_exit (EXIT_SUCCESS); /* NOREACH */
 }

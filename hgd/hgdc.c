@@ -19,7 +19,7 @@
 
 char			*user, *host = "127.0.0.1";
 int			 port = HGD_DFL_PORT;
-int			 sock_fd, exit_ok = 0;
+int			 sock_fd;
 
 void
 hgd_exit_nicely()
@@ -106,19 +106,17 @@ hgd_usage()
 }
 
 /* upload and queue a file to the playlist */
-#define HGD_BINARY_SEND_CHUNK	(2 << 8)
+#define HGD_BINARY_CHUNK	4096
 int
 hgd_req_queue(char **args)
 {
 	FILE			*f;
 	struct stat		st;
 	ssize_t			written = 0, fsize, chunk_sz;
-	char			chunk[HGD_BINARY_SEND_CHUNK], *filename = args[0];
+	char			chunk[HGD_BINARY_CHUNK], *filename = args[0];
 	char			*q_req, *resp;
 
 	DPRINTF("%s: will queue '%s'\n", __func__, args[0]);
-
-	/* XXX strip filename, so it is just a basename */
 
 	if (stat(filename, &st) < 0) {
 		warn("%s: cannot stat '%s'\n", __func__, filename);
@@ -147,10 +145,10 @@ hgd_req_queue(char **args)
 	}
 
 	while (written != fsize) {
-		if (fsize - written < HGD_BINARY_SEND_CHUNK)
+		if (fsize - written < HGD_BINARY_CHUNK)
 			chunk_sz = fsize - written;
 		else
-			chunk_sz = HGD_BINARY_SEND_CHUNK;
+			chunk_sz = HGD_BINARY_CHUNK;
 
 		if (fread(chunk, chunk_sz, 1, f) != 1) {
 			warn("%s: retrying fread", __func__);
