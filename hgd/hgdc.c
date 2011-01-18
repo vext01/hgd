@@ -25,7 +25,7 @@ void
 hgd_exit_nicely()
 {
 	close(sock_fd);
-	exit(exit_ok);
+	_exit(!exit_ok);
 }
 
 int

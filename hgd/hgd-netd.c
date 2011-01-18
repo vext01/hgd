@@ -60,9 +60,9 @@ hgd_exit_nicely()
 		sqlite3_close(db);
 
 	if (exit_ok)
-		exit (EXIT_SUCCESS);
+		_exit (EXIT_SUCCESS);
 	else
-		exit (EXIT_FAILURE);
+		_exit (EXIT_FAILURE);
 }
 
 void
@@ -744,7 +744,8 @@ hgd_listen_loop()
 			DPRINTF("%s: client service complete\n", __func__);
 			shutdown(cli_fd, SHUT_RDWR);
 			close(cli_fd);
-			exit (EXIT_SUCCESS); /* client is done */
+			close(svr_fd);
+			_exit (EXIT_SUCCESS); /* client is done */
 		}
 		DPRINTF("%s: client servicer PID = '%d'\n",
 		    __func__, child_pid);
