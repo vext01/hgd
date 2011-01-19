@@ -1,8 +1,8 @@
 HGD TODO LIST
-$Id: TODO,v 1.4 2011/01/16 23:19:18 edd Exp $
+$Id: TODO,v 1.5 2011/01/19 00:55:10 edd Exp $
 
 this version
- * getopt to both servers (path, dont fork, debug, version)
+ * finish getopt
  * implement rest of client operations.
  * have playd set all playing to 0 on crash/exit
  * move sql queries into db.c?
