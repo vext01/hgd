@@ -309,6 +309,7 @@ hgd_exec_req(int argc, char **argv)
 
 	if (correct_desp == NULL) {
 		hgd_usage();
+		exit_ok = 1;
 		hgd_exit_nicely();
 	}
 
