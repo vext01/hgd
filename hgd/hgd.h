@@ -1,6 +1,10 @@
 #ifndef __HGD_H
 #define __HGD_H
 
+#ifndef INFTIM
+#define INFTIM -1
+#endif
+
 /* paths */
 #define HGD_DFL_DIR			"/var/hgd"
 #define HGD_DB_NAME			"hgd.db"
