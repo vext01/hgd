@@ -785,7 +785,9 @@ hgd_listen_loop()
 			svr_fd = -1; /* prevent shutdown of svr_fd */
 			exit_ok = 1;
 			hgd_exit_nicely();
-		}
+		} /* child block ends */
+
+		close (cli_fd);
 		DPRINTF("%s: client servicer PID = '%d'\n",
 		    __func__, child_pid);
 		/* otherwise, back round for the next client */
