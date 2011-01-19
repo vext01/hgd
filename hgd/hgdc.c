@@ -19,12 +19,22 @@
 
 char			*user, *host = "127.0.0.1";
 int			 port = HGD_DFL_PORT;
-int			 sock_fd;
+int			 sock_fd = -1;
 
 void
 hgd_exit_nicely()
 {
-	close(sock_fd);
+	if (!exit_ok)
+		fprintf(stderr,
+		    "%s: hgdc was interrupted or crashed - cleaning up\n"
+		    , __func__);
+
+	if (sock_fd > 0) {
+		if (shutdown(sock_fd, SHUT_RDWR) == -1)
+			fprintf(stderr,
+			    "%s: couldn't shutdown socket\n", __func__);
+		close(sock_fd);
+	}
 	_exit(!exit_ok);
 }
 
@@ -69,6 +79,7 @@ hgd_setup_socket()
 	struct sockaddr_in	addr;
 	char			*resp;
 	struct hostent		*he;
+	int			sockopt = 1;
 
 	DPRINTF("%s: connecting to %s\n", __func__, host);
 	he = gethostbyname("localhost");
@@ -86,6 +97,11 @@ hgd_setup_socket()
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd < 0)
 		errx(EXIT_FAILURE, "%s: can't make socket", __func__);
+
+	if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR,
+		    &sockopt, sizeof(sockopt)) < 0) {
+		warn("%s: cannot set SO_REUSEADDR", __func__);
+	}
 
 	if (connect(sock_fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		close(sock_fd);
@@ -357,10 +373,8 @@ main(int argc, char **argv)
 	free(resp);
 
 	DPRINTF("%s: shutdown socket\n", __func__);
-	if (shutdown(sock_fd, SHUT_RDWR) == -1)
-		fprintf(stderr, "%s: can't shutdown socket\n", __func__);
 
-	close(sock_fd);
-
-	_exit (EXIT_SUCCESS);
+	exit_ok = 1;
+	hgd_exit_nicely();
+	_exit (EXIT_SUCCESS); /* NOREACH */
 }

@@ -25,7 +25,7 @@ sqlite3				*db = NULL;
 void
 hgd_exit_nicely()
 {
-	if (dying || !exit_ok)
+	if (!exit_ok)
 		fprintf(stderr,
 		    "\n%s: hgd-playd was interrupted or crashed\n", __func__);
 
@@ -38,10 +38,7 @@ hgd_exit_nicely()
 	if (filestore_path)
 		free(filestore_path);
 
-	if (exit_ok)
-		exit (EXIT_SUCCESS);
-	else
-		exit (EXIT_FAILURE);
+	exit (!exit_ok);
 }
 
 void
