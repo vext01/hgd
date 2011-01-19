@@ -43,17 +43,17 @@ int				req_votes = HGD_DFL_REQ_VOTES;
 void
 hgd_exit_nicely()
 {
-	if (dying || !exit_ok)
+	if (!exit_ok)
 		fprintf(stderr,
 		    "\n%s: hgd-netd was interrupted or crashed\n", __func__);
 
 	/* XXX remove mplayer PID if existing */
 
 	if (svr_fd >= 0) {
-		close(svr_fd);
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
 			fprintf(stderr,
 			    "%s: can't shutdown socket\n", __func__);
+		close(svr_fd);
 	}
 	if (db_path)
 		free(db_path);
@@ -751,6 +751,11 @@ hgd_listen_loop()
 			continue;
 		}
 
+		if (setsockopt(cli_fd, SOL_SOCKET, SO_REUSEADDR,
+			    &sockopt, sizeof(sockopt)) < 0) {
+			warn("%s: cannot set SO_REUSEADDR", __func__);
+		}
+
 		/* ok, let's deal with that request then */
 		child_pid = fork();
 
@@ -758,19 +763,27 @@ hgd_listen_loop()
 			hgd_service_client(cli_fd, &cli_addr);
 			DPRINTF("%s: client service complete\n", __func__);
 
+			/* XXX experimental - probably will be removed */
+#if 0
+			while (1) {
+				pfd.fd = cli_fd;
+				data_ready = poll(&pfd, 1, INFTIM);
+				/* wait for a hangup */
+				if (pfd.revents | POLLHUP) {
+					hgd_exit_nicely();
+				}
+			}
+#endif
+
+			/* and we are done with this client */
 			if (shutdown(cli_fd, SHUT_RDWR) == -1)
 				fprintf(stderr,
 				    "%s: can't shutdown socket\n", __func__);
-
-			/* XXX experimental - probably will be removed */
-			pfd.fd = cli_fd;
-			poll(&pfd, 1, INFTIM);
-
-			/* and we are done with this client */
 			close(cli_fd);
 
+			close(svr_fd);
+			svr_fd = -1; /* prevent shutdown of svr_fd */
 			exit_ok = 1;
-			svr_fd = -1; /* prevent exit from closing svr_fd */
 			hgd_exit_nicely();
 		}
 		DPRINTF("%s: client servicer PID = '%d'\n",

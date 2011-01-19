@@ -160,10 +160,8 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 		}
 	}
 
-	if (dying) {
-		exit_ok = 0;
+	if (dying)
 		hgd_exit_nicely();
-	}
 
 	full_msg = xmalloc(len);
 	msg = full_msg;
@@ -206,10 +204,8 @@ hgd_sock_recv_line(int fd)
 		}
 	}
 
-	if (dying) {
-		exit_ok = 0;
+	if (dying)
 		hgd_exit_nicely();
-	}
 
 	full_msg = xmalloc(msg_max);
 
