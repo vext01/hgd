@@ -1,14 +1,17 @@
 HGD TODO LIST
-$Id: TODO,v 1.5 2011/01/19 00:55:10 edd Exp $
+$Id: TODO,v 1.6 2011/01/20 17:44:56 edd Exp $
 
 this version
+ * implement database wrapper func that retries up to x times on error
+ * client should check usage *before* connecting
+ * revisit DNS code in client
  * finish getopt
  * implement rest of client operations.
  * have playd set all playing to 0 on crash/exit
  * move sql queries into db.c?
- * man page
  
 Next version:
+ * man page
  * authentication
  * admin commands
  * have netd send whether playd is playing in ls?
