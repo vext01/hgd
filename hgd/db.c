@@ -22,9 +22,19 @@ hgd_open_db(char *db_path)
 
 	/* open the database */
 	DPRINTF("%s: opening database\n", __func__);
-	if (sqlite3_open(db_path, &db)) {
+	if (sqlite3_open(db_path, &db) != SQLITE_OK) {
 		fprintf(stderr, "%s: can't open db: %s\n",
 		    __func__, sqlite3_errmsg(db));
+		return NULL;
+	}
+
+	DPRINTF("%s: setting database timeout\n", __func__);
+	sql_res = sqlite3_busy_timeout(db, 2000);
+	if (sql_res != SQLITE_OK) {
+		fprintf(stderr, "%s: can't set busy timout on db: %s\n",
+		    __func__, sqlite3_errmsg(db));
+		sqlite3_close(db);
+		sqlite3_free(sql_err);
 		return NULL;
 	}
 
