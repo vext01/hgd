@@ -168,6 +168,22 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 
 	while (recvd_tot != len) {
 		recvd = recv(fd, msg, len - recvd_tot, 0);
+
+		switch (recvd) {
+		case 0:
+			/* should not happen */
+			fprintf(stderr, "%s: no bytes recvd\n", __func__);
+			continue;
+		case -1:
+			if (errno == EINTR)
+				continue;
+			warn("%s: recv", __func__);
+			return (NULL);
+		default:
+			/* good */
+			break;
+		};
+
 		msg += recvd;
 		recvd_tot += recvd;
 	}
@@ -177,8 +193,6 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 
 /*
  * recieve a line, free when done
- * XXX cant fail at the moment - allow failure and update call sites
- * XXX dont allocate 1 byte at a time - that sucks
  */
 char *
 hgd_sock_recv_line(int fd)
@@ -213,10 +227,20 @@ hgd_sock_recv_line(int fd)
 		/* recieve one byte */
 		recvd = recv(fd, &recv_char, 1, 0);
 
-		if (recvd != 1) {
+		switch (recvd) {
+		case 0:
+			/* should not happen */
+			fprintf(stderr, "%s: no bytes recvd\n", __func__);
+			continue;
+		case -1:
+			if (errno == EINTR)
+				continue;
 			warn("%s: recv", __func__);
 			return (NULL);
-		}
+		default:
+			/* good */
+			break;
+		};
 
 		if (recvd_tot >= msg_max - 1) {
 			msg_max *= 2;
