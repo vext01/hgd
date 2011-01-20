@@ -1,5 +1,5 @@
 HGD TODO LIST
-$Id: TODO,v 1.6 2011/01/20 17:44:56 edd Exp $
+$Id: TODO,v 1.7 2011/01/20 19:05:41 me92 Exp $
 
 this version
  * implement database wrapper func that retries up to x times on error
@@ -9,6 +9,7 @@ this version
  * implement rest of client operations.
  * have playd set all playing to 0 on crash/exit
  * move sql queries into db.c?
+ * disallow hgdc from trying to upload dirs
  
 Next version:
  * man page

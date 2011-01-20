@@ -760,6 +760,11 @@ hgd_listen_loop()
 		child_pid = fork();
 
 		if (!child_pid) {
+
+			db = hgd_open_db(db_path);
+			if (db == NULL)
+				return (EXIT_FAILURE);
+
 			hgd_service_client(cli_fd, &cli_addr);
 			DPRINTF("%s: client service complete\n", __func__);
 
@@ -874,10 +879,14 @@ main(int argc, char **argv)
 		}
 	}
 
+
+	/* Created tables if needed */
 	db = hgd_open_db(db_path);
 	if (db == NULL)
-		return (EXIT_FAILURE);
-
+		hgd_exit_nicely();
+	sqlite3_close(db);
+	db = NULL;
+	
 	hgd_listen_loop();
 
 	exit_ok = 1;
