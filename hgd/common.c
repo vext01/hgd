@@ -15,7 +15,7 @@
 
 #include "hgd.h"
 
-uint8_t				 hgd_debug = 1;
+int8_t				 hgd_debug = 0;
 uint8_t				 dying = 0;
 uint8_t				 exit_ok = 0;
 
@@ -278,10 +278,4 @@ hgd_register_sig_handlers()
 	signal(SIGTERM, hgd_kill_sighandler);
 	signal(SIGABRT, hgd_kill_sighandler);
 	signal(SIGINT, hgd_kill_sighandler);
-}
-
-char *
-serror()
-{
-	return strerror(errno);
 }

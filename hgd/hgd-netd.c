@@ -27,7 +27,6 @@
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
-//uint8_t				exit_ok = 0;
 
 char				*hgd_dir = NULL;
 char				*db_path = NULL;
@@ -797,9 +796,7 @@ hgd_listen_loop()
 		    __func__, child_pid);
 		/* otherwise, back round for the next client */
 	}
-
-	/* NOREACH ATM */
-	//close(svr_fd); shutdown()...
+	/* NOREACH */
 }
 
 void
@@ -811,6 +808,7 @@ hgd_usage()
 	printf("  -n		set number of votes required to vote-off\n");
 	printf("  -p		set network port number\n");
 	printf("  -v		show version and exit\n");
+	printf("  -x		set debug level (0-3)\n");
 }
 
 int
@@ -824,27 +822,36 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_DEBUG_DEBUG, "%s: parsing options\n", __func__);
-	while ((ch = getopt(argc, argv, "d:hn:p:v")) != -1) {
+	while ((ch = getopt(argc, argv, "d:hn:p:vx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = strdup(optarg);
-			DPRINTF(HGD_DEBUG_DEBUG, "%s: set hgd dir to '%s'\n", __func__, hgd_dir);
+			DPRINTF(HGD_DEBUG_DEBUG,
+			    "set hgd dir to '%s'\n", hgd_dir);
 			break;
 		case 'n':
 			req_votes = atoi(optarg);
-			DPRINTF(HGD_DEBUG_DEBUG, "%s: set required-votes to %d\n",
-			    __func__, req_votes);
+			DPRINTF(HGD_DEBUG_DEBUG,
+			    "set required-votes to %d\n", req_votes);
 			break;
 		case 'p':
 			port = atoi(optarg);
-			DPRINTF(HGD_DEBUG_DEBUG, "%s: set port to %d\n", __func__, port);
+			DPRINTF(HGD_DEBUG_DEBUG,
+			    "set port to %d\n", port);
 			break;
 		case 'v':
 			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
 			printf("(C) Edd Barrett 2011\n");
 			exit_ok = 1;
 			hgd_exit_nicely();
+			break;
+		case 'x':
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			DPRINTF(HGD_DEBUG_DEBUG,
+			    "set debug level to %d\n", hgd_debug);
 			break;
 		case 'h':
 		default:
@@ -856,7 +863,6 @@ main(int argc, char **argv)
 
 		argc -= optind;
 		argv += optind;
-
 	}
 
 	/* set up paths */
@@ -867,7 +873,7 @@ main(int argc, char **argv)
 	if (mkdir(hgd_dir, 0700) != 0) {
 		if (errno != EEXIST) {
 			DPRINTF(HGD_DEBUG_ERROR,
-			    "%s: %s", hgd_dir, serror(errno));
+			    "%s: %s", hgd_dir, serror());
 			hgd_exit_nicely();
 		}
 	}
@@ -879,7 +885,6 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 		}
 	}
-
 
 	/* Created tables if needed */
 	db = hgd_open_db(db_path);
