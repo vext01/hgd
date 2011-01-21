@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <sqlite3.h>
 
-extern uint8_t			 hgd_debug;
+extern int8_t			 hgd_debug;
 extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
 extern char			*debug_names[];
@@ -61,10 +61,10 @@ struct hgd_req_despatch {
 };
 
 /* debug levels */
-#define HGD_DEBUG_ERROR			1
-#define HGD_DEBUG_WARN			2
-#define HGD_DEBUG_INFO			3
-#define HGD_DEBUG_DEBUG			4
+#define HGD_DEBUG_ERROR			0
+#define HGD_DEBUG_WARN			1
+#define HGD_DEBUG_INFO			2
+#define HGD_DEBUG_DEBUG			3
 
 /* simple debug facility */
 #define DPRINTF(level, x...)						\
@@ -75,7 +75,7 @@ struct hgd_req_despatch {
 			fprintf(stderr, x);				\
 		}							\
 	} while (0)
-char				*serror();
+#define serror()			strerror(errno)
 
 
 struct hgd_playlist_item	*hgd_new_playlist_item();
