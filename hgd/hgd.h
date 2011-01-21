@@ -6,7 +6,7 @@
 #endif
 
 /* paths */
-#define HGD_DFL_DIR			"/home/me92/hgd_filestore"
+#define HGD_DFL_DIR			"/var/hgd"
 #define HGD_DB_NAME			"hgd.db"
 #define HGD_MPLAYER_PID_NAME		"mplayer.pid"
 #define HGD_FILESTORE_NAME		"files"
