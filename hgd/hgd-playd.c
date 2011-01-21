@@ -208,12 +208,7 @@ main(int argc, char **argv)
 	int			sql_res;
 	char			*sql_err, ch;
 
-	/* i command you to stfu GCC */
-	argc = argc;
-	argv = argv;
-
 	hgd_register_sig_handlers();
-
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_DEBUG_DEBUG, "%s: parsing options\n", __func__);
