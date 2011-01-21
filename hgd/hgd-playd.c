@@ -50,7 +50,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	char			*pid_path;
 	FILE			*pid_file;
 
-	DPRINTF("%s: playing '%s' for '%s'\n", __func__, t->filename, t->user);
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: playing '%s' for '%s'\n", __func__, t->filename, t->user);
 
 	/* mark it as playing in the database */
 	xasprintf(&query, "UPDATE playlist SET playing=1 WHERE id=%d", t->id);
@@ -96,7 +96,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 		free(pid_path);
 	}
 
-	DPRINTF("%s: finished playing (exit %d)\n", __func__, status);
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: finished playing (exit %d)\n", __func__, status);
 
 	/* mark it as finished in the database */
 	xasprintf(&query2,
@@ -120,7 +120,7 @@ hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
 	argc = argc;
 	names = names;
 
-	DPRINTF("%s: track found\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: track found\n", __func__);
 
 	item_t = (struct hgd_playlist_item *) item;
 
@@ -158,7 +158,7 @@ hgd_play_loop()
 	struct hgd_playlist_item	*track;
 
 	/* forever play songs */
-	DPRINTF("%s: starting play loop\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: starting play loop\n", __func__);
 	while (!dying) {
 
 		track = hgd_new_playlist_item();
@@ -177,12 +177,12 @@ hgd_play_loop()
 		}
 
 		if (track->filename != NULL) {
-			DPRINTF("%s: next track is: '%s'\n",
+			DPRINTF(HGD_DEBUG_DEBUG, "%s: next track is: '%s'\n",
 			    __func__, track->filename);
 			hgd_clear_votes();
 			hgd_play_track(track);
 		} else {
-			DPRINTF("%s: no tracks to play\n", __func__);
+			DPRINTF(HGD_DEBUG_DEBUG, "%s: no tracks to play\n", __func__);
 			sleep(1);
 		}
 		hgd_free_playlist_item(track);
@@ -212,7 +212,7 @@ main(int argc, char **argv)
 	if (db == NULL)
 		hgd_exit_nicely();
 
-	DPRINTF("%s: clearing 'playing' flags\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: clearing 'playing' flags\n", __func__);
 	sql_res = sqlite3_exec(db, "UPDATE playlist SET playing=0;",
 	    NULL, NULL, &sql_err);
 

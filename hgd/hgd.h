@@ -28,6 +28,7 @@
 extern uint8_t			 hgd_debug;
 extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
+extern char			*debug_names[];
 
 struct hgd_playlist_item {
 	int			 id;
@@ -59,9 +60,22 @@ struct hgd_req_despatch {
 	int			(*handler)(char **);
 };
 
+/* debug levels */
+#define HGD_DEBUG_ERROR			1
+#define HGD_DEBUG_WARN			2
+#define HGD_DEBUG_INFO			3
+#define HGD_DEBUG_DEBUG			4
+
 /* simple debug facility */
-#define DPRINTF(x...)           do { if (hgd_debug)		\
-					    fprintf(stderr, x); } while (0)
+#define DPRINTF(level, x...)						\
+	do {								\
+		if (level <= hgd_debug) {				\
+			fprintf(stderr, "[%s - %s:%d]\n\t",		\
+			    debug_names[level], __FILE__, __LINE__);	\
+			fprintf(stderr, x);				\
+		}							\
+	} while (0)
+char				*serror();
 
 
 struct hgd_playlist_item	*hgd_new_playlist_item();

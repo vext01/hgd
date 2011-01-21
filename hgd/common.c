@@ -15,9 +15,12 @@
 
 #include "hgd.h"
 
-uint8_t				 hgd_debug = 0;
+uint8_t				 hgd_debug = 1;
 uint8_t				 dying = 0;
 uint8_t				 exit_ok = 0;
+
+char				*debug_names[] = {
+				    "error", "warn", "info", "debug"};
 
 struct hgd_playlist_item *
 hgd_new_playlist_item()
@@ -95,7 +98,7 @@ hgd_sock_send_bin(int fd, char *msg, ssize_t sz)
 			sent = 0;
 			continue;
 		} else
-			DPRINTF("%s: sent %d bytes\n", __func__, (int) sent);
+			DPRINTF(HGD_DEBUG_DEBUG, "%s: sent %d bytes\n", __func__, (int) sent);
 
 		msg += sent;
 		tot_sent += sent;
@@ -119,7 +122,7 @@ hgd_sock_send(int fd, char *msg)
 		sent_tot += sent;
 	}
 
-	DPRINTF("%s: sent %d bytes\n", __func__, (int) len);
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: sent %d bytes\n", __func__, (int) len);
 }
 
 /* send a \r\n terminated line */
@@ -132,7 +135,7 @@ hgd_sock_send_line(int fd, char *msg)
 	hgd_sock_send(fd, term);
 	free(term);
 
-	DPRINTF("%s: sent line: %s\n", __func__, msg);
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: sent line: %s\n", __func__, msg);
 }
 
 /* recieve a specific size, free when done */
@@ -277,4 +280,8 @@ hgd_register_sig_handlers()
 	signal(SIGINT, hgd_kill_sighandler);
 }
 
-
+char *
+serror()
+{
+	return strerror(errno);
+}
