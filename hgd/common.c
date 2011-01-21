@@ -66,7 +66,7 @@ xmalloc(size_t sz)
 
 	ptr = malloc(sz);
 	if (!ptr)
-		fprintf(stderr, "%s: could not allocate\n", __func__);
+		DPRINTF(HGD_DEBUG_ERROR, "Could not allocate\n");
 
 	return ptr;
 }
@@ -78,7 +78,7 @@ xrealloc(void *old_p, size_t sz)
 
 	ptr = realloc(old_p, sz);
 	if (!ptr)
-		fprintf(stderr, "%s: could not reallocate\n", __func__);
+		DPRINTF(HGD_DEBUG_ERROR,"Could not reallocate\n");
 
 	return ptr;
 }
@@ -93,7 +93,7 @@ xasprintf(char **buf, char *fmt, ...)
 	ret = vasprintf(buf, fmt, ap);
 
 	if (ret == -1)
-		fprintf(stderr, "%s: can't allocate", __func__);
+		DPRINTF(HGD_DEBUG_ERROR, "Can't allocate\n");
 
 	return ret;
 }
@@ -111,11 +111,11 @@ hgd_sock_send_bin(int fd, char *msg, ssize_t sz)
 		sent = send(fd, next, sz - tot_sent, 0);
 
 		if (sent < 0) {
-			fprintf(stderr, "%s: send failed\n", __func__);
+			DPRINTF(HGD_DEBUG_DEBUG, "Send failed\n");
 			sent = 0;
 			continue;
 		} else
-			DPRINTF(HGD_DEBUG_DEBUG, "%s: sent %d bytes\n", __func__, (int) sent);
+			DPRINTF(HGD_DEBUG_DEBUG, "Sent %d bytes\n", (int) sent);
 
 		msg += sent;
 		tot_sent += sent;
@@ -133,13 +133,14 @@ hgd_sock_send(int fd, char *msg)
 	while (sent_tot != len) {
 		sent = send(fd, msg, len - sent_tot, 0);
 		if (sent < 0) {
+			/* XXX: change this to DPRINTF */
 			warn("%s: send\n", __func__);
 			sent = 0;
 		}
 		sent_tot += sent;
 	}
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: sent %d bytes\n", __func__, (int) len);
+	DPRINTF(HGD_DEBUG_DEBUG, "Sent %d bytes\n", (int) len);
 }
 
 /* send a \r\n terminated line */
@@ -152,7 +153,7 @@ hgd_sock_send_line(int fd, char *msg)
 	hgd_sock_send(fd, term);
 	free(term);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: sent line: %s\n", __func__, msg);
+	DPRINTF(HGD_DEBUG_DEBUG, "Sent line: %s\n", msg);
 }
 
 /* recieve a specific size, free when done */
@@ -192,7 +193,7 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 		switch (recvd) {
 		case 0:
 			/* should not happen */
-			fprintf(stderr, "%s: no bytes recvd\n", __func__);
+			DPRINTF(HGD_DEBUG_WARN, "No bytes recvd\n");
 			continue;
 		case -1:
 			if (errno == EINTR)
@@ -250,7 +251,7 @@ hgd_sock_recv_line(int fd)
 		switch (recvd) {
 		case 0:
 			/* should not happen */
-			fprintf(stderr, "%s: no bytes recvd\n", __func__);
+			DPRINTF(HGD_DEBUG_WARN, "No bytes recvd\n");
 			continue;
 		case -1:
 			if (errno == EINTR)
