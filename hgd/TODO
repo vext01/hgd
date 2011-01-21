@@ -1,9 +1,10 @@
 HGD TODO LIST
-$Id: TODO,v 1.8 2011/01/21 20:29:07 edd Exp $
+$Id: TODO,v 1.9 2011/01/21 20:41:05 edd Exp $
 
 this version
  * make DPRINTF do \n so we dont have to
  * convert warn() to DPRINTF
+ * review all debug messages - are they the right level?
  * implement database wrapper func that retries up to x times on error
  * client should check usage *before* connecting
  * revisit DNS code in client
