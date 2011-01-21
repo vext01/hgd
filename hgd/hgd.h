@@ -5,6 +5,8 @@
 #define INFTIM -1
 #endif
 
+#define HGD_VERSION			"0.1"
+
 /* paths */
 #define HGD_DFL_DIR			"/var/hgd"
 #define HGD_DB_NAME			"hgd.db"

@@ -19,8 +19,6 @@
 
 #include "hgd.h"
 
-/* XXX autogunk this at some stage */
-#define HGD_VERSION		"0.1"
 #define HGD_GREET		"ok|HGD-" HGD_VERSION
 #define HGD_BYE			"ok|Catch you later d00d!"
 
