@@ -18,6 +18,7 @@
 int8_t				 hgd_debug = 0;
 uint8_t				 dying = 0;
 uint8_t				 exit_ok = 0;
+pid_t				 pid = 0;
 
 char				*debug_names[] = {
 				    "error", "warn", "info", "debug"};
