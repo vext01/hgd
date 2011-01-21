@@ -192,11 +192,21 @@ hgd_play_loop()
 		hgd_exit_nicely();
 }
 
+void
+hgd_usage()
+{
+	printf("usage: hgd-netd <options>\n");
+	printf("  -d		set hgd state directory\n");
+	printf("  -h		show this message and exit\n");
+	printf("  -v		show version and exit\n");
+	printf("  -x		set debug level (0-3)\n");
+}
+
 int
 main(int argc, char **argv)
 {
 	int			sql_res;
-	char			*sql_err;
+	char			*sql_err, ch;
 
 	/* i command you to stfu GCC */
 	argc = argc;
@@ -205,6 +215,41 @@ main(int argc, char **argv)
 	hgd_register_sig_handlers();
 
 	hgd_dir = strdup(HGD_DFL_DIR);
+
+	DPRINTF(HGD_DEBUG_DEBUG, "%s: parsing options\n", __func__);
+	while ((ch = getopt(argc, argv, "d:hvx:")) != -1) {
+		switch (ch) {
+		case 'd':
+			free(hgd_dir);
+			hgd_dir = strdup(optarg);
+			DPRINTF(HGD_DEBUG_DEBUG,
+			    "set hgd dir to '%s'\n", hgd_dir);
+			break;
+		case 'v':
+			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
+			printf("(C) Edd Barrett 2011\n");
+			exit_ok = 1;
+			hgd_exit_nicely();
+			break;
+		case 'x':
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			DPRINTF(HGD_DEBUG_DEBUG,
+			    "set debug level to %d\n", hgd_debug);
+			break;
+		case 'h':
+		default:
+			hgd_usage();
+			exit_ok = 1;
+			hgd_exit_nicely();
+			break;
+		};
+
+		argc -= optind;
+		argv += optind;
+	}
+
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
 
