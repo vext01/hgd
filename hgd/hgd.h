@@ -24,13 +24,17 @@
 /* misc */
 #define HGD_DFL_REQ_VOTES		3
 
+#include <sys/types.h>
+#include <unistd.h>
 #include <stdint.h>
+
 #include <sqlite3.h>
 
 extern int8_t			 hgd_debug;
 extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
 extern char			*debug_names[];
+extern pid_t			 pid;
 
 struct hgd_playlist_item {
 	int			 id;
@@ -72,8 +76,9 @@ struct hgd_req_despatch {
 #define DPRINTF(level, x...)						\
 	do {								\
 		if (level <= hgd_debug) {				\
-			fprintf(stderr, "[%s - %s:%d]\n\t",		\
-			    debug_names[level], __FILE__, __LINE__);	\
+			fprintf(stderr, "[%s - %08d %s:%d]\n\t",	\
+			    debug_names[level], getpid(),		\
+			    __FILE__, __LINE__);			\
 			fprintf(stderr, x);				\
 		}							\
 	} while (0)
