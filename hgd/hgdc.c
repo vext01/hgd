@@ -329,16 +329,29 @@ main(int argc, char **argv)
 	if (user == NULL)
 		errx(EXIT_FAILURE, "%s: can't get username", __func__);
 
-	while ((ch = getopt(argc, argv, "hs:v")) != -1) {
+	while ((ch = getopt(argc, argv, "hp:s:vx:")) != -1) {
 		switch (ch) {
 		case 's':
-			DPRINTF(HGD_DEBUG_DEBUG, "%s: set server to %s", __func__, optarg);
+			DPRINTF(HGD_DEBUG_DEBUG, "%s: set server to %s",
+			    __func__, optarg);
 			host = optarg;
 			break;
+		case 'p':
+			port = atoi(optarg);
+			DPRINTF(HGD_DEBUG_DEBUG, "set port to %d\n", port);
+			break;
 		case 'v':
-			/* XXX */
+			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
+			printf("(C) Edd Barrett 2011\n");
 			exit_ok = 1;
 			hgd_exit_nicely();
+			break;
+		case 'x':
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			DPRINTF(HGD_DEBUG_DEBUG,
+			    "set debug level to %d\n", hgd_debug);
 			break;
 		case 'h':
 		default:
