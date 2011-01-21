@@ -83,7 +83,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
-		execlp("mplayer", "mplayer", "-quiet",
+		execlp("mplayer", "mplayer", "-really-quiet",
 		    t->filename, (char *) NULL);
 
 		/* if we get here, the shit hit the fan with execlp */
