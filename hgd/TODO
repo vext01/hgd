@@ -1,11 +1,10 @@
 HGD TODO LIST
-$Id: TODO,v 1.13 2011/01/22 22:22:06 edd Exp $
+$Id: TODO,v 1.14 2011/01/22 22:41:11 edd Exp $
 
-this version
+This version
  * review all debug messages - are they the right level?
  * revisit DNS code in client
  * move sql queries into db.c?
- * disallow hgdc from trying to upload dirs
  
 Next version:
  * have playd set all playing to 0 on crash/exit?

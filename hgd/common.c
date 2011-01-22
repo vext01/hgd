@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <poll.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <sqlite3.h>
 
@@ -304,4 +306,14 @@ hgd_register_sig_handlers()
 	signal(SIGTERM, hgd_kill_sighandler);
 	signal(SIGABRT, hgd_kill_sighandler);
 	signal(SIGINT, hgd_kill_sighandler);
+}
+
+uint8_t
+is_ip_addr(char *str)
+{
+	struct sockaddr_in	sa;
+	int			res;
+
+	res = inet_pton(AF_INET, str, &(sa.sin_addr));
+	return res != 0;
 }
