@@ -95,11 +95,22 @@ hgd_setup_socket()
 	int			sockopt = 1;
 
 	DPRINTF(HGD_D_DEBUG, "Connecting to %s", host);
-	he = gethostbyname("localhost");
-	if (he != NULL) {
-		host = inet_ntoa(*( struct in_addr*)(he->h_addr_list[0]));
+
+	/* if they gave a hostname, we look up the IP */
+	if (!is_ip_addr(host)) {
+		DPRINTF(HGD_D_DEBUG, "Looking up host '%s'", host);
+		he = gethostbyname(host);
+		if (he == NULL) {
+			DPRINTF(HGD_D_ERROR,
+			    "Failiure in hostname resolution: '%s'", host);
+			hgd_exit_nicely();
+		}
+
+		host = inet_ntoa( *(struct in_addr*)(he->h_addr_list[0]));
 		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
 	}
+
+	DPRINTF(HGD_D_DEBUG, "Connecting to IP %s", host);
 
 	/* set up socket address */
 	memset(&addr, 0, sizeof(struct sockaddr_in));

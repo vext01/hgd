@@ -130,5 +130,6 @@ void				hgd_register_sig_handlers();
 
 /* misc */
 sqlite3				*hgd_open_db(char *);
+uint8_t				is_ip_addr(char *str);
 
 #endif
