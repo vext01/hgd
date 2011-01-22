@@ -65,8 +65,10 @@ xmalloc(size_t sz)
 	void			*ptr;
 
 	ptr = malloc(sz);
-	if (!ptr)
-		DPRINTF(HGD_D_ERROR, "Could not allocate\n");
+	if (!ptr) {
+		DPRINTF(HGD_D_ERROR, "Could not allocate");
+		hgd_exit_nicely();
+	}
 
 	return ptr;
 }
@@ -77,8 +79,10 @@ xrealloc(void *old_p, size_t sz)
 	void			*ptr;
 
 	ptr = realloc(old_p, sz);
-	if (!ptr)
-		DPRINTF(HGD_D_ERROR,"Could not reallocate\n");
+	if (!ptr) {
+		DPRINTF(HGD_D_ERROR,"Could not reallocate");
+		hgd_exit_nicely();
+	}
 
 	return ptr;
 }
@@ -92,8 +96,10 @@ xasprintf(char **buf, char *fmt, ...)
 	va_start(ap, fmt);
 	ret = vasprintf(buf, fmt, ap);
 
-	if (ret == -1)
-		DPRINTF(HGD_D_ERROR, "Can't allocate\n");
+	if (ret == -1) {
+		DPRINTF(HGD_D_ERROR, "Can't allocate");
+		hgd_exit_nicely();
+	}
 
 	return ret;
 }
@@ -111,11 +117,11 @@ hgd_sock_send_bin(int fd, char *msg, ssize_t sz)
 		sent = send(fd, next, sz - tot_sent, 0);
 
 		if (sent < 0) {
-			DPRINTF(HGD_D_DEBUG, "Send failed\n");
+			DPRINTF(HGD_D_WARN, "Send failed");
 			sent = 0;
 			continue;
 		} else
-			DPRINTF(HGD_D_DEBUG, "Sent %d bytes\n", (int) sent);
+			DPRINTF(HGD_D_DEBUG, "Sent %d bytes", (int) sent);
 
 		msg += sent;
 		tot_sent += sent;
@@ -133,14 +139,13 @@ hgd_sock_send(int fd, char *msg)
 	while (sent_tot != len) {
 		sent = send(fd, msg, len - sent_tot, 0);
 		if (sent < 0) {
-			/* XXX: change this to DPRINTF */
-			warn("%s: send\n", __func__);
+			DPRINTF(HGD_D_WARN, "send: %s", SERROR);
 			sent = 0;
 		}
 		sent_tot += sent;
 	}
 
-	DPRINTF(HGD_D_DEBUG, "Sent %d bytes\n", (int) len);
+	DPRINTF(HGD_D_DEBUG, "Sent %d bytes", (int) len);
 }
 
 /* send a \r\n terminated line */
@@ -153,7 +158,7 @@ hgd_sock_send_line(int fd, char *msg)
 	hgd_sock_send(fd, term);
 	free(term);
 
-	DPRINTF(HGD_D_DEBUG, "Sent line: %s\n", msg);
+	DPRINTF(HGD_D_DEBUG, "Sent line: %s", msg);
 }
 
 /* recieve a specific size, free when done */
@@ -174,7 +179,7 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 		data_ready = poll(&pfd, 1, INFTIM);
 		if (data_ready == -1) {
 			if (errno != EINTR) {
-				warn("%s: poll error\n", __func__);
+				DPRINTF(HGD_D_WARN, "poll error: %s", SERROR);
 				dying = 1;
 			}
 			data_ready = 0;
@@ -193,12 +198,12 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 		switch (recvd) {
 		case 0:
 			/* should not happen */
-			DPRINTF(HGD_D_WARN, "No bytes recvd\n");
+			DPRINTF(HGD_D_WARN, "No bytes recvd");
 			continue;
 		case -1:
 			if (errno == EINTR)
 				continue;
-			warn("%s: recv", __func__);
+			DPRINTF(HGD_D_WARN, "recv: %s", SERROR);
 			return (NULL);
 		default:
 			/* good */
@@ -232,7 +237,7 @@ hgd_sock_recv_line(int fd)
 		data_ready = poll(&pfd, 1, INFTIM);
 		if (data_ready == -1) {
 			if (errno != EINTR) {
-				warn("%s: poll error\n", __func__);
+				DPRINTF(HGD_D_WARN, "Poll error: %s", SERROR);
 				dying = 1;
 			}
 			data_ready = 0;
@@ -251,12 +256,12 @@ hgd_sock_recv_line(int fd)
 		switch (recvd) {
 		case 0:
 			/* should not happen */
-			DPRINTF(HGD_D_WARN, "No bytes recvd\n");
+			DPRINTF(HGD_D_WARN, "No bytes recvd");
 			continue;
 		case -1:
 			if (errno == EINTR)
 				continue;
-			warn("%s: recv", __func__);
+			DPRINTF(HGD_D_WARN, "recv: %s", SERROR);
 			return (NULL);
 		default:
 			/* good */
