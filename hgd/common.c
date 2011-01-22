@@ -162,14 +162,13 @@ hgd_sock_send_line(int fd, char *msg)
 }
 
 /* recieve a specific size, free when done */
-/* XXX set a timeout */
 char *
 hgd_sock_recv_bin(int fd, ssize_t len)
 {
 	ssize_t			recvd_tot = 0, recvd;
 	char			*msg, *full_msg = NULL;
 	struct pollfd		pfd;
-	int			data_ready = 0;
+	int			data_ready = 0, tries_left = 3;
 
 	/* spin until something is ready */
 	pfd.fd = fd;
@@ -192,19 +191,20 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 	full_msg = xmalloc(len);
 	msg = full_msg;
 
-	while (recvd_tot != len) {
+	while (recvd_tot != len && tries_left > 0) {
 		recvd = recv(fd, msg, len - recvd_tot, 0);
 
 		switch (recvd) {
 		case 0:
 			/* should not happen */
 			DPRINTF(HGD_D_WARN, "No bytes recvd");
+			tries_left--;
 			continue;
 		case -1:
 			if (errno == EINTR)
 				continue;
 			DPRINTF(HGD_D_WARN, "recv: %s", SERROR);
-			return (NULL);
+			tries_left--;
 		default:
 			/* good */
 			break;
@@ -212,6 +212,11 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 
 		msg += recvd;
 		recvd_tot += recvd;
+	}
+
+	if (tries_left == 0) {
+		DPRINTF(HGD_D_ERROR, "Gave up trying to recieve: %s", SERROR);
+		return NULL;
 	}
 
 	return full_msg;

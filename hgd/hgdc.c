@@ -165,7 +165,6 @@ hgd_usage()
 }
 
 /* upload and queue a file to the playlist */
-#define HGD_BINARY_CHUNK	4096
 int
 hgd_req_queue(char **args)
 {
@@ -181,6 +180,12 @@ hgd_req_queue(char **args)
 		DPRINTF(HGD_D_ERROR, "Can't stat '%s'", filename);
 		hgd_exit_nicely();
 	}
+
+	if (st.st_mode & S_IFDIR) {
+		DPRINTF(HGD_D_ERROR, "Can't upload directories");
+		hgd_exit_nicely();
+	}
+
 	fsize = st.st_size;
 
 	/* send request to upload */
