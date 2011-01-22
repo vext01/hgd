@@ -41,6 +41,7 @@
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
+size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
 
 char				*hgd_dir = NULL;
 char				*filestore_path = NULL;
@@ -241,7 +242,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	/* strip path, we don't care about that */
 	filename = basename(filename_p);
 
-	if (bytes == 0) {
+	if ((bytes == 0) || (bytes > max_upload_size)) {
 		hgd_sock_send_line(sess->sock_fd, "err|size");
 		return -1;
 	}
@@ -804,6 +805,7 @@ hgd_usage()
 	printf("  -h		show this message and exit\n");
 	printf("  -n		set number of votes required to vote-off\n");
 	printf("  -p		set network port number\n");
+	printf("  -s		set maximum upload size (in MB)\n");
 	printf("  -v		show version and exit\n");
 	printf("  -x		set debug level (0-3)\n");
 }
@@ -819,7 +821,7 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "d:hn:p:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:hn:p:s:vx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
@@ -829,11 +831,16 @@ main(int argc, char **argv)
 		case 'n':
 			req_votes = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG,
-			    "set required-votes to %d", req_votes);
+			    "Set required-votes to %d", req_votes);
 			break;
 		case 'p':
 			port = atoi(optarg);
-			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
+			DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
+			break;
+		case 's':
+			max_upload_size = atoi(optarg) * (1024 * 1024);
+			DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
+			    (int) max_upload_size);
 			break;
 		case 'v':
 			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
@@ -854,10 +861,10 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		};
-
-		argc -= optind;
-		argv += optind;
 	}
+
+	argc -= optind;
+	argv += optind;
 
 	/* set up paths */
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
