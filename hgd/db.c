@@ -39,8 +39,8 @@ hgd_open_db(char *db_path)
 	/* open the database */
 	DPRINTF(HGD_DEBUG_DEBUG, "%s: opening database\n", __func__);
 	if (sqlite3_open(db_path, &db) != SQLITE_OK) {
-		fprintf(stderr, "%s: can't open db: %s\n",
-		    __func__, sqlite3_errmsg(db));
+		DPRINTF(HGD_DEBUG_ERROR, "Can't open db: %s\n",
+		    sqlite3_errmsg(db));
 		return NULL;
 	}
 
@@ -49,14 +49,14 @@ hgd_open_db(char *db_path)
 
 
 	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't set busy timout on db: %s\n",
-		    __func__, sqlite3_errmsg(db));
+		DPRINTF(HGD_DEBUG_ERROR, "Can't set busy timout on db: %s\n",
+		    sqlite3_errmsg(db));
 		sqlite3_close(db);
 		sqlite3_free(sql_err);
 		return NULL;
 	}
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: making playlist table (if needed)\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "Making playlist table (if needed)\n");
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS playlist ("
 	    "id INTEGER PRIMARY KEY,"
@@ -67,22 +67,22 @@ hgd_open_db(char *db_path)
 	    NULL, NULL, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't initialise db: %s\n",
-		    __func__, sqlite3_errmsg(db));
+		DPRINTF(HGD_DEBUG_ERROR, "Can't initialise db: %s\n",
+		    sqlite3_errmsg(db));
 		sqlite3_close(db);
 		sqlite3_free(sql_err);
 		return NULL;
 	}
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: making votes table (if needed)\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "making votes table (if needed)\n");
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS votes ("
 	    "user VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY)",
 	    NULL, NULL, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't initialise db: %s\n",
-		    __func__, sqlite3_errmsg(db));
+		DPRINTF(HGD_DEBUG_ERROR, "Can't initialise db: %s\n",
+		    sqlite3_errmsg(db));
 		sqlite3_close(db);
 		sqlite3_free(sql_err);
 		return NULL;

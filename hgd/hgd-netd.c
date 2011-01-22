@@ -474,9 +474,9 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	pid_t				pid;
 	FILE				*pid_file;
 	size_t				read;
-	int				sql_res, tid;
+	int				sql_res, tid = -1;
 
-	DPRINTF(HGD_DEBUG_INFO, "%s: %s wants to kill track %d\n", __func__, sess->user, tid);
+	DPRINTF(HGD_DEBUG_INFO, "%s wants to kill track %d\n", sess->user, tid);
 
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
@@ -694,7 +694,7 @@ hgd_sigchld(int sig)
 {
 	/* XXX is this safe? */
 	sig = sig; /* quiet */
-	waitpid(-1, NULL, NULL); /* clear up exit status from proc table */
+	waitpid(-1, NULL, 0); /* clear up exit status from proc table */
 	signal(SIGCHLD, hgd_sigchld);
 }
 

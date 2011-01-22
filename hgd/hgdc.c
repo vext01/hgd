@@ -41,14 +41,14 @@ void
 hgd_exit_nicely()
 {
 	if (!exit_ok)
-		fprintf(stderr,
-		    "%s: hgdc was interrupted or crashed - cleaning up\n"
-		    , __func__);
+		DPRINTF(HGD_DEBUG_INFO,
+		    "hgdc was interrupted or crashed - cleaning up\n");
+
 
 	if (sock_fd > 0) {
 		if (shutdown(sock_fd, SHUT_RDWR) == -1)
-			fprintf(stderr,
-			    "%s: couldn't shutdown socket\n", __func__);
+			DPRINTF(HGD_DEBUG_WARN,
+			    "couldn't shutdown socket\n");
 		close(sock_fd);
 	}
 	_exit(!exit_ok);
@@ -65,21 +65,20 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	if (hgd_debug) {
 		trunc = strdup(resp);
 		//trunc[len - 2] = 0; /* remove \r\n */
-		DPRINTF(HGD_DEBUG_DEBUG, "%s: check reponse '%s'\n", __func__, trunc);
+		DPRINTF(HGD_DEBUG_DEBUG, "Check reponse '%s'\n", trunc);
 		free(trunc);
 	} else
 		trunc = trunc; /* silence compiler */
 
 	if (len < 2) {
-		fprintf(stderr, "%s: malformed server response\n", __func__);
+		DPRINTF(HGD_DEBUG_ERROR, "Malformed server response\n");
 		err = -1;
 	} else if ((resp[0] != 'o') || (resp[1] != 'k')) {
 		if (len < 5)
-			fprintf(stderr, "%s: malformed server response\n",
-			    __func__);
+			DPRINTF(HGD_DEBUG_ERROR, "Malformed server response\n");
 		else
-			fprintf(stderr, "%s: failure: %s\n",
-			    __func__, &resp[4]);
+			DPRINTF(HGD_DEBUG_ERROR, "failure: %s\n",
+			    &resp[4]);
 		err = -1;
 	}
 
@@ -97,11 +96,11 @@ hgd_setup_socket()
 	struct hostent		*he;
 	int			sockopt = 1;
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: connecting to %s\n", __func__, host);
+	DPRINTF(HGD_DEBUG_DEBUG, "Connecting to %s\n", host);
 	he = gethostbyname("localhost");
 	if (he != NULL) {
 		host = inet_ntoa(*( struct in_addr*)(he->h_addr_list[0]));
-		DPRINTF(HGD_DEBUG_DEBUG, "%s: found ip %s\n", __func__, host);
+		DPRINTF(HGD_DEBUG_DEBUG, "found ip %s\n", host);
 	}
 
 	/* set up socket address */
@@ -129,7 +128,7 @@ hgd_setup_socket()
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: connected to %s\n", __func__, host);
+	DPRINTF(HGD_DEBUG_DEBUG, "Connected to %s\n", host);
 }
 void
 hgd_usage()
@@ -148,7 +147,7 @@ hgd_req_queue(char **args)
 	char			chunk[HGD_BINARY_CHUNK], *filename = args[0];
 	char			*q_req, *resp;
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: will queue '%s'\n", __func__, args[0]);
+	DPRINTF(HGD_DEBUG_DEBUG, "Will queue '%s'\n", args[0]);
 
 	if (stat(filename, &st) < 0) {
 		warn("%s: cannot stat '%s'\n", __func__, filename);
@@ -169,7 +168,7 @@ hgd_req_queue(char **args)
 	}
 	free(resp);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: opening '%s' for reading\n", __func__, filename);
+	DPRINTF(HGD_DEBUG_DEBUG, "opening '%s' for reading\n", filename);
 	f = fopen(filename, "r");
 	if (f == NULL) {
 		warn("%s: fopen '%s'", __func__, filename);
@@ -190,7 +189,7 @@ hgd_req_queue(char **args)
 		hgd_sock_send_bin(sock_fd, chunk, chunk_sz);
 
 		written += chunk_sz;
-		DPRINTF(HGD_DEBUG_DEBUG, "%s: progress %d/%d bytes\n", __func__,
+		DPRINTF(HGD_DEBUG_DEBUG, "progress %d/%d bytes\n",
 		   (int)  written, (int) fsize);
 	}
 
@@ -200,7 +199,7 @@ hgd_req_queue(char **args)
 		return -1;
 	}
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: transfer complete\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "transfer complete\n");
 	free(resp);
 
 	return (0);
@@ -270,8 +269,8 @@ hgd_req_playlist(char **args)
 
 	for (p = resp; (*p != 0 && *p != '|'); p ++);
 	if (*p != '|') {
-		fprintf(stderr,
-		    "%s: didn't find a argument separator", __func__);
+		DPRINTF(HGD_DEBUG_ERROR,
+		    "didn't find a argument separator");
 		free(resp);
 		return -1;
 	}
@@ -279,7 +278,7 @@ hgd_req_playlist(char **args)
 	n_items = atoi(++p);
 	free(resp);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: expecting %d items in playlist\n", __func__, n_items);
+	DPRINTF(HGD_DEBUG_DEBUG, "expecting %d items in playlist\n", n_items);
 	for (i = 0; i < n_items; i++) {
 		track_resp = hgd_sock_recv_line(sock_fd);
 		if (i == 0) {
@@ -293,7 +292,7 @@ hgd_req_playlist(char **args)
 		free(track_resp);
 	}
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: done\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "done\n");
 
 	return (0);
 }
@@ -329,7 +328,7 @@ hgd_exec_req(int argc, char **argv)
 		hgd_exit_nicely();
 	}
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: despatching request '%s'\n", __func__, correct_desp->req);
+	DPRINTF(HGD_DEBUG_DEBUG, "despatching request '%s'\n", correct_desp->req);
 	correct_desp->handler(&argv[1]);
 }
 
@@ -391,7 +390,7 @@ main(int argc, char **argv)
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: identified as %s\n", __func__, user);
+	DPRINTF(HGD_DEBUG_DEBUG, "identified as %s\n", user);
 
 	/* do whatever the user wants */
 	hgd_exec_req(argc, argv);
@@ -402,7 +401,7 @@ main(int argc, char **argv)
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%s: shutdown socket\n", __func__);
+	DPRINTF(HGD_DEBUG_DEBUG, "shutdown socket\n");
 
 	exit_ok = 1;
 	hgd_exit_nicely();
