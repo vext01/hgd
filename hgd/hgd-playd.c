@@ -61,7 +61,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	char			*pid_path;
 	FILE			*pid_file;
 
-	DPRINTF(HGD_D_DEBUG, "Playing '%s' for '%s'", t->filename, t->user);
+	DPRINTF(HGD_D_INFO, "Playing '%s' for '%s'", t->filename, t->user);
 
 	/* mark it as playing in the database */
 	xasprintf(&query, "UPDATE playlist SET playing=1 WHERE id=%d", t->id);
@@ -98,12 +98,23 @@ hgd_play_track(struct hgd_playlist_item *t)
 		fprintf(pid_file, "%d", pid);
 		fclose(pid_file);
 		wait(&status);
+
+		/* unlink mplayer pid path */
+		DPRINTF(HGD_D_DEBUG, "Deleting mplayer pid file");
 		if (unlink(pid_path) < 0) {
 			DPRINTF(HGD_D_ERROR, "Can't unlink '%s'", pid_path);
 			free(pid_path);
 			hgd_exit_nicely();
 		}
 		free(pid_path);
+
+		/* unlink mplayer pid path */
+		DPRINTF(HGD_D_DEBUG, "Deleting finished: %s", t->filename);
+		if (unlink(t->filename) < 0) {
+			DPRINTF(HGD_D_ERROR, "Can't unlink '%s'", pid_path);
+			hgd_exit_nicely();
+		}
+
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
