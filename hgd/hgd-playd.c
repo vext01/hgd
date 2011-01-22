@@ -30,6 +30,8 @@
 
 char				*hgd_dir = NULL;
 char				*filestore_path;
+uint8_t				 purge_finished_db = 1;
+uint8_t				 purge_finished_fs = 1;
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -102,30 +104,36 @@ hgd_play_track(struct hgd_playlist_item *t)
 		/* unlink mplayer pid path */
 		DPRINTF(HGD_D_DEBUG, "Deleting mplayer pid file");
 		if (unlink(pid_path) < 0) {
-			DPRINTF(HGD_D_ERROR, "Can't unlink '%s'", pid_path);
-			free(pid_path);
-			hgd_exit_nicely();
+			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
 		}
 		free(pid_path);
 
-		/* unlink mplayer pid path */
-		DPRINTF(HGD_D_DEBUG, "Deleting finished: %s", t->filename);
-		if (unlink(t->filename) < 0) {
-			DPRINTF(HGD_D_ERROR, "Can't unlink '%s'", pid_path);
-			hgd_exit_nicely();
-		}
+		/* unlink media */
 
+		if ((purge_finished_fs) && (unlink(t->filename) < 0)) {
+			DPRINTF(HGD_D_DEBUG,
+			    "Deleting finished: %s", t->filename);
+			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
+		}
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
-	/* mark it as finished in the database */
-	xasprintf(&query2,
-	    "UPDATE playlist SET playing=0, finished=1 WHERE id=%d", t->id);
+	/* mark it as finished or delete in the database */
+	if (purge_finished_db) {
+		DPRINTF(HGD_D_DEBUG, "Purging/cleaning up db");
+		xasprintf(&query2,
+		    "DELETE FROM playlist WHERE id=%d OR finished=1", t->id);
+	} else {
+		DPRINTF(HGD_D_DEBUG, "Marking finished up db");
+		xasprintf(&query2, "UPDATE playlist SET playing=0,"
+		   " finished=1 WHERE id=%d", t->id);
+	}
+
 	sql_res = sqlite3_exec(db, query2, NULL, NULL, &sql_err2);
 	free(query2);
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
+		DPRINTF(HGD_D_ERROR, "Can't purge/mark finished: %s",
 		    sqlite3_errmsg(db));
 		sqlite3_free(sql_err2);
 		hgd_exit_nicely();
@@ -216,10 +224,12 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
-	printf("  -d		set hgd state directory\n");
-	printf("  -h		show this message and exit\n");
-	printf("  -v		show version and exit\n");
-	printf("  -x		set debug level (0-3)\n");
+	printf("  -d	Set hgd state directory\n");
+	printf("  -h	Show this message and exit\n");
+	printf("  -p	Don't purge finished tracks from filesystem\n");
+	printf("  -q	Don't purge finished tracks in database\n");
+	printf("  -v	Show version and exit\n");
+	printf("  -x	Set debug level (0-3)\n");
 }
 
 int
@@ -232,12 +242,20 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "d:hvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:hpqvx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = strdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "set hgd dir to '%s'", hgd_dir);
+			break;
+		case 'p':
+			DPRINTF(HGD_D_DEBUG, "No purging from fs");
+			purge_finished_fs = 0;
+			break;
+		case 'q':
+			DPRINTF(HGD_D_DEBUG, "No purging from db");
+			purge_finished_db = 0;
 			break;
 		case 'v':
 			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
