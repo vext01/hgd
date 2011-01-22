@@ -29,9 +29,7 @@
 #include "hgd.h"
 
 char				*hgd_dir = NULL;
-char				*db_path = NULL;
 char				*filestore_path;
-sqlite3				*db = NULL;
 
 //uint8_t				exit_ok = 0;
 

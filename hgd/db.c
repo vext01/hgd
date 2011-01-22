@@ -28,6 +28,9 @@
 
 #include "hgd.h"
 
+sqlite3				*db = NULL;
+char				*db_path = NULL;
+
 /* Open, create and initialise database */
 sqlite3 *
 hgd_open_db(char *db_path)
