@@ -44,6 +44,7 @@ char				*hgd_dir = NULL;
 char				*filestore_path = NULL;
 
 int				req_votes = HGD_DFL_REQ_VOTES;
+uint8_t				single_client = 0;
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
@@ -682,7 +683,8 @@ hgd_listen_loop()
 		}
 
 		/* ok, let's deal with that request then */
-		child_pid = fork();
+		if (!single_client)
+			child_pid = fork();
 
 		if (!child_pid) {
 
@@ -715,13 +717,14 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
-	printf("  -d		set hgd state directory\n");
-	printf("  -h		show this message and exit\n");
-	printf("  -n		set number of votes required to vote-off\n");
-	printf("  -p		set network port number\n");
-	printf("  -s		set maximum upload size (in MB)\n");
-	printf("  -v		show version and exit\n");
-	printf("  -x		set debug level (0-3)\n");
+	printf("  -d		Set hgd state directory\n");
+	printf("  -f		Don't fork - service single client (debug)\n");
+	printf("  -h		Show this message and exit\n");
+	printf("  -n		Set number of votes required to vote-off\n");
+	printf("  -p		Set network port number\n");
+	printf("  -s		Set maximum upload size (in MB)\n");
+	printf("  -v		Show version and exit\n");
+	printf("  -x		Set debug level (0-3)\n");
 }
 
 int
@@ -735,12 +738,16 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "d:hn:p:s:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:fhn:p:s:vx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = strdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
+			break;
+		case 'f':
+			single_client = 1;
+			DPRINTF(HGD_D_DEBUG, "Single client debug mode on");
 			break;
 		case 'n':
 			req_votes = atoi(optarg);
