@@ -133,7 +133,17 @@ hgd_setup_socket()
 void
 hgd_usage()
 {
-	fprintf(stderr, "usage: XXX\n");
+	printf("Usage: hgdc [opts] command [args]\n\n");
+	printf("  Commands include:\n");
+	printf("    q <filename>\tQueue a track\n");
+	printf("    vo\t\t\tVote-off current track\n");
+	printf("    ls\t\t\tShow playlist\n\n");
+	printf("  Options include:\n");
+	printf("    -h\t\tShow this message and exit\n");
+	printf("    -p port\t\tSet connection port\n");
+	printf("    -s host/ip\t\tSet connection address\n");
+	printf("    -x level\t\tSet debug level (0-3)\n");
+	printf("    -v\t\t\tShow version and exit\n");
 }
 
 /* upload and queue a file to the playlist */
@@ -325,7 +335,7 @@ hgd_exec_req(int argc, char **argv)
 		hgd_exit_nicely();
 	}
 
-	DPRINTF(HGD_D_DEBUG, "despatching request '%s'", correct_desp->req);
+	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	correct_desp->handler(&argv[1]);
 }
 
@@ -333,9 +343,6 @@ int
 main(int argc, char **argv)
 {
 	char			*user_cmd, *resp, ch;
-
-	if (argc < 2)
-		DPRINTF(HGD_D_ERROR, "Implement usage XXX");
 
 	user = getenv("USER");
 	if (user == NULL) {
