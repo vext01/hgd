@@ -44,7 +44,6 @@ hgd_exit_nicely()
 		DPRINTF(HGD_D_INFO,
 		    "hgdc was interrupted or crashed - cleaning up");
 
-
 	if (sock_fd > 0) {
 		if (shutdown(sock_fd, SHUT_RDWR) == -1)
 			DPRINTF(HGD_D_WARN, "Couldn't shutdown socket");
@@ -75,12 +74,14 @@ hgd_check_svr_response(char *resp, uint8_t x)
 		if (len < 5)
 			DPRINTF(HGD_D_ERROR, "Malformed server response");
 		else
-			DPRINTF(HGD_D_ERROR, "failure: %s", &resp[4]);
+			DPRINTF(HGD_D_ERROR, "Failure: %s", &resp[4]);
 		err = -1;
 	}
 
-	if ((err == -1) && (x))
+	if ((err == -1) && (x)) {
+		free(resp);
 		hgd_exit_nicely();
+	}
 
 	return err;
 }
@@ -89,7 +90,7 @@ void
 hgd_setup_socket()
 {
 	struct sockaddr_in	addr;
-	char			*resp;
+	char			*resp, *user_cmd;
 	struct hostent		*he;
 	int			sockopt = 1;
 
@@ -129,7 +130,24 @@ hgd_setup_socket()
 	free(resp);
 
 	DPRINTF(HGD_D_DEBUG, "Connected to %s", host);
+
+	/* identify ourselves */
+	user = getenv("USER");
+	if (user == NULL) {
+		DPRINTF(HGD_D_ERROR, "can't get username");
+		hgd_exit_nicely();
+	}
+
+	xasprintf(&user_cmd, "user|%s", user);
+	hgd_sock_send_line(sock_fd, user_cmd);
+
+	resp = hgd_sock_recv_line(sock_fd);
+	hgd_check_svr_response(resp, 1);
+	free(resp);
+
+	DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
 }
+
 void
 hgd_usage()
 {
@@ -254,10 +272,7 @@ hgd_req_vote_off(char **args)
 	hgd_sock_send_line(sock_fd, "vo");
 
 	resp = hgd_sock_recv_line(sock_fd);
-	if (hgd_check_svr_response(resp, 0) == -1) {
-		free(resp);
-		return (-1);
-	}
+	hgd_check_svr_response(resp, 1);
 
 	return (0);
 }
@@ -319,6 +334,12 @@ hgd_exec_req(int argc, char **argv)
 {
 	struct hgd_req_despatch	*desp, *correct_desp = NULL;
 
+	if (argc == 0) {
+		hgd_usage();
+		exit_ok = 1;
+		hgd_exit_nicely();
+	}
+
 	for (desp = req_desps; desp->req != NULL; desp++) {
 		if (strcmp(desp->req, argv[0]) != 0)
 			continue;
@@ -335,6 +356,9 @@ hgd_exec_req(int argc, char **argv)
 		hgd_exit_nicely();
 	}
 
+	/* once we know that the hgdc is used properly, open connection */
+	hgd_setup_socket();
+
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	correct_desp->handler(&argv[1]);
 }
@@ -342,13 +366,7 @@ hgd_exec_req(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-	char			*user_cmd, *resp, ch;
-
-	user = getenv("USER");
-	if (user == NULL) {
-		DPRINTF(HGD_D_ERROR, "can't get username");
-		hgd_exit_nicely();
-	}
+	char			*resp, ch;
 
 	while ((ch = getopt(argc, argv, "hp:s:vx:")) != -1) {
 		switch (ch) {
@@ -383,18 +401,6 @@ main(int argc, char **argv)
 
 	argc -= optind;
 	argv += optind;
-
-	hgd_setup_socket();
-
-	/* identify ourselves */
-	xasprintf(&user_cmd, "user|%s", user);
-	hgd_sock_send_line(sock_fd, user_cmd);
-
-	resp = hgd_sock_recv_line(sock_fd);
-	hgd_check_svr_response(resp, 1);
-	free(resp);
-
-	DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
 
 	/* do whatever the user wants */
 	hgd_exec_req(argc, argv);
