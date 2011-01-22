@@ -1,21 +1,15 @@
 HGD TODO LIST
-$Id: TODO,v 1.11 2011/01/22 17:45:00 edd Exp $
+$Id: TODO,v 1.12 2011/01/22 21:37:55 edd Exp $
 
 this version
- * make DPRINTF do \n so we dont have to
- * convert warn() to DPRINTF
  * review all debug messages - are they the right level?
- * maximum upload limit
  * limit getline socket length
- * client should check usage *before* connecting
  * revisit DNS code in client
- * finish getopt
- * implement rest of client operations.
- * have playd set all playing to 0 on crash/exit
  * move sql queries into db.c?
  * disallow hgdc from trying to upload dirs
  
 Next version:
+ * have playd set all playing to 0 on crash/exit?
  * man page
  * authentication
  * admin commands
