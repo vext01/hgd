@@ -35,6 +35,12 @@
 #define HGD_DFL_MAX_UPLOAD	(1024 * 1024 * 50)
 #define HGD_MAX_LINE		128
 #define HGD_BINARY_CHUNK	4096
+#define HGD_BINARY_RECV_SZ	(2 << 8)
+#define	HGD_MAX_PROTO_TOKS	3
+#define HGD_GREET		"ok|HGD-" HGD_VERSION
+#define HGD_BYE			"ok|Catch you later d00d!"
+#define HGD_PID_STR_SZ		10
+
 
 /* database schema */
 #define HGD_DBS_FILENAME_LEN		"50"
@@ -64,6 +70,11 @@ struct hgd_playlist_item {
 	char			*user;
 	uint8_t			 playing;
 	uint8_t			 finished;
+};
+
+struct hgd_playlist {
+	unsigned int n_items;
+	struct hgd_playlist_item **items;
 };
 
 /* server side client info */
@@ -109,7 +120,7 @@ struct hgd_req_despatch {
 
 
 struct hgd_playlist_item	*hgd_new_playlist_item();
-void				hgd_free_playlist_item(
+void				 hgd_free_playlist_item(
 				    struct hgd_playlist_item *);
 
 /* wrappers */
@@ -122,14 +133,22 @@ void				 hgd_sock_send(int fd, char *msg);
 void				 hgd_sock_send_line(int fd, char *msg);
 char				*hgd_sock_recv_bin(int fd, ssize_t len);
 char				*hgd_sock_recv_line(int fd);
-void				hgd_sock_send_bin(int, char *, ssize_t);
+void				 hgd_sock_send_bin(int, char *, ssize_t);
 
-void				hgd_exit_nicely();
-void				hgd_kill_sighandler(int sig);
-void				hgd_register_sig_handlers();
+void				 hgd_exit_nicely();
+void				 hgd_kill_sighandler(int sig);
+void				 hgd_register_sig_handlers();
+
+/* database stuff */
+sqlite3				*hgd_open_db(char *);
+int				 hgd_get_playing_item_cb(void *arg,
+				     int argc, char **data, char **names);
+struct hgd_playlist_item	*hgd_get_playing_item();
+int				 hgd_get_num_votes_cb(void *arg,
+				     int argc, char **data, char **names);
+int				 hgd_get_num_votes();
 
 /* misc */
-sqlite3				*hgd_open_db(char *);
-uint8_t				is_ip_addr(char *str);
+uint8_t				 is_ip_addr(char *str);
 
 #endif
