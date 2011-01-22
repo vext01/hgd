@@ -1,9 +1,8 @@
 HGD TODO LIST
-$Id: TODO,v 1.12 2011/01/22 21:37:55 edd Exp $
+$Id: TODO,v 1.13 2011/01/22 22:22:06 edd Exp $
 
 this version
  * review all debug messages - are they the right level?
- * limit getline socket length
  * revisit DNS code in client
  * move sql queries into db.c?
  * disallow hgdc from trying to upload dirs
