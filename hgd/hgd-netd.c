@@ -282,6 +282,12 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		    (int) to_write);
 
 		payload = hgd_sock_recv_bin(sess->sock_fd, to_write);
+		if (payload == NULL) {
+			DPRINTF(HGD_D_ERROR, "failed to recv binary");
+			hgd_sock_send_line(sess->sock_fd, "err|internal");
+			svr_fd = -1; /* prevent server socket closure */
+			hgd_exit_nicely();
+		}
 		write_ret = write(f, payload, to_write);
 
 		/* what if write returns less than the chunk XXX? */
