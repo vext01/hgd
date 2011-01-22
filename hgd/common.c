@@ -225,7 +225,6 @@ hgd_sock_recv_line(int fd)
 {
 	ssize_t			recvd_tot = 0, recvd;
 	char			recv_char, *full_msg = NULL;
-	int			msg_max = 128;
 	struct pollfd		pfd;
 	int			data_ready = 0;
 
@@ -247,7 +246,7 @@ hgd_sock_recv_line(int fd)
 	if (dying)
 		hgd_exit_nicely();
 
-	full_msg = xmalloc(msg_max);
+	full_msg = xmalloc(HGD_MAX_LINE);
 
 	do {
 		/* recieve one byte */
@@ -268,22 +267,21 @@ hgd_sock_recv_line(int fd)
 			break;
 		};
 
-		if (recvd_tot >= msg_max - 1) {
-			msg_max *= 2;
-			full_msg = xrealloc(full_msg, msg_max); // double buffer size
-		}
+		if (recvd_tot >= HGD_MAX_LINE)
+			DPRINTF(HGD_D_ERROR, "Socket line was long");
+
 		full_msg[recvd_tot] = recv_char;
 
 		recvd_tot += recvd;
-	} while ((recvd_tot >= 1) && recv_char != '\n');
+	} while ((recvd_tot >= 1) &&
+	    (recvd_tot <= HGD_MAX_LINE) && (recv_char != '\n'));
 
 	/* get rid of \r\n */
 	if (full_msg[recvd_tot - 2] == '\r')
 		full_msg[recvd_tot - 2] = 0;
+
 	full_msg[recvd_tot - 1] = 0;
-
 	full_msg[recvd_tot] = 0;
-
 	return full_msg;
 }
 
