@@ -1,9 +1,9 @@
 HGD TODO LIST
-$Id: TODO,v 1.15 2011/01/22 22:42:20 edd Exp $
+$Id: TODO,v 1.16 2011/01/22 22:59:21 edd Exp $
 
-This version
- * review all debug messages - are they the right level?
- * move sql queries into db.c?
+This version:
+  * test
+  * valgrind
  
 Next version:
  * have playd set all playing to 0 on crash/exit?
@@ -11,3 +11,7 @@ Next version:
  * authentication
  * admin commands
  * have netd send whether playd is playing in ls?
+
+If someone gets bored:
+ * review all debug messages - are they the right level?
+ * make some more sql quries generic and put in db.c
