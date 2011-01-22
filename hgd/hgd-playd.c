@@ -31,8 +31,6 @@
 char				*hgd_dir = NULL;
 char				*filestore_path;
 
-//uint8_t				exit_ok = 0;
-
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
  */
@@ -40,8 +38,7 @@ void
 hgd_exit_nicely()
 {
 	if (!exit_ok)
-		fprintf(stderr,
-		    "\n%s: hgd-playd was interrupted or crashed\n", __func__);
+		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
 
 	if (db)
 		sqlite3_close(db);
@@ -64,7 +61,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	char			*pid_path;
 	FILE			*pid_file;
 
-	DPRINTF(HGD_D_DEBUG, "%s: playing '%s' for '%s'\n", __func__, t->filename, t->user);
+	DPRINTF(HGD_D_DEBUG, "Playing '%s' for '%s'", t->filename, t->user);
 
 	/* mark it as playing in the database */
 	xasprintf(&query, "UPDATE playlist SET playing=1 WHERE id=%d", t->id);
@@ -72,8 +69,8 @@ hgd_play_track(struct hgd_playlist_item *t)
 	free(query);
 
 	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: set track playing in sql: %s\n",
-		    __func__, sqlite3_errmsg(db));
+		DPRINTF(HGD_D_ERROR, "Set track playing in sql: %s\n",
+		    sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
 		hgd_exit_nicely();
 	}
@@ -85,7 +82,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 		    t->filename, (char *) NULL);
 
 		/* if we get here, the shit hit the fan with execlp */
-		warn("execlp() failed");
+		DPRINTF(HGD_D_ERROR, "execlp() failed");
 		hgd_exit_nicely();
 	} else {
 		/* we will write away child pid */
@@ -93,7 +90,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 
 		pid_file = fopen(pid_path, "w");
 		if (pid_file == NULL) {
-			warn("%s: can't open '%s'", __func__, pid_path);
+			DPRINTF(HGD_D_ERROR, "Can't open '%s'", pid_path);
 			free(pid_path);
 			hgd_exit_nicely();
 		}
@@ -103,26 +100,26 @@ hgd_play_track(struct hgd_playlist_item *t)
 		fclose(pid_file);
 		wait(&status);
 		if (unlink(pid_path) < 0) {
-			warn("%s: can't unlink '%s'", __func__, pid_path);
+			DPRINTF(HGD_D_ERROR, "Can't unlink '%s'", pid_path);
 			free(pid_path);
 			hgd_exit_nicely();
 		}
 		free(pid_path);
 	}
 
-	DPRINTF(HGD_D_DEBUG, "%s: finished playing (exit %d)\n", __func__, status);
+	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
 	/* mark it as finished in the database */
 	xasprintf(&query2,
 	    "UPDATE playlist SET playing=0, finished=1 WHERE id=%d", t->id);
 	sql_res = sqlite3_exec(db, query2, NULL, NULL, &sql_err2);
-	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't initialise db: %s\n",
-		    __func__, sqlite3_errmsg(db));
-		sqlite3_free(sql_err2);
-	}
-
 	free(query2);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
+		    sqlite3_errmsg(db));
+		sqlite3_free(sql_err2);
+		hgd_exit_nicely();
+	}
 }
 
 int
@@ -134,7 +131,7 @@ hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
 	argc = argc;
 	names = names;
 
-	DPRINTF(HGD_D_DEBUG, "%s: track found\n", __func__);
+	DPRINTF(HGD_D_DEBUG, "track found");
 
 	item_t = (struct hgd_playlist_item *) item;
 
@@ -158,7 +155,7 @@ hgd_clear_votes()
 	sql_res = sqlite3_exec(db, query, NULL, NULL, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't clear vote list\n", __func__);
+		DPRINTF(HGD_D_ERROR, "Can't clear vote list");
 		sqlite3_free(sql_err);
 		hgd_exit_nicely();
 	}
@@ -172,9 +169,8 @@ hgd_play_loop()
 	struct hgd_playlist_item	*track;
 
 	/* forever play songs */
-	DPRINTF(HGD_D_DEBUG, "%s: starting play loop\n", __func__);
+	DPRINTF(HGD_D_DEBUG, "Starting play loop");
 	while (!dying) {
-
 		track = hgd_new_playlist_item();
 
 		/* get the next track (if there is one) */
@@ -184,19 +180,19 @@ hgd_play_loop()
 		   hgd_get_next_track_cb, track, &sql_err);
 
 		if (sql_res != SQLITE_OK) {
-			fprintf(stderr, "%s: can't get next track: %s\n",
-			    __func__, sqlite3_errmsg(db));
+			DPRINTF(HGD_D_ERROR, "Can't get next track: %s",
+			    sqlite3_errmsg(db));
 			sqlite3_free(sql_err);
 			hgd_exit_nicely();
 		}
 
 		if (track->filename != NULL) {
-			DPRINTF(HGD_D_DEBUG, "%s: next track is: '%s'\n",
-			    __func__, track->filename);
+			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
+			    track->filename);
 			hgd_clear_votes();
 			hgd_play_track(track);
 		} else {
-			DPRINTF(HGD_D_DEBUG, "%s: no tracks to play\n", __func__);
+			DPRINTF(HGD_D_DEBUG, "no tracks to play");
 			sleep(1);
 		}
 		hgd_free_playlist_item(track);
@@ -225,14 +221,13 @@ main(int argc, char **argv)
 	hgd_register_sig_handlers();
 	hgd_dir = strdup(HGD_DFL_DIR);
 
-	DPRINTF(HGD_D_DEBUG, "%s: parsing options\n", __func__);
+	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "d:hvx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = strdup(optarg);
-			DPRINTF(HGD_D_DEBUG,
-			    "set hgd dir to '%s'\n", hgd_dir);
+			DPRINTF(HGD_D_DEBUG, "set hgd dir to '%s'", hgd_dir);
 			break;
 		case 'v':
 			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
@@ -245,7 +240,7 @@ main(int argc, char **argv)
 			if (hgd_debug > 3)
 				hgd_debug = 3;
 			DPRINTF(HGD_D_DEBUG,
-			    "set debug level to %d\n", hgd_debug);
+			    "set debug level to %d", hgd_debug);
 			break;
 		case 'h':
 		default:
@@ -266,16 +261,15 @@ main(int argc, char **argv)
 	if (db == NULL)
 		hgd_exit_nicely();
 
-	DPRINTF(HGD_D_DEBUG, "%s: clearing 'playing' flags\n", __func__);
+	DPRINTF(HGD_D_DEBUG, "Clearing 'playing' flags");
 	sql_res = sqlite3_exec(db, "UPDATE playlist SET playing=0;",
 	    NULL, NULL, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
-		fprintf(stderr, "%s: can't initialise db: %s\n",
-		    __func__, sqlite3_errmsg(db));
-		sqlite3_close(db);
+		DPRINTF(HGD_D_ERROR, "Can't clear db flags: %s",
+		    sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
-		return NULL;
+		hgd_exit_nicely();
 	}
 
 	/* start */
