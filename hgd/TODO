@@ -1,9 +1,8 @@
 HGD TODO LIST
-$Id: TODO,v 1.14 2011/01/22 22:41:11 edd Exp $
+$Id: TODO,v 1.15 2011/01/22 22:42:20 edd Exp $
 
 This version
  * review all debug messages - are they the right level?
- * revisit DNS code in client
  * move sql queries into db.c?
  
 Next version:
