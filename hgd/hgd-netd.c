@@ -894,7 +894,7 @@ main(int argc, char **argv)
 	if (mkdir(hgd_dir, 0700) != 0) {
 		if (errno != EEXIST) {
 			DPRINTF(HGD_DEBUG_ERROR,
-			    "%s: %s", hgd_dir, serror());
+			    "%s: %s", hgd_dir, SERROR());
 			hgd_exit_nicely();
 		}
 	}
