@@ -32,6 +32,7 @@
 /* networking */
 #define HGD_DFL_PORT			6633
 #define HGD_DFL_BACKLOG			5
+#define HGD_DFL_MAX_UPLOAD		(1024 * 1024 * 50)
 
 /* database schema */
 #define HGD_DBS_FILENAME_LEN		"50"
