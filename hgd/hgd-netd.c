@@ -43,9 +43,7 @@ int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 
 char				*hgd_dir = NULL;
-char				*db_path = NULL;
 char				*filestore_path = NULL;
-sqlite3				*db = NULL;
 
 int				req_votes = HGD_DFL_REQ_VOTES;
 

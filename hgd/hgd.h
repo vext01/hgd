@@ -52,6 +52,9 @@ extern uint8_t			 exit_ok;
 extern char			*debug_names[];
 extern pid_t			 pid;
 
+extern sqlite3			*db;
+extern char			*db_path;
+
 struct hgd_playlist_item {
 	int			 id;
 	char			*filename;
