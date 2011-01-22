@@ -83,10 +83,10 @@ struct hgd_req_despatch {
 };
 
 /* debug levels */
-#define HGD_DEBUG_ERROR			0
-#define HGD_DEBUG_WARN			1
-#define HGD_DEBUG_INFO			2
-#define HGD_DEBUG_DEBUG			3
+#define HGD_D_ERROR			0
+#define HGD_D_WARN			1
+#define HGD_D_INFO			2
+#define HGD_D_DEBUG			3
 
 /* simple debug facility */
 #define DPRINTF(level, x...)						\
