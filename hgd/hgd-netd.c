@@ -57,14 +57,14 @@ void
 hgd_exit_nicely()
 {
 	if (!exit_ok)
-		DPRINTF(HGD_DEBUG_ERROR, 
+		DPRINTF(HGD_D_ERROR, 
 		    "hgd-netd was interrupted or crashed\n");
 
 	/* XXX remove mplayer PID if existing */
 
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
-		DPRINTF(HGD_DEBUG_WARN, 
+		DPRINTF(HGD_D_WARN, 
 			    "Can't shutdown socket\n");
 		close(svr_fd);
 	}
@@ -89,7 +89,7 @@ hgd_identify_client(struct sockaddr_in *cli_addr)
 	char			*ret = NULL;
 	int			found_name;
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Servicing client\n");
+	DPRINTF(HGD_D_DEBUG, "Servicing client\n");
 
 	found_name = getnameinfo((struct sockaddr *) cli_addr,
 	    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host), cli_serv,
@@ -98,7 +98,7 @@ hgd_identify_client(struct sockaddr_in *cli_addr)
 	if (found_name == 0)
 		goto found; /* found a hostname */
 
-	DPRINTF(HGD_DEBUG_WARN, "Client hostname *not* found: %s\n",
+	DPRINTF(HGD_D_WARN, "Client hostname *not* found: %s\n",
 	    gai_strerror(found_name));
 
 	found_name = getnameinfo((struct sockaddr *) cli_addr,
@@ -108,7 +108,7 @@ hgd_identify_client(struct sockaddr_in *cli_addr)
 	if (found_name == 0)
 		goto found; /* found an IP address */
 
-	DPRINTF(HGD_DEBUG_WARN, "Cannot identify client ip: %s\n",
+	DPRINTF(HGD_D_WARN, "Cannot identify client ip: %s\n",
 	    gai_strerror(found_name)); 
 	return NULL;
 
@@ -123,7 +123,7 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 {
 	struct hgd_playlist_item	*t;
 
-	DPRINTF(HGD_DEBUG_DEBUG, "A track is playing\n");
+	DPRINTF(HGD_D_DEBUG, "A track is playing\n");
 
 	/* silence compiler */
 	argc = argc;
@@ -155,7 +155,7 @@ hgd_get_playing_item()
 
 	if (sql_res != SQLITE_OK) {
 		/* XXX: convert to sqlerror */
-		DPRINTF(HGD_DEBUG_ERROR,"Can't get playing track: %s\n",
+		DPRINTF(HGD_D_ERROR,"Can't get playing track: %s\n",
 		    sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
 		hgd_free_playlist_item(playing);
@@ -185,7 +185,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	char				*reply;
 
 	/* XXX: this seems pointless */
-	DPRINTF(HGD_DEBUG_DEBUG, "\n");
+	DPRINTF(HGD_D_DEBUG, "\n");
 	args = args; /* silence compiler */
 
 	/*
@@ -209,7 +209,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 int
 hgd_cmd_user(struct hgd_session *sess, char **args)
 {
-	DPRINTF(HGD_DEBUG_DEBUG, "User on host '%s' identified as %s\n",
+	DPRINTF(HGD_D_DEBUG, "User on host '%s' identified as %s\n",
 	    sess->cli_str, args[0]);
 
 	sess->user = strdup(args[0]);
@@ -259,7 +259,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	/* prepare to recieve the media file and stash away */
 	xasprintf(&unique_fn, "%s/%s.XXXXXXXX", filestore_path, filename);
-	DPRINTF(HGD_DEBUG_DEBUG, "Template for filestore is '%s'\n", unique_fn);
+	DPRINTF(HGD_D_DEBUG, "Template for filestore is '%s'\n", unique_fn);
 
 	f = mkstemp(unique_fn);
 	if (f < 0) {
@@ -271,7 +271,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	hgd_sock_send_line(sess->sock_fd, "ok...");
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Recieving %d byte payload '%s' from %s into %s\n",
+	DPRINTF(HGD_D_DEBUG, "Recieving %d byte payload '%s' from %s into %s\n",
 	    (int) bytes, filename, sess->user, unique_fn);
 
 	/* recieve bytes in small chunks so that we dont use moar RAM */
@@ -284,7 +284,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 		payload = NULL;
 
-		DPRINTF(HGD_DEBUG_DEBUG, "Waiting for chunk of length %d bytes\n",
+		DPRINTF(HGD_D_DEBUG, "Waiting for chunk of length %d bytes\n",
 		    (int) to_write);
 
 		payload = hgd_sock_recv_bin(sess->sock_fd, to_write);
@@ -301,9 +301,9 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		}
 
 		bytes_recvd += to_write;
-		DPRINTF(HGD_DEBUG_DEBUG, "Recieved binary chunk of length %d bytes\n",
+		DPRINTF(HGD_D_DEBUG, "Recieved binary chunk of length %d bytes\n",
 		    (int) to_write);
-		DPRINTF(HGD_DEBUG_DEBUG, "Expecting a further %d bytes\n",
+		DPRINTF(HGD_D_DEBUG, "Expecting a further %d bytes\n",
 		    (int) (bytes - bytes_recvd));
 
 		free(payload);
@@ -318,7 +318,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	sql_res = sqlite3_exec(db, sql, NULL, NULL, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_DEBUG_ERROR,"Can't get playing track: %s\n",
+		DPRINTF(HGD_D_ERROR,"Can't get playing track: %s\n",
 		    sqlite3_errmsg(db));
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
 		sqlite3_free(sql_err);
@@ -327,7 +327,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	hgd_sock_send_line(sess->sock_fd, "ok");
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Transfer complete\n");
+	DPRINTF(HGD_D_DEBUG, "Transfer complete\n");
 
 clean:
 	if (f == -1)
@@ -394,21 +394,21 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	list.n_items = 0;
 	list.items = NULL;
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Playlist request: %d\n", list.n_items);
+	DPRINTF(HGD_D_DEBUG, "Playlist request: %d\n", list.n_items);
 
 	sql_res = sqlite3_exec(db,
 	    "SELECT id, filename, user FROM playlist WHERE finished=0",
 	    hgd_get_playlist_cb, &list, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_DEBUG_ERROR, "Can't get playing track: %s\n",
+		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s\n",
 		    sqlite3_errmsg(db));
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
 		sqlite3_free(sql_err);
 		return (-1);
 	}
 
-	DPRINTF(HGD_DEBUG_DEBUG, "playlist request: %d items\n", list.n_items);
+	DPRINTF(HGD_D_DEBUG, "playlist request: %d items\n", list.n_items);
 
 	/* and respond to client */
 	xasprintf(&resp, "ok|%d", list.n_items);
@@ -452,7 +452,7 @@ hgd_get_num_votes()
 	xasprintf(&sql, "SELECT COUNT (*) FROM votes;");
 	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, &num, &sql_err);
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_DEBUG_ERROR, "Can't get votes: %s\n",
+		DPRINTF(HGD_D_ERROR, "Can't get votes: %s\n",
 		    sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
 		free(sql);
@@ -460,7 +460,7 @@ hgd_get_num_votes()
 	}
 	free(sql);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "%d votes so far\n",num);
+	DPRINTF(HGD_D_DEBUG, "%d votes so far\n",num);
 	return num;
 }
 
@@ -476,7 +476,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	size_t				read;
 	int				sql_res, tid = -1;
 
-	DPRINTF(HGD_DEBUG_INFO, "%s wants to kill track %d\n", sess->user, tid);
+	DPRINTF(HGD_D_INFO, "%s wants to kill track %d\n", sess->user, tid);
 
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
@@ -488,7 +488,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	/* is *anything* playing? */
 	if (playing == NULL) {
-		DPRINTF(HGD_DEBUG_ERROR,
+		DPRINTF(HGD_D_ERROR,
 		    "No track is playing, can't vote off");
 		hgd_sock_send_line(sess->sock_fd, "err|not_playing");
 		hgd_free_playlist_item(playing);
@@ -499,7 +499,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	if (args != NULL) { /* null if call from hgd_cmd_vote_off_noargs */
 		tid = atoi(args[0]);
 		if (playing->id != tid) {
-			DPRINTF(HGD_DEBUG_ERROR,
+			DPRINTF(HGD_D_ERROR,
 			    "Track to vote off isn't playing\n");
 			hgd_sock_send_line(sess->sock_fd, "err|wrong_track");
 			hgd_free_playlist_item(playing);
@@ -517,13 +517,13 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	case SQLITE_OK:
 		break;
 	case SQLITE_CONSTRAINT:
-		DPRINTF(HGD_DEBUG_INFO, "User '%s' already voted\n", sess->user);
+		DPRINTF(HGD_D_INFO, "User '%s' already voted\n", sess->user);
 		hgd_sock_send_line(sess->sock_fd, "err|duplicate_vote");
 		sqlite3_free(sql_err);
 		return (-1);
 	default:
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
-		DPRINTF(HGD_DEBUG_ERROR, "Can't insert vote: %s\n",
+		DPRINTF(HGD_D_ERROR, "Can't insert vote: %s\n",
 		    sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
 		return (-1);
@@ -535,7 +535,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		return 0;
 	}
 
-	DPRINTF(HGD_DEBUG_INFO, "Vote limit exceeded - kill track");
+	DPRINTF(HGD_D_INFO, "Vote limit exceeded - kill track");
 
 	/* kill mplayer then */
 	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
@@ -560,7 +560,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	fclose(pid_file);
 
 	pid = atoi(pid_str);
-	DPRINTF(HGD_DEBUG_DEBUG, "Killing mplayer\n");
+	DPRINTF(HGD_D_DEBUG, "Killing mplayer\n");
 	if (kill(pid, SIGINT) < 0)
 		/* XXX: change to DPRINTF */
 		warn("%s: can't kill mplayer", __func__);
@@ -611,10 +611,10 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	/* tokenise */
 	do {
 		tokens[n_toks] = strdup(strsep(&next, "|"));
-		DPRINTF(HGD_DEBUG_DEBUG, "tok %d: %s\n", n_toks, tokens[n_toks]);
+		DPRINTF(HGD_D_DEBUG, "tok %d: %s\n", n_toks, tokens[n_toks]);
 	} while ((n_toks++ < HGD_MAX_PROTO_TOKS) && (next != NULL));
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Got %d tokens\n", n_toks);
+	DPRINTF(HGD_D_DEBUG, "Got %d tokens\n", n_toks);
 	if ((n_toks == 0) || (strlen(tokens[0]) == 0)) {
 		hgd_sock_send_line(sess->sock_fd, "err|no_tokens_sent");
 		return 0;
@@ -636,7 +636,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	}
 
 	if (correct_desp != NULL) {
-		DPRINTF(HGD_DEBUG_DEBUG, "Despatching '%s' handler\n", tokens[0]);
+		DPRINTF(HGD_D_DEBUG, "Despatching '%s' handler\n", tokens[0]);
 		if (strcmp(correct_desp->cmd, "bye") != 0)
 			correct_desp->handler(sess, &tokens[1]);
 		else
@@ -667,7 +667,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	if (sess.cli_str == NULL)
 		xasprintf(&sess.cli_str, "unknown"); /* shouldn't happen */
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Client connection: '%s'\n", sess.cli_str);
+	DPRINTF(HGD_D_DEBUG, "Client connection: '%s'\n", sess.cli_str);
 
 	/* oh hai */
 	hgd_sock_send_line(cli_fd, HGD_GREET);
@@ -708,7 +708,7 @@ hgd_listen_loop()
 	int			sockopt = 1, data_ready;
 	struct pollfd		pfd;
 
-	DPRINTF(HGD_DEBUG_DEBUG, "setting up socket\n");
+	DPRINTF(HGD_D_DEBUG, "setting up socket\n");
 
 	if ((svr_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		errx(EXIT_FAILURE, "%s: socket(): ", __func__);
@@ -731,14 +731,14 @@ hgd_listen_loop()
 	if (listen(svr_fd, sock_backlog) < 0)
 		errx(EXIT_FAILURE, "%s: listen", __func__);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Socket ready and listening on port %d\n", port);
+	DPRINTF(HGD_D_DEBUG, "Socket ready and listening on port %d\n", port);
 
 	/* setup signal handler */
 	signal(SIGCHLD, hgd_sigchld);
 
 	while (1) {
 
-		DPRINTF(HGD_DEBUG_DEBUG, "waiting for client connection\n");
+		DPRINTF(HGD_D_DEBUG, "waiting for client connection\n");
 
 		/* spin until something is ready */
 		pfd.fd = svr_fd;
@@ -786,7 +786,7 @@ hgd_listen_loop()
 				hgd_exit_nicely();
 
 			hgd_service_client(cli_fd, &cli_addr);
-			DPRINTF(HGD_DEBUG_DEBUG, "client service complete\n");
+			DPRINTF(HGD_D_DEBUG, "client service complete\n");
 
 			/* XXX experimental - probably will be removed */
 #if 0
@@ -802,7 +802,7 @@ hgd_listen_loop()
 
 			/* and we are done with this client */
 			if (shutdown(cli_fd, SHUT_RDWR) == -1)
-				DPRINTF(HGD_DEBUG_ERROR, 
+				DPRINTF(HGD_D_ERROR, 
 				    "Can't shutdown socket\n");
 			close(cli_fd);
 
@@ -813,7 +813,7 @@ hgd_listen_loop()
 		} /* child block ends */
 
 		close (cli_fd);
-		DPRINTF(HGD_DEBUG_DEBUG, "client servicer PID = '%d'\n",
+		DPRINTF(HGD_D_DEBUG, "client servicer PID = '%d'\n",
 		    child_pid);
 		/* otherwise, back round for the next client */
 	}
@@ -842,23 +842,23 @@ main(int argc, char **argv)
 
 	hgd_dir = strdup(HGD_DFL_DIR);
 
-	DPRINTF(HGD_DEBUG_DEBUG, "Parsing options\n");
+	DPRINTF(HGD_D_DEBUG, "Parsing options\n");
 	while ((ch = getopt(argc, argv, "d:hn:p:vx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = strdup(optarg);
-			DPRINTF(HGD_DEBUG_DEBUG,
+			DPRINTF(HGD_D_DEBUG,
 			    "set hgd dir to '%s'\n", hgd_dir);
 			break;
 		case 'n':
 			req_votes = atoi(optarg);
-			DPRINTF(HGD_DEBUG_DEBUG,
+			DPRINTF(HGD_D_DEBUG,
 			    "set required-votes to %d\n", req_votes);
 			break;
 		case 'p':
 			port = atoi(optarg);
-			DPRINTF(HGD_DEBUG_DEBUG,
+			DPRINTF(HGD_D_DEBUG,
 			    "set port to %d\n", port);
 			break;
 		case 'v':
@@ -871,7 +871,7 @@ main(int argc, char **argv)
 			hgd_debug = atoi(optarg);
 			if (hgd_debug > 3)
 				hgd_debug = 3;
-			DPRINTF(HGD_DEBUG_DEBUG,
+			DPRINTF(HGD_D_DEBUG,
 			    "set debug level to %d\n", hgd_debug);
 			break;
 		case 'h':
@@ -893,7 +893,7 @@ main(int argc, char **argv)
 	/* make state dir if not existing */
 	if (mkdir(hgd_dir, 0700) != 0) {
 		if (errno != EEXIST) {
-			DPRINTF(HGD_DEBUG_ERROR,
+			DPRINTF(HGD_D_ERROR,
 			    "%s: %s", hgd_dir, SERROR());
 			hgd_exit_nicely();
 		}
