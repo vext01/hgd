@@ -99,6 +99,7 @@ struct hgd_req_despatch {
 			    debug_names[level], getpid(),		\
 			    __FILE__, __LINE__);			\
 			fprintf(stderr, x);				\
+			fprintf(stderr, "\n");				\
 		}							\
 	} while (0)
 #define SERROR()			strerror(errno)
