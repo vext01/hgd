@@ -95,7 +95,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 			hgd_exit_nicely();
 		}
 
-
 		fprintf(pid_file, "%d", pid);
 		fclose(pid_file);
 		wait(&status);

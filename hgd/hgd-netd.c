@@ -35,9 +35,6 @@
 
 #include "hgd.h"
 
-#define HGD_GREET		"ok|HGD-" HGD_VERSION
-#define HGD_BYE			"ok|Catch you later d00d!"
-
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
@@ -115,58 +112,6 @@ found:
 	return ret;
 }
 
-int
-hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
-{
-	struct hgd_playlist_item	*t;
-
-	DPRINTF(HGD_D_DEBUG, "A track is playing");
-
-	/* silence compiler */
-	argc = argc;
-	names = names;
-
-	t = (struct hgd_playlist_item *) arg;
-
-	/* populate a struct that we pick up later */
-	t->id = atoi(data[0]);
-	t->filename = strdup(data[1]);
-	t->user = strdup(data[2]);
-
-	return SQLITE_OK;
-}
-
-struct hgd_playlist_item *
-hgd_get_playing_item()
-{
-	struct hgd_playlist_item	*playing = NULL;
-	int				 sql_res;
-	char				*sql_err;
-
-	playing = hgd_new_playlist_item();
-
-	sql_res = sqlite3_exec(db,
-	    "SELECT id, filename, user "
-	    "FROM playlist WHERE playing=1 LIMIT 1",
-	    hgd_get_playing_item_cb, playing, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		/* XXX: convert to sqlerror */
-		DPRINTF(HGD_D_ERROR,"Can't get playing track: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
-		hgd_free_playlist_item(playing);
-		return NULL;
-	}
-
-	if (playing->filename == NULL) {
-		hgd_free_playlist_item(playing);
-		return NULL;
-	}
-
-	return playing;
-}
-
 /*
  * respond to client what is currently playing.
  *
@@ -201,6 +146,11 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	return 0;
 }
 
+/*
+ * Identify yourself to the server
+ *
+ * args: username
+ */
 int
 hgd_cmd_user(struct hgd_session *sess, char **args)
 {
@@ -227,7 +177,6 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
  * after 'ok...'
  * client then sends 'size' bytes of the media to queue
  */
-#define HGD_BINARY_RECV_SZ	(2 << 8)
 int
 hgd_cmd_queue(struct hgd_session *sess, char **args)
 {
@@ -337,11 +286,6 @@ clean:
 	return 0;
 }
 
-struct hgd_playlist {
-	unsigned int n_items;
-	struct hgd_playlist_item **items;
-};
-
 int
 hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 {
@@ -427,41 +371,6 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	return (0);
 }
 
-int
-hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
-{
-	int			*num = (int *) arg;
-
-	/* quiet */
-	argc = argc;
-	names = names;
-
-	*num = atoi(data[0]);
-	return (0);
-}
-
-int
-hgd_get_num_votes()
-{
-	int			sql_res, num = -1;
-	char			*sql, *sql_err;
-
-	xasprintf(&sql, "SELECT COUNT (*) FROM votes;");
-	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, &num, &sql_err);
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't get votes: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
-		free(sql);
-		return (-1);
-	}
-	free(sql);
-
-	DPRINTF(HGD_D_DEBUG, "%d votes so far", num);
-	return num;
-}
-
-#define HGD_PID_STR_SZ		10
 int
 hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
@@ -585,7 +494,6 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
-#define	HGD_MAX_PROTO_TOKS	3
 uint8_t
 hgd_parse_line(struct hgd_session *sess, char *line)
 {
