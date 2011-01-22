@@ -102,7 +102,7 @@ struct hgd_req_despatch {
 			fprintf(stderr, "\n");				\
 		}							\
 	} while (0)
-#define SERROR()			strerror(errno)
+#define SERROR			strerror(errno)
 
 
 struct hgd_playlist_item	*hgd_new_playlist_item();
