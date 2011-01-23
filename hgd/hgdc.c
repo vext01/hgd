@@ -97,7 +97,7 @@ hgd_setup_socket()
 	DPRINTF(HGD_D_DEBUG, "Connecting to %s", host);
 
 	/* if they gave a hostname, we look up the IP */
-	if (!is_ip_addr(host)) {
+	if (!hgd_is_ip_addr(host)) {
 		DPRINTF(HGD_D_DEBUG, "Looking up host '%s'", host);
 		he = gethostbyname(host);
 		if (he == NULL) {

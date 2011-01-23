@@ -52,6 +52,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/stat.h>
 
 #include <sqlite3.h>
 
@@ -60,6 +61,9 @@ extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
 extern char			*debug_names[];
 extern pid_t			 pid;
+
+extern char			*hgd_dir;
+extern char			*filestore_path;
 
 extern sqlite3			*db;
 extern char			*db_path;
@@ -149,6 +153,7 @@ int				 hgd_get_num_votes_cb(void *arg,
 int				 hgd_get_num_votes();
 
 /* misc */
-uint8_t				 is_ip_addr(char *str);
+uint8_t				 hgd_is_ip_addr(char *str);
+void				 hgd_mk_state_dir();
 
 #endif

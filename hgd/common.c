@@ -41,6 +41,10 @@ pid_t				 pid = 0;
 char				*debug_names[] = {
 				    "error", "warn", "info", "debug"};
 
+/* these are unused in client */
+char				*hgd_dir = NULL;
+char				*filestore_path = NULL;
+
 struct hgd_playlist_item *
 hgd_new_playlist_item()
 {
@@ -309,11 +313,31 @@ hgd_register_sig_handlers()
 }
 
 uint8_t
-is_ip_addr(char *str)
+hgd_is_ip_addr(char *str)
 {
 	struct sockaddr_in	sa;
 	int			res;
 
 	res = inet_pton(AF_INET, str, &(sa.sin_addr));
 	return res != 0;
+}
+
+/* make state dir if not existing */
+void
+hgd_mk_state_dir()
+{
+	if (mkdir(hgd_dir, 0700) != 0) {
+		if (errno != EEXIST) {
+			DPRINTF(HGD_D_ERROR, "%s: %s", hgd_dir, SERROR);
+			hgd_exit_nicely();
+		}
+	}
+
+	/* make filestore if not existing */
+	if (mkdir(filestore_path, 0700) != 0) {
+		if (errno != EEXIST) {
+			DPRINTF(HGD_D_ERROR, "%s:%s", filestore_path, SERROR);
+			hgd_exit_nicely();
+		}
+	}
 }
