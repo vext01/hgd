@@ -43,6 +43,8 @@ size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
 int				req_votes = HGD_DFL_REQ_VOTES;
 uint8_t				single_client = 0;
 
+char				*vote_sound = NULL;
+
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
  * this indicates an error occured or kill signal was caught
@@ -380,11 +382,11 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
 	struct hgd_playlist_item	*playing = NULL;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
-	char				*sql, *sql_err;
+	char				*sql, *sql_err, *scmd;
 	pid_t				pid;
 	FILE				*pid_file;
 	size_t				read;
-	int				sql_res, tid = -1;
+	int				sql_res, tid = -1, scmd_ret;
 
 	DPRINTF(HGD_D_INFO, "%s wants to kill track %d", sess->user, tid);
 
@@ -437,6 +439,22 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		return (-1);
 	}
 
+	/* play a sound on skipping? */
+	if (vote_sound != NULL) {
+		DPRINTF(HGD_D_DEBUG, "Play voteoff sound: '%s'", vote_sound);
+		xasprintf(&scmd, "mplayer -really-quiet %s", vote_sound);
+		scmd_ret = system(scmd);
+
+		/* unreachable as mplayer doesn't return non-zero :\ */
+		if (scmd_ret != 0) {
+			DPRINTF(HGD_D_WARN,
+			    "Vote-off noise failed to play (ret %d): %s",
+			    scmd_ret, vote_sound);
+		}
+
+		free(scmd);
+	}
+
 	/* are we at the vote limit yet? */
 	if (hgd_get_num_votes() < req_votes) {
 		hgd_sock_send_line(sess->sock_fd, "ok");
@@ -469,7 +487,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	pid = atoi(pid_str);
 	DPRINTF(HGD_D_DEBUG, "Killing mplayer");
 	if (kill(pid, SIGINT) < 0)
-		DPRINTF(HGD_D_WARN, "Can't kill mplayeri: %s", SERROR);
+		DPRINTF(HGD_D_WARN, "Can't kill mplayer: %s", SERROR);
 
 	/* Note: player daemon will empty the votes table */
 	hgd_sock_send_line(sess->sock_fd, "ok");
@@ -728,6 +746,7 @@ hgd_usage()
 	printf("  -s		Set maximum upload size (in MB)\n");
 	printf("  -v		Show version and exit\n");
 	printf("  -x		Set debug level (0-3)\n");
+	printf("  -y		Set path to noise to play when voting off\n");
 }
 
 int
@@ -741,7 +760,7 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "d:fhn:p:s:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:fhn:p:s:vx:y:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
@@ -777,6 +796,11 @@ main(int argc, char **argv)
 			if (hgd_debug > 3)
 				hgd_debug = 3;
 			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
+			break;
+		case 'y':
+			vote_sound = optarg;
+			DPRINTF(HGD_D_DEBUG,
+			    "set voteoff sound %s", vote_sound);
 			break;
 		case 'h':
 		default:
