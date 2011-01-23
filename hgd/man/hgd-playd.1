@@ -1,4 +1,4 @@
-.\"	$Id: hgd-netd.1,v 1.2 2011/01/23 13:18:37 edd Exp $
+.\"	$Id: hgd-playd.1,v 1.1 2011/01/23 13:18:37 edd Exp $
 .\"
 .\" Copyright (c) 2011 Edd Barrett <vext01@gmail.com>
 .\"
@@ -15,58 +15,47 @@
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
 .Dd $Mdocdate: January 23 2011 $
-.Dt HGD-NETD 1
+.Dt HGD-PLAYD 1
 .Os
 .Sh NAME
-.Nm hgd-netd
+.Nm hgd-playd
 .Nd Network daemon for the Hackathon Gunther Daemon.
 .Sh SYNOPSIS
-.Nm hgd-netd
+.Nm hgd-playd
 .Bk -words
-.Op Fl fhv
+.Op Fl hpqv
 .Op Fl d Ar state-dir
-.Op Fl n Ar num-votes
-.Op Fl p Ar port
 .Op Fl x Ar debug-level
-.Op Fl y Ar path-to-vote-sound
 .Ek
 .Sh DESCRIPTION
 .Nm
-is a the network daemon for the Hackathon Gunther Daemon -- a music system
+is a the player daemon for the Hackathon Gunther Daemon -- a music system
 suitible for hackathons, internet cafes, LAN parties etc.
 .Pp
 .Nm
-is primarily responsible for recieving files for
-.Xr hgd-playd 1
-to play later. A playlist is stored in an SQLite3 database in the state
-directory.
+plays uploaded files from clients, as described in an sqlite3 database in the
+state directory.
 .Nm
-can also recieve other commands from clients, such as requests to "vote-off"
-the currently playing song, if the user dislikes the song.
+uses
+.Xr mplayer 1
+for multimedia playing capabilities and will play both audio files and video
+files (if DISPLAY is set).
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl d Ar dir
 Set the HGD state directory where the SQLite database and uploaded files will
 be stored. This defaults to /var/hgd.
-.It Fl f
-Don't fork and service a single client only. This is useful for debugging
-purposes only.
 .It Fl h
 Show the usage help and exit.
-.It Fl n Ar num
-Set the number of votes required to "vote-off" a song. This defaults to 3.
-.It Fl p Ar port
-Set the TCP port to listen on. Defaults to 6633.
-.It Fl s Ar mb
-Set the maximum file upload size in MB. Defaults to 50MB.
+.It Fl p
+Don't purge finished tracks from the filesystem (files/ in state dir).
+.It Fl q
+Don't purge finished tracks from the sqlite3 database.
 .It Fl v
 Show version information and exit.
 .It Fl x Ar level
 Set the debug level: 0=errors, 1=warnings, 2=info, 3=debug. Defaults to 1.
-.It Fl y Ar path
-Set the path to a sound file to play when a vote-off is successful. None by
-default.
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
