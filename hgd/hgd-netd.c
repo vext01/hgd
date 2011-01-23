@@ -232,6 +232,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		if (payload == NULL) {
 			DPRINTF(HGD_D_ERROR, "failed to recv binary");
 			hgd_sock_send_line(sess->sock_fd, "err|internal");
+			unlink(filename); /* don't much care if this fails */
+
 			svr_fd = -1; /* prevent server socket closure */
 			hgd_exit_nicely();
 		}
@@ -242,6 +244,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 			DPRINTF(HGD_D_ERROR, "Failed to write %d bytes: %s",
 			    (int) to_write, SERROR);
 			hgd_sock_send_line(sess->sock_fd, "err|internal");
+			unlink(filename); /* don't much care if this fails */
 			goto clean;
 		}
 
@@ -280,6 +283,9 @@ clean:
 		free(payload);
 	free(payload);
 	free(unique_fn);
+
+	if (bytes_recvd != bytes)
+		return -1;
 
 	return 0;
 }
