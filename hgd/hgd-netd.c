@@ -40,9 +40,6 @@ int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
 
-char				*hgd_dir = NULL;
-char				*filestore_path = NULL;
-
 int				req_votes = HGD_DFL_REQ_VOTES;
 uint8_t				single_client = 0;
 
@@ -790,22 +787,7 @@ main(int argc, char **argv)
 	/* set up paths */
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
-
-	/* make state dir if not existing */
-	if (mkdir(hgd_dir, 0700) != 0) {
-		if (errno != EEXIST) {
-			DPRINTF(HGD_D_ERROR, "%s: %s", hgd_dir, SERROR);
-			hgd_exit_nicely();
-		}
-	}
-
-	/* make filestore if not existing */
-	if (mkdir(filestore_path, 0700) != 0) {
-		if (errno != EEXIST) {
-			DPRINTF(HGD_D_ERROR, "%s:%s", filestore_path, SERROR);
-			hgd_exit_nicely();
-		}
-	}
+	hgd_mk_state_dir();
 
 	/* Created tables if needed */
 	db = hgd_open_db(db_path);
