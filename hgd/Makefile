@@ -1,6 +1,7 @@
 CPPFLAGS=`pkg-config --cflags sqlite3`
 SQL_LDFLAGS=`pkg-config --libs sqlite3`
 CFLAGS=-Wall -Wextra -g
+PREFIX?=/usr/local
 
 .PHONY: all
 all: hgd-playd hgd-netd hgdc
@@ -22,3 +23,9 @@ hgd-netd: common.o hgd-netd.c hgd.h db.o
 
 hgdc: common.o hgdc.c hgd.h
 	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} -o hgdc common.o hgdc.c
+
+.PHONY: install
+install: hgd-playd hgd-netd hgdc
+	${INSTALL} hgd-netd ${DESTDIR}${PREFIX}/sbin
+	${INSTALL} hgd-playd ${DESTDIR}${PREFIX}/sbin
+	${INSTALL} hgdc ${DESTDIR}${PREFIX}/bin
