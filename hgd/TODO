@@ -1,16 +1,13 @@
 HGD TODO LIST
-$Id: TODO,v 1.18 2011/01/23 12:28:43 edd Exp $
+$Id: TODO,v 1.19 2011/01/23 13:37:40 edd Exp $
 
 This version:
   * test
   * valgrind
  
 Next version:
- * have playd set all playing to 0 on crash/exit?
- * man page
  * authentication
  * admin commands
- * have netd send whether playd is playing in ls?
 
 If someone gets bored:
  * review all debug messages - are they the right level?
