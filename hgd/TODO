@@ -1,8 +1,7 @@
 HGD TODO LIST
-$Id: TODO,v 1.17 2011/01/23 00:58:55 edd Exp $
+$Id: TODO,v 1.18 2011/01/23 12:28:43 edd Exp $
 
 This version:
-  * make cli_fd global so hgd_exit_nicely can close it if open (netd)
   * test
   * valgrind
  
