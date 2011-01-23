@@ -107,7 +107,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 		free(pid_path);
 
 		/* unlink media */
-
 		if ((purge_finished_fs) && (unlink(t->filename) < 0)) {
 			DPRINTF(HGD_D_DEBUG,
 			    "Deleting finished: %s", t->filename);
