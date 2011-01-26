@@ -164,6 +164,7 @@ hgd_usage()
 {
 	printf("Usage: hgdc [opts] command [args]\n\n");
 	printf("  Commands include:\n");
+	printf("    hud\t\t\tHeads up display\n");
 	printf("    q <filename>\tQueue a track\n");
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
