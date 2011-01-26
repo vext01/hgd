@@ -335,9 +335,30 @@ hgd_req_playlist(char **args)
 	return (0);
 }
 
+/*
+ * Heads up display mode for 
+ * May make this more spctacular at some stage...
+ */
+int
+hgd_req_hud(char **args)
+{
+	args = args; /* silence */
+
+	system("clear");
+	while (1) {
+		printf("HGD Server @ %s -- Playlist:\n\n", host);
+		hgd_req_playlist(NULL);
+		sleep(1);
+		system("clear");
+	}
+
+	return 0;
+}
+
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 	{"ls",		0,	hgd_req_playlist},
+	{"hud",		0,	hgd_req_hud},
 	/*"np",		0,	hgd_req_now_playing}, */
 	{"vo",		0,	hgd_req_vote_off},
 	{"q",		1,	hgd_req_queue},
