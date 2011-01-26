@@ -1,4 +1,4 @@
-.\"	$Id: hgdc.1,v 1.1 2011/01/23 13:32:08 edd Exp $
+.\"	$Id: hgdc.1,v 1.2 2011/01/26 16:31:41 edd Exp $
 .\"
 .\" Copyright (c) 2011 Edd Barrett <vext01@gmail.com>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: January 23 2011 $
+.Dd $Mdocdate: January 26 2011 $
 .Dt HGDC 1
 .Os
 .Sh NAME
@@ -53,6 +53,9 @@ Set the debug level: 0=errors, 1=warnings, 2=info, 3=debug. Defaults to 1.
 .Pp
 The commands are as follows:
 .Bl -tag -width Ds
+.It hud
+Enter `heads up display mode'; shows the playlist updating every second.
+A persistent server connection is used.
 .It ls
 Show playlist.
 .It q Ar filename
