@@ -133,15 +133,17 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	 * can't distinguish between error and nothing playing unfortunately
 	 */
 	playing = hgd_get_playing_item();
-	if (playing == NULL)
+	if (playing == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "ok|0");
-	else {
-		xasprintf(&reply, "ok|1|%d|%s|%s",
-		    playing->id, playing->filename, playing->user);
-		hgd_sock_send_line(sess->sock_fd, reply);
-		free(reply);
-		free(playing);
+		return -1
 	}
+
+	xasprintf(&reply, "ok|1|%d|%s|%s",
+	    playing->id, playing->filename, playing->user);
+	hgd_sock_send_line(sess->sock_fd, reply);
+
+	free(reply);
+	free(playing);
 
 	return 0;
 }
