@@ -43,11 +43,11 @@
 
 
 /* database schema */
-#define HGD_DBS_FILENAME_LEN		"50"
-#define HGD_DBS_USERNAME_LEN		"15"
+#define HGD_DBS_FILENAME_LEN	"50"
+#define HGD_DBS_USERNAME_LEN	"15"
 
 /* misc */
-#define HGD_DFL_REQ_VOTES		3
+#define HGD_DFL_REQ_VOTES	3
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -77,8 +77,8 @@ struct hgd_playlist_item {
 };
 
 struct hgd_playlist {
-	unsigned int n_items;
-	struct hgd_playlist_item **items;
+	unsigned int			n_items;
+	struct hgd_playlist_item	**items;
 };
 
 /* server side client info */
@@ -104,10 +104,10 @@ struct hgd_req_despatch {
 };
 
 /* debug levels */
-#define HGD_D_ERROR			0
-#define HGD_D_WARN			1
-#define HGD_D_INFO			2
-#define HGD_D_DEBUG			3
+#define HGD_D_ERROR		0
+#define HGD_D_WARN		1
+#define HGD_D_INFO		2
+#define HGD_D_DEBUG		3
 
 /* simple debug facility */
 #define DPRINTF(level, x...)						\
