@@ -1,6 +1,6 @@
 CPPFLAGS=`pkg-config --cflags sqlite3`
 SQL_LDFLAGS=`pkg-config --libs sqlite3`
-CFLAGS=-Wall -Wextra -g
+CFLAGS+=-Wall -Wextra -g
 
 PREFIX?=/usr/local
 MANDIR?=${PREFIX}/man/man1
