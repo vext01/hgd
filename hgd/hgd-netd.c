@@ -373,8 +373,9 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 
 	/* free up */
 	for (i = 0; i < list.n_items; i ++)
-		free(list.items[i]);
-	//free(list.items);
+		hgd_free_playlist_item(list.items[i]);
+
+	free(list.items);
 
 	return (0);
 }
