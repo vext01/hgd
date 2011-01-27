@@ -341,3 +341,10 @@ hgd_mk_state_dir()
 		}
 	}
 }
+
+void
+hgd_print_version()
+{
+	printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
+	printf("(C) Edd Barrett 2011\n");
+}

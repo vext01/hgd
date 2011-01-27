@@ -417,8 +417,7 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
 			break;
 		case 'v':
-			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
-			printf("(C) Edd Barrett 2011\n");
+			hgd_print_version();
 			exit_ok = 1;
 			hgd_exit_nicely();
 			break;
