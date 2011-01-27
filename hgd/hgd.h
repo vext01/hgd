@@ -21,7 +21,7 @@
 #define INFTIM -1
 #endif
 
-#define HGD_VERSION		"0.1-beta"
+#define HGD_VERSION		"0.1rc1"
 
 /* paths */
 #define HGD_DFL_DIR		"/var/hgd"
@@ -155,5 +155,6 @@ int				 hgd_get_num_votes();
 /* misc */
 uint8_t				 hgd_is_ip_addr(char *str);
 void				 hgd_mk_state_dir();
+void				 hgd_print_version();
 
 #endif

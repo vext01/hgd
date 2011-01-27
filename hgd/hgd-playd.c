@@ -255,8 +255,7 @@ main(int argc, char **argv)
 			purge_finished_db = 0;
 			break;
 		case 'v':
-			printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
-			printf("(C) Edd Barrett 2011\n");
+			hgd_print_version();
 			exit_ok = 1;
 			hgd_exit_nicely();
 			break;
