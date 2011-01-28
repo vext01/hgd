@@ -640,6 +640,8 @@ hgd_listen_loop()
 	int			sockopt = 1, data_ready;
 	struct pollfd		pfd;
 
+start:
+
 	DPRINTF(HGD_D_DEBUG, "Setting up socket");
 
 	if ((svr_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -704,8 +706,12 @@ hgd_listen_loop()
 
 		if (cli_fd < 0) {
 			DPRINTF(HGD_D_WARN, "Server failed to accept");
-			sleep(1);
-			continue;
+			close(svr_fd);
+			/*
+			 * accept will fail next time aswell :\
+			 * it seems the fix is to re-initialise the socket
+			 */
+			goto start;
 		}
 
 		if (setsockopt(cli_fd, SOL_SOCKET, SO_REUSEADDR,
