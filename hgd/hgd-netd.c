@@ -201,6 +201,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		 * will throw a ton of binary at us. Fools
 		 */
 		hgd_sock_send_line(sess->sock_fd, "err|size");
+		close(sess->sock_fd);
 		hgd_exit_nicely();
 	}
 
