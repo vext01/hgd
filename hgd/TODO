@@ -1,7 +1,8 @@
 HGD TODO LIST
-$Id: TODO,v 1.19 2011/01/23 13:37:40 edd Exp $
+$Id: TODO,v 1.20 2011/01/28 23:54:22 edd Exp $
 
 This version:
+  * protect sql queries from special characters like ';
   * test
   * valgrind
  
