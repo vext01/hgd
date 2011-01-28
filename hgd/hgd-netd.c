@@ -39,6 +39,7 @@ int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
+uint8_t				num_bad_commands = 0;	
 
 int				req_votes = HGD_DFL_REQ_VOTES;
 uint8_t				single_client = 0;
@@ -550,6 +551,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	DPRINTF(HGD_D_DEBUG, "Got %d tokens", n_toks);
 	if ((n_toks == 0) || (strlen(tokens[0]) == 0)) {
 		hgd_sock_send_line(sess->sock_fd, "err|no_tokens_sent");
+		num_bad_commands++;
 		return 0;
 	}
 
@@ -570,12 +572,15 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	if (correct_desp != NULL) {
 		DPRINTF(HGD_D_DEBUG, "Despatching '%s' handler", tokens[0]);
+		num_bad_commands = 0;
 		if (strcmp(correct_desp->cmd, "bye") != 0)
 			correct_desp->handler(sess, &tokens[1]);
 		else
 			bye = 1;
-	} else
+	} else {
 		hgd_sock_send_line(sess->sock_fd, "err|invalid_command");
+		num_bad_commands++;
+	}
 
 	/* free tokens */
 	for (; n_toks > 0; )
@@ -610,6 +615,11 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		recv_line = hgd_sock_recv_line(sess.sock_fd);
 		exit = hgd_parse_line(&sess, recv_line);
 		free(recv_line);
+		if (num_bad_commands >= HGD_MAX_BAD_COMMANDS) {
+			DPRINTF(HGD_D_WARN, "Client abused server, kicking '%s'", sess.cli_str);
+			close(sess.sock_fd);
+			hgd_exit_nicely();
+		}
 	} while (!exit && !dying);
 
 	/* laters */
