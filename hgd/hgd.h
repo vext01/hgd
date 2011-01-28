@@ -33,7 +33,7 @@
 #define HGD_DFL_PORT		6633
 #define HGD_DFL_BACKLOG		10
 #define HGD_DFL_MAX_UPLOAD	(1024 * 1024 * 50)
-#define HGD_MAX_LINE		128
+#define HGD_MAX_LINE		256
 #define HGD_BINARY_CHUNK	4096
 #define HGD_BINARY_RECV_SZ	(2 << 8)
 #define	HGD_MAX_PROTO_TOKS	3

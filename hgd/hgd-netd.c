@@ -194,8 +194,14 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	filename = basename(filename_p);
 
 	if ((bytes == 0) || (bytes > max_upload_size)) {
+		/*
+		 * we need to put our foot down and kick clients
+		 * who are claiming to send a too big file, as if
+		 * they don't check the error condition, then they
+		 * will throw a ton of binary at us. Fools
+		 */
 		hgd_sock_send_line(sess->sock_fd, "err|size");
-		return -1;
+		hgd_exit_nicely();
 	}
 
 	if (sess->user == NULL) {
