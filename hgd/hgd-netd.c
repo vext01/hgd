@@ -282,6 +282,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		    sqlite3_errmsg(db));
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
 		sqlite3_free(sql_err);
+		unlink(filename); /* don't much care if this fails */
 		goto clean;
 	}
 
