@@ -39,7 +39,7 @@ int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
-uint8_t				num_bad_commands = 0;	
+uint8_t				num_bad_commands = 0;
 
 int				req_votes = HGD_DFL_REQ_VOTES;
 uint8_t				single_client = 0;
@@ -579,6 +579,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		else
 			bye = 1;
 	} else {
+		DPRINTF(HGD_D_WARN, "Invalid command");
 		hgd_sock_send_line(sess->sock_fd, "err|invalid_command");
 		num_bad_commands++;
 	}
@@ -617,7 +618,8 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		exit = hgd_parse_line(&sess, recv_line);
 		free(recv_line);
 		if (num_bad_commands >= HGD_MAX_BAD_COMMANDS) {
-			DPRINTF(HGD_D_WARN, "Client abused server, kicking '%s'", sess.cli_str);
+			DPRINTF(HGD_D_WARN,"Client abused server, "
+			    "kicking '%s'", sess.cli_str);
 			close(sess.sock_fd);
 			hgd_exit_nicely();
 		}
