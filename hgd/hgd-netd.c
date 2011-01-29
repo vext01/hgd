@@ -105,12 +105,13 @@ hgd_identify_client(struct sockaddr_in *cli_addr)
 
 	DPRINTF(HGD_D_WARN, "Can't identify client ip: %s",
 	    gai_strerror(found_name));
-	return NULL;
+
+	return (NULL);
 
 found:
 	/* good, we got an identifier name/ip */
 	xasprintf(&ret, "%s", cli_host);
-	return ret;
+	return (ret);
 }
 
 /*
@@ -136,7 +137,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	playing = hgd_get_playing_item();
 	if (playing == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "ok|0");
-		return -1;
+		return (-1);
 	}
 
 	xasprintf(&reply, "ok|1|%d|%s|%s",
@@ -146,7 +147,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	free(reply);
 	free(playing);
 
-	return 0;
+	return (0);
 }
 
 /*
@@ -163,7 +164,7 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
 	sess->user = strdup(args[0]);
 	hgd_sock_send_line(sess->sock_fd, "ok");
 
-	return 0;
+	return (0);
 }
 
 /*
@@ -185,8 +186,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 {
 	char			*filename_p = args[0], *payload = NULL;
 	size_t			bytes = atoi(args[1]);
-	char			*unique_fn, *sql, *sql_err;
-	int			f = -1, sql_res;
+	char			*unique_fn = NULL, *sql, *sql_err;
+	int			f = -1, sql_res, ret = 0;
 	size_t			bytes_recvd = 0, to_write;
 	ssize_t			write_ret;
 	char			*filename;
@@ -195,20 +196,15 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	filename = basename(filename_p);
 
 	if ((bytes == 0) || (bytes > max_upload_size)) {
-		/*
-		 * we need to put our foot down and kick clients
-		 * who are claiming to send a too big file, as if
-		 * they don't check the error condition, then they
-		 * will throw a ton of binary at us. Fools
-		 */
 		hgd_sock_send_line(sess->sock_fd, "err|size");
-		close(sess->sock_fd);
-		hgd_exit_nicely();
+		ret = -1;
+		goto clean;
 	}
 
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
-		return -1;
+		ret = -1;
+		goto clean;
 	}
 
 	/* prepare to recieve the media file and stash away */
@@ -219,6 +215,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	if (f < 0) {
 		DPRINTF(HGD_D_ERROR, "mkstemp: %s: %s", filestore_path, SERROR);
 		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		ret = -1;
 		goto clean;
 	}
 
@@ -245,9 +242,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 			DPRINTF(HGD_D_ERROR, "failed to recv binary");
 			hgd_sock_send_line(sess->sock_fd, "err|internal");
 			unlink(filename); /* don't much care if this fails */
-
-			svr_fd = -1; /* prevent server socket closure */
-			hgd_exit_nicely();
+			ret = -1;
+			goto clean;
 		}
 		write_ret = write(f, payload, to_write);
 
@@ -257,6 +253,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 			    (int) to_write, SERROR);
 			hgd_sock_send_line(sess->sock_fd, "err|internal");
 			unlink(filename); /* don't much care if this fails */
+			ret = -1;
 			goto clean;
 		}
 
@@ -283,6 +280,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
 		sqlite3_free(sql_err);
 		unlink(filename); /* don't much care if this fails */
+		ret = -1;
 		goto clean;
 	}
 
@@ -294,13 +292,13 @@ clean:
 		close(f);
 	if (payload)
 		free(payload);
-	free(payload);
-	free(unique_fn);
+	if (unique_fn)
+		free(unique_fn);
 
 	if (bytes_recvd != bytes)
-		return -1;
+		ret = -1;
 
-	return 0;
+	return (ret);
 }
 
 int
@@ -330,7 +328,7 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 	    sizeof(struct hgd_playlist_item *) * list->n_items + 1);
 	list->items[list->n_items] = item;
 
-	list->n_items ++;
+	list->n_items++;
 
 	return (SQLITE_OK);
 }
@@ -404,7 +402,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
-		return -1;
+		return (-1);
 	}
 
 	sess = sess; args = args;
@@ -470,7 +468,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	/* are we at the vote limit yet? */
 	if (hgd_get_num_votes() < req_votes) {
 		hgd_sock_send_line(sess->sock_fd, "ok");
-		return 0;
+		return (0);
 	}
 
 	DPRINTF(HGD_D_INFO, "Vote limit exceeded - kill track");
@@ -482,7 +480,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		DPRINTF(HGD_D_WARN,
 		    "Can't find mplayer pid file: %s: %s", pid_path, SERROR);
 		free(pid_path);
-		return -1;
+		return (-1);
 	}
 
 	free(pid_path);
@@ -491,7 +489,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		if (!feof(pid_file)) {
 			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
 			fclose(pid_file);
-			return -1;
+			return (-1);
 		}
 	}
 	fclose(pid_file);
@@ -504,7 +502,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	/* Note: player daemon will empty the votes table */
 	hgd_sock_send_line(sess->sock_fd, "ok");
 
-	return 0;
+	return (0);
 }
 
 int
@@ -571,19 +569,32 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		break;
 	}
 
-	if (correct_desp != NULL) {
+	/* command not found */
+	if (correct_desp == NULL) {
 		DPRINTF(HGD_D_DEBUG, "Despatching '%s' handler", tokens[0]);
-		num_bad_commands = 0;
-		if (strcmp(correct_desp->cmd, "bye") != 0)
-			correct_desp->handler(sess, &tokens[1]);
-		else
-			bye = 1;
-	} else {
+
 		DPRINTF(HGD_D_WARN, "Invalid command");
 		hgd_sock_send_line(sess->sock_fd, "err|invalid_command");
 		num_bad_commands++;
+
+		goto clean;
 	}
 
+	/* bye has special meaning */
+	if (strcmp(correct_desp->cmd, "bye") == 0) {
+		bye = 1;
+		goto clean;
+	}
+
+	/* otherwise despatch */
+	if (correct_desp->handler(sess, &tokens[1]) < 0) {
+		DPRINTF(HGD_D_WARN, "despatch of '%s' for '%s' returned -1",
+		    tokens[0], sess->cli_str);
+		num_bad_commands++;
+	} else
+		num_bad_commands = 0;
+
+clean:
 	/* free tokens */
 	for (; n_toks > 0; )
 		free(tokens[--n_toks]);
@@ -852,6 +863,7 @@ main(int argc, char **argv)
 	db = hgd_open_db(db_path);
 	if (db == NULL)
 		hgd_exit_nicely();
+
 	sqlite3_close(db);
 	db = NULL;
 
