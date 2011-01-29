@@ -267,7 +267,7 @@ hgd_sock_recv_line(int fd)
 		case 0:
 			/* should not happen */
 			DPRINTF(HGD_D_WARN, "No bytes recvd");
-			continue;
+			return (NULL);
 		case -1:
 			if (errno == EINTR)
 				continue;
