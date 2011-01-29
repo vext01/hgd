@@ -621,6 +621,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 			DPRINTF(HGD_D_WARN,"Client abused server, "
 			    "kicking '%s'", sess.cli_str);
 			close(sess.sock_fd);
+			exit_ok = 1;
 			hgd_exit_nicely();
 		}
 	} while (!exit && !dying);
