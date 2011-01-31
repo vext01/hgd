@@ -137,7 +137,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	playing = hgd_get_playing_item();
 	if (playing == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "ok|0");
-		return (-1);
+		return (0);
 	}
 
 	xasprintf(&reply, "ok|1|%d|%s|%s",
