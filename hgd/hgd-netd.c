@@ -186,8 +186,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 {
 	char			*filename_p = args[0], *payload = NULL;
 	size_t			bytes = atoi(args[1]);
-	char			*unique_fn = NULL, *sql, *sql_err;
-	int			f = -1, sql_res, ret = 0;
+	char			*unique_fn = NULL;
+	int			f = -1, ret = 0;
 	size_t			bytes_recvd = 0, to_write;
 	ssize_t			write_ret;
 	char			*filename;
@@ -267,20 +267,9 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	}
 	payload = NULL;
 
-	xasprintf(&sql,
-	    "INSERT INTO playlist (filename, user, playing, finished)"
-	    "VALUES ('%s', '%s', 0, 0)", basename(unique_fn), sess->user);
-
-	/* insert into database */
-	sql_res = sqlite3_exec(db, sql, NULL, NULL, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_WARN, "Can't get playing track: %s",
-		    sqlite3_errmsg(db));
+	/* insert track into db */
+	if (hgd_insert_track(basename(unique_fn), sess->user) == -1) {
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
-		sqlite3_free(sql_err);
-		unlink(filename); /* don't much care if this fails */
-		ret = -1;
 		goto clean;
 	}
 
