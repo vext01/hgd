@@ -152,6 +152,7 @@ struct hgd_playlist_item	*hgd_get_playing_item();
 int				 hgd_get_num_votes_cb(void *arg,
 				     int argc, char **data, char **names);
 int				 hgd_get_num_votes();
+int				 hgd_insert_track(char *filename, char *user);
 
 /* misc */
 uint8_t				 hgd_is_ip_addr(char *str);
