@@ -179,3 +179,42 @@ hgd_get_num_votes()
 }
 
 
+int
+hgd_insert_track(char *filename, char *user)
+{
+	int			 ret = -1;
+	int			 sql_res;
+	sqlite3_stmt		*stmt;
+	char			*sql = "INSERT INTO playlist "
+	    "(filename, user, playing, finished) VALUES (?, ?, 0, 0)";
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s",
+		    sqlite3_errmsg(db));
+		goto clean;
+	}
+
+	/* bind paramenets */
+	sql_res = sqlite3_bind_text(stmt, 1, filename, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_text(stmt, 2, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", sqlite3_errmsg(db));
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", sqlite3_errmsg(db));
+		goto clean;
+	}
+
+	ret = 0; /* everything went ok */
+
+clean:
+	sqlite3_finalize(stmt);
+
+	return (ret);
+}
+
+
