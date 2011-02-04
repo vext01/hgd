@@ -381,11 +381,11 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
 	struct hgd_playlist_item	*playing = NULL;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
-	char				*sql, *sql_err, *scmd;
+	char				*scmd;
 	pid_t				pid;
 	FILE				*pid_file;
 	size_t				read;
-	int				sql_res, tid = -1, scmd_ret;
+	int				tid = -1, scmd_ret;
 
 	DPRINTF(HGD_D_INFO, "%s wants to kill track %d", sess->user, tid);
 
@@ -401,7 +401,6 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	if (playing == NULL) {
 		DPRINTF(HGD_D_ERROR, "No track is playing, can't vote off");
 		hgd_sock_send_line(sess->sock_fd, "err|not_playing");
-		hgd_free_playlist_item(playing);
 		return (-1);
 	}
 
@@ -418,25 +417,19 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	hgd_free_playlist_item(playing);
 
 	/* insert vote */
-	asprintf(&sql, "INSERT INTO votes (user) VALUES ('%s');", sess->user);
-	sql_res = sqlite3_exec(db, sql, NULL, NULL, &sql_err);
-	free(sql);
-
-	switch (sql_res) {
-	case SQLITE_OK:
-		break;
-	case SQLITE_CONSTRAINT:
+	switch (hgd_insert_vote(sess->user)) {
+	case 0:
+		break; /* good */
+	case 1:
+		/* duplicate vote */
 		DPRINTF(HGD_D_INFO, "User '%s' already voted", sess->user);
 		hgd_sock_send_line(sess->sock_fd, "err|duplicate_vote");
-		sqlite3_free(sql_err);
-		return (-1);
+		return (0);
+		break;
 	default:
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
-		DPRINTF(HGD_D_WARN, "Can't insert vote: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
 		return (-1);
-	}
+	};
 
 	/* play a sound on skipping? */
 	if (vote_sound != NULL) {
