@@ -151,6 +151,7 @@ hgd_setup_socket()
 
 	xasprintf(&user_cmd, "user|%s", user);
 	hgd_sock_send_line(sock_fd, user_cmd);
+	free(user_cmd);
 
 	resp = hgd_sock_recv_line(sock_fd);
 	hgd_check_svr_response(resp, 1);
@@ -253,7 +254,7 @@ hgd_req_queue(char **args)
 void
 hgd_print_track(char *resp)
 {
-	int			n_toks = 0;
+	int			n_toks = 0, i;
 	char			*tokens[3] = {NULL, NULL, NULL};
 
 	do {
@@ -267,6 +268,9 @@ hgd_print_track(char *resp)
 		fprintf(stderr,
 		    "%s: wrong number of tokens from server\n",
 		    __func__);
+
+	for (i = 0; i < n_toks; i ++)
+		free(tokens[i]);
 }
 
 void
