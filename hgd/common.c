@@ -306,7 +306,6 @@ hgd_kill_sighandler(int sig)
 void
 hgd_register_sig_handlers()
 {
-	signal(SIGKILL, hgd_kill_sighandler);
 	signal(SIGTERM, hgd_kill_sighandler);
 	signal(SIGABRT, hgd_kill_sighandler);
 	signal(SIGINT, hgd_kill_sighandler);
