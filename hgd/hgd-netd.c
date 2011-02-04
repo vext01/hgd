@@ -290,70 +290,23 @@ clean:
 	return (ret);
 }
 
-int
-hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
-{
-	struct hgd_playlist		*list;
-	struct hgd_playlist_item	*item;
-
-	/* shaddap gcc */
-	argc = argc;
-	names = names;
-
-	list = (struct hgd_playlist *) arg;
-
-	item = xmalloc(sizeof(struct hgd_playlist_item));
-
-	item->id = atoi(data[0]);
-	item->filename = strdup(data[1]);
-	item->user = strdup(data[2]);
-	item->playing = 0;	/* don't need in netd */
-	item->finished = 0;	/* don't need in netd */
-
-	/* remove unique string from filename, only playd uses that */
-	item->filename[strlen(item->filename) - 9] = 0;
-
-	list->items = xrealloc(list->items,
-	    sizeof(struct hgd_playlist_item *) * list->n_items + 1);
-	list->items[list->n_items] = item;
-
-	list->n_items++;
-
-	return (SQLITE_OK);
-}
-
 /*
  * report back items in the playlist
  */
 int
 hgd_cmd_playlist(struct hgd_session *sess, char **args)
 {
-	int			sql_res;
-	char			*sql_err, *resp;
-	struct hgd_playlist	list;
-	unsigned int		i;
+	char			*resp;
+	struct hgd_playlist	 list;
+	unsigned int		 i;
 
 	/* shhh */
 	args = args;
 
-	list.n_items = 0;
-	list.items = NULL;
-
-	DPRINTF(HGD_D_DEBUG, "Playlist request: %d", list.n_items);
-
-	sql_res = sqlite3_exec(db,
-	    "SELECT id, filename, user FROM playlist WHERE finished=0",
-	    hgd_get_playlist_cb, &list, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s",
-		    sqlite3_errmsg(db));
+	if (hgd_get_playlist(&list) == -1) {
 		hgd_sock_send_line(sess->sock_fd, "err|sql");
-		sqlite3_free(sql_err);
 		return (-1);
 	}
-
-	DPRINTF(HGD_D_DEBUG, "playlist request: %d items", list.n_items);
 
 	/* and respond to client */
 	xasprintf(&resp, "ok|%d", list.n_items);
