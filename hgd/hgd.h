@@ -153,6 +153,7 @@ int				 hgd_get_num_votes_cb(void *arg,
 				     int argc, char **data, char **names);
 int				 hgd_get_num_votes();
 int				 hgd_insert_track(char *filename, char *user);
+int				 hgd_insert_vote(char *user);
 
 /* misc */
 uint8_t				 hgd_is_ip_addr(char *str);
