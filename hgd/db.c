@@ -195,7 +195,7 @@ hgd_insert_track(char *filename, char *user)
 		goto clean;
 	}
 
-	/* bind paramenets */
+	/* bind params */
 	sql_res = sqlite3_bind_text(stmt, 1, filename, -1, SQLITE_TRANSIENT);
 	sql_res &= sqlite3_bind_text(stmt, 2, user, -1, SQLITE_TRANSIENT);
 	if (sql_res != SQLITE_OK) {
@@ -210,11 +210,44 @@ hgd_insert_track(char *filename, char *user)
 	}
 
 	ret = 0; /* everything went ok */
-
 clean:
 	sqlite3_finalize(stmt);
-
 	return (ret);
 }
 
+int
+hgd_insert_vote(char *user)
+{
+	int			 ret = -1;
+	int			 sql_res;
+	sqlite3_stmt		*stmt;
+	char			*sql = "INSERT INTO votes (user) VALUES (?)";
 
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s",
+		    sqlite3_errmsg(db));
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", sqlite3_errmsg(db));
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res == SQLITE_CONSTRAINT) {
+		ret = 1; /* indicates duplicat vote */
+		goto clean;
+	} else if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", sqlite3_errmsg(db));
+		goto clean;
+	}
+
+	ret = 0; /* everything went ok */
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
