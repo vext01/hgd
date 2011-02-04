@@ -145,7 +145,8 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	hgd_sock_send_line(sess->sock_fd, reply);
 
 	free(reply);
-	free(playing);
+
+	hgd_free_playlist_item(playing);
 
 	return (0);
 }

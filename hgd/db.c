@@ -276,7 +276,7 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 	item->filename[strlen(item->filename) - 9] = 0;
 
 	list->items = xrealloc(list->items,
-	    sizeof(struct hgd_playlist_item *) * list->n_items + 1);
+	    sizeof(struct hgd_playlist_item *) * (list->n_items + 1));
 	list->items[list->n_items] = item;
 
 	list->n_items++;
