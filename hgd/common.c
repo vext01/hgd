@@ -108,8 +108,6 @@ xasprintf(char **buf, char *fmt, ...)
 	return ret;
 }
 
-/* XXX code review these functions, they are dirty */
-
 /* send binary over the socket */
 void
 hgd_sock_send_bin(int fd, char *msg, ssize_t sz)
