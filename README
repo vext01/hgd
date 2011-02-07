@@ -1,4 +1,68 @@
 Hackathon Guenther Daemon
 =========================
 
-XXX fill this file out.
+HGD is a music system suitable for hackathons, internet cafes, LAN
+parties etc. Music is played on one set of speakers and clients queue up
+media from their own machines over the network.
+
+HGD was inspired by the LPD hack -- a music system used at OpenBSD
+hackathons. We plan to implement similar functionality and extend it.
+
+Current features
+----------------
+
+ * Network listener daemon.
+ * Player daemon (uses mplayer).
+ * Command line client with the ability queue and vote-off tracks.
+ * Works on Linux and OpenBSD.
+
+Building
+--------
+
+The build system is both bmake and gmake compatible, as it stands we use only
+make.
+
+ * To build everything, type 'make'.
+ * To build only the client type 'make hgdc'.
+
+Running
+-------
+
+If you are happy with putting HGD state in /var/hgd, then you can run the
+two servers with no arguments:
+ % hgd-netd
+ % hgd-playd
+
+Then you can queue tracks:
+ % hgdc q <some media file>
+
+Each command has a manual page for detailed usage instructions. Also,
+each command has a '-h' option for quick help.
+
+Developers
+----------
+
+ * Code style is as described in the style(9) OpenBSD manual page.
+   http://www.openbsd.org/cgi-bin/man.cgi?query=style&sektion=9
+ * All database code should go in db.c.
+ * Any other common functionality should go in common.c.
+ * Debugging is done via DPRINTF at the appropriate debug level.
+ * Exit is done via hgd_exit_nicely() -- each program has it's own
+   implementation. You should try to call this as far up the call stack
+   as possible, so that as much stuff is free()d/closed as possible
+   before exit.
+ * DO NOT JUST COMMIT, YOU MUST GET AN OK FROM ME FIRST!
+   Mail the diff to <vext01 (at) gmail (dot) com> for review.
+
+Future Hacking
+--------------
+
+ * Put mplayer in slave mode and implement admins commands for: next track,
+   pause etc.
+ * Authentication and crypto.
+ * Algorithm to make playlist fair.
+
+Bugs
+----
+
+Inevitable. Please report bugs on github.
