@@ -42,11 +42,6 @@
 #define HGD_BYE			"ok|Catch you later d00d!"
 #define HGD_PID_STR_SZ		10
 
-
-/* database schema */
-#define HGD_DBS_FILENAME_LEN	"50"
-#define HGD_DBS_USERNAME_LEN	"15"
-
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
 
@@ -54,8 +49,6 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/stat.h>
-
-#include <sqlite3.h>
 
 extern int8_t			 hgd_debug;
 extern uint8_t			 dying;
@@ -65,9 +58,6 @@ extern pid_t			 pid;
 
 extern char			*hgd_dir;
 extern char			*filestore_path;
-
-extern sqlite3			*db;
-extern char			*db_path;
 
 struct hgd_playlist_item {
 	int			 id;
@@ -143,18 +133,6 @@ void				 hgd_sock_send_bin(int, char *, ssize_t);
 void				 hgd_exit_nicely();
 void				 hgd_kill_sighandler(int sig);
 void				 hgd_register_sig_handlers();
-
-/* database stuff */
-sqlite3				*hgd_open_db(char *);
-int				 hgd_get_playing_item_cb(void *arg,
-				     int argc, char **data, char **names);
-struct hgd_playlist_item	*hgd_get_playing_item();
-int				 hgd_get_num_votes_cb(void *arg,
-				     int argc, char **data, char **names);
-int				 hgd_get_num_votes();
-int				 hgd_insert_track(char *filename, char *user);
-int				 hgd_insert_vote(char *user);
-int				 hgd_get_playlist(struct hgd_playlist *list);
 
 /* misc */
 uint8_t				 hgd_is_ip_addr(char *str);

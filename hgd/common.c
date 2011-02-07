@@ -29,8 +29,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <sqlite3.h>
-
 #include "hgd.h"
 
 int8_t				 hgd_debug = 1; /* default to warn */
