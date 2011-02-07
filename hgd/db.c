@@ -115,34 +115,28 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 	return SQLITE_OK;
 }
 
-struct hgd_playlist_item *
-hgd_get_playing_item()
+int
+hgd_get_playing_item(struct hgd_playlist_item **playing)
 {
-	struct hgd_playlist_item	*playing = NULL;
 	int				 sql_res;
 	char				*sql_err;
 
-	playing = hgd_new_playlist_item();
+	*playing = hgd_new_playlist_item();
 
 	sql_res = sqlite3_exec(db,
 	    "SELECT id, filename, user "
 	    "FROM playlist WHERE playing=1 LIMIT 1",
-	    hgd_get_playing_item_cb, playing, &sql_err);
+	    hgd_get_playing_item_cb, *playing, &sql_err);
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s",
 		    sqlite3_errmsg(db));
 		sqlite3_free(sql_err);
-		hgd_free_playlist_item(playing);
-		return NULL;
+		hgd_free_playlist_item(*playing);
+		return (-1);
 	}
 
-	if (playing->filename == NULL) {
-		hgd_free_playlist_item(playing);
-		return NULL;
-	}
-
-	return playing;
+	return (0);
 }
 
 int
