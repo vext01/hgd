@@ -53,6 +53,10 @@ Developers
    before exit.
  * DO NOT JUST COMMIT, YOU MUST GET AN OK FROM ME FIRST!
    Mail the diff to <vext01 (at) gmail (dot) com> for review.
+ * Make sure you have your git client configured correctly with respect
+   to user.name and user.email. They should be the same as on github.
+   (Yes, older commits have other usernames, that's because the code was
+   imported from privately hosted CVS).
 
 Future Hacking
 --------------
