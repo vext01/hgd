@@ -27,6 +27,7 @@
 #include <sqlite3.h>
 
 #include "hgd.h"
+#include "db.h"
 
 sqlite3				*db = NULL;
 char				*db_path = NULL;
