@@ -135,17 +135,20 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	 * XXX
 	 * can't distinguish between error and nothing playing unfortunately
 	 */
-	playing = hgd_get_playing_item();
-	if (playing == NULL) {
-		hgd_sock_send_line(sess->sock_fd, "ok|0");
-		return (0);
+	if (hgd_get_playing_item(&playing) == -1) {
+		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		return (-1);
 	}
 
-	xasprintf(&reply, "ok|1|%d|%s|%s",
-	    playing->id, playing->filename, playing->user);
-	hgd_sock_send_line(sess->sock_fd, reply);
+	if (playing->filename == NULL) {
+		hgd_sock_send_line(sess->sock_fd, "ok|0");
+	} else {
+		xasprintf(&reply, "ok|1|%d|%s|%s",
+		    playing->id, playing->filename, playing->user);
+		hgd_sock_send_line(sess->sock_fd, reply);
 
-	free(reply);
+		free(reply);
+	}
 
 	hgd_free_playlist_item(playing);
 
@@ -350,12 +353,16 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	sess = sess; args = args;
-	playing = hgd_get_playing_item();
+	if (hgd_get_playing_item(&playing) == -1) {
+		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		return (-1);
+	}
 
 	/* is *anything* playing? */
-	if (playing == NULL) {
+	if (playing->filename == NULL) {
 		DPRINTF(HGD_D_ERROR, "No track is playing, can't vote off");
 		hgd_sock_send_line(sess->sock_fd, "err|not_playing");
+		hgd_free_playlist_item(playing);
 		return (-1);
 	}
 

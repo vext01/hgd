@@ -29,7 +29,8 @@ extern char			*db_path;
 sqlite3				*hgd_open_db(char *);
 int				 hgd_get_playing_item_cb(void *arg,
 				     int argc, char **data, char **names);
-struct hgd_playlist_item	*hgd_get_playing_item();
+int				 hgd_get_playing_item(
+				     struct hgd_playlist_item **playing);
 int				 hgd_get_num_votes_cb(void *arg,
 				     int argc, char **data, char **names);
 int				 hgd_get_num_votes();
