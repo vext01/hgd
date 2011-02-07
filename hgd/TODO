@@ -1,9 +1,10 @@
 HGD TODO LIST
-$Id: TODO,v 1.21 2011/02/07 11:56:42 edd Exp $
+$Id: TODO,v 1.22 2011/02/07 15:59:12 edd Exp $
 
 This version:
  * stop client from segging if server dies
  * fix np - error vs. not playing.
+ * make hgdc not require sqlite header (need a db.h).
  
 Next version:
  * authentication
