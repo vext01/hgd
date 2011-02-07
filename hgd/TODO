@@ -1,10 +1,9 @@
 HGD TODO LIST
-$Id: TODO,v 1.20 2011/01/28 23:54:22 edd Exp $
+$Id: TODO,v 1.21 2011/02/07 11:56:42 edd Exp $
 
 This version:
-  * protect sql queries from special characters like ';
-  * test
-  * valgrind
+ * stop client from segging if server dies
+ * fix np - error vs. not playing.
  
 Next version:
  * authentication
