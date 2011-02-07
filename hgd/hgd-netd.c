@@ -34,6 +34,7 @@
 #include <poll.h>
 
 #include "hgd.h"
+#include "db.h"
 
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;

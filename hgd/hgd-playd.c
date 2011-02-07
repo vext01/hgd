@@ -27,6 +27,7 @@
 #include <sqlite3.h>
 
 #include "hgd.h"
+#include "db.h"
 
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
