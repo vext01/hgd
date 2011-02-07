@@ -8,7 +8,3 @@ This version:
 Next version:
  * authentication
  * admin commands
-
-If someone gets bored:
- * review all debug messages - are they the right level?
- * make some more sql quries generic and put in db.c
