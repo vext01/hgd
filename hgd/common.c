@@ -227,7 +227,8 @@ hgd_sock_recv_bin(int fd, ssize_t len)
 }
 
 /*
- * recieve a line, free when done
+ * recieve a line, free when done.
+ * returns NULL on error.
  */
 char *
 hgd_sock_recv_line(int fd)

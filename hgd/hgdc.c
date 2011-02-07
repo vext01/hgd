@@ -58,6 +58,12 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	int			len, err = 0;
 	char			*trunc = NULL;
 
+	if (resp == NULL) {
+		DPRINTF(HGD_D_ERROR, "failed to read server response, "
+		    "did the server die?");
+		hgd_exit_nicely(); 
+	}
+
 	len = strlen(resp);
 
 	if (hgd_debug) {
