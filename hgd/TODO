@@ -1,8 +1,9 @@
 HGD TODO LIST
-$Id: TODO,v 1.24 2011/02/07 20:29:47 edd Exp $
+$Id: TODO,v 1.25 2011/02/07 21:01:23 edd Exp $
 
 This version:
- * fix np - error vs. not playing.
+ * none known - if you see bugs let us know asap, as we are prepping for
+   a release.
  
 Next version:
  * authentication
