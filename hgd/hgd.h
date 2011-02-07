@@ -104,9 +104,9 @@ struct hgd_req_despatch {
 #define DPRINTF(level, x...)						\
 	do {								\
 		if (level <= hgd_debug) {				\
-			fprintf(stderr, "[%s - %08d %s:%d]\n\t",	\
+			fprintf(stderr, "[%s - %08d %s:%s():%d]\n\t",	\
 			    debug_names[level], getpid(),		\
-			    __FILE__, __LINE__);			\
+			    __FILE__, __func__, __LINE__);		\
 			fprintf(stderr, x);				\
 			fprintf(stderr, "\n");				\
 		}							\
