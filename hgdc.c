@@ -45,6 +45,7 @@ hgd_exit_nicely()
 		    "hgdc was interrupted or crashed - cleaning up");
 
 	if (sock_fd > 0) {
+		/* try to close connection */
 		if (shutdown(sock_fd, SHUT_RDWR) == -1)
 			DPRINTF(HGD_D_WARN, "Couldn't shutdown socket");
 		close(sock_fd);
@@ -61,7 +62,7 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	if (resp == NULL) {
 		DPRINTF(HGD_D_ERROR, "failed to read server response, "
 		    "did the server die?");
-		hgd_exit_nicely(); 
+		hgd_exit_nicely();
 	}
 
 	len = strlen(resp);
@@ -299,7 +300,7 @@ hgd_req_vote_off(char **args)
 	hgd_sock_send_line(sock_fd, "vo");
 
 	resp = hgd_sock_recv_line(sock_fd);
-	hgd_check_svr_response(resp, 1);
+	hgd_check_svr_response(resp, 0);
 
 	return (0);
 }

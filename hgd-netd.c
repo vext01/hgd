@@ -354,7 +354,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	/* is *anything* playing? */
 	if (playing.filename == NULL) {
-		DPRINTF(HGD_D_ERROR, "No track is playing, can't vote off");
+		DPRINTF(HGD_D_INFO, "No track is playing, can't vote off");
 		hgd_sock_send_line(sess->sock_fd, "err|not_playing");
 		return (-1);
 	}
@@ -525,7 +525,12 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	/* otherwise despatch */
 	if (correct_desp->handler(sess, &tokens[1]) < 0) {
-		DPRINTF(HGD_D_WARN, "despatch of '%s' for '%s' returned -1",
+		/*
+		 * this happens often, ie when a client tries to
+		 * vote off twice, and that is fine, so we put the message
+		 * in INFO rather than WARN
+		 */
+		DPRINTF(HGD_D_INFO, "despatch of '%s' for '%s' returned -1",
 		    tokens[0], sess->cli_str);
 		num_bad_commands++;
 	} else
