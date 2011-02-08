@@ -126,31 +126,29 @@ found:
 int
 hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 {
-	struct hgd_playlist_item	*playing = NULL;
+	struct hgd_playlist_item	 playing;
 	char				*reply;
 
 	args = args; /* silence compiler */
 
-	/*
-	 * XXX
-	 * can't distinguish between error and nothing playing unfortunately
-	 */
+	memset(&playing, 0, sizeof(playing));
 	if (hgd_get_playing_item(&playing) == -1) {
 		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		hgd_free_playlist_item(&playing);
 		return (-1);
 	}
 
-	if (playing->filename == NULL) {
+	if (playing.filename == NULL) {
 		hgd_sock_send_line(sess->sock_fd, "ok|0");
 	} else {
 		xasprintf(&reply, "ok|1|%d|%s|%s",
-		    playing->id, playing->filename, playing->user);
+		    playing.id, playing.filename, playing.user);
 		hgd_sock_send_line(sess->sock_fd, reply);
 
 		free(reply);
 	}
 
-	hgd_free_playlist_item(playing);
+	hgd_free_playlist_item(&playing);
 
 	return (0);
 }
@@ -325,11 +323,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 		free(resp);
 	}
 
-	/* free up */
-	for (i = 0; i < list.n_items; i ++)
-		hgd_free_playlist_item(list.items[i]);
-
-	free(list.items);
+	hgd_free_playlist(&list);
 
 	return (0);
 }
@@ -337,7 +331,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 int
 hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
-	struct hgd_playlist_item	*playing = NULL;
+	struct hgd_playlist_item	 playing;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
 	char				*scmd;
 	pid_t				pid;
@@ -352,31 +346,30 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		return (-1);
 	}
 
-	sess = sess; args = args;
+	memset(&playing, 0, sizeof(playing));
 	if (hgd_get_playing_item(&playing) == -1) {
 		hgd_sock_send_line(sess->sock_fd, "err|internal");
 		return (-1);
 	}
 
 	/* is *anything* playing? */
-	if (playing->filename == NULL) {
+	if (playing.filename == NULL) {
 		DPRINTF(HGD_D_ERROR, "No track is playing, can't vote off");
 		hgd_sock_send_line(sess->sock_fd, "err|not_playing");
-		hgd_free_playlist_item(playing);
 		return (-1);
 	}
 
 	/* is the file they are voting off playing? */
 	if (args != NULL) { /* null if call from hgd_cmd_vote_off_noargs */
 		tid = atoi(args[0]);
-		if (playing->id != tid) {
+		if (playing.id != tid) {
 			DPRINTF(HGD_D_INFO, "Track to voteoff isn't playing");
 			hgd_sock_send_line(sess->sock_fd, "err|wrong_track");
-			hgd_free_playlist_item(playing);
+			hgd_free_playlist_item(&playing);
 			return (-1);
 		}
 	}
-	hgd_free_playlist_item(playing);
+	hgd_free_playlist_item(&playing);
 
 	/* insert vote */
 	switch (hgd_insert_vote(sess->user)) {
