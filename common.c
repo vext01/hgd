@@ -29,6 +29,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <openssl/ssl.h>
+
 #include "hgd.h"
 
 int8_t				 hgd_debug = 1; /* default to warn */
@@ -238,6 +240,25 @@ hgd_sock_recv_bin(int fd, ssize_t len)
  * returns NULL on error.
  */
 char *
+hgd_sock_recv_line_ssl(SSL *ssl)
+{
+	/* XXX: implement this */
+	char* buffer;
+	int ssl_ret;
+
+	buffer = xmalloc(128 * (sizeof (char)));
+
+	ssl_ret = SSL_read(ssl, buffer, 128);
+
+	return buffer;
+
+}
+
+/*
+ * recieve a line, free when done.
+ * returns NULL on error.
+ */
+char *
 hgd_sock_recv_line(int fd)
 {
 	ssize_t			recvd_tot = 0, recvd;
@@ -268,6 +289,7 @@ hgd_sock_recv_line(int fd)
 	do {
 		/* recieve one byte */
 		recvd = recv(fd, &recv_char, 1, 0);
+
 
 		switch (recvd) {
 		case 0:

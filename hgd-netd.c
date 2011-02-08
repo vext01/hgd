@@ -36,9 +36,15 @@
 #include "hgd.h"
 #include "db.h"
 
+#define HGD_CERT_FILE "cert.pem"
+#define HGD_KEY_FILE "key.pem"
+
+#include <openssl/ssl.h>
+
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
+int				cli_fd = -1;
 size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
 uint8_t				num_bad_commands = 0;
 
@@ -46,6 +52,8 @@ int				req_votes = HGD_DFL_REQ_VOTES;
 uint8_t				single_client = 0;
 
 char				*vote_sound = NULL;
+
+int				ssl_on = 0;
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
@@ -450,6 +458,38 @@ hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
 	return (hgd_cmd_vote_off(sess, NULL));
 }
 
+int
+hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
+{
+	SSL_METHOD *method;
+	SSL_CTX *ctx;
+	SSL *ssl;
+
+	unused = unused;
+
+	OpenSSL_add_all_algorithms();   /* load & register cryptos */
+	SSL_load_error_strings();     /* load all error messages */
+	method = SSLv2_server_method();   /* create server instance */
+	ctx = SSL_CTX_new(method);         /* create context */
+
+	 /* set the local certificate from CertFile */
+	SSL_CTX_use_certificate_file(ctx, HGD_CERT_FILE, SSL_FILETYPE_PEM);
+	 /* set the private key from KeyFile */
+	SSL_CTX_use_PrivateKey_file(ctx, HGD_KEY_FILE, SSL_FILETYPE_PEM);
+	 /* verify private key */
+	if ( !SSL_CTX_check_private_key(ctx) )
+	 abort();;
+
+	 ssl = SSL_new(ctx);
+	 SSL_set_fd(ssl, cli_fd);
+	 SSL_accept(ssl);
+
+
+
+	 return 0;
+}
+
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	handler_function	*/
@@ -459,6 +499,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"ls",		0,	hgd_cmd_playlist},
 	{"user",	1,	hgd_cmd_user},
 	{"q",		2,	hgd_cmd_queue},
+	{"encrypt",	0,	hgd_cmd_encrypt},
 	{"bye",		0,	NULL},	/* bye is special */
 	{NULL,		0,	NULL}	/* terminate */
 };
@@ -546,7 +587,7 @@ clean:
 }
 
 void
-hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
+hgd_service_client(struct sockaddr_in *cli_addr)
 {
 	struct hgd_session	 sess;
 	char			*recv_line;
@@ -603,7 +644,7 @@ void
 hgd_listen_loop()
 {
 	struct sockaddr_in	addr, cli_addr;
-	int			cli_fd, child_pid = 0;
+	int			child_pid = 0;
 	socklen_t		cli_addr_len;
 	int			sockopt = 1, data_ready;
 	struct pollfd		pfd;
@@ -697,7 +738,7 @@ start:
 			if (db == NULL)
 				hgd_exit_nicely();
 
-			hgd_service_client(cli_fd, &cli_addr);
+			hgd_service_client(&cli_addr);
 			DPRINTF(HGD_D_DEBUG, "client service complete");
 
 			/* and we are done with this client */
