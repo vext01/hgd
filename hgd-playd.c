@@ -138,29 +138,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 	}
 }
 
-int
-hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
-{
-	struct hgd_playlist_item	*item_t;
-
-	/* silence compiler */
-	argc = argc;
-	names = names;
-
-	DPRINTF(HGD_D_DEBUG, "track found");
-
-	item_t = (struct hgd_playlist_item *) item;
-
-	/* populate a struct that we pick up later */
-	item_t->id = atoi(data[0]);
-	xasprintf(&(item_t->filename), "%s/%s", filestore_path, data[1]);
-	item_t->user = strdup(data[2]);
-	item_t->playing = 0;
-	item_t->finished = 0;
-
-	return SQLITE_OK;
-}
-
 void
 hgd_clear_votes()
 {
@@ -180,8 +157,6 @@ hgd_clear_votes()
 void
 hgd_play_loop()
 {
-	int				sql_res;
-	char				*sql_err;
 	struct hgd_playlist_item	*track;
 
 	/* forever play songs */
@@ -189,16 +164,8 @@ hgd_play_loop()
 	while (!dying) {
 		track = hgd_new_playlist_item();
 
-		/* get the next track (if there is one) */
-		sql_res = sqlite3_exec(db,
-		   "SELECT id, filename, user "
-		   "FROM playlist WHERE finished=0 LIMIT 1",
-		   hgd_get_next_track_cb, track, &sql_err);
-
-		if (sql_res != SQLITE_OK) {
-			DPRINTF(HGD_D_ERROR, "Can't get next track: %s",
-			    sqlite3_errmsg(db));
-			sqlite3_free(sql_err);
+		if (hgd_get_next_track(track) == -1) {
+			hgd_free_playlist_item(track);
 			hgd_exit_nicely();
 		}
 
