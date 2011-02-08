@@ -187,6 +187,7 @@ hgd_sock_send_line(int fd, SSL* ssl, char *msg)
 
 		DPRINTF(HGD_D_DEBUG, "Sent line: %s", msg);
 	} else {
+		DPRINTF(HGD_D_DEBUG, "Trying to send SSL message: %s", msg);
 		xasprintf(&term, "%s\r\n", msg);
 		hgd_sock_send_ssl(ssl, term);
 		free(term);

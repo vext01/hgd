@@ -476,7 +476,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	SSL_CTX_use_PrivateKey_file(ctx, HGD_KEY_FILE, SSL_FILETYPE_PEM);
 	 /* verify private key */
 	if ( !SSL_CTX_check_private_key(ctx) )
-	 abort();;
+		DPRINTF(HGD_D_ERROR, "BALLS");
 
 	 sess->ssl = SSL_new(ctx);
 	 SSL_set_fd(sess->ssl, sess->sock_fd);
