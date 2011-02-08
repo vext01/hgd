@@ -42,6 +42,8 @@ SSL*			 ssl = NULL;
 void
 hgd_exit_nicely()
 {
+	/* XXX cleanup ssl */
+
 	if (!exit_ok)
 		DPRINTF(HGD_D_INFO,
 		    "hgdc was interrupted or crashed - cleaning up");
@@ -412,6 +414,23 @@ hgd_exec_req(int argc, char **argv)
 
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	correct_desp->handler(&argv[1]);
+}
+
+int
+ssl_connect(int fd)
+{
+	SSL_METHOD *method;
+	SSL_CTX *ctx;
+	OpenSSL_add_all_algorithms();   /* load & register cryptos */
+	SSL_load_error_strings();     /* load all error messages */
+	method = SSLv2_client_method();   /* create client instance */
+	ctx = SSL_CTX_new(method);         /* create context */
+
+	ssl = SSL_new(ctx);
+	SSL_set_fd(ssl, fd);
+	SSL_connect(ssl);
+
+	return 0;
 }
 
 int
