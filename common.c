@@ -43,24 +43,33 @@ char				*debug_names[] = {
 char				*hgd_dir = NULL;
 char				*filestore_path = NULL;
 
-struct hgd_playlist_item *
-hgd_new_playlist_item()
-{
-	struct hgd_playlist_item	*item;
-
-	item = xmalloc(sizeof(struct hgd_playlist_item));
-	memset(item, 0, sizeof(struct hgd_playlist_item));
-
-	return (item);
-}
-
-void hgd_free_playlist_item(struct hgd_playlist_item *i)
+/*
+ * frees members of a playlist item, but not the item
+ * itself, therefore allowing stack allocation if wished
+ */
+void
+hgd_free_playlist_item(struct hgd_playlist_item *i)
 {
 	if (i->filename != NULL)
 		free(i->filename);
 	if (i->user != NULL)
 		free(i->user);
-	free(i);
+}
+
+/*
+ * free a playlist's members but not the list itself
+ */
+void
+hgd_free_playlist(struct hgd_playlist *list)
+{
+	unsigned int		i;
+
+	for (i = 0; i < list->n_items; i ++) {
+		hgd_free_playlist_item(list->items[i]);
+		free(list->items[i]);
+	}
+
+	free(list->items);
 }
 
 void *

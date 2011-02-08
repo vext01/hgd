@@ -157,28 +157,27 @@ hgd_clear_votes()
 void
 hgd_play_loop()
 {
-	struct hgd_playlist_item	*track;
+	struct hgd_playlist_item	 track;
 
 	/* forever play songs */
 	DPRINTF(HGD_D_DEBUG, "Starting play loop");
 	while (!dying) {
-		track = hgd_new_playlist_item();
+		memset(&track, 0, sizeof(track));
 
-		if (hgd_get_next_track(track) == -1) {
-			hgd_free_playlist_item(track);
+		if (hgd_get_next_track(&track) == -1) {
 			hgd_exit_nicely();
 		}
 
-		if (track->filename != NULL) {
+		if (track.filename != NULL) {
 			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
-			    track->filename);
+			    track.filename);
 			hgd_clear_votes();
-			hgd_play_track(track);
+			hgd_play_track(&track);
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
 			sleep(1);
 		}
-		hgd_free_playlist_item(track);
+		hgd_free_playlist_item(&track);
 	}
 
 	if (dying)
