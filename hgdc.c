@@ -37,6 +37,8 @@ char			*user, *host = "127.0.0.1";
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
+SSL*			 ssl = NULL;
+
 void
 hgd_exit_nicely()
 {
@@ -143,7 +145,7 @@ hgd_setup_socket()
 	}
 
 	/* expect a hello message */
-	resp = hgd_sock_recv_line(sock_fd);
+	resp = hgd_sock_recv_line(sock_fd, ssl);
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 
@@ -157,10 +159,10 @@ hgd_setup_socket()
 	}
 
 	xasprintf(&user_cmd, "user|%s", user);
-	hgd_sock_send_line(sock_fd, user_cmd);
+	hgd_sock_send_line(sock_fd, ssl, user_cmd);
 	free(user_cmd);
 
-	resp = hgd_sock_recv_line(sock_fd);
+	resp = hgd_sock_recv_line(sock_fd, ssl);
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 
@@ -210,11 +212,11 @@ hgd_req_queue(char **args)
 
 	/* send request to upload */
 	xasprintf(&q_req, "q|%s|%d", filename, fsize);
-	hgd_sock_send_line(sock_fd, q_req);
+	hgd_sock_send_line(sock_fd, ssl, q_req);
 	free(q_req);
 
 	/* check we are allowed */
-	resp = hgd_sock_recv_line(sock_fd);
+	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == -1) {
 		free(resp);
 		return -1;
@@ -239,14 +241,14 @@ hgd_req_queue(char **args)
 			continue;
 		}
 
-		hgd_sock_send_bin(sock_fd, chunk, chunk_sz);
+		hgd_sock_send_bin(sock_fd, ssl, chunk, chunk_sz);
 
 		written += chunk_sz;
 		DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
 		   (int)  written, (int) fsize);
 	}
 
-	resp = hgd_sock_recv_line(sock_fd);
+	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == -1) {
 		free(resp);
 		return -1;
@@ -297,9 +299,9 @@ hgd_req_vote_off(char **args)
 
 	args = args; /* sssh */
 
-	hgd_sock_send_line(sock_fd, "vo");
+	hgd_sock_send_line(sock_fd, ssl, "vo");
 
-	resp = hgd_sock_recv_line(sock_fd);
+	resp = hgd_sock_recv_line(sock_fd, ssl);
 	hgd_check_svr_response(resp, 0);
 
 	return (0);
@@ -313,8 +315,8 @@ hgd_req_playlist(char **args)
 
 	args = args; /* shhh */
 
-	hgd_sock_send_line(sock_fd, "ls");
-	resp = hgd_sock_recv_line(sock_fd);
+	hgd_sock_send_line(sock_fd, ssl, "ls");
+	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == -1) {
 		free(resp);
 		return -1;
@@ -332,7 +334,7 @@ hgd_req_playlist(char **args)
 
 	DPRINTF(HGD_D_DEBUG, "expecting %d items in playlist", n_items);
 	for (i = 0; i < n_items; i++) {
-		track_resp = hgd_sock_recv_line(sock_fd);
+		track_resp = hgd_sock_recv_line(sock_fd, ssl);
 		if (i == 0) {
 			hgd_hline();
 			hgd_print_track(track_resp);
@@ -454,8 +456,8 @@ main(int argc, char **argv)
 	hgd_exec_req(argc, argv);
 
 	/* sign off */
-	hgd_sock_send_line(sock_fd, "bye");
-	resp = hgd_sock_recv_line(sock_fd);
+	hgd_sock_send_line(sock_fd, ssl, "bye");
+	resp = hgd_sock_recv_line(sock_fd, ssl);
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 

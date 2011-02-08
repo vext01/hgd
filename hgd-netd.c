@@ -141,17 +141,17 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 
 	memset(&playing, 0, sizeof(playing));
 	if (hgd_get_playing_item(&playing) == -1) {
-		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 		hgd_free_playlist_item(&playing);
 		return (-1);
 	}
 
 	if (playing.filename == NULL) {
-		hgd_sock_send_line(sess->sock_fd, "ok|0");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|0");
 	} else {
 		xasprintf(&reply, "ok|1|%d|%s|%s",
 		    playing.id, playing.filename, playing.user);
-		hgd_sock_send_line(sess->sock_fd, reply);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
 
 		free(reply);
 	}
@@ -173,7 +173,7 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
 	    sess->cli_str, args[0]);
 
 	sess->user = strdup(args[0]);
-	hgd_sock_send_line(sess->sock_fd, "ok");
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 
 	return (0);
 }
@@ -207,13 +207,13 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	filename = basename(filename_p);
 
 	if ((bytes == 0) || (bytes > max_upload_size)) {
-		hgd_sock_send_line(sess->sock_fd, "err|size");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
 		ret = -1;
 		goto clean;
 	}
 
 	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|user_not_identified");
 		ret = -1;
 		goto clean;
 	}
@@ -225,12 +225,12 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	f = mkstemp(unique_fn);
 	if (f < 0) {
 		DPRINTF(HGD_D_ERROR, "mkstemp: %s: %s", filestore_path, SERROR);
-		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 		ret = -1;
 		goto clean;
 	}
 
-	hgd_sock_send_line(sess->sock_fd, "ok...");
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok...");
 
 	DPRINTF(HGD_D_INFO, "Recving %d byte payload '%s' from %s into %s",
 	    (int) bytes, filename, sess->user, unique_fn);
@@ -248,10 +248,10 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		DPRINTF(HGD_D_DEBUG, "Waiting for chunk of length %d bytes",
 		    (int) to_write);
 
-		payload = hgd_sock_recv_bin(sess->sock_fd, to_write);
+		payload = hgd_sock_recv_bin(sess->sock_fd, sess->ssl, to_write);
 		if (payload == NULL) {
 			DPRINTF(HGD_D_ERROR, "failed to recv binary");
-			hgd_sock_send_line(sess->sock_fd, "err|internal");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 			unlink(filename); /* don't much care if this fails */
 			ret = -1;
 			goto clean;
@@ -262,7 +262,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		if (write_ret < 0) {
 			DPRINTF(HGD_D_ERROR, "Failed to write %d bytes: %s",
 			    (int) to_write, SERROR);
-			hgd_sock_send_line(sess->sock_fd, "err|internal");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 			unlink(filename); /* don't much care if this fails */
 			ret = -1;
 			goto clean;
@@ -280,11 +280,11 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	/* insert track into db */
 	if (hgd_insert_track(basename(unique_fn), sess->user) == -1) {
-		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
 
-	hgd_sock_send_line(sess->sock_fd, "ok");
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	DPRINTF(HGD_D_INFO, "Transfer of '%s' complete", filename);
 
 clean:
@@ -315,19 +315,19 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	args = args;
 
 	if (hgd_get_playlist(&list) == -1) {
-		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		return (-1);
 	}
 
 	/* and respond to client */
 	xasprintf(&resp, "ok|%d", list.n_items);
-	hgd_sock_send_line(sess->sock_fd, resp);
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 	free(resp);
 
 	for (i = 0; i < list.n_items; i++) {
 		xasprintf(&resp, "%d|%s|%s", list.items[i]->id,
 		    list.items[i]->filename, list.items[i]->user);
-		hgd_sock_send_line(sess->sock_fd, resp);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 		free(resp);
 	}
 
@@ -350,20 +350,20 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	DPRINTF(HGD_D_INFO, "%s wants to kill track %d", sess->user, tid);
 
 	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, "err|user_not_identified");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|user_not_identified");
 		return (-1);
 	}
 
 	memset(&playing, 0, sizeof(playing));
 	if (hgd_get_playing_item(&playing) == -1) {
-		hgd_sock_send_line(sess->sock_fd, "err|internal");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 		return (-1);
 	}
 
 	/* is *anything* playing? */
 	if (playing.filename == NULL) {
 		DPRINTF(HGD_D_INFO, "No track is playing, can't vote off");
-		hgd_sock_send_line(sess->sock_fd, "err|not_playing");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|not_playing");
 		return (-1);
 	}
 
@@ -372,7 +372,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		tid = atoi(args[0]);
 		if (playing.id != tid) {
 			DPRINTF(HGD_D_INFO, "Track to voteoff isn't playing");
-			hgd_sock_send_line(sess->sock_fd, "err|wrong_track");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|wrong_track");
 			hgd_free_playlist_item(&playing);
 			return (-1);
 		}
@@ -386,11 +386,11 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	case 1:
 		/* duplicate vote */
 		DPRINTF(HGD_D_INFO, "User '%s' already voted", sess->user);
-		hgd_sock_send_line(sess->sock_fd, "err|duplicate_vote");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|duplicate_vote");
 		return (0);
 		break;
 	default:
-		hgd_sock_send_line(sess->sock_fd, "err|sql");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		return (-1);
 	};
 
@@ -412,7 +412,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	/* are we at the vote limit yet? */
 	if (hgd_get_num_votes() < req_votes) {
-		hgd_sock_send_line(sess->sock_fd, "ok");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		return (0);
 	}
 
@@ -445,7 +445,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		DPRINTF(HGD_D_WARN, "Can't kill mplayer: %s", SERROR);
 
 	/* Note: player daemon will empty the votes table */
-	hgd_sock_send_line(sess->sock_fd, "ok");
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 
 	return (0);
 }
@@ -526,7 +526,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	DPRINTF(HGD_D_DEBUG, "Got %d tokens", n_toks);
 	if ((n_toks == 0) || (strlen(tokens[0]) == 0)) {
-		hgd_sock_send_line(sess->sock_fd, "err|no_tokens_sent");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|no_tokens_sent");
 		num_bad_commands++;
 		return 0;
 	}
@@ -551,7 +551,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		DPRINTF(HGD_D_DEBUG, "Despatching '%s' handler", tokens[0]);
 
 		DPRINTF(HGD_D_WARN, "Invalid command");
-		hgd_sock_send_line(sess->sock_fd, "err|invalid_command");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|invalid_command");
 		num_bad_commands++;
 
 		goto clean;
@@ -603,16 +603,12 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	DPRINTF(HGD_D_INFO, "Client connection: '%s'", sess.cli_str);
 
 	/* oh hai */
-	hgd_sock_send_line(cli_fd, HGD_GREET);
+	hgd_sock_send_line(cli_fd, sess.ssl, HGD_GREET);
 
 	/* main command recieve loop */
 	exit = 0;
 	do {
-		if (sess.ssl == NULL) {
-			recv_line = hgd_sock_recv_line(sess.sock_fd);
-		} else {
-			recv_line = hgd_sock_recv_line_ssl(sess.ssl);
-		}
+		recv_line = hgd_sock_recv_line(sess.sock_fd, sess.ssl);
 		exit = hgd_parse_line(&sess, recv_line);
 		free(recv_line);
 		if (num_bad_commands >= HGD_MAX_BAD_COMMANDS) {
@@ -625,7 +621,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	} while (!exit && !dying);
 
 	/* laters */
-	hgd_sock_send_line(cli_fd, HGD_BYE);
+	hgd_sock_send_line(cli_fd, sess.ssl, HGD_BYE);
 
 	/* free up the hgd_session members */
 	free(sess.cli_str);
