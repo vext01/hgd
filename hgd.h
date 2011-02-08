@@ -50,6 +50,9 @@
 #include <stdint.h>
 #include <sys/stat.h>
 
+#include <openssl/ssl.h>
+
+
 extern int8_t			 hgd_debug;
 extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
@@ -78,6 +81,7 @@ struct hgd_session {
 	struct sockaddr_in	*cli_addr;
 	char			*cli_str;
 	char			*user;
+	SSL			*ssl;
 };
 
 /* server command despatch */

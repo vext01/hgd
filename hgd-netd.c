@@ -44,7 +44,6 @@
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
-int				cli_fd = -1;
 size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
 uint8_t				num_bad_commands = 0;
 
@@ -53,7 +52,6 @@ uint8_t				single_client = 0;
 
 char				*vote_sound = NULL;
 
-int				ssl_on = 0;
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
@@ -463,7 +461,6 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 {
 	SSL_METHOD *method;
 	SSL_CTX *ctx;
-	SSL *ssl;
 
 	unused = unused;
 
@@ -480,9 +477,9 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	if ( !SSL_CTX_check_private_key(ctx) )
 	 abort();;
 
-	 ssl = SSL_new(ctx);
-	 SSL_set_fd(ssl, cli_fd);
-	 SSL_accept(ssl);
+	 sess->ssl = SSL_new(ctx);
+	 SSL_set_fd(sess->ssl, sess->sock_fd);
+	 SSL_accept(sess->ssl);
 
 
 
@@ -587,7 +584,7 @@ clean:
 }
 
 void
-hgd_service_client(struct sockaddr_in *cli_addr)
+hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 {
 	struct hgd_session	 sess;
 	char			*recv_line;
@@ -597,6 +594,7 @@ hgd_service_client(struct sockaddr_in *cli_addr)
 	sess.sock_fd = cli_fd;
 	sess.cli_addr = cli_addr;
 	sess.user = NULL;
+	sess.ssl = NULL;
 
 	if (sess.cli_str == NULL)
 		xasprintf(&sess.cli_str, "unknown"); /* shouldn't happen */
@@ -609,7 +607,11 @@ hgd_service_client(struct sockaddr_in *cli_addr)
 	/* main command recieve loop */
 	exit = 0;
 	do {
-		recv_line = hgd_sock_recv_line(sess.sock_fd);
+		if (sess.ssl == NULL) {
+			recv_line = hgd_sock_recv_line(sess.sock_fd);
+		} else {
+			recv_line = hgd_sock_recv_line_ssl(sess.ssl);
+		}
 		exit = hgd_parse_line(&sess, recv_line);
 		free(recv_line);
 		if (num_bad_commands >= HGD_MAX_BAD_COMMANDS) {
@@ -644,7 +646,7 @@ void
 hgd_listen_loop()
 {
 	struct sockaddr_in	addr, cli_addr;
-	int			child_pid = 0;
+	int			cli_fd, child_pid = 0;
 	socklen_t		cli_addr_len;
 	int			sockopt = 1, data_ready;
 	struct pollfd		pfd;
@@ -738,7 +740,7 @@ start:
 			if (db == NULL)
 				hgd_exit_nicely();
 
-			hgd_service_client(&cli_addr);
+			hgd_service_client(cli_fd, &cli_addr);
 			DPRINTF(HGD_D_DEBUG, "client service complete");
 
 			/* and we are done with this client */
