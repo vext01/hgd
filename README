@@ -3,7 +3,8 @@ Hackathon Gunther Daemon
 
 HGD is a music system suitable for hackathons, internet cafes, LAN
 parties etc. Music is played on one set of speakers and clients queue up
-media from their own machines over the network.
+media from their own machines over the network. Because we use MPlayer to play
+media, you can send anything MPlayer understands, including video.
 
 HGD was inspired by the LPD hack -- a music system used at OpenBSD
 hackathons. We plan to implement similar functionality and extend it.
@@ -38,6 +39,9 @@ Then you can queue tracks:
 
 Each command has a manual page for detailed usage instructions. Also,
 each command has a '-h' option for quick help.
+
+If you do not want to show the video of media files, 'unset DISPLAY' before
+running hgd-playd.
 
 Developers
 ----------
