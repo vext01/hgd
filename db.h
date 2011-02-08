@@ -37,5 +37,6 @@ int				 hgd_get_num_votes();
 int				 hgd_insert_track(char *filename, char *user);
 int				 hgd_insert_vote(char *user);
 int				 hgd_get_playlist(struct hgd_playlist *list);
-
+int				 hgd_get_next_track(
+				     struct hgd_playlist_item *track);
 #endif
