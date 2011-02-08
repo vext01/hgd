@@ -131,6 +131,7 @@ int				 xasprintf(char **buf, char *fmt, ...);
 void				 hgd_sock_send(int fd, char *msg);
 void				 hgd_sock_send_line(int fd, char *msg);
 char				*hgd_sock_recv_bin(int fd, ssize_t len);
+char				*hgd_sock_recv_line_ssl(SSL* fd);
 char				*hgd_sock_recv_line(int fd);
 void				 hgd_sock_send_bin(int, char *, ssize_t);
 
