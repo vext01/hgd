@@ -1,4 +1,3 @@
-# $Id: Makefile,v 1.11 2011/02/07 20:09:31 edd Exp $
 SQL_CPPFLAGS=`pkg-config --cflags sqlite3`
 SQL_LDFLAGS=`pkg-config --libs sqlite3`
 CFLAGS+=-Wall -Wextra

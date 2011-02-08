@@ -61,7 +61,8 @@ hgd_exit_nicely()
 
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
-		DPRINTF(HGD_D_WARN, "Can't shutdown socket: %s", SERROR);
+			DPRINTF(HGD_D_WARN,
+			    "Can't shutdown socket: %s",SERROR);
 		close(svr_fd);
 	}
 	if (db_path)
