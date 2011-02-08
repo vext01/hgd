@@ -347,7 +347,7 @@ hgd_req_playlist(char **args)
 }
 
 /*
- * Heads up display mode for 
+ * Heads up display mode
  * May make this more spctacular at some stage...
  */
 int
