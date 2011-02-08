@@ -114,9 +114,9 @@ struct hgd_req_despatch {
 #define SERROR			strerror(errno)
 
 
-struct hgd_playlist_item	*hgd_new_playlist_item();
 void				 hgd_free_playlist_item(
 				    struct hgd_playlist_item *);
+void				 hgd_free_playlist(struct hgd_playlist *);
 
 /* wrappers */
 void				*xmalloc(size_t);
