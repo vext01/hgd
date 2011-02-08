@@ -306,3 +306,49 @@ hgd_get_playlist(struct hgd_playlist *list)
 
 	return (0);
 }
+
+int
+hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
+{
+	struct hgd_playlist_item	*item_t;
+
+	/* silence compiler */
+	argc = argc;
+	names = names;
+
+	DPRINTF(HGD_D_DEBUG, "track found");
+
+	item_t = (struct hgd_playlist_item *) item;
+
+	/* populate a struct that we pick up later */
+	item_t->id = atoi(data[0]);
+	xasprintf(&(item_t->filename), "%s/%s", filestore_path, data[1]);
+	item_t->user = strdup(data[2]);
+	item_t->playing = 0;
+	item_t->finished = 0;
+
+	return SQLITE_OK;
+}
+
+/* get the next track (if there is one) */
+int
+hgd_get_next_track(struct hgd_playlist_item *track)
+{
+	int			 sql_res;
+	char			*sql_err;
+
+	sql_res = sqlite3_exec(db,
+	    "SELECT id, filename, user "
+	    "FROM playlist WHERE finished=0 LIMIT 1",
+	    hgd_get_next_track_cb, track, &sql_err);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't get next track: %s", sql_err);
+		sqlite3_free(sql_err);
+		return (-1);
+	}
+
+	return (0);
+}
+
+
