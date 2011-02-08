@@ -64,6 +64,7 @@ hgd_exit_nicely()
 		DPRINTF(HGD_D_ERROR, "hgd-netd was interrupted or crashed");
 
 	/* XXX remove mplayer PID if existing */
+	/* XXX close ssl socket */
 
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
