@@ -494,6 +494,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 		err = ERR_get_error();
 		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_CTX_check_private_key: %s\n", error);
 		return -1;
 	}
 
@@ -504,6 +505,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 		err = ERR_get_error();
 		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_new: %s\n", error);
 		return -1;
 	 }
 
@@ -514,6 +516,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 		err = ERR_get_error();
 		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_set_fd: %s\n", error);
 		return -1;
 	 }
 
@@ -524,9 +527,11 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 		err = ERR_get_error();
 		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_accept: %s\n", error);
 		return -1;
 	 }
 
+	 DPRINTF(HGD_D_DEBUG, "Connected SSL");
 	 hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	 return 0;
 }
