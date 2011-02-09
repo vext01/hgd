@@ -47,9 +47,12 @@ int			 will_encrypt = 0;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
-SSL*			 ssl = NULL;
+SSL			*ssl = NULL;
 const SSL_METHOD	*method;
-SSL_CTX 		*ctx;
+SSL_CTX			*ctx;
+
+/* protos */
+int			 hgd_check_svr_response(char *resp, uint8_t x);
 
 void
 hgd_exit_nicely()
@@ -66,65 +69,55 @@ hgd_exit_nicely()
 			DPRINTF(HGD_D_WARN, "Couldn't shutdown socket");
 		close(sock_fd);
 	}
+
 	_exit(!exit_ok);
 }
 
 int
 hgd_encrypt(int fd)
 {
-	int 		ssl_res = 0;
-	char*		ok_str = NULL;
-
+	int		 ssl_res = 0;
+	char		*ok_str = NULL;
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
-
 	/* XXX this block can probably be moved so its done once */
 	SSL_library_init();
-	OpenSSL_add_all_algorithms();   /* load & register cryptos */
-	SSL_load_error_strings();     /* load all error messages */
-	method = SSLv2_client_method();   /* create client instance */
-	ctx = SSL_CTX_new(method);         /* create context */
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+	method = SSLv2_client_method();
+
+	ctx = SSL_CTX_new(method);
 	if (ctx == NULL) {
 		PRINT_SSL_ERR;
 		return -1;
 	}
 
-
-
-
-
-	ssl = SSL_new(ctx);    /* create new SSL connection state */
+	ssl = SSL_new(ctx);
 	if (ssl == NULL) {
 		PRINT_SSL_ERR;
 		return -1;
 	}
 
-	ssl_res = SSL_set_fd(ssl, fd);   /* attach the socket descriptor */
+	ssl_res = SSL_set_fd(ssl, fd);
 	if (ssl_res == 0) {
 		PRINT_SSL_ERR;
 		return -1;
 	}
 
-
-	ssl_res = SSL_connect(ssl);          /* perform the connection */
+	ssl_res = SSL_connect(ssl);
 	if (ssl_res != 1) {
 		PRINT_SSL_ERR;
 		return -1;
 	}
 
 	ok_str = hgd_sock_recv_line(fd, ssl);
+	hgd_check_svr_response(ok_str, 1);
+	free(ok_str);
 
-	if (strncmp (ok_str, "ok", HGD_MAX_LINE)) {
-		free (ok_str);
-		return 0;
-	} else {
-		DPRINTF(HGD_D_ERROR, "Failed to connect ssl, revieved :%s", ok_str);
-		free(ok_str);
-		return -1;
-	}
+	DPRINTF(HGD_D_INFO, "SSL established");
 
-
+	return (0);
 }
 
 int
@@ -167,20 +160,27 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	return err;
 }
 
-void
+int
 hgd_client_login(int fd, SSL* ssl, char* username)
 {
 	char			*resp, *user_cmd;
+	int			 login_ok = -1;
 
 	xasprintf(&user_cmd, "user|%s", username);
 	hgd_sock_send_line(fd, ssl, user_cmd);
 	free(user_cmd);
 
 	resp = hgd_sock_recv_line(fd, ssl);
-	hgd_check_svr_response(resp, 1);
+	login_ok = hgd_check_svr_response(resp, 0);
+
 	free(resp);
 
-	DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
+	if (login_ok == 0)
+		DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
+	else
+		DPRINTF(HGD_D_WARN, "Login as %s failed", user);
+
+	return (login_ok);
 }
 
 void
@@ -251,8 +251,8 @@ hgd_setup_socket()
 		hgd_encrypt(sock_fd);
 	}
 
+	/* XXX check return */
 	hgd_client_login(sock_fd, ssl, user);
-
 }
 
 
