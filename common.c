@@ -231,9 +231,9 @@ void
 hgd_sock_send_line(int fd, SSL* ssl, char *msg)
 {
 	if (ssl == NULL) {
-		hgd_sock_send_line_ssl(ssl, msg);
-	} else {
 		hgd_sock_send_line_nossl(fd, msg);
+	} else {
+		hgd_sock_send_line_ssl(ssl, msg);
 	}
 }
 
