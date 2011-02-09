@@ -21,6 +21,9 @@
 #define HGD_DBS_FILENAME_LEN	"50"
 #define HGD_DBS_USERNAME_LEN	"15"
 
+/* sqlite database error string (from global db ptr) */
+#define DERROR			sqlite3_errmsg(db)
+
 #include <sqlite3.h>
 
 extern sqlite3			*db;
@@ -39,4 +42,6 @@ int				 hgd_insert_vote(char *user);
 int				 hgd_get_playlist(struct hgd_playlist *list);
 int				 hgd_get_next_track(
 				     struct hgd_playlist_item *track);
+int				 hgd_mark_playing(int id);
+int				 hgd_mark_finished(int id, uint8_t purge);
 #endif

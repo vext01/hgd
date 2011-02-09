@@ -56,25 +56,13 @@ hgd_exit_nicely()
 void
 hgd_play_track(struct hgd_playlist_item *t)
 {
-	int			status = 0, sql_res, pid;
-	char			*query, *sql_err;
-	char			*query2, *sql_err2;
+	int			status = 0, pid;
 	char			*pid_path;
 	FILE			*pid_file;
 
 	DPRINTF(HGD_D_INFO, "Playing '%s' for '%s'", t->filename, t->user);
-
-	/* mark it as playing in the database */
-	xasprintf(&query, "UPDATE playlist SET playing=1 WHERE id=%d", t->id);
-	sql_res = sqlite3_exec(db, query, NULL, NULL, &sql_err);
-	free(query);
-
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Set track playing in sql: %s\n",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
+	if (hgd_mark_playing(t->id) == -1)
 		hgd_exit_nicely();
-	}
 
 	pid = fork();
 	if (!pid) {
@@ -117,25 +105,9 @@ hgd_play_track(struct hgd_playlist_item *t)
 
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
-	/* mark it as finished or delete in the database */
-	if (purge_finished_db) {
-		DPRINTF(HGD_D_DEBUG, "Purging/cleaning up db");
-		xasprintf(&query2,
-		    "DELETE FROM playlist WHERE id=%d OR finished=1", t->id);
-	} else {
-		DPRINTF(HGD_D_DEBUG, "Marking finished up db");
-		xasprintf(&query2, "UPDATE playlist SET playing=0,"
-		   " finished=1 WHERE id=%d", t->id);
-	}
-
-	sql_res = sqlite3_exec(db, query2, NULL, NULL, &sql_err2);
-	free(query2);
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't purge/mark finished: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err2);
-		hgd_exit_nicely();
-	}
+	if (hgd_mark_finished(t->id, purge_finished_db) == -1)
+		DPRINTF(HGD_D_WARN,
+		    "Could not purge/mark finished -- trying to continue");
 }
 
 void

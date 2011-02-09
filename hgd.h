@@ -116,8 +116,9 @@ struct hgd_req_despatch {
 			fprintf(stderr, "\n");				\
 		}							\
 	} while (0)
-#define SERROR			strerror(errno)
 
+/* generic error string */
+#define SERROR			strerror(errno)
 
 void				 hgd_free_playlist_item(
 				    struct hgd_playlist_item *);

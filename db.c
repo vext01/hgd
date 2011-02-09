@@ -348,4 +348,53 @@ hgd_get_next_track(struct hgd_playlist_item *track)
 	return (0);
 }
 
+/* mark it as playing in the database */
+int
+hgd_mark_playing(int id)
+{
+	char			*query;
+	int			 sql_res;
+
+	/* XXX param this query */
+	xasprintf(&query, "UPDATE playlist SET playing=1 WHERE id=%d", id);
+	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
+	free(query);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "mark playing: %s\n", DERROR);
+		return (-1);
+	}
+
+	return (0);
+}
+
+int
+hgd_mark_finished(int id, uint8_t purge)
+{
+	int			 sql_res;
+	char			*query;
+
+	/* XXX param these queries */
+
+	/* mark it as finished or delete in the database */
+	if (purge) {
+		DPRINTF(HGD_D_DEBUG, "Purging/cleaning up db");
+		xasprintf(&query,
+		    "DELETE FROM playlist WHERE id=%d OR finished=1", id);
+	} else {
+		DPRINTF(HGD_D_DEBUG, "Marking finished up db");
+		xasprintf(&query, "UPDATE playlist SET playing=0,"
+		   " finished=1 WHERE id=%d", id);
+	}
+
+	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
+	free(query);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't purge/mark finished: %s", DERROR);
+		return (-1);
+	}
+
+	return (0);
+}
 
