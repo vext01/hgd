@@ -119,9 +119,8 @@ xasprintf(char **buf, char *fmt, ...)
 	return ret;
 }
 
-/* send binary over the socket */
 void
-hgd_sock_send_bin(int fd, SSL* ssl, char *msg, ssize_t sz)
+hgd_sock_send_bin_nossl(int fd, char *msg, ssize_t sz)
 {
 	ssize_t		tot_sent = 0, sent;
 	char		*next = msg;
@@ -140,6 +139,32 @@ hgd_sock_send_bin(int fd, SSL* ssl, char *msg, ssize_t sz)
 		tot_sent += sent;
 	}
 }
+
+void
+hgd_sock_send_bin_ssl(SSL* ssl, char *msg, ssize_t sz)
+{
+	ssl = ssl;
+	msg = msg;
+	sz = sz;
+
+
+	DPRINTF(HGD_D_ERROR, "NOT IMPLEMENTED");
+	exit(0);
+	/* XXX: IMPLEMENT */
+}
+
+/* send binary over the socket */
+void
+hgd_sock_send_bin(int fd, SSL* ssl, char *msg, ssize_t sz)
+{
+	if (ssl == NULL) {
+		hgd_sock_send_bin_nossl(fd, msg, sz);
+	} else {
+		hgd_sock_send_bin_ssl(ssl, msg, sz);
+	}
+}
+
+
 
 /* send a message onto the network SSL!*/
 void
@@ -174,32 +199,47 @@ hgd_sock_send(int fd, char *msg)
 	DPRINTF(HGD_D_DEBUG, "Sent %d bytes", (int) len);
 }
 
+void
+hgd_sock_send_line_ssl(SSL* ssl, char *msg)
+{
+	char			*term;
+
+	DPRINTF(HGD_D_DEBUG, "Trying to send SSL message: %s", msg);
+	xasprintf(&term, "%s\r\n", msg);
+	hgd_sock_send_ssl(ssl, term);
+	free(term);
+
+	DPRINTF(HGD_D_DEBUG, "Sent line: %s", msg);
+}
+
+void
+hgd_sock_send_line_nossl(int fd, char *msg)
+{
+	char			*term;
+
+	xasprintf(&term, "%s\r\n", msg);
+	hgd_sock_send(fd, term);
+	free(term);
+
+	DPRINTF(HGD_D_DEBUG, "Sent line: %s", msg);
+
+}
+
+
 /* send a \r\n terminated line */
 void
 hgd_sock_send_line(int fd, SSL* ssl, char *msg)
 {
-	char			*term;
-
-	if (ssl == NULL)
-	{
-		xasprintf(&term, "%s\r\n", msg);
-		hgd_sock_send(fd, term);
-		free(term);
-
-		DPRINTF(HGD_D_DEBUG, "Sent line: %s", msg);
+	if (ssl == NULL) {
+		hgd_sock_send_line_ssl(ssl, msg);
 	} else {
-		DPRINTF(HGD_D_DEBUG, "Trying to send SSL message: %s", msg);
-		xasprintf(&term, "%s\r\n", msg);
-		hgd_sock_send_ssl(ssl, term);
-		free(term);
-
-		DPRINTF(HGD_D_DEBUG, "Sent line: %s", msg);
+		hgd_sock_send_line_nossl(fd, msg);
 	}
 }
 
 /* recieve a specific size, free when done */
 char *
-hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len)
+hgd_sock_recv_bin_nossl(int fd, ssize_t len)
 {
 	ssize_t			recvd_tot = 0, recvd;
 	char			*msg, *full_msg = NULL;
@@ -258,6 +298,123 @@ hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len)
 	return full_msg;
 }
 
+/* recieve a specific size, free when done */
+char *
+hgd_sock_recv_bin_ssl(SSL* ssl, ssize_t len)
+{
+	ssl = ssl;
+	len = len;
+
+	DPRINTF(HGD_D_ERROR, "NOT implemented");
+	exit(-1);
+	/*XXX*/
+}
+
+/* recieve a specific size, free when done */
+char *
+hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len)
+{
+	if (ssl == NULL) {
+		return hgd_sock_recv_bin_nossl(fd, len);
+	} else {
+		return hgd_sock_recv_bin_ssl(ssl, len);
+	}
+
+}
+
+char *
+hgd_sock_recv_line_nossl(int fd)
+{
+	ssize_t			recvd_tot = 0, recvd;
+	char			recv_char, *full_msg = NULL;
+	struct pollfd		pfd;
+	int			data_ready = 0;
+
+	/* spin until something is ready */
+	pfd.fd = fd;
+	pfd.events = POLLIN;
+
+	while (!dying && !data_ready) {
+		data_ready = poll(&pfd, 1, INFTIM);
+		if (data_ready == -1) {
+			if (errno != EINTR) {
+				DPRINTF(HGD_D_WARN, "Poll error: %s", SERROR);
+				dying = 1;
+			}
+			data_ready = 0;
+		}
+	}
+
+	if (dying)
+		hgd_exit_nicely();
+
+	full_msg = xmalloc(HGD_MAX_LINE);
+
+	do {
+		/* recieve one byte */
+		recvd = recv(fd, &recv_char, 1, 0);
+
+
+		switch (recvd) {
+		case 0:
+			/* should not happen */
+			DPRINTF(HGD_D_WARN, "No bytes recvd");
+			return (NULL);
+		case -1:
+			if (errno == EINTR)
+				continue;
+			DPRINTF(HGD_D_WARN, "recv: %s", SERROR);
+			return (NULL);
+		default:
+			/* good */
+			break;
+		};
+
+		if (recvd_tot >= HGD_MAX_LINE)
+			DPRINTF(HGD_D_ERROR, "Socket line was long");
+
+		full_msg[recvd_tot] = recv_char;
+
+		recvd_tot += recvd;
+	} while ((recvd_tot >= 1) &&
+	    (recvd_tot <= HGD_MAX_LINE) && (recv_char != '\n'));
+
+	/* get rid of \r\n */
+	if (full_msg[recvd_tot - 2] == '\r')
+		full_msg[recvd_tot - 2] = 0;
+
+	full_msg[recvd_tot - 1] = 0;
+	full_msg[recvd_tot] = 0;
+	return full_msg;
+
+}
+
+char *
+hgd_sock_recv_line_ssl(SSL* ssl)
+{
+	char* 			buffer = NULL;
+	int 			ssl_ret = 0;
+	char* 			line = NULL;
+
+
+	buffer = calloc(HGD_MAX_LINE, sizeof(char)); /* XXX make xcalloc! */
+
+	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
+
+	char* c = strstr(buffer, "\r\n");
+	c = NULL;
+
+	DPRINTF(HGD_D_DEBUG, "SSL RECV:%s", buffer);
+
+	xasprintf(&line, "%s", buffer);
+
+	free(buffer);
+
+	return line;
+
+
+}
+
 /*
  * recieve a line, free when done.
  * returns NULL on error.
@@ -265,95 +422,10 @@ hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len)
 char *
 hgd_sock_recv_line(int fd, SSL* ssl)
 {
-	ssize_t			recvd_tot = 0, recvd;
-	char			recv_char, *full_msg = NULL;
-	struct pollfd		pfd;
-	int			data_ready = 0;
-
-	char* 			buffer = NULL;
-	int 			ssl_ret = 0;
-
 	if (ssl == NULL) {
-		/* spin until something is ready */
-		pfd.fd = fd;
-		pfd.events = POLLIN;
-
-		while (!dying && !data_ready) {
-			data_ready = poll(&pfd, 1, INFTIM);
-			if (data_ready == -1) {
-				if (errno != EINTR) {
-					DPRINTF(HGD_D_WARN, "Poll error: %s", SERROR);
-					dying = 1;
-				}
-				data_ready = 0;
-			}
-		}
-
-		if (dying)
-			hgd_exit_nicely();
-
-		full_msg = xmalloc(HGD_MAX_LINE);
-
-		do {
-			/* recieve one byte */
-			recvd = recv(fd, &recv_char, 1, 0);
-
-
-			switch (recvd) {
-			case 0:
-				/* should not happen */
-				DPRINTF(HGD_D_WARN, "No bytes recvd");
-				return (NULL);
-			case -1:
-				if (errno == EINTR)
-					continue;
-				DPRINTF(HGD_D_WARN, "recv: %s", SERROR);
-				return (NULL);
-			default:
-				/* good */
-				break;
-			};
-
-			if (recvd_tot >= HGD_MAX_LINE)
-				DPRINTF(HGD_D_ERROR, "Socket line was long");
-
-			full_msg[recvd_tot] = recv_char;
-
-			recvd_tot += recvd;
-		} while ((recvd_tot >= 1) &&
-		    (recvd_tot <= HGD_MAX_LINE) && (recv_char != '\n'));
-
-		/* get rid of \r\n */
-		if (full_msg[recvd_tot - 2] == '\r')
-			full_msg[recvd_tot - 2] = 0;
-
-		full_msg[recvd_tot - 1] = 0;
-		full_msg[recvd_tot] = 0;
-		return full_msg;
-
+		return hgd_sock_recv_line_nossl(fd);
 	} else {
-
-		int len = 0;
-		char* line = NULL;
-
-
-		buffer = calloc(HGD_MAX_LINE, sizeof(char)); /* XXX */
-
-		ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
-
-		char* c = strstr(buffer, "\r\n");
-		c = NULL;
-
-		DPRINTF(HGD_D_DEBUG, "SSL RECV:%s", buffer);
-
-
-
-		xasprintf(&line, "%s", buffer);
-
-		free(buffer);
-
-		return line;
-
+		return hgd_sock_recv_line_ssl(ssl);
 	}
 }
 
