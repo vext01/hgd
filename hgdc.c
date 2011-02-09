@@ -117,6 +117,8 @@ hgd_encrypt(int fd)
 	}
 
 	DPRINTF(HGD_D_ERROR, "%s",
+
+	/* XXX check return value of this */
 	hgd_sock_recv_line(fd, ssl));
 
 	return 0;
@@ -168,10 +170,10 @@ hgd_client_login(int fd, SSL* ssl, char* username)
 	char			*resp, *user_cmd;
 
 	xasprintf(&user_cmd, "user|%s", username);
-	hgd_sock_send_line(sock_fd, ssl, user_cmd);
+	hgd_sock_send_line(fd, ssl, user_cmd);
 	free(user_cmd);
 
-	resp = hgd_sock_recv_line(sock_fd, ssl);
+	resp = hgd_sock_recv_line(fd, ssl);
 	hgd_check_svr_response(resp, 1);
 	free(resp);
 
@@ -240,6 +242,11 @@ hgd_setup_socket()
 		DPRINTF(HGD_D_ERROR, "can't get username");
 		hgd_exit_nicely();
 	}
+
+	if (will_encrypt) {
+		hgd_encrypt(sock_fd);
+	}
+
 	hgd_client_login(sock_fd, ssl, user);
 
 }
@@ -486,12 +493,6 @@ hgd_exec_req(int argc, char **argv)
 
 	/* once we know that the hgdc is used properly, open connection */
 	hgd_setup_socket();
-
-	if (will_encrypt) {
-		hgd_encrypt(sock_fd);
-
-	}
-
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	correct_desp->handler(&argv[1]);
 }
