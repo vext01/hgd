@@ -72,10 +72,14 @@ hgd_exit_nicely()
 int
 hgd_encrypt(int fd)
 {
-	int ssl_res = 0;
+	int 		ssl_res = 0;
+	char*		ok_str = NULL;
+
+
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
 
+	/* XXX this block can probably be moved so its done once */
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();   /* load & register cryptos */
 	SSL_load_error_strings();     /* load all error messages */
@@ -85,6 +89,10 @@ hgd_encrypt(int fd)
 		PRINT_SSL_ERR;
 		return -1;
 	}
+
+
+
+
 
 	ssl = SSL_new(ctx);    /* create new SSL connection state */
 	if (ssl == NULL) {
@@ -105,12 +113,18 @@ hgd_encrypt(int fd)
 		return -1;
 	}
 
-	DPRINTF(HGD_D_ERROR, "%s",
+	ok_str = hgd_sock_recv_line(fd, ssl);
 
-	/* XXX check return value of this */
-	hgd_sock_recv_line(fd, ssl));
+	if (strncmp (ok_str, "ok", HGD_MAX_LINE)) {
+		free (ok_str);
+		return 0;
+	} else {
+		DPRINTF(HGD_D_ERROR, "Failed to connect ssl, revieved :%s", ok_str);
+		free(ok_str);
+		return -1;
+	}
 
-	return 0;
+
 }
 
 int
@@ -233,6 +247,7 @@ hgd_setup_socket()
 	}
 
 	if (will_encrypt) {
+		/* XXX check return value of this */
 		hgd_encrypt(sock_fd);
 	}
 
