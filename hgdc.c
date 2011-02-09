@@ -33,8 +33,6 @@
 
 #include "hgd.h"
 
-
-
 char			*user, *host = "127.0.0.1";
 int			 will_encrypt = 0;
 int			 port = HGD_DFL_PORT;
@@ -78,7 +76,7 @@ hgd_encrypt(int fd)
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
-	method = SSLv2_client_method();
+	method = (SSL_METHOD *) SSLv2_client_method();
 
 	ctx = SSL_CTX_new(method);
 	if (ctx == NULL) {
@@ -260,7 +258,8 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
-	printf("    -h\t\tShow this message and exit\n");
+	printf("    -e\t\t\tUse SSL encryption\n");
+	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -s host/ip\t\tSet connection address\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
@@ -497,16 +496,16 @@ hgd_exec_req(int argc, char **argv)
 int
 ssl_connect(int fd)
 {
-	OpenSSL_add_all_algorithms();   /* load & register cryptos */
-	SSL_load_error_strings();     /* load all error messages */
-	method = SSLv2_client_method();   /* create client instance */
-	ctx = SSL_CTX_new(method);         /* create context */
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+	method = (SSL_METHOD *) SSLv2_client_method();
+	ctx = SSL_CTX_new(method);
 
 	ssl = SSL_new(ctx);
 	SSL_set_fd(ssl, fd);
 	SSL_connect(ssl);
 
-	return 0;
+	return (0);
 }
 
 int
@@ -514,7 +513,7 @@ main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "hp:s:vx:e")) != -1) {
+	while ((ch = getopt(argc, argv, "ehp:s:vx:")) != -1) {
 		switch (ch) {
 		case 'e':
 			DPRINTF(HGD_D_DEBUG, "Enabled encryption");
