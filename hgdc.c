@@ -41,7 +41,7 @@ int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
 SSL			*ssl = NULL;
-const SSL_METHOD	*method;
+SSL_METHOD		*method;
 SSL_CTX			*ctx;
 
 /* protos */
