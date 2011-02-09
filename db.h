@@ -44,4 +44,7 @@ int				 hgd_get_next_track(
 				     struct hgd_playlist_item *track);
 int				 hgd_mark_playing(int id);
 int				 hgd_mark_finished(int id, uint8_t purge);
+int				 hgd_clear_votes();
+int				 hgd_init_playstate();
+
 #endif

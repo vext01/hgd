@@ -398,3 +398,36 @@ hgd_mark_finished(int id, uint8_t purge)
 	return (0);
 }
 
+int
+hgd_clear_votes()
+{
+	char			*query = "DELETE FROM votes;";
+	int			sql_res;
+
+	/* mark it as playing in the database */
+	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't clear vote list");
+		return (-1);
+	}
+
+	return (0);
+}
+
+int
+hgd_init_playstate()
+{
+	int			 sql_res;
+
+	DPRINTF(HGD_D_DEBUG, "Clearing 'playing' flags");
+	sql_res = sqlite3_exec(db, "UPDATE playlist SET playing=0;",
+	    NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't clear db flags: %s", DERROR);
+		return (-1);
+	}
+
+	return (0);
+}

@@ -111,22 +111,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 }
 
 void
-hgd_clear_votes()
-{
-	char			*query = "DELETE FROM votes;", *sql_err;
-	int			sql_res;
-
-	/* mark it as playing in the database */
-	sql_res = sqlite3_exec(db, query, NULL, NULL, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't clear vote list");
-		sqlite3_free(sql_err);
-		hgd_exit_nicely();
-	}
-}
-
-void
 hgd_play_loop()
 {
 	struct hgd_playlist_item	 track;
@@ -171,8 +155,7 @@ hgd_usage()
 int
 main(int argc, char **argv)
 {
-	int			sql_res;
-	char			*sql_err, ch;
+	char			 ch;
 
 	hgd_register_sig_handlers();
 	hgd_dir = strdup(HGD_DFL_DIR);
@@ -225,16 +208,7 @@ main(int argc, char **argv)
 	if (db == NULL)
 		hgd_exit_nicely();
 
-	DPRINTF(HGD_D_DEBUG, "Clearing 'playing' flags");
-	sql_res = sqlite3_exec(db, "UPDATE playlist SET playing=0;",
-	    NULL, NULL, &sql_err);
-
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't clear db flags: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
-		hgd_exit_nicely();
-	}
+	hgd_init_playstate();
 
 	/* start */
 	hgd_play_loop();
