@@ -116,6 +116,9 @@ hgd_encrypt(int fd)
 
 	}
 
+	DPRINTF(HGD_D_ERROR, "%s",
+	hgd_sock_recv_line(fd, ssl));
+
 	return 0;
 }
 
