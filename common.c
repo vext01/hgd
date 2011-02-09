@@ -336,11 +336,17 @@ hgd_sock_recv_line(int fd, SSL* ssl)
 		int len = 0;
 		char* line = NULL;
 
-		buffer = xmalloc(HGD_MAX_LINE);
+
+		buffer = calloc(HGD_MAX_LINE, sizeof(char)); /* XXX */
 
 		ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 
-		DPRINTF(HGD_D_DEBUG, "SSL RECV:%S", buffer);
+		char* c = strstr(buffer, "\r\n");
+		c = NULL;
+
+		DPRINTF(HGD_D_DEBUG, "SSL RECV:%s", buffer);
+
+
 
 		xasprintf(&line, "%s", buffer);
 
