@@ -465,13 +465,19 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 {
 	unused = unused;
 
+	SSL_library_init();
 	OpenSSL_add_all_algorithms();   /* load & register cryptos */
 	SSL_load_error_strings();     /* load all error messages */
 	method = SSLv2_server_method();   /* create server instance */
 	ctx = SSL_CTX_new(method);         /* create context */
 	if (ctx == NULL) {
-		perror("SSL_CTX_NEW:");
-		exit(1000);
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_CTX_new: %s\n", error);
+		exit(-1);/*XXX*/
 	}
 
 
@@ -480,8 +486,15 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	 /* set the private key from KeyFile */
 	SSL_CTX_use_PrivateKey_file(ctx, HGD_KEY_FILE, SSL_FILETYPE_PEM);
 	 /* verify private key */
-	if ( !SSL_CTX_check_private_key(ctx) )
-		DPRINTF(HGD_D_ERROR, "BALLS");
+	if ( !SSL_CTX_check_private_key(ctx) ) {
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_CTX_check_private_key: %s\n", error);
+		exit(-1); /*XXX*/
+	}
 
 	 sess->ssl = SSL_new(ctx);
 	 SSL_set_fd(sess->ssl, sess->sock_fd);
