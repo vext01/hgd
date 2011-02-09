@@ -48,7 +48,7 @@ int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
 SSL*			 ssl = NULL;
-SSL_METHOD 		*method;
+const SSL_METHOD	*method;
 SSL_CTX 		*ctx;
 
 void
@@ -504,8 +504,6 @@ hgd_exec_req(int argc, char **argv)
 int
 ssl_connect(int fd)
 {
-	SSL_METHOD *method;
-	SSL_CTX *ctx;
 	OpenSSL_add_all_algorithms();   /* load & register cryptos */
 	SSL_load_error_strings();     /* load all error messages */
 	method = SSLv2_client_method();   /* create client instance */
