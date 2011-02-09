@@ -21,7 +21,7 @@
 .Sh SYNOPSIS
 .Nm hgdc
 .Bk -words
-.Op Fl hv
+.Op Fl ehv
 .Op Fl p Ar port
 .Op Fl s Ar host
 .Op Fl x Ar debug-level
@@ -35,6 +35,9 @@ suitable for hackathons, internet cafes, LAN parties etc.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl e
+Encrypt network communications using SSL. Requires that the server is
+accepting SSL communications.
 .It Fl h
 Show the usage help and exit.
 .It Fl p Ar port
