@@ -49,6 +49,8 @@ Developers
  * Code style is as described in the style(9) OpenBSD manual page.
    http://www.openbsd.org/cgi-bin/man.cgi?query=style&sektion=9
  * All of our functions are prefixed 'hgd_'
+ * All of our macros are defined in .h files and are prefixed HGD_ other
+   than in certain (generic) cases (SERROR).
  * All database code should go in db.c.
  * Any other common functionality should go in common.c.
  * Debugging is done via DPRINTF at the appropriate debug level.
