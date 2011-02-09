@@ -470,8 +470,13 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	method = SSLv2_server_method();   /* create server instance */
 	ctx = SSL_CTX_new(method);         /* create context */
 	if (ctx == NULL) {
-		perror("SSL_CTX_NEW:");
-		exit(1000);
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_CTX_new: %s\n", error);
+		exit(-1);
 	}
 
 
