@@ -36,7 +36,7 @@
 #include "hgd.h"
 #include "db.h"
 
-#define HGD_CERT_FILE "certreq.csr"
+#define HGD_CERT_FILE "certificate.crt"
 #define HGD_KEY_FILE "privkey.pem"
 
 #include <openssl/ssl.h>
@@ -464,6 +464,8 @@ int
 hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 {
 	unused = unused;
+	int ssl_err = 0;
+
 
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();   /* load & register cryptos */
@@ -477,7 +479,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 		err = ERR_get_error();
 		ERR_error_string_n(err, error, sizeof(error));
 		printf("SSL_CTX_new: %s\n", error);
-		exit(-1);/*XXX*/
+		return -1;
 	}
 
 
@@ -492,16 +494,40 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 		err = ERR_get_error();
 		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_CTX_check_private_key: %s\n", error);
-		exit(-1); /*XXX*/
+		return -1;
 	}
 
 	 sess->ssl = SSL_new(ctx);
-	 SSL_set_fd(sess->ssl, sess->sock_fd);
-	 SSL_accept(sess->ssl);
+	 if (sess->ssl == NULL) {
+		char error[255];
+		unsigned long err;
 
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		return -1;
+	 }
 
+	 ssl_err = SSL_set_fd(sess->ssl, sess->sock_fd);
+	 if (ssl_err == 0) {
+		char error[255];
+		unsigned long err;
 
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		return -1;
+	 }
+
+	 ssl_err = SSL_accept(sess->ssl);
+	 if (ssl_err != 1) {
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		return -1;
+	 }
+
+	 hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	 return 0;
 }
 
