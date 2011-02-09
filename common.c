@@ -145,9 +145,10 @@ hgd_sock_send_bin(int fd, SSL* ssl, char *msg, ssize_t sz)
 void
 hgd_sock_send_ssl(SSL* ssl, char *msg)
 {
-	char* buffer;
-	buffer = xmalloc(sizeof (char) * HGD_MAX_LINE);
-	strcat(buffer, msg);
+	char* buffer = NULL;
+	buffer = xmalloc(HGD_MAX_LINE);
+
+	strncpy(buffer, msg, HGD_MAX_LINE);
 
 	SSL_write(ssl, buffer, HGD_MAX_LINE);
 	free(buffer);
@@ -269,8 +270,8 @@ hgd_sock_recv_line(int fd, SSL* ssl)
 	struct pollfd		pfd;
 	int			data_ready = 0;
 
-	char* buffer;
-	int ssl_ret;
+	char* 			buffer = NULL;
+	int 			ssl_ret = 0;
 
 	if (ssl == NULL) {
 		/* spin until something is ready */
@@ -332,12 +333,20 @@ hgd_sock_recv_line(int fd, SSL* ssl)
 
 	} else {
 
+		int len = 0;
+		char* line = NULL;
 
-		buffer = xmalloc(128 * (sizeof (char)));
+		buffer = xmalloc(HGD_MAX_LINE);
 
 		ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 
-		return buffer;
+		DPRINTF(HGD_D_DEBUG, "SSL RECV:%S", buffer);
+
+		xasprintf(&line, "%s", buffer);
+
+		free(buffer);
+
+		return line;
 
 	}
 }
