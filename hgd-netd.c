@@ -52,7 +52,7 @@ uint8_t				single_client = 0;
 
 char				*vote_sound = NULL;
 
-const SSL_METHOD		*method;
+SSL_METHOD		*method;
 SSL_CTX 			*ctx = NULL;
 
 
