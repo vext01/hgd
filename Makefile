@@ -3,7 +3,7 @@ SQL_LDFLAGS=`pkg-config --libs sqlite3`
 
 SSL_LD_FLAGS=-lssl -lcrypto
 
-CFLAGS+=-Wall -Wextra
+CFLAGS+=-Wall -Wextra -g
 
 prefix?=/usr/local
 mandir?=${prefix}/man/man1
