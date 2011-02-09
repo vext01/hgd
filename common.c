@@ -262,18 +262,6 @@ hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len)
  * returns NULL on error.
  */
 char *
-hgd_sock_recv_line_ssl(SSL *ssl)
-{
-	/* XXX: implement this */
-
-
-}
-
-/*
- * recieve a line, free when done.
- * returns NULL on error.
- */
-char *
 hgd_sock_recv_line(int fd, SSL* ssl)
 {
 	ssize_t			recvd_tot = 0, recvd;
