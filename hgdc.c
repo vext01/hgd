@@ -34,10 +34,13 @@
 #include "hgd.h"
 
 char			*user, *host = "127.0.0.1";
+int			 will_encrypt = 0;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
 SSL*			 ssl = NULL;
+SSL_METHOD 		*method;
+SSL_CTX 		*ctx;
 
 void
 hgd_exit_nicely()
@@ -55,6 +58,65 @@ hgd_exit_nicely()
 		close(sock_fd);
 	}
 	_exit(!exit_ok);
+}
+
+int
+hgd_encrypt(int fd)
+{
+	int ssl_res = 0;
+	hgd_sock_send_line(fd, NULL, "encrypt");
+
+
+	SSL_library_init();
+	OpenSSL_add_all_algorithms();   /* load & register cryptos */
+	SSL_load_error_strings();     /* load all error messages */
+	method = SSLv2_client_method();   /* create client instance */
+	ctx = SSL_CTX_new(method);         /* create context */
+	if (ctx == NULL) {
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_CTX_new: %s\n", error);
+		return -1;
+	}
+
+	ssl = SSL_new(ctx);    /* create new SSL connection state */
+	if (ssl == NULL) {
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_new: %s\n", error);
+		return -1;
+	}
+	ssl_res = SSL_set_fd(ssl, fd);   /* attach the socket descriptor */
+	if (ssl_res == 0) {
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_set_fd: %s\n", error);
+		return -1;
+	}
+
+
+	ssl_res = SSL_connect(ssl);          /* perform the connection */
+	if (ssl_res != 1) {
+		char error[255];
+		unsigned long err;
+
+		err = ERR_get_error();
+		ERR_error_string_n(err, error, sizeof(error));
+		printf("SSL_set_fd: %s\n", error);
+		return -1;
+
+	}
+
+	return 0;
 }
 
 int
@@ -412,6 +474,11 @@ hgd_exec_req(int argc, char **argv)
 	/* once we know that the hgdc is used properly, open connection */
 	hgd_setup_socket();
 
+	if (will_encrypt) {
+		hgd_encrypt(sock_fd);
+
+	}
+
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	correct_desp->handler(&argv[1]);
 }
@@ -438,8 +505,12 @@ main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "hp:s:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "hp:s:vx:e")) != -1) {
 		switch (ch) {
+		case 'e':
+			DPRINTF(HGD_D_DEBUG, "Enabled encryption");
+			will_encrypt = 1;
+			break;
 		case 's':
 			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
 			host = optarg;
