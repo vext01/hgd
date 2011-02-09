@@ -36,8 +36,8 @@
 #include "hgd.h"
 #include "db.h"
 
-#define HGD_CERT_FILE "cert.pem"
-#define HGD_KEY_FILE "key.pem"
+#define HGD_CERT_FILE "certreq.csr"
+#define HGD_KEY_FILE "privkey.pem"
 
 #include <openssl/ssl.h>
 
@@ -51,6 +51,9 @@ int				req_votes = HGD_DFL_REQ_VOTES;
 uint8_t				single_client = 0;
 
 char				*vote_sound = NULL;
+
+SSL_METHOD 			*method = NULL;
+SSL_CTX 			*ctx = NULL;
 
 
 /*
@@ -460,15 +463,17 @@ hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
 int
 hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 {
-	SSL_METHOD *method;
-	SSL_CTX *ctx;
-
 	unused = unused;
 
 	OpenSSL_add_all_algorithms();   /* load & register cryptos */
 	SSL_load_error_strings();     /* load all error messages */
 	method = SSLv2_server_method();   /* create server instance */
 	ctx = SSL_CTX_new(method);         /* create context */
+	if (ctx == NULL) {
+		perror("SSL_CTX_NEW:");
+		exit(1000);
+	}
+
 
 	 /* set the local certificate from CertFile */
 	SSL_CTX_use_certificate_file(ctx, HGD_CERT_FILE, SSL_FILETYPE_PEM);
