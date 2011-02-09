@@ -51,6 +51,7 @@
 #include <sys/stat.h>
 
 #include <openssl/ssl.h>
+#include <openssl/err.h>
 
 
 extern int8_t			 hgd_debug;
