@@ -33,6 +33,15 @@
 
 #include "hgd.h"
 
+#define PRINT_SSL_ERR							\
+	do {								\
+		char error[255];					\
+		unsigned long err;					\
+		err = ERR_get_error();					\
+		ERR_error_string_n(err, error, sizeof(error));		\
+		printf("SSL_CTX_new: %s\n", error);			\
+	} while(0)
+
 char			*user, *host = "127.0.0.1";
 int			 will_encrypt = 0;
 int			 port = HGD_DFL_PORT;
@@ -73,47 +82,27 @@ hgd_encrypt(int fd)
 	method = SSLv2_client_method();   /* create client instance */
 	ctx = SSL_CTX_new(method);         /* create context */
 	if (ctx == NULL) {
-		char error[255];
-		unsigned long err;
-
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_CTX_new: %s\n", error);
+		PRINT_SSL_ERR;
 		return -1;
 	}
 
 	ssl = SSL_new(ctx);    /* create new SSL connection state */
 	if (ssl == NULL) {
-		char error[255];
-		unsigned long err;
-
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_new: %s\n", error);
+		PRINT_SSL_ERR;
 		return -1;
 	}
+
 	ssl_res = SSL_set_fd(ssl, fd);   /* attach the socket descriptor */
 	if (ssl_res == 0) {
-		char error[255];
-		unsigned long err;
-
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_set_fd: %s\n", error);
+		PRINT_SSL_ERR;
 		return -1;
 	}
 
 
 	ssl_res = SSL_connect(ssl);          /* perform the connection */
 	if (ssl_res != 1) {
-		char error[255];
-		unsigned long err;
-
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_set_fd: %s\n", error);
+		PRINT_SSL_ERR;
 		return -1;
-
 	}
 
 	DPRINTF(HGD_D_ERROR, "%s",
