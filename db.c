@@ -352,50 +352,80 @@ hgd_get_next_track(struct hgd_playlist_item *track)
 int
 hgd_mark_playing(int id)
 {
-	char			*query;
-	int			 sql_res;
+	int			 sql_res, ret = -1;
+	sqlite3_stmt		*stmt;
+	char			*sql = "UPDATE playlist SET playing=1 "
+				    "WHERE id=?";
 
-	/* XXX param this query */
-	xasprintf(&query, "UPDATE playlist SET playing=1 WHERE id=%d", id);
-	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
-	free(query);
-
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "mark playing: %s\n", DERROR);
-		return (-1);
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
 	}
 
-	return (0);
+	/* bind params */
+	sql_res = sqlite3_bind_int(stmt, 1, id);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = 0;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
 }
 
 int
 hgd_mark_finished(int id, uint8_t purge)
 {
 	int			 sql_res;
-	char			*query;
-
-	/* XXX param these queries */
+	char			*q_purge = "DELETE FROM playlist WHERE "
+				    "id=? OR finished=1";
+	char			*q_mark = "UPDATE playlist SET playing=0,"
+				    " finished=1 WHERE id=?";
+	char			*sql = NULL;
+	sqlite3_stmt		*stmt;
+	int			 ret = -1;
 
 	/* mark it as finished or delete in the database */
 	if (purge) {
+		sql = q_purge;
 		DPRINTF(HGD_D_DEBUG, "Purging/cleaning up db");
-		xasprintf(&query,
-		    "DELETE FROM playlist WHERE id=%d OR finished=1", id);
 	} else {
+		sql = q_mark;
 		DPRINTF(HGD_D_DEBUG, "Marking finished up db");
-		xasprintf(&query, "UPDATE playlist SET playing=0,"
-		   " finished=1 WHERE id=%d", id);
 	}
 
-	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
-	free(query);
-
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't purge/mark finished: %s", DERROR);
-		return (-1);
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
 	}
 
-	return (0);
+	/* bind params */
+	sql_res = sqlite3_bind_int(stmt, 1, id);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = 0;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
 }
 
 int
