@@ -533,18 +533,17 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 	ret = 0; /* all is well */
 clean:
-	 /* XXX do we clean anything up on failure? */
 
-	 if (ret == -1) {
-		 DPRINTF(HGD_D_INFO, "SSL connection established");
-		 hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-	 } else {
-		 DPRINTF(HGD_D_INFO, "SSL connection failed");
-		 /* i doubt this will ever be recieved */
-		 hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|ssl");
-	 }
+	if (ret == -1) {
+		DPRINTF(HGD_D_INFO, "SSL connection failed");
+		 /* XXX do we clean anything up on failure? */
+		hgd_exit_nicely(); /* be paranoid and kick client */
+	} else {
+		DPRINTF(HGD_D_INFO, "SSL connection established");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	}
 
-	 return (ret);
+	return (ret);
 }
 
 /* lookup table for command handlers */
