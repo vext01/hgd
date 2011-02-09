@@ -33,14 +33,7 @@
 
 #include "hgd.h"
 
-#define PRINT_SSL_ERR							\
-	do {								\
-		char error[255];					\
-		unsigned long err;					\
-		err = ERR_get_error();					\
-		ERR_error_string_n(err, error, sizeof(error));		\
-		printf("SSL_CTX_new: %s\n", error);			\
-	} while(0)
+
 
 char			*user, *host = "127.0.0.1";
 int			 will_encrypt = 0;
@@ -89,25 +82,25 @@ hgd_encrypt(int fd)
 
 	ctx = SSL_CTX_new(method);
 	if (ctx == NULL) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_CTX_new");
 		return -1;
 	}
 
 	ssl = SSL_new(ctx);
 	if (ssl == NULL) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_new");
 		return -1;
 	}
 
 	ssl_res = SSL_set_fd(ssl, fd);
 	if (ssl_res == 0) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_set_fd");
 		return -1;
 	}
 
 	ssl_res = SSL_connect(ssl);
 	if (ssl_res != 1) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_connect");
 		return -1;
 	}
 
