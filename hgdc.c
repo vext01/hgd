@@ -163,10 +163,26 @@ hgd_check_svr_response(char *resp, uint8_t x)
 }
 
 void
+hgd_client_login(int fd, SSL* ssl, char* username)
+{
+	char			*resp, *user_cmd;
+
+	xasprintf(&user_cmd, "user|%s", username);
+	hgd_sock_send_line(sock_fd, ssl, user_cmd);
+	free(user_cmd);
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	hgd_check_svr_response(resp, 1);
+	free(resp);
+
+	DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
+}
+
+void
 hgd_setup_socket()
 {
 	struct sockaddr_in	addr;
-	char			*resp, *user_cmd;
+	char*			resp;
 	struct hostent		*he;
 	int			sockopt = 1;
 
@@ -224,17 +240,11 @@ hgd_setup_socket()
 		DPRINTF(HGD_D_ERROR, "can't get username");
 		hgd_exit_nicely();
 	}
+	hgd_client_login(sock_fd, ssl, user);
 
-	xasprintf(&user_cmd, "user|%s", user);
-	hgd_sock_send_line(sock_fd, ssl, user_cmd);
-	free(user_cmd);
-
-	resp = hgd_sock_recv_line(sock_fd, ssl);
-	hgd_check_svr_response(resp, 1);
-	free(resp);
-
-	DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
 }
+
+
 
 void
 hgd_usage()
