@@ -86,6 +86,22 @@ xmalloc(size_t sz)
 	}
 
 	return ptr;
+
+}
+
+
+void *
+xcalloc(size_t sz, size_t size)
+{
+	void			*ptr;
+
+	ptr = calloc(sz, size);
+	if (!ptr) {
+		DPRINTF(HGD_D_ERROR, "Could not allocate");
+		hgd_exit_nicely();
+	}
+
+	return ptr;
 }
 
 void *
@@ -397,7 +413,7 @@ hgd_sock_recv_line_ssl(SSL* ssl)
 	char* 			line = NULL;
 
 
-	buffer = calloc(HGD_MAX_LINE, sizeof(char)); /* XXX make xcalloc! */
+	buffer = xcalloc(HGD_MAX_LINE, sizeof(char)); /* XXX make xcalloc! */
 
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 
