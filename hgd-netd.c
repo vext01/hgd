@@ -59,6 +59,10 @@ char				*vote_sound = NULL;
 SSL_METHOD			*method;
 SSL_CTX				*ctx = NULL;
 
+int				 encryption_enabled = 1;
+char				*ssl_cert_path = HGD_CERT_FILE;
+char				*ssl_key_path = HGD_KEY_FILE;
+
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
  * this indicates an error occured or kill signal was caught
@@ -495,12 +499,12 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	/* set the local certificate from CertFile */
 	/* check return XXX */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
-	SSL_CTX_use_certificate_file(ctx, HGD_CERT_FILE, SSL_FILETYPE_PEM);
+	SSL_CTX_use_certificate_file(ctx, ssl_cert_path, SSL_FILETYPE_PEM);
 
 	 /* set the private key from KeyFile */
 	/* check return XXX */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL private certificate");
-	SSL_CTX_use_PrivateKey_file(ctx, HGD_KEY_FILE, SSL_FILETYPE_PEM);
+	SSL_CTX_use_PrivateKey_file(ctx, ssl_key_path, SSL_FILETYPE_PEM);
 
 	/* verify private key */
 	/* XXX when this fails, server still sends a cleartext "ok" */
@@ -831,6 +835,9 @@ hgd_usage()
 	printf("  -v		Show version and exit\n");
 	printf("  -x		Set debug level (0-3)\n");
 	printf("  -y		Set path to noise to play when voting off\n");
+	printf("  -E		Disable encryption option\n");
+	printf("  -c		Set path to your SSL cert\n");
+	printf("  -k		Set path to your SSL private key\n");
 }
 
 int
@@ -844,7 +851,7 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "d:fhn:p:s:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:fhn:p:s:vx:y:Ek:c:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
@@ -884,6 +891,21 @@ main(int argc, char **argv)
 			vote_sound = optarg;
 			DPRINTF(HGD_D_DEBUG,
 			    "set voteoff sound %s", vote_sound);
+			break;
+		case 'E':
+			encryption_enabled = 0;
+			DPRINTF(HGD_D_DEBUG,
+			    "disabled encyption");
+			break;
+		case 'k':
+			ssl_key_path = optarg;
+			DPRINTF(HGD_D_DEBUG,
+			    "set ssl private key path to %s", ssl_key_path);
+			break;
+		case 'c':
+			ssl_cert_path = optarg;
+			DPRINTF(HGD_D_DEBUG,
+			    "set ssl cert path to %s", ssl_cert_path);
 			break;
 		case 'h':
 		default:
