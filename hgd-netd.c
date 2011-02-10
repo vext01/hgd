@@ -837,7 +837,7 @@ hgd_usage()
 	printf("  -E		Disable TLS encryption support\n");
 	printf("  -f		Don't fork - service single client (debug)\n");
 	printf("  -h		Show this message and exit\n");
-	printf("  -k		Set path to SSL private key file\n");
+	printf("  -k		Set path to TLS private key file\n");
 	printf("  -n		Set number of votes required to vote-off\n");
 	printf("  -p		Set network port number\n");
 	printf("  -s		Set maximum upload size (in MB)\n");
