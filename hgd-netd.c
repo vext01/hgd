@@ -476,7 +476,6 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 	unused = unused;
 
-
 	if (!encryption_enabled) {
 		DPRINTF(HGD_D_WARN,
 		    "User tried to enable SSL when it is turned off");
@@ -489,6 +488,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
+
 	method = (SSL_METHOD *) TLSv1_server_method();
 	if (method == NULL) {
 		PRINT_SSL_ERR("TLSv1_server_method");
@@ -504,18 +504,27 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	/* set the local certificate from CertFile */
 	/* check return XXX */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
-	SSL_CTX_use_certificate_file(ctx, ssl_cert_path, SSL_FILETYPE_PEM);
+	if (!SSL_CTX_use_certificate_file(
+	    ctx, ssl_cert_path, SSL_FILETYPE_PEM)) {
+		DPRINTF(HGD_D_ERROR, "Can't load TLS cert: %s", ssl_cert_path);
+		PRINT_SSL_ERR("SSL_CTX_use_certificate_file");
+		goto clean;
+	}
 
 	 /* set the private key from KeyFile */
 	/* check return XXX */
-	DPRINTF(HGD_D_DEBUG, "Loading SSL private certificate");
-	SSL_CTX_use_PrivateKey_file(ctx, ssl_key_path, SSL_FILETYPE_PEM);
+	DPRINTF(HGD_D_DEBUG, "Loading SSL private key");
+	if (!SSL_CTX_use_PrivateKey_file(
+	    ctx, ssl_key_path, SSL_FILETYPE_PEM)) {
+		DPRINTF(HGD_D_ERROR, "Can't load TLS key: %s", ssl_key_path);
+		PRINT_SSL_ERR("SSL_CTX_use_PrivateKey_file");
+	}
 
 	/* verify private key */
 	/* XXX when this fails, server still sends a cleartext "ok" */
 	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
 	if (!SSL_CTX_check_private_key(ctx)) {
-		DPRINTF(HGD_D_INFO, "keylocation is: %s", ssl_key_path);
+		DPRINTF(HGD_D_ERROR, "Can't verify TLS key: %s", ssl_key_path);
 		PRINT_SSL_ERR("SSL_CTX_check_private_key");
 		goto clean;
 	}

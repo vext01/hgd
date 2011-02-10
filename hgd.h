@@ -28,6 +28,7 @@
 #define HGD_DB_NAME		"hgd.db"
 #define HGD_MPLAYER_PID_NAME	"mplayer.pid"
 #define HGD_FILESTORE_NAME	"files"
+#define HGD_DFL_SVR_CONF_DIR	"/etc/hgd"
 
 /* networking */
 #define HGD_DFL_PORT		6633
@@ -40,14 +41,14 @@
 #define	HGD_MAX_PROTO_TOKS	3
 #define HGD_GREET		"ok|HGD-" HGD_VERSION
 #define HGD_BYE			"ok|Catch you later d00d!"
-#define HGD_PID_STR_SZ		10
 
 /* TLS */
-#define HGD_DFL_CERT_FILE		"certificate.crt"
-#define HGD_DFL_KEY_FILE		"privkey.pem"
+#define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"
+#define HGD_DFL_KEY_FILE	HGD_DFL_SVR_CONF_DIR "/privkey.key"
 
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
+#define HGD_PID_STR_SZ		10
 
 #include <sys/types.h>
 #include <unistd.h>
