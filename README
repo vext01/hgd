@@ -53,8 +53,14 @@ each command has a '-h' option for quick help.
 If you do not want to show the video of media files, 'unset DISPLAY' before
 running hgd-playd.
 
-Generating a SSL Cert:
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privkey.key -out certificate.crt 
+Running with SSL
+----------------
+
+You can use self signed SSL on the server to encrypt all network
+communications:
+
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout \
+	privkey.key -out certificate.crt 
 
 Developers
 ----------

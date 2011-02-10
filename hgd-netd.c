@@ -36,8 +36,12 @@
 #include "hgd.h"
 #include "db.h"
 
-#define HGD_CERT_FILE "certificate.crt"
-#define HGD_KEY_FILE "privkey.pem"
+/*
+ * XXX these should be configurable
+ * How about -P and -C ?
+ */
+#define HGD_CERT_FILE		"certificate.crt"
+#define HGD_KEY_FILE		"privkey.pem"
 
 #include <openssl/ssl.h>
 
@@ -52,9 +56,8 @@ uint8_t				single_client = 0;
 
 char				*vote_sound = NULL;
 
-SSL_METHOD 			*method = NULL;
-SSL_CTX 			*ctx = NULL;
-
+SSL_METHOD			*method;
+SSL_CTX				*ctx = NULL;
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
@@ -216,7 +219,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	}
 
 	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|user_not_identified");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|user_not_identified");
 		ret = -1;
 		goto clean;
 	}
@@ -227,7 +231,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	f = mkstemp(unique_fn);
 	if (f < 0) {
-		DPRINTF(HGD_D_ERROR, "mkstemp: %s: %s", filestore_path, SERROR);
+		DPRINTF(HGD_D_ERROR, "mkstemp: %s: %s",
+		    filestore_path, SERROR);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 		ret = -1;
 		goto clean;
@@ -251,10 +256,13 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		DPRINTF(HGD_D_DEBUG, "Waiting for chunk of length %d bytes",
 		    (int) to_write);
 
-		payload = hgd_sock_recv_bin(sess->sock_fd, sess->ssl, to_write);
+		payload = hgd_sock_recv_bin(sess->sock_fd,
+		    sess->ssl, to_write);
 		if (payload == NULL) {
 			DPRINTF(HGD_D_ERROR, "failed to recv binary");
-			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
+			hgd_sock_send_line(sess->sock_fd,
+			    sess->ssl, "err|internal");
+
 			unlink(filename); /* don't much care if this fails */
 			ret = -1;
 			goto clean;
@@ -265,7 +273,8 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		if (write_ret < 0) {
 			DPRINTF(HGD_D_ERROR, "Failed to write %d bytes: %s",
 			    (int) to_write, SERROR);
-			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
+			hgd_sock_send_line(sess->sock_fd,
+			    sess->ssl, "err|internal");
 			unlink(filename); /* don't much care if this fails */
 			ret = -1;
 			goto clean;
@@ -289,7 +298,6 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	DPRINTF(HGD_D_INFO, "Transfer of '%s' complete", filename);
-
 clean:
 	if (f == -1)
 		close(f);
@@ -353,7 +361,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	DPRINTF(HGD_D_INFO, "%s wants to kill track %d", sess->user, tid);
 
 	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|user_not_identified");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|user_not_identified");
 		return (-1);
 	}
 
@@ -366,7 +375,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	/* is *anything* playing? */
 	if (playing.filename == NULL) {
 		DPRINTF(HGD_D_INFO, "No track is playing, can't vote off");
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|not_playing");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|not_playing");
 		return (-1);
 	}
 
@@ -375,7 +385,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		tid = atoi(args[0]);
 		if (playing.id != tid) {
 			DPRINTF(HGD_D_INFO, "Track to voteoff isn't playing");
-			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|wrong_track");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			    "err|wrong_track");
 			hgd_free_playlist_item(&playing);
 			return (-1);
 		}
@@ -389,7 +400,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	case 1:
 		/* duplicate vote */
 		DPRINTF(HGD_D_INFO, "User '%s' already voted", sess->user);
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|duplicate_vote");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|duplicate_vote");
 		return (0);
 		break;
 	default:
@@ -463,79 +475,76 @@ hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
 int
 hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 {
-	unused = unused;
-	int ssl_err = 0;
+	int			ssl_err = 0, ret = -1;
 
+	unused = unused;
+
+	DPRINTF(HGD_D_INFO, "Setting up SSL connection");
 
 	SSL_library_init();
-	OpenSSL_add_all_algorithms();   /* load & register cryptos */
-	SSL_load_error_strings();     /* load all error messages */
-	method = SSLv2_server_method();   /* create server instance */
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+	method = (SSL_METHOD *) SSLv2_server_method();
+
 	ctx = SSL_CTX_new(method);         /* create context */
 	if (ctx == NULL) {
-		char error[255];
-		unsigned long err;
-
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_CTX_new: %s\n", error);
-		return -1;
+		PRINT_SSL_ERR("SSL_CTX_new");
+		goto clean;
 	}
 
-
-	 /* set the local certificate from CertFile */
+	/* set the local certificate from CertFile */
+	/* check return XXX */
+	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
 	SSL_CTX_use_certificate_file(ctx, HGD_CERT_FILE, SSL_FILETYPE_PEM);
-	 /* set the private key from KeyFile */
-	SSL_CTX_use_PrivateKey_file(ctx, HGD_KEY_FILE, SSL_FILETYPE_PEM);
-	 /* verify private key */
-	if ( !SSL_CTX_check_private_key(ctx) ) {
-		char error[255];
-		unsigned long err;
 
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_CTX_check_private_key: %s\n", error);
-		return -1;
+	 /* set the private key from KeyFile */
+	/* check return XXX */
+	DPRINTF(HGD_D_DEBUG, "Loading SSL private certificate");
+	SSL_CTX_use_PrivateKey_file(ctx, HGD_KEY_FILE, SSL_FILETYPE_PEM);
+
+	/* verify private key */
+	/* XXX when this fails, server still sends a cleartext "ok" */
+	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
+	if (!SSL_CTX_check_private_key(ctx)) {
+		PRINT_SSL_ERR("SSL_CTX_check_private_key");
+		goto clean;
 	}
 
-	 sess->ssl = SSL_new(ctx);
-	 if (sess->ssl == NULL) {
-		char error[255];
-		unsigned long err;
+	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
+	sess->ssl = SSL_new(ctx);
+	if (sess->ssl == NULL) {
+		PRINT_SSL_ERR("SSL_new");
+		goto clean;
+	}
 
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_new: %s\n", error);
-		return -1;
-	 }
+	DPRINTF(HGD_D_DEBUG, "SSL_set_fd");
+	ssl_err = SSL_set_fd(sess->ssl, sess->sock_fd);
+	if (ssl_err == 0) {
+		PRINT_SSL_ERR("SSL_set_fd");
+		goto clean;
+	}
 
-	 ssl_err = SSL_set_fd(sess->ssl, sess->sock_fd);
-	 if (ssl_err == 0) {
-		char error[255];
-		unsigned long err;
+	DPRINTF(HGD_D_DEBUG, "SSL_accept");
+	ssl_err = SSL_accept(sess->ssl);
+	if (ssl_err != 1) {
+		PRINT_SSL_ERR("SSL_accept");
+		goto clean;
+	}
 
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_set_fd: %s\n", error);
-		return -1;
-	 }
+	ret = 0; /* all is well */
+clean:
 
-	 ssl_err = SSL_accept(sess->ssl);
-	 if (ssl_err != 1) {
-		char error[255];
-		unsigned long err;
+	if (ret == -1) {
+		DPRINTF(HGD_D_INFO, "SSL connection failed");
+		 /* XXX do we clean anything up on failure? */
+		hgd_exit_nicely(); /* be paranoid and kick client */
+	} else {
+		DPRINTF(HGD_D_INFO, "SSL connection established");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	}
 
-		err = ERR_get_error();
-		ERR_error_string_n(err, error, sizeof(error));
-		printf("SSL_accept: %s\n", error);
-		return -1;
-	 }
-
-	 DPRINTF(HGD_D_DEBUG, "Connected SSL");
-	 hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-	 return 0;
+	return (ret);
 }
-
 
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
@@ -575,7 +584,8 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	DPRINTF(HGD_D_DEBUG, "Got %d tokens", n_toks);
 	if ((n_toks == 0) || (strlen(tokens[0]) == 0)) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|no_tokens_sent");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|no_tokens_sent");
 		num_bad_commands++;
 		return 0;
 	}
@@ -600,7 +610,8 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		DPRINTF(HGD_D_DEBUG, "Despatching '%s' handler", tokens[0]);
 
 		DPRINTF(HGD_D_WARN, "Invalid command");
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|invalid_command");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|invalid_command");
 		num_bad_commands++;
 
 		goto clean;
