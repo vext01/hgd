@@ -492,7 +492,11 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
-	method = (SSL_METHOD *) SSLv2_server_method();
+	method = (SSL_METHOD *) TLSv1_server_method();
+	if (method == NULL) {
+		PRINT_SSL_ERR("TLSv1_server_method");
+		goto clean;
+	}
 
 	ctx = SSL_CTX_new(method);         /* create context */
 	if (ctx == NULL) {
@@ -514,6 +518,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	/* XXX when this fails, server still sends a cleartext "ok" */
 	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
 	if (!SSL_CTX_check_private_key(ctx)) {
+		DPRINTF(HGD_D_INFO, "keylocation is: %s", ssl_key_path);
 		PRINT_SSL_ERR("SSL_CTX_check_private_key");
 		goto clean;
 	}
@@ -587,7 +592,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	/* tokenise */
 	do {
 		tokens[n_toks] = strdup(strsep(&next, "|"));
-		DPRINTF(HGD_D_DEBUG, "tok %d: %s", n_toks, tokens[n_toks]);
+		DPRINTF(HGD_D_DEBUG, "tok %d: \"%s\"", n_toks, tokens[n_toks]);
 	} while ((n_toks++ < HGD_MAX_PROTO_TOKS) && (next != NULL));
 
 	DPRINTF(HGD_D_DEBUG, "Got %d tokens", n_toks);

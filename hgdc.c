@@ -76,7 +76,12 @@ hgd_encrypt(int fd)
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
-	method = (SSL_METHOD *) SSLv2_client_method();
+
+	method = (SSL_METHOD *) TLSv1_client_method();
+	if (method == NULL) {
+		PRINT_SSL_ERR ("TLSv1_client_method");
+		return -1;
+	}
 
 	ctx = SSL_CTX_new(method);
 	if (ctx == NULL) {
@@ -264,6 +269,7 @@ hgd_usage()
 	printf("    -s host/ip\t\tSet connection address\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
+	printf("    -e\t\t\tEnable Encyption\n");
 }
 
 /* upload and queue a file to the playlist */

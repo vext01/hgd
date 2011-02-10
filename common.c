@@ -187,7 +187,7 @@ void
 hgd_sock_send_ssl(SSL* ssl, char *msg)
 {
 	char* buffer = NULL;
-	buffer = xmalloc(HGD_MAX_LINE);
+	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 
 	strncpy(buffer, msg, HGD_MAX_LINE);
 
@@ -413,7 +413,7 @@ hgd_sock_recv_line_ssl(SSL* ssl)
 	char* 			line = NULL;
 
 
-	buffer = xcalloc(HGD_MAX_LINE, sizeof(char)); /* XXX make xcalloc! */
+	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 
