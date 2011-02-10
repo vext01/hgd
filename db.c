@@ -37,26 +37,22 @@ sqlite3 *
 hgd_open_db(char *db_path)
 {
 	int			sql_res;
-	char			*sql_err;
 	sqlite3			*db;
 
 	/* open the database */
 	DPRINTF(HGD_D_DEBUG, "opening database");
 	if (sqlite3_open(db_path, &db) != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't open db: %s", sqlite3_errmsg(db));
-		return NULL;
+		DPRINTF(HGD_D_ERROR, "Can't open db: %s", DERROR);
+		return (NULL);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Setting database timeout");
 	sql_res = sqlite3_busy_timeout(db, 2000);
 
-
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't set busy timout on db: %s",
-		    sqlite3_errmsg(db));
+		DPRINTF(HGD_D_ERROR, "Can't set busy timout: %s", DERROR);
 		sqlite3_close(db);
-		sqlite3_free(sql_err);
-		return NULL;
+		return (NULL);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Making playlist table (if needed)");
@@ -67,28 +63,25 @@ hgd_open_db(char *db_path)
 	    "user VARCHAR(" HGD_DBS_USERNAME_LEN "),"
 	    "playing INTEGER,"
 	    "finished INTEGER)",
-	    NULL, NULL, &sql_err);
+	    NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
-		    sqlite3_errmsg(db));
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
 		sqlite3_close(db);
-		sqlite3_free(sql_err);
-		return NULL;
+		return (NULL);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "making votes table (if needed)");
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS votes ("
 	    "user VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY)",
-	    NULL, NULL, &sql_err);
+	    NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
-		    sqlite3_errmsg(db));
+		    DERROR);
 		sqlite3_close(db);
-		sqlite3_free(sql_err);
-		return NULL;
+		return (NULL);
 	}
 
 	return db;
@@ -119,17 +112,14 @@ int
 hgd_get_playing_item(struct hgd_playlist_item *playing)
 {
 	int				 sql_res;
-	char				*sql_err;
 
 	sql_res = sqlite3_exec(db,
 	    "SELECT id, filename, user "
 	    "FROM playlist WHERE playing=1 LIMIT 1",
-	    hgd_get_playing_item_cb, playing, &sql_err);
+	    hgd_get_playing_item_cb, playing, NULL);
 
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
+		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s", DERROR);
 		return (-1);
 	}
 
@@ -153,21 +143,19 @@ int
 hgd_get_num_votes()
 {
 	int			sql_res, num = -1;
-	char			*sql, *sql_err;
+	char			*sql;
 
 	xasprintf(&sql, "SELECT COUNT (*) FROM votes;");
-	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, &num, &sql_err);
+	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, &num, NULL);
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't get votes: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
+		DPRINTF(HGD_D_ERROR, "Can't get votes: %s", DERROR);
 		free(sql);
 		return (-1);
 	}
 	free(sql);
 
 	DPRINTF(HGD_D_DEBUG, "%d votes so far", num);
-	return num;
+	return (num);
 }
 
 
@@ -183,7 +171,7 @@ hgd_insert_track(char *filename, char *user)
 	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s",
-		    sqlite3_errmsg(db));
+		    DERROR);
 		goto clean;
 	}
 
@@ -191,13 +179,13 @@ hgd_insert_track(char *filename, char *user)
 	sql_res = sqlite3_bind_text(stmt, 1, filename, -1, SQLITE_TRANSIENT);
 	sql_res &= sqlite3_bind_text(stmt, 2, user, -1, SQLITE_TRANSIENT);
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", sqlite3_errmsg(db));
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
 		goto clean;
 	}
 
 	sql_res = sqlite3_step(stmt);
 	if (sql_res != SQLITE_DONE) {
-		DPRINTF(HGD_D_WARN, "Can't step sql: %s", sqlite3_errmsg(db));
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
 		goto clean;
 	}
 
@@ -218,14 +206,14 @@ hgd_insert_vote(char *user)
 	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s",
-		    sqlite3_errmsg(db));
+		    DERROR);
 		goto clean;
 	}
 
 	/* bind params */
 	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", sqlite3_errmsg(db));
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
 		goto clean;
 	}
 
@@ -234,7 +222,7 @@ hgd_insert_vote(char *user)
 		ret = 1; /* indicates duplicat vote */
 		goto clean;
 	} else if (sql_res != SQLITE_DONE) {
-		DPRINTF(HGD_D_WARN, "Can't step sql: %s", sqlite3_errmsg(db));
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
 		goto clean;
 	}
 
@@ -283,7 +271,6 @@ int
 hgd_get_playlist(struct hgd_playlist *list)
 {
 	int			sql_res;
-	char			*sql_err;
 
 	list->n_items = 0;
 	list->items = NULL;
@@ -292,12 +279,10 @@ hgd_get_playlist(struct hgd_playlist *list)
 
 	sql_res = sqlite3_exec(db,
 	    "SELECT id, filename, user FROM playlist WHERE finished=0",
-	    hgd_get_playlist_cb, list, &sql_err);
+	    hgd_get_playlist_cb, list, NULL);
 
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s",
-		    sqlite3_errmsg(db));
-		sqlite3_free(sql_err);
+		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s", DERROR);
 		return (-1);
 	}
 
@@ -332,20 +317,130 @@ int
 hgd_get_next_track(struct hgd_playlist_item *track)
 {
 	int			 sql_res;
-	char			*sql_err;
 
 	sql_res = sqlite3_exec(db,
 	    "SELECT id, filename, user "
 	    "FROM playlist WHERE finished=0 LIMIT 1",
-	    hgd_get_next_track_cb, track, &sql_err);
+	    hgd_get_next_track_cb, track, NULL);
 
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't get next track: %s", sql_err);
-		sqlite3_free(sql_err);
+		DPRINTF(HGD_D_ERROR, "Can't get next track: %s", DERROR);
 		return (-1);
 	}
 
 	return (0);
 }
 
+/* mark it as playing in the database */
+int
+hgd_mark_playing(int id)
+{
+	int			 sql_res, ret = -1;
+	sqlite3_stmt		*stmt;
+	char			*sql = "UPDATE playlist SET playing=1 "
+				    "WHERE id=?";
 
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_int(stmt, 1, id);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = 0;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
+
+int
+hgd_mark_finished(int id, uint8_t purge)
+{
+	int			 sql_res;
+	char			*q_purge = "DELETE FROM playlist WHERE "
+				    "id=? OR finished=1";
+	char			*q_mark = "UPDATE playlist SET playing=0,"
+				    " finished=1 WHERE id=?";
+	char			*sql = NULL;
+	sqlite3_stmt		*stmt;
+	int			 ret = -1;
+
+	/* mark it as finished or delete in the database */
+	if (purge) {
+		sql = q_purge;
+		DPRINTF(HGD_D_DEBUG, "Purging/cleaning up db");
+	} else {
+		sql = q_mark;
+		DPRINTF(HGD_D_DEBUG, "Marking finished up db");
+	}
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_int(stmt, 1, id);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = 0;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
+
+int
+hgd_clear_votes()
+{
+	char			*query = "DELETE FROM votes;";
+	int			sql_res;
+
+	/* mark it as playing in the database */
+	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't clear vote list");
+		return (-1);
+	}
+
+	return (0);
+}
+
+int
+hgd_init_playstate()
+{
+	int			 sql_res;
+
+	DPRINTF(HGD_D_DEBUG, "Clearing 'playing' flags");
+	sql_res = sqlite3_exec(db, "UPDATE playlist SET playing=0;",
+	    NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't clear db flags: %s", DERROR);
+		return (-1);
+	}
+
+	return (0);
+}

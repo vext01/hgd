@@ -17,6 +17,16 @@ Current features
  * Command line client with the ability queue and vote-off tracks.
  * Works on Linux and OpenBSD.
 
+Prerequisites
+-------------
+
+To build, you will need:
+
+ * Linux or OpenBSD (possibly others, not tested)
+ * make (either GNU or BSD)
+ * gcc or clang
+ * sqlite3 libraries and headers (if building servers).
+
 Building
 --------
 
