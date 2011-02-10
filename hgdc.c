@@ -33,23 +33,17 @@
 
 #include "hgd.h"
 
-#define PRINT_SSL_ERR							\
-	do {								\
-		char error[255];					\
-		unsigned long err;					\
-		err = ERR_get_error();					\
-		ERR_error_string_n(err, error, sizeof(error));		\
-		printf("SSL_CTX_new: %s\n", error);			\
-	} while(0)
-
 char			*user, *host = "127.0.0.1";
 int			 will_encrypt = 0;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
-SSL*			 ssl = NULL;
-SSL_METHOD 		*method;
-SSL_CTX 		*ctx;
+SSL			*ssl = NULL;
+SSL_METHOD		*method;
+SSL_CTX			*ctx;
+
+/* protos */
+int			 hgd_check_svr_response(char *resp, uint8_t x);
 
 void
 hgd_exit_nicely()
@@ -66,65 +60,55 @@ hgd_exit_nicely()
 			DPRINTF(HGD_D_WARN, "Couldn't shutdown socket");
 		close(sock_fd);
 	}
+
 	_exit(!exit_ok);
 }
 
 int
 hgd_encrypt(int fd)
 {
-	int 		ssl_res = 0;
-	char*		ok_str = NULL;
-
+	int		 ssl_res = 0;
+	char		*ok_str = NULL;
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
-
 	/* XXX this block can probably be moved so its done once */
 	SSL_library_init();
-	OpenSSL_add_all_algorithms();   /* load & register cryptos */
-	SSL_load_error_strings();     /* load all error messages */
-	method = SSLv2_client_method();   /* create client instance */
-	ctx = SSL_CTX_new(method);         /* create context */
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+	method = (SSL_METHOD *) SSLv2_client_method();
+
+	ctx = SSL_CTX_new(method);
 	if (ctx == NULL) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_CTX_new");
 		return -1;
 	}
 
-
-
-
-
-	ssl = SSL_new(ctx);    /* create new SSL connection state */
+	ssl = SSL_new(ctx);
 	if (ssl == NULL) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_new");
 		return -1;
 	}
 
-	ssl_res = SSL_set_fd(ssl, fd);   /* attach the socket descriptor */
+	ssl_res = SSL_set_fd(ssl, fd);
 	if (ssl_res == 0) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_set_fd");
 		return -1;
 	}
 
-
-	ssl_res = SSL_connect(ssl);          /* perform the connection */
+	ssl_res = SSL_connect(ssl);
 	if (ssl_res != 1) {
-		PRINT_SSL_ERR;
+		PRINT_SSL_ERR ("SSL_connect");
 		return -1;
 	}
 
 	ok_str = hgd_sock_recv_line(fd, ssl);
+	hgd_check_svr_response(ok_str, 1);
+	free(ok_str);
 
-	if (strncmp (ok_str, "ok", HGD_MAX_LINE)) {
-		free (ok_str);
-		return 0;
-	} else {
-		DPRINTF(HGD_D_ERROR, "Failed to connect ssl, revieved :%s", ok_str);
-		free(ok_str);
-		return -1;
-	}
+	DPRINTF(HGD_D_INFO, "SSL established");
 
-
+	return (0);
 }
 
 int
@@ -167,20 +151,27 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	return err;
 }
 
-void
+int
 hgd_client_login(int fd, SSL* ssl, char* username)
 {
 	char			*resp, *user_cmd;
+	int			 login_ok = -1;
 
 	xasprintf(&user_cmd, "user|%s", username);
 	hgd_sock_send_line(fd, ssl, user_cmd);
 	free(user_cmd);
 
 	resp = hgd_sock_recv_line(fd, ssl);
-	hgd_check_svr_response(resp, 1);
+	login_ok = hgd_check_svr_response(resp, 0);
+
 	free(resp);
 
-	DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
+	if (login_ok == 0)
+		DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
+	else
+		DPRINTF(HGD_D_WARN, "Login as %s failed", user);
+
+	return (login_ok);
 }
 
 void
@@ -251,8 +242,8 @@ hgd_setup_socket()
 		hgd_encrypt(sock_fd);
 	}
 
+	/* XXX check return */
 	hgd_client_login(sock_fd, ssl, user);
-
 }
 
 
@@ -267,7 +258,8 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
-	printf("    -h\t\tShow this message and exit\n");
+	printf("    -e\t\t\tUse SSL encryption\n");
+	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -s host/ip\t\tSet connection address\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
@@ -504,18 +496,16 @@ hgd_exec_req(int argc, char **argv)
 int
 ssl_connect(int fd)
 {
-	SSL_METHOD *method;
-	SSL_CTX *ctx;
-	OpenSSL_add_all_algorithms();   /* load & register cryptos */
-	SSL_load_error_strings();     /* load all error messages */
-	method = SSLv2_client_method();   /* create client instance */
-	ctx = SSL_CTX_new(method);         /* create context */
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+	method = (SSL_METHOD *) SSLv2_client_method();
+	ctx = SSL_CTX_new(method);
 
 	ssl = SSL_new(ctx);
 	SSL_set_fd(ssl, fd);
 	SSL_connect(ssl);
 
-	return 0;
+	return (0);
 }
 
 int
@@ -523,7 +513,7 @@ main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "hp:s:vx:e")) != -1) {
+	while ((ch = getopt(argc, argv, "ehp:s:vx:")) != -1) {
 		switch (ch) {
 		case 'e':
 			DPRINTF(HGD_D_DEBUG, "Enabled encryption");

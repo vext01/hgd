@@ -105,6 +105,7 @@ struct hgd_req_despatch {
 #define HGD_D_INFO		2
 #define HGD_D_DEBUG		3
 
+
 /* simple debug facility */
 #define DPRINTF(level, x...)						\
 	do {								\
@@ -116,6 +117,15 @@ struct hgd_req_despatch {
 			fprintf(stderr, "\n");				\
 		}							\
 	} while (0)
+
+#define PRINT_SSL_ERR(msg)						\
+	do {								\
+		char error[255];					\
+		unsigned long err;					\
+		err = ERR_get_error();					\
+		ERR_error_string_n(err, error, sizeof(error));		\
+		DPRINTF (HGD_D_ERROR, "%s: %s\n", msg, error);		\
+	} while(0)
 
 /* generic error string */
 #define SERROR			strerror(errno)
