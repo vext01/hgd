@@ -36,12 +36,8 @@
 #include "hgd.h"
 #include "db.h"
 
-/*
- * XXX these should be configurable
- * How about -P and -C ?
- */
-#define HGD_CERT_FILE		"certificate.crt"
-#define HGD_KEY_FILE		"privkey.pem"
+#define HGD_DEFAULT_CERT_FILE		"certificate.crt"
+#define HGD_DEFAULT_KEY_FILE		"privkey.pem"
 
 #include <openssl/ssl.h>
 
@@ -60,8 +56,8 @@ SSL_METHOD			*method;
 SSL_CTX				*ctx = NULL;
 
 int				 encryption_enabled = 1;
-char				*ssl_cert_path = HGD_CERT_FILE;
-char				*ssl_key_path = HGD_KEY_FILE;
+char				*ssl_cert_path = HGD_DEFAULT_CERT_FILE;
+char				*ssl_key_path = HGD_DEFAULT_KEY_FILE;
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
@@ -482,6 +478,14 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	int			ssl_err = 0, ret = -1;
 
 	unused = unused;
+
+
+	if (!encryption_enabled) {
+		DPRINTF(HGD_D_WARN,
+		    "User tried to enable SSL when it is turned off");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|nossl");
+		return -1;
+	}
 
 	DPRINTF(HGD_D_INFO, "Setting up SSL connection");
 
