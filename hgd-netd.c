@@ -36,9 +36,6 @@
 #include "hgd.h"
 #include "db.h"
 
-#define HGD_DEFAULT_CERT_FILE		"certificate.crt"
-#define HGD_DEFAULT_KEY_FILE		"privkey.pem"
-
 #include <openssl/ssl.h>
 
 int				port = HGD_DFL_PORT;
@@ -56,8 +53,8 @@ SSL_METHOD			*method;
 SSL_CTX				*ctx = NULL;
 
 int				 encryption_enabled = 1;
-char				*ssl_cert_path = HGD_DEFAULT_CERT_FILE;
-char				*ssl_key_path = HGD_DEFAULT_KEY_FILE;
+char				*ssl_cert_path = HGD_DFL_CERT_FILE;
+char				*ssl_key_path = HGD_DFL_KEY_FILE;
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
