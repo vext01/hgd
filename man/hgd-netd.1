@@ -21,8 +21,10 @@
 .Sh SYNOPSIS
 .Nm hgd-netd
 .Bk -words
-.Op Fl fhv
+.Op Fl Efhv
+.Op Fl c Ar path-to-tls-cert
 .Op Fl d Ar state-dir
+.Op Fl k Ar path-to-tls-key
 .Op Fl n Ar num-votes
 .Op Fl p Ar port
 .Op Fl x Ar debug-level
@@ -44,14 +46,20 @@ the currently playing song, if the user dislikes the song.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl c Ar file
+Set the path to the TLS certificate file.
 .It Fl d Ar dir
 Set the HGD state directory where the SQLite database and uploaded files will
 be stored. This defaults to /var/hgd.
+.It Fl E
+Disable TLS support.
 .It Fl f
 Don't fork and service a single client only. This is useful for debugging
 purposes only.
 .It Fl h
 Show the usage help and exit.
+.It Fl k Ar file
+Set the path to the TLS private key.
 .It Fl n Ar num
 Set the number of votes required to "vote-off" a song. This defaults to 3.
 .It Fl p Ar port
