@@ -74,6 +74,17 @@ Set the debug level: 0=errors, 1=warnings, 2=info, 3=debug. Defaults to 1.
 Set the path to a sound file to play when a vote-off is successful. None by
 default.
 .El
+.Sh ENCRYPTING WITH TLS
+You can use self signed TLS on the server to encrypt all network
+communications, thus protecting passwords. The simplest way to do this
+is to do the following:
+.Bl -tag -width Ds
+.It cd /etc/hgd
+.It openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout \\
+	privkey.key -out certificate.crt 
+.El
+When hgd-netd sees a valid TLS certificate and private key, it will allow
+SSL network communications from clients.
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
