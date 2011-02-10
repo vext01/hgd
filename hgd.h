@@ -42,6 +42,10 @@
 #define HGD_BYE			"ok|Catch you later d00d!"
 #define HGD_PID_STR_SZ		10
 
+/* TLS */
+#define HGD_DFL_CERT_FILE		"certificate.crt"
+#define HGD_DFL_KEY_FILE		"privkey.pem"
+
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
 
