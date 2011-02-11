@@ -328,7 +328,7 @@ hgd_sock_recv_bin_ssl(SSL* ssl, ssize_t len)
 
 	DPRINTF(HGD_D_ERROR, "NOT implemented");
 	exit(-1);
-	/*XXX*/
+	/*XXX Implement SSL binary recv*/
 }
 
 /* recieve a specific size, free when done */
@@ -425,8 +425,14 @@ hgd_sock_recv_line_ssl(SSL* ssl)
 
 	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 
+
 	/* XXX check return */
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
+	if (ssl_ret <= 0) {
+		PRINT_SSL_ERR("Failed doing SSL read.");
+		return (NULL);
+	}
+
 
 	/* get rid of \r\n */
 	c = strstr(buffer, "\r\n");
