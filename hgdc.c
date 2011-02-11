@@ -58,6 +58,10 @@ hgd_exit_nicely()
 		SSL_free(ssl);
 	}
 
+	if (ctx) {
+		SSL_CTX_free(ctx);
+	}
+
 	if (sock_fd > 0) {
 		/* try to close connection */
 		if (shutdown(sock_fd, SHUT_RDWR) == -1)
@@ -73,8 +77,6 @@ hgd_encrypt(int fd)
 {
 	int			 ssl_res = 0;
 	char			*ok_str = NULL;
-
-
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 

@@ -474,6 +474,7 @@ hgd_sock_recv_line_ssl(SSL *ssl)
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 	if (ssl_ret <= 0) {
 		PRINT_SSL_ERR("SSL_read");
+		free(buffer);
 		return (NULL);
 	}
 
