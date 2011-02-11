@@ -48,11 +48,15 @@ int			 hgd_check_svr_response(char *resp, uint8_t x);
 void
 hgd_exit_nicely()
 {
-	/* XXX cleanup ssl */
-
 	if (!exit_ok)
 		DPRINTF(HGD_D_INFO,
 		    "hgdc was interrupted or crashed - cleaning up");
+
+
+	if (ssl) {
+		/* clean up ssl structures */
+		SSL_free(ssl);
+	}
 
 	if (sock_fd > 0) {
 		/* try to close connection */
@@ -243,13 +247,15 @@ hgd_setup_socket()
 	}
 
 	if (will_encrypt) {
-		/* XXX check return value of this */
-		hgd_encrypt(sock_fd);
+
+		if (hgd_encrypt(sock_fd) != 0) {
+			/* XXX do something when encrypt fails? */
+		}
 	}
 
 
 	if ( hgd_client_login(sock_fd, ssl, user) != 0) {
-		/* XXX do somthing on failed login */
+		/* XXX do something on failed login */
 	}
 }
 
