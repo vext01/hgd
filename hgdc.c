@@ -247,8 +247,10 @@ hgd_setup_socket()
 		hgd_encrypt(sock_fd);
 	}
 
-	/* XXX check return */
-	hgd_client_login(sock_fd, ssl, user);
+
+	if ( hgd_client_login(sock_fd, ssl, user) != 0) {
+		/* XXX do somthing on failed login */
+	}
 }
 
 /* NOTE! -c is reserved for 'config file path' */

@@ -426,7 +426,6 @@ hgd_sock_recv_line_ssl(SSL* ssl)
 	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 
 
-	/* XXX check return */
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 	if (ssl_ret <= 0) {
 		PRINT_SSL_ERR("Failed doing SSL read.");
