@@ -67,8 +67,8 @@ hgd_exit_nicely()
 int
 hgd_encrypt(int fd)
 {
-	int		 ssl_res = 0;
-	char		*ok_str = NULL;
+	int			 ssl_res = 0;
+	char			*ok_str = NULL;
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
@@ -80,31 +80,31 @@ hgd_encrypt(int fd)
 	method = (SSL_METHOD *) TLSv1_client_method();
 	if (method == NULL) {
 		PRINT_SSL_ERR ("TLSv1_client_method");
-		return -1;
+		return (-1);
 	}
 
 	ctx = SSL_CTX_new(method);
 	if (ctx == NULL) {
 		PRINT_SSL_ERR ("SSL_CTX_new");
-		return -1;
+		return (-1);
 	}
 
 	ssl = SSL_new(ctx);
 	if (ssl == NULL) {
 		PRINT_SSL_ERR ("SSL_new");
-		return -1;
+		return (-1);
 	}
 
 	ssl_res = SSL_set_fd(ssl, fd);
 	if (ssl_res == 0) {
 		PRINT_SSL_ERR ("SSL_set_fd");
-		return -1;
+		return (-1);
 	}
 
 	ssl_res = SSL_connect(ssl);
 	if (ssl_res != 1) {
 		PRINT_SSL_ERR ("SSL_connect");
-		return -1;
+		return (-1);
 	}
 
 	ok_str = hgd_sock_recv_line(fd, ssl);
@@ -250,8 +250,6 @@ hgd_setup_socket()
 	/* XXX check return */
 	hgd_client_login(sock_fd, ssl, user);
 }
-
-
 
 void
 hgd_usage()
