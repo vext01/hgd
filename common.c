@@ -45,6 +45,39 @@ char				*debug_names[] = {
 char				*hgd_dir = NULL;
 char				*filestore_path = NULL;
 
+int
+hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx, int server) {
+
+
+	SSL_library_init();
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+
+	DPRINTF(HGD_D_DEBUG, "Setting up TLSv1_client_method");
+	if (server) {
+		*method = (SSL_METHOD *) TLSv1_server_method();
+		if (*method == NULL) {
+			PRINT_SSL_ERR ("TLSv1_server_method");
+			return (-1);
+		}
+	} else {
+		*method = (SSL_METHOD *) TLSv1_client_method();
+		if (*method == NULL) {
+			PRINT_SSL_ERR ("TLSv1_client_method");
+			return (-1);
+		}
+	}
+
+	DPRINTF(HGD_D_DEBUG, "Setting up SSL_CTX_new");
+	*ctx = SSL_CTX_new(*method);
+	if (*ctx == NULL) {
+		PRINT_SSL_ERR ("SSL_CTX_new");
+		return (-1);
+	}
+
+	return (0);
+}
+
 /*
  * frees members of a playlist item, but not the item
  * itself, therefore allowing stack allocation if wished
@@ -406,7 +439,7 @@ hgd_sock_recv_line_nossl(int fd)
 	if (c == NULL) {
 		DPRINTF(HGD_D_WARN, "could not locate \\r\\n terminator");
 	} else {
-		*c = NULL;
+		*c = 0;
 	}
 
 	full_msg[recvd_tot - 1] = 0;
@@ -438,7 +471,7 @@ hgd_sock_recv_line_ssl(SSL* ssl)
 	if (c == NULL) {
 		DPRINTF(HGD_D_WARN, "could not locate \\r\\n terminator");
 	} else {
-		*c = NULL;
+		*c = 0;
 	}
 
 	DPRINTF(HGD_D_DEBUG, "TLS recvd:'%s'", buffer);

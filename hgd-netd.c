@@ -49,7 +49,7 @@ uint8_t				single_client = 0;
 
 char				*vote_sound = NULL;
 
-SSL_METHOD			*method;
+SSL_METHOD			*method = NULL;
 SSL_CTX				*ctx = NULL;
 
 int				 encryption_enabled = 1;
@@ -67,7 +67,11 @@ hgd_exit_nicely()
 		DPRINTF(HGD_D_ERROR, "hgd-netd was interrupted or crashed");
 
 	/* XXX remove mplayer PID if existing */
-	/* XXX close ssl socket */
+
+	/* Clean this up
+	if (ssl) {
+		SSL_free(ssl);
+	}*/
 
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
@@ -485,22 +489,6 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 	DPRINTF(HGD_D_INFO, "Setting up SSL connection");
 
-	SSL_library_init();
-	OpenSSL_add_all_algorithms();
-	SSL_load_error_strings();
-
-	method = (SSL_METHOD *) TLSv1_server_method();
-	if (method == NULL) {
-		PRINT_SSL_ERR("TLSv1_server_method");
-		goto clean;
-	}
-
-	ctx = SSL_CTX_new(method);         /* create context */
-	if (ctx == NULL) {
-		PRINT_SSL_ERR("SSL_CTX_new");
-		goto clean;
-	}
-
 	/* set the local certificate from CertFile */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
 	if (!SSL_CTX_use_certificate_file(
@@ -556,7 +544,8 @@ clean:
 
 	if (ret == -1) {
 		DPRINTF(HGD_D_INFO, "SSL connection failed");
-		 /* XXX do we clean anything up on failure? */
+		 /* XXX do we clean anything up on failure?
+		  * SSL stucture is cleaned in hgd_exit*/
 		hgd_exit_nicely(); /* be paranoid and kick client */
 	} else {
 		DPRINTF(HGD_D_INFO, "SSL connection established");
@@ -948,6 +937,10 @@ main(int argc, char **argv)
 
 	sqlite3_close(db);
 	db = NULL;
+
+	if (encryption_enabled) {
+		hgd_setup_ssl_ctx(&method, &ctx, 1);
+	}
 
 	hgd_listen_loop();
 

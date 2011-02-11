@@ -74,25 +74,15 @@ hgd_encrypt(int fd)
 	int			 ssl_res = 0;
 	char			*ok_str = NULL;
 
+
+
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
-	/* XXX this block can probably be moved so its done once */
-	SSL_library_init();
-	OpenSSL_add_all_algorithms();
-	SSL_load_error_strings();
-
-	method = (SSL_METHOD *) TLSv1_client_method();
-	if (method == NULL) {
-		PRINT_SSL_ERR ("TLSv1_client_method");
+	if (hgd_setup_ssl_ctx(&method, &ctx, 0) != 0) {
 		return (-1);
 	}
 
-	ctx = SSL_CTX_new(method);
-	if (ctx == NULL) {
-		PRINT_SSL_ERR ("SSL_CTX_new");
-		return (-1);
-	}
-
+	DPRINTF(HGD_D_DEBUG, "Setting up SSL_new");
 	ssl = SSL_new(ctx);
 	if (ssl == NULL) {
 		PRINT_SSL_ERR ("SSL_new");
@@ -562,6 +552,8 @@ main(int argc, char **argv)
 
 	argc -= optind;
 	argv += optind;
+
+
 
 	/* do whatever the user wants */
 	hgd_exec_req(argc, argv);
