@@ -21,7 +21,7 @@
 .Sh SYNOPSIS
 .Nm hgd-playd
 .Bk -words
-.Op Fl hpqv
+.Op Fl Chpqv
 .Op Fl d Ar state-dir
 .Op Fl x Ar debug-level
 .Ek
@@ -41,6 +41,8 @@ files (if DISPLAY is set).
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl C
+Clear the playlist at startup.
 .It Fl d Ar dir
 Set the HGD state directory where the SQLite database and uploaded files will
 be stored. This defaults to /var/hgd.

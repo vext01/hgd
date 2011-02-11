@@ -167,6 +167,7 @@ hgd_setup_socket()
 	DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
 }
 
+/* NOTE! -c is reserved for 'config file path' */
 void
 hgd_usage()
 {
