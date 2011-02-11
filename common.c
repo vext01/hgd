@@ -159,14 +159,19 @@ hgd_sock_send_bin_nossl(int fd, char *msg, ssize_t sz)
 void
 hgd_sock_send_bin_ssl(SSL* ssl, char *msg, ssize_t sz)
 {
-	ssl = ssl;
-	msg = msg;
-	sz = sz;
+	ssize_t		sent = 0;
 
+	/* SSL_write is all or nothing */
+	while (!sent) {
+		sent = SSL_write(ssl, msg, sz);
 
-	DPRINTF(HGD_D_ERROR, "NOT IMPLEMENTED");
-	exit(0);
-	/* XXX: IMPLEMENT */
+		if (sent <= 0) {
+			DPRINTF(HGD_D_WARN, "Send failed");
+			sent = 0;
+			continue;
+		} else
+			DPRINTF(HGD_D_DEBUG, "Sent %d bytes", (int) sent);
+	}
 }
 
 /* send binary over the socket */
@@ -316,19 +321,33 @@ hgd_sock_recv_bin_nossl(int fd, ssize_t len)
 		return NULL;
 	}
 
-	return full_msg;
+	return (full_msg);
 }
 
 /* recieve a specific size, free when done */
 char *
 hgd_sock_recv_bin_ssl(SSL* ssl, ssize_t len)
 {
-	ssl = ssl;
-	len = len;
+	ssize_t			recvd_tot = 0, recvd;
+	char			*msg, *full_msg = NULL;
 
-	DPRINTF(HGD_D_ERROR, "NOT implemented");
-	exit(-1);
-	/*XXX Implement SSL binary recv*/
+	full_msg = xmalloc(len);
+	msg = full_msg;
+
+	while (recvd_tot != len) {
+		//recvd = recv(fd, msg, len - recvd_tot, 0);
+		recvd = SSL_read(ssl, msg, len - recvd_tot);
+
+		if (recvd < 0) {
+			DPRINTF(HGD_D_WARN, "No bytes recvd");
+			recvd = 0;
+		}
+
+		msg += recvd;
+		recvd_tot += recvd;
+	}
+
+	return (full_msg);
 }
 
 /* recieve a specific size, free when done */
@@ -425,13 +444,11 @@ hgd_sock_recv_line_ssl(SSL* ssl)
 
 	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 
-
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 	if (ssl_ret <= 0) {
 		PRINT_SSL_ERR("Failed doing SSL read.");
 		return (NULL);
 	}
-
 
 	/* get rid of \r\n */
 	c = strstr(buffer, "\r\n");
