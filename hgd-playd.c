@@ -31,6 +31,7 @@
 
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
+uint8_t				 clear_playlist_on_start = 0;
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -140,10 +141,12 @@ hgd_play_loop()
 		hgd_exit_nicely();
 }
 
+/* NOTE! -c is reserved for 'config file path' */
 void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
+	printf("  -C	Clear playlist on startup\n");
 	printf("  -d	Set hgd state directory\n");
 	printf("  -h	Show this message and exit\n");
 	printf("  -p	Don't purge finished tracks from filesystem\n");
@@ -161,8 +164,13 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "d:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
 		switch (ch) {
+		case 'C':
+			clear_playlist_on_start = 1;
+			DPRINTF(HGD_D_DEBUG, "will clear playlist '%s'",
+			    hgd_dir);
+			break;
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = strdup(optarg);
@@ -209,6 +217,9 @@ main(int argc, char **argv)
 		hgd_exit_nicely();
 
 	hgd_init_playstate();
+
+	if (clear_playlist_on_start)
+		hgd_clear_playlist();
 
 	/* start */
 	hgd_play_loop();

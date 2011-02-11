@@ -839,6 +839,7 @@ start:
 	/* NOREACH */
 }
 
+/* NOTE! -c is reserved for 'config file path' */
 void
 hgd_usage()
 {

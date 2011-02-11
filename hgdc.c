@@ -251,6 +251,7 @@ hgd_setup_socket()
 	hgd_client_login(sock_fd, ssl, user);
 }
 
+/* NOTE! -c is reserved for 'config file path' */
 void
 hgd_usage()
 {
