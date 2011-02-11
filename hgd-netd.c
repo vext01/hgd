@@ -266,7 +266,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		}
 		write_ret = write(f, payload, to_write);
 
-		/* what if write returns less than the chunk XXX? */
+		/* XXX what if write returns less than the chunk? */
 		if (write_ret < 0) {
 			DPRINTF(HGD_D_ERROR, "Failed to write %d bytes: %s",
 			    (int) to_write, SERROR);
@@ -502,7 +502,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	}
 
 	/* set the local certificate from CertFile */
-	/* check return XXX */
+	/* XXX check return */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
 	if (!SSL_CTX_use_certificate_file(
 	    ctx, ssl_cert_path, SSL_FILETYPE_PEM)) {
@@ -511,8 +511,8 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 		goto clean;
 	}
 
-	 /* set the private key from KeyFile */
-	/* check return XXX */
+	/* set the private key from KeyFile */
+	/* XXXcheck return */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL private key");
 	if (!SSL_CTX_use_PrivateKey_file(
 	    ctx, ssl_key_path, SSL_FILETYPE_PEM)) {
@@ -549,6 +549,8 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 		PRINT_SSL_ERR("SSL_accept");
 		goto clean;
 	}
+
+	SSL_CTX_set_mode(ssl, SSL_MODE_AUTO_RETRY);
 
 	ret = 0; /* all is well */
 clean:
