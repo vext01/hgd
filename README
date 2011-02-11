@@ -53,6 +53,14 @@ each command has a '-h' option for quick help.
 If you do not want to show the video of media files, 'unset DISPLAY' before
 running hgd-playd.
 
+Roadmap
+-------
+
+ * 0.1 - basic functionality (pretty much complete, will tag soon).
+ * 0.2 - TLS crypto support and authentication (see egelmex fork on github).
+ * 0.3 - Admin commands and mplayer slave mode.
+ * 0.4 - Fair share playlist
+
 Developers
 ----------
 
