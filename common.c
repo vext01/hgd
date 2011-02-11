@@ -186,12 +186,16 @@ hgd_sock_send_bin(int fd, SSL* ssl, char *msg, ssize_t sz)
 void
 hgd_sock_send_ssl(SSL* ssl, char *msg)
 {
-	char* buffer = NULL;
-	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
+	char			*buffer = NULL;
 
+	DPRINTF(HGD_D_DEBUG, "TLS send '%s'", msg);
+
+	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 	strncpy(buffer, msg, HGD_MAX_LINE);
 
+	DPRINTF(HGD_D_DEBUG, "TLS send buf '%s'", buffer);
 	SSL_write(ssl, buffer, HGD_MAX_LINE);
+
 	free(buffer);
 }
 
@@ -220,12 +224,13 @@ hgd_sock_send_line_ssl(SSL* ssl, char *msg)
 {
 	char			*term;
 
-	DPRINTF(HGD_D_DEBUG, "Trying to send SSL message: %s", msg);
-	xasprintf(&term, "%s\r\n", msg);
-	hgd_sock_send_ssl(ssl, term);
-	free(term);
+	DPRINTF(HGD_D_DEBUG, "Trying to send SSL message: '%s'", msg);
 
-	DPRINTF(HGD_D_DEBUG, "Sent line: %s", msg);
+	xasprintf(&term, "%s\r\n", msg);
+	DPRINTF(HGD_D_DEBUG, "Sending terminated line: '%s'", term);
+	hgd_sock_send_ssl(ssl, term);
+
+	free(term);
 }
 
 void
@@ -341,10 +346,11 @@ hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len)
 char *
 hgd_sock_recv_line_nossl(int fd)
 {
-	ssize_t			recvd_tot = 0, recvd;
-	char			recv_char, *full_msg = NULL;
-	struct pollfd		pfd;
-	int			data_ready = 0;
+	ssize_t			 recvd_tot = 0, recvd;
+	char			 recv_char, *full_msg = NULL;
+	struct pollfd		 pfd;
+	char			*c;
+	int			 data_ready = 0;
 
 	/* spin until something is ready */
 	pfd.fd = fd;
@@ -396,39 +402,46 @@ hgd_sock_recv_line_nossl(int fd)
 	    (recvd_tot <= HGD_MAX_LINE) && (recv_char != '\n'));
 
 	/* get rid of \r\n */
-	if (full_msg[recvd_tot - 2] == '\r')
-		full_msg[recvd_tot - 2] = 0;
+	c = strstr(full_msg, "\r\n");
+	if (c == NULL) {
+		DPRINTF(HGD_D_WARN, "could not locate \\r\\n terminator");
+	} else {
+		*c = NULL;
+	}
 
 	full_msg[recvd_tot - 1] = 0;
 	full_msg[recvd_tot] = 0;
-	return full_msg;
 
+	return (full_msg);
 }
 
 char *
 hgd_sock_recv_line_ssl(SSL* ssl)
 {
-	char* 			buffer = NULL;
-	int 			ssl_ret = 0;
-	char* 			line = NULL;
+	char			*buffer = NULL;
+	int			 ssl_ret = 0;
+	char			*line = NULL, *c;
 
 
 	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 
+	/* XXX check return */
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 
-	char* c = strstr(buffer, "\r\n");
-	c = NULL;
+	/* get rid of \r\n */
+	c = strstr(buffer, "\r\n");
+	if (c == NULL) {
+		DPRINTF(HGD_D_WARN, "could not locate \\r\\n terminator");
+	} else {
+		*c = NULL;
+	}
 
-	DPRINTF(HGD_D_DEBUG, "SSL RECV:%s", buffer);
+	DPRINTF(HGD_D_DEBUG, "TLS recvd:'%s'", buffer);
 
-	xasprintf(&line, "%s", buffer);
-
+	line = strdup(buffer);
 	free(buffer);
 
-	return line;
-
-
+	return (line);
 }
 
 /*
