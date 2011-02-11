@@ -444,3 +444,22 @@ hgd_init_playstate()
 
 	return (0);
 }
+
+int
+hgd_clear_playlist()
+{
+	char			*query = "DELETE FROM playlist;";
+	int			sql_res;
+
+	/* mark it as playing in the database */
+	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't clear playlist");
+		return (-1);
+	}
+
+	return (0);
+}
+
+
