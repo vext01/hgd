@@ -157,7 +157,7 @@ hgd_sock_send_bin_nossl(int fd, char *msg, ssize_t sz)
 }
 
 void
-hgd_sock_send_bin_ssl(SSL* ssl, char *msg, ssize_t sz)
+hgd_sock_send_bin_ssl(SSL *ssl, char *msg, ssize_t sz)
 {
 	ssize_t		sent = 0;
 
@@ -176,7 +176,7 @@ hgd_sock_send_bin_ssl(SSL* ssl, char *msg, ssize_t sz)
 
 /* send binary over the socket */
 void
-hgd_sock_send_bin(int fd, SSL* ssl, char *msg, ssize_t sz)
+hgd_sock_send_bin(int fd, SSL *ssl, char *msg, ssize_t sz)
 {
 	if (ssl == NULL) {
 		hgd_sock_send_bin_nossl(fd, msg, sz);
@@ -185,11 +185,9 @@ hgd_sock_send_bin(int fd, SSL* ssl, char *msg, ssize_t sz)
 	}
 }
 
-
-
-/* send a message onto the network SSL!*/
+/* send a TLS encrypted message onto the network */
 void
-hgd_sock_send_ssl(SSL* ssl, char *msg)
+hgd_sock_send_ssl(SSL *ssl, char *msg)
 {
 	char			*buffer = NULL;
 
@@ -198,9 +196,7 @@ hgd_sock_send_ssl(SSL* ssl, char *msg)
 	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 	strncpy(buffer, msg, HGD_MAX_LINE);
 
-	DPRINTF(HGD_D_DEBUG, "TLS send buf '%s'", buffer);
 	SSL_write(ssl, buffer, HGD_MAX_LINE);
-
 	free(buffer);
 }
 
@@ -225,14 +221,13 @@ hgd_sock_send(int fd, char *msg)
 }
 
 void
-hgd_sock_send_line_ssl(SSL* ssl, char *msg)
+hgd_sock_send_line_ssl(SSL *ssl, char *msg)
 {
 	char			*term;
 
-	DPRINTF(HGD_D_DEBUG, "Trying to send SSL message: '%s'", msg);
+	DPRINTF(HGD_D_DEBUG, "Trying to send TLS message: '%s'", msg);
 
 	xasprintf(&term, "%s\r\n", msg);
-	DPRINTF(HGD_D_DEBUG, "Sending terminated line: '%s'", term);
 	hgd_sock_send_ssl(ssl, term);
 
 	free(term);
@@ -254,7 +249,7 @@ hgd_sock_send_line_nossl(int fd, char *msg)
 
 /* send a \r\n terminated line */
 void
-hgd_sock_send_line(int fd, SSL* ssl, char *msg)
+hgd_sock_send_line(int fd, SSL *ssl, char *msg)
 {
 	if (ssl == NULL) {
 		hgd_sock_send_line_nossl(fd, msg);
@@ -326,7 +321,7 @@ hgd_sock_recv_bin_nossl(int fd, ssize_t len)
 
 /* recieve a specific size, free when done */
 char *
-hgd_sock_recv_bin_ssl(SSL* ssl, ssize_t len)
+hgd_sock_recv_bin_ssl(SSL *ssl, ssize_t len)
 {
 	ssize_t			recvd_tot = 0, recvd;
 	char			*msg, *full_msg = NULL;
@@ -335,7 +330,6 @@ hgd_sock_recv_bin_ssl(SSL* ssl, ssize_t len)
 	msg = full_msg;
 
 	while (recvd_tot != len) {
-		//recvd = recv(fd, msg, len - recvd_tot, 0);
 		recvd = SSL_read(ssl, msg, len - recvd_tot);
 
 		if (recvd < 0) {
@@ -352,7 +346,7 @@ hgd_sock_recv_bin_ssl(SSL* ssl, ssize_t len)
 
 /* recieve a specific size, free when done */
 char *
-hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len)
+hgd_sock_recv_bin(int fd, SSL *ssl, ssize_t len)
 {
 	if (ssl == NULL) {
 		return hgd_sock_recv_bin_nossl(fd, len);
@@ -435,7 +429,7 @@ hgd_sock_recv_line_nossl(int fd)
 }
 
 char *
-hgd_sock_recv_line_ssl(SSL* ssl)
+hgd_sock_recv_line_ssl(SSL *ssl)
 {
 	char			*buffer = NULL;
 	int			 ssl_ret = 0;
@@ -446,7 +440,7 @@ hgd_sock_recv_line_ssl(SSL* ssl)
 
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 	if (ssl_ret <= 0) {
-		PRINT_SSL_ERR("Failed doing SSL read.");
+		PRINT_SSL_ERR("SSL_read");
 		return (NULL);
 	}
 
@@ -471,7 +465,7 @@ hgd_sock_recv_line_ssl(SSL* ssl)
  * returns NULL on error.
  */
 char *
-hgd_sock_recv_line(int fd, SSL* ssl)
+hgd_sock_recv_line(int fd, SSL *ssl)
 {
 	if (ssl == NULL) {
 		return hgd_sock_recv_line_nossl(fd);

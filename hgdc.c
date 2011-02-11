@@ -111,7 +111,7 @@ hgd_encrypt(int fd)
 	hgd_check_svr_response(ok_str, 1);
 	free(ok_str);
 
-	DPRINTF(HGD_D_INFO, "SSL established");
+	DPRINTF(HGD_D_INFO, "TLS connection established");
 
 	return (0);
 }
@@ -157,7 +157,7 @@ hgd_check_svr_response(char *resp, uint8_t x)
 }
 
 int
-hgd_client_login(int fd, SSL* ssl, char* username)
+hgd_client_login(int fd, SSL *ssl, char *username)
 {
 	char			*resp, *user_cmd;
 	int			 login_ok = -1;
@@ -264,7 +264,7 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
-	printf("    -e\t\t\tUse SSL encryption\n");
+	printf("    -e\t\t\tUse TLS encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -s host/ip\t\tSet connection address\n");

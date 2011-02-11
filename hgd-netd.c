@@ -478,12 +478,12 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 	if (!encryption_enabled) {
 		DPRINTF(HGD_D_WARN,
-		    "User tried to enable SSL when it is turned off");
+		    "User tried to enable TLS when it is turned off");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|nossl");
-		return -1;
+		return (-1);
 	}
 
-	DPRINTF(HGD_D_INFO, "Setting up SSL connection");
+	DPRINTF(HGD_D_INFO, "Setting up TLS connection");
 
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
@@ -502,7 +502,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	}
 
 	/* set the local certificate from CertFile */
-	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
+	DPRINTF(HGD_D_DEBUG, "Loading TLS certificate");
 	if (!SSL_CTX_use_certificate_file(
 	    ctx, ssl_cert_path, SSL_FILETYPE_PEM)) {
 		DPRINTF(HGD_D_ERROR, "Can't load TLS cert: %s", ssl_cert_path);
@@ -511,7 +511,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	}
 
 	/* set the private key from KeyFile */
-	DPRINTF(HGD_D_DEBUG, "Loading SSL private key");
+	DPRINTF(HGD_D_DEBUG, "Loading TLS private key");
 	if (!SSL_CTX_use_PrivateKey_file(
 	    ctx, ssl_key_path, SSL_FILETYPE_PEM)) {
 		DPRINTF(HGD_D_ERROR, "Can't load TLS key: %s", ssl_key_path);
@@ -520,14 +520,14 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	}
 
 	/* verify private key */
-	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
+	DPRINTF(HGD_D_DEBUG, "Verify TLS private certificate");
 	if (!SSL_CTX_check_private_key(ctx)) {
 		DPRINTF(HGD_D_ERROR, "Can't verify TLS key: %s", ssl_key_path);
 		PRINT_SSL_ERR("SSL_CTX_check_private_key");
 		goto clean;
 	}
 
-	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
+	DPRINTF(HGD_D_DEBUG, "Verify TLS private certificate");
 	sess->ssl = SSL_new(ctx);
 	if (sess->ssl == NULL) {
 		PRINT_SSL_ERR("SSL_new");
@@ -555,11 +555,11 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 clean:
 
 	if (ret == -1) {
-		DPRINTF(HGD_D_INFO, "SSL connection failed");
+		DPRINTF(HGD_D_INFO, "TLS connection failed");
 		 /* XXX do we clean anything up on failure? */
 		hgd_exit_nicely(); /* be paranoid and kick client */
 	} else {
-		DPRINTF(HGD_D_INFO, "SSL connection established");
+		DPRINTF(HGD_D_INFO, "TLS connection established");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	}
 
