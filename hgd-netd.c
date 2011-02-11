@@ -580,12 +580,6 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	struct hgd_cmd_despatch *desp, *correct_desp;
 	uint8_t			bye = 0;
 
-	/* strip the line of \r\n */
-	for (p = line; *p != 0; p++) {
-		if ((*p == '\r') || (*p == '\n'))
-			*p = 0;
-	}
-
 	/* tokenise */
 	do {
 		tokens[n_toks] = strdup(strsep(&next, "|"));
@@ -694,7 +688,10 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	hgd_sock_send_line(cli_fd, sess.ssl, HGD_BYE);
 
 	/* free up the hgd_session members */
-	free(sess.cli_str);
+	if (sess.cli_str != NULL)
+		free(sess.cli_str);
+	if (sess.ssl != NULL)
+		SSL_free(sess.ssl);
 	if (sess.user)
 		free(sess.user);
 }
