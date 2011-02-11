@@ -502,7 +502,6 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	}
 
 	/* set the local certificate from CertFile */
-	/* XXX check return */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
 	if (!SSL_CTX_use_certificate_file(
 	    ctx, ssl_cert_path, SSL_FILETYPE_PEM)) {
@@ -512,16 +511,15 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	}
 
 	/* set the private key from KeyFile */
-	/* XXXcheck return */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL private key");
 	if (!SSL_CTX_use_PrivateKey_file(
 	    ctx, ssl_key_path, SSL_FILETYPE_PEM)) {
 		DPRINTF(HGD_D_ERROR, "Can't load TLS key: %s", ssl_key_path);
 		PRINT_SSL_ERR("SSL_CTX_use_PrivateKey_file");
+		goto clean;
 	}
 
 	/* verify private key */
-	/* XXX when this fails, server still sends a cleartext "ok" */
 	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
 	if (!SSL_CTX_check_private_key(ctx)) {
 		DPRINTF(HGD_D_ERROR, "Can't verify TLS key: %s", ssl_key_path);
@@ -550,7 +548,8 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 		goto clean;
 	}
 
-	SSL_CTX_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+	/* This cannot fail so no error check */
+	SSL_CTX_set_mode(ctx, SSL_MODE_AUTO_RETRY);
 
 	ret = 0; /* all is well */
 clean:
