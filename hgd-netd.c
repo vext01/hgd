@@ -38,6 +38,12 @@
 
 #include <openssl/ssl.h>
 
+enum CRYPT_STATE {
+	encypt_disable,
+	encypt_enable,
+	encypt_force
+};
+
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
@@ -52,7 +58,7 @@ char				*vote_sound = NULL;
 SSL_METHOD			*method = NULL;
 SSL_CTX				*ctx = NULL;
 
-int				 encryption_enabled = 1;
+enum CRYPT_STATE 		 crypt_option = encypt_enable;
 uint8_t				 ssl_capable = 0;
 char				*ssl_cert_path = HGD_DFL_CERT_FILE;
 char				*ssl_key_path = HGD_DFL_KEY_FILE;
@@ -481,7 +487,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 	unused = unused;
 
-	if (!encryption_enabled) {
+	if (crypt_option == encypt_enable || crypt_option == encypt_force) {
 		DPRINTF(HGD_D_WARN,
 		    "User tried to enable TLS when it is turned off");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|nossl");
@@ -840,8 +846,13 @@ main(int argc, char **argv)
 			hgd_dir = strdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
 			break;
+		case 'e':
+			crypt_option = encypt_force;
+			DPRINTF(HGD_D_DEBUG,
+			    "disabled encyption");
+			break;
 		case 'E':
-			encryption_enabled = 0;
+			crypt_option = encypt_disable;
 			DPRINTF(HGD_D_DEBUG,
 			    "disabled encyption");
 			break;
@@ -909,10 +920,15 @@ main(int argc, char **argv)
 	sqlite3_close(db);
 	db = NULL;
 
-	if (encryption_enabled) {
+	if (crypt_option == encypt_enable || crypt_option == encypt_force) {
 		if (hgd_setup_ssl_ctx(&method, &ctx, 1,
-			    ssl_cert_path, ssl_key_path) == -1)
-			encryption_enabled = 0;
+			    ssl_cert_path, ssl_key_path) == -1) {
+			if (crypt_option == encypt_enable) {
+				crypt_option = encypt_disable;
+			} else {
+				/* XXX: we need to crap out here */
+			}
+		}
 	}
 
 	hgd_listen_loop();
