@@ -94,6 +94,7 @@ struct hgd_session {
 struct hgd_cmd_despatch {
 	char			*cmd;
 	uint8_t			n_args;
+	uint8_t			allow_uncrypted;
 	int			(*handler)(struct hgd_session *, char **);
 };
 
