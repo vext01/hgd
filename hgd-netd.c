@@ -487,6 +487,11 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 	unused = unused;
 
+	if (sess->ssl != NULL) {
+		DPRINTF(HGD_D_WARN, "User tried to enable encyption twice");
+		return (-1);
+	}
+
 	if (crypt_option == encypt_enable || crypt_option == encypt_force) {
 		DPRINTF(HGD_D_WARN,
 		    "User tried to enable TLS when it is turned off");
