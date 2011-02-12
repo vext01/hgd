@@ -80,7 +80,7 @@ hgd_encrypt(int fd)
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
-	if (hgd_setup_ssl_ctx(&method, &ctx, 0) != 0) {
+	if (hgd_setup_ssl_ctx(&method, &ctx, 0, 0, 0) != 0) {
 		return (-1);
 	}
 
@@ -244,7 +244,6 @@ hgd_setup_socket()
 			/* XXX do something when encrypt fails? */
 		}
 	}
-
 
 	if ( hgd_client_login(sock_fd, ssl, user) != 0) {
 		/* XXX do something on failed login */

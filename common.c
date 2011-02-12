@@ -46,8 +46,8 @@ char				*hgd_dir = NULL;
 char				*filestore_path = NULL;
 
 int
-hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx, int server) {
-
+hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
+    int server, char *cert_path, char *key_path) {
 
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
@@ -75,6 +75,36 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx, int server) {
 		return (-1);
 	}
 
+	if (!server)
+		goto done;
+
+	/* set the local certificate from CertFile */
+	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
+	if (!SSL_CTX_use_certificate_file(
+	    *ctx, cert_path, SSL_FILETYPE_PEM)) {
+		DPRINTF(HGD_D_ERROR, "Can't load TLS cert: %s", cert_path);
+		PRINT_SSL_ERR("SSL_CTX_use_certificate_file");
+		return (-1);
+	}
+
+	/* set the private key from KeyFile */
+	DPRINTF(HGD_D_DEBUG, "Loading TLS private key");
+	if (!SSL_CTX_use_PrivateKey_file(
+	    *ctx, key_path, SSL_FILETYPE_PEM)) {
+		DPRINTF(HGD_D_ERROR, "Can't load TLS key: %s", key_path);
+		PRINT_SSL_ERR("SSL_CTX_use_PrivateKey_file");
+		return (-1);
+	}
+
+	/* verify private key */
+	DPRINTF(HGD_D_DEBUG, "Verify TLS private certificate");
+	if (!SSL_CTX_check_private_key(*ctx)) {
+		DPRINTF(HGD_D_ERROR, "Can't verify TLS key: %s", key_path);
+		PRINT_SSL_ERR("SSL_CTX_check_private_key");
+		return (-1);
+	}
+
+done:
 	return (0);
 }
 

@@ -160,6 +160,7 @@ uint8_t				 hgd_is_ip_addr(char *str);
 void				 hgd_mk_state_dir();
 void				 hgd_print_version();
 
-int				 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx, int server);
+int				 hgd_setup_ssl_ctx(SSL_METHOD **method,
+				     SSL_CTX **ctx, int server, char *, char *);
 
 #endif
