@@ -537,16 +537,16 @@ clean:
 
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
-	/* cmd,		n_args,	handler_function	*/
-	{"np",		0,	hgd_cmd_now_playing},
-	{"vo",		1,	hgd_cmd_vote_off},
-	{"vo",		0,	hgd_cmd_vote_off_noarg},
-	{"ls",		0,	hgd_cmd_playlist},
-	{"user",	1,	hgd_cmd_user},
-	{"q",		2,	hgd_cmd_queue},
-	{"encrypt",	0,	hgd_cmd_encrypt},
-	{"bye",		0,	NULL},	/* bye is special */
-	{NULL,		0,	NULL}	/* terminate */
+	/* cmd,		n_args,	allow_uncrypted,handler_function	*/
+	{"np",		0,	0,	hgd_cmd_now_playing},
+	{"vo",		1,	0,	hgd_cmd_vote_off},
+	{"vo",		0,	0,	hgd_cmd_vote_off_noarg},
+	{"ls",		0,	0,	hgd_cmd_playlist},
+	{"user",	1,	0,	hgd_cmd_user},
+	{"q",		2,	0,	hgd_cmd_queue},
+	{"encrypt",	0,	1,	hgd_cmd_encrypt},
+	{"bye",		0,	1,	NULL},	/* bye is special */
+	{NULL,		0,	1,	NULL}	/* terminate */
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
@@ -607,17 +607,26 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	}
 
 	/* otherwise despatch */
-	if (correct_desp->handler(sess, &tokens[1]) < 0) {
-		/*
-		 * this happens often, ie when a client tries to
-		 * vote off twice, and that is fine, so we put the message
-		 * in INFO rather than WARN
-		 */
-		DPRINTF(HGD_D_INFO, "despatch of '%s' for '%s' returned -1",
-		    tokens[0], sess->cli_str);
+
+
+	if (crypt_option == encypt_force && correct_desp->allow_uncrypted == 0) {
+		DPRINTF(HGD_D_INFO, "user tried to call '%s' un-encrypted when encryption is forced",
+					    tokens[0]);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sslrequired");
 		num_bad_commands++;
-	} else
-		num_bad_commands = 0;
+	} else {
+		if (correct_desp->handler(sess, &tokens[1]) < 0) {
+			/*
+			 * this happens often, ie when a client tries to
+			 * vote off twice, and that is fine, so we put the message
+			 * in INFO rather than WARN
+			 */
+			DPRINTF(HGD_D_INFO, "despatch of '%s' for '%s' returned -1",
+			    tokens[0], sess->cli_str);
+			num_bad_commands++;
+		} else
+			num_bad_commands = 0;
+	}
 
 clean:
 	/* free tokens */
