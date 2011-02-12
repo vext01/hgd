@@ -481,6 +481,21 @@ hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
 }
 
 int
+hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused) {
+	unused = unused;
+
+	if (crypt_option == encypt_enable || crypt_option == encypt_force) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "ok|tlsv2");
+	} else {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		   "err|nocrypto");
+	}
+	return 0;
+
+}
+
+int
 hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 {
 	int			ssl_err = 0, ret = -1;
@@ -549,6 +564,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"ls",		0,	0,	hgd_cmd_playlist},
 	{"user",	1,	0,	hgd_cmd_user},
 	{"q",		2,	0,	hgd_cmd_queue},
+	{"encrypt?",	0,	1,	hgd_cmd_encrypt_questionmark},
 	{"encrypt",	0,	1,	hgd_cmd_encrypt},
 	{"bye",		0,	1,	NULL},	/* bye is special */
 	{NULL,		0,	1,	NULL}	/* terminate */
