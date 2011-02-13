@@ -82,24 +82,24 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
 	if (!SSL_CTX_use_certificate_file(
 	    *ctx, cert_path, SSL_FILETYPE_PEM)) {
-		DPRINTF(HGD_D_ERROR, "Can't load TLS cert: %s", cert_path);
+		DPRINTF(HGD_D_ERROR, "Can't load SSL cert: %s", cert_path);
 		PRINT_SSL_ERR("SSL_CTX_use_certificate_file");
 		return (-1);
 	}
 
 	/* set the private key from KeyFile */
-	DPRINTF(HGD_D_DEBUG, "Loading TLS private key");
+	DPRINTF(HGD_D_DEBUG, "Loading SSL private key");
 	if (!SSL_CTX_use_PrivateKey_file(
 	    *ctx, key_path, SSL_FILETYPE_PEM)) {
-		DPRINTF(HGD_D_ERROR, "Can't load TLS key: %s", key_path);
+		DPRINTF(HGD_D_ERROR, "Can't load SSL key: %s", key_path);
 		PRINT_SSL_ERR("SSL_CTX_use_PrivateKey_file");
 		return (-1);
 	}
 
 	/* verify private key */
-	DPRINTF(HGD_D_DEBUG, "Verify TLS private certificate");
+	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
 	if (!SSL_CTX_check_private_key(*ctx)) {
-		DPRINTF(HGD_D_ERROR, "Can't verify TLS key: %s", key_path);
+		DPRINTF(HGD_D_ERROR, "Can't verify SSL key: %s", key_path);
 		PRINT_SSL_ERR("SSL_CTX_check_private_key");
 		return (-1);
 	}
@@ -248,13 +248,13 @@ hgd_sock_send_bin(int fd, SSL *ssl, char *msg, ssize_t sz)
 	}
 }
 
-/* send a TLS encrypted message onto the network */
+/* send a SSL encrypted message onto the network */
 void
 hgd_sock_send_ssl(SSL *ssl, char *msg)
 {
 	char			*buffer = NULL;
 
-	DPRINTF(HGD_D_DEBUG, "TLS send '%s'", msg);
+	DPRINTF(HGD_D_DEBUG, "SSL send '%s'", msg);
 
 	buffer = xcalloc(HGD_MAX_LINE, sizeof(char));
 	strncpy(buffer, msg, HGD_MAX_LINE);
@@ -288,7 +288,7 @@ hgd_sock_send_line_ssl(SSL *ssl, char *msg)
 {
 	char			*term;
 
-	DPRINTF(HGD_D_DEBUG, "Trying to send TLS message: '%s'", msg);
+	DPRINTF(HGD_D_DEBUG, "Trying to send SSL message: '%s'", msg);
 
 	xasprintf(&term, "%s\r\n", msg);
 	hgd_sock_send_ssl(ssl, term);
@@ -516,7 +516,7 @@ hgd_sock_recv_line_ssl(SSL *ssl)
 		*c = 0;
 	}
 
-	DPRINTF(HGD_D_DEBUG, "TLS recvd:'%s'", buffer);
+	DPRINTF(HGD_D_DEBUG, "SSL recvd:'%s'", buffer);
 
 	line = strdup(buffer);
 	free(buffer);

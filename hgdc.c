@@ -146,7 +146,7 @@ hgd_encrypt(int fd)
 	hgd_check_svr_response(ok_str, 1);
 	free(ok_str);
 
-	DPRINTF(HGD_D_INFO, "TLS connection established");
+	DPRINTF(HGD_D_INFO, "SSL connection established");
 
 	return (0);
 }

@@ -532,7 +532,7 @@ clean:
 
 		hgd_exit_nicely(); /* be paranoid and kick client */
 	} else {
-		DPRINTF(HGD_D_INFO, "TLS connection established");
+		DPRINTF(HGD_D_INFO, "SSL connection established");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	}
 
@@ -827,13 +827,13 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
-	printf("  -c		Set path to TLS certificate file\n");
+	printf("  -c		Set path to SSL certificate file\n");
 	printf("  -d		Set hgd state directory\n");
-	printf("  -E		Disable TLS encryption support\n");
-	printf("  -e		Force TLS encryption support\n");
+	printf("  -E		Disable SSL encryption support\n");
+	printf("  -e		Force SSL encryption support\n");
 	printf("  -f		Don't fork - service single client (debug)\n");
 	printf("  -h		Show this message and exit\n");
-	printf("  -k		Set path to TLS private key file\n");
+	printf("  -k		Set path to SSL private key file\n");
 	printf("  -n		Set number of votes required to vote-off\n");
 	printf("  -p		Set network port number\n");
 	printf("  -s		Set maximum upload size (in MB)\n");

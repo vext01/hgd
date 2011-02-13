@@ -42,7 +42,7 @@
 #define HGD_GREET		"ok|HGD-" HGD_VERSION
 #define HGD_BYE			"ok|Catch you later d00d!"
 
-/* TLS */
+/* SSL */
 #define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"
 #define HGD_DFL_KEY_FILE	HGD_DFL_SVR_CONF_DIR "/privkey.key"
 
