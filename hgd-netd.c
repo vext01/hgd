@@ -541,17 +541,17 @@ clean:
 
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
-	/* cmd,		n_args,	handler_function */
-	{"np",		0,	hgd_cmd_now_playing},
-	{"vo",		1,	hgd_cmd_vote_off},
-	{"vo",		0,	hgd_cmd_vote_off_noarg},
-	{"ls",		0,	hgd_cmd_playlist},
-	{"user",	1,	hgd_cmd_user},
-	{"q",		2,	hgd_cmd_queue},
-	{"encrypt?",	0,	hgd_cmd_encrypt_questionmark},
-	{"encrypt",	0,	hgd_cmd_encrypt},
-	{"bye",		0,	NULL},	/* bye is special */
-	{NULL,		0,	NULL}	/* terminate */
+	/* cmd,		n_args,	secure,	handler_function */
+	{"np",		0,	1,	hgd_cmd_now_playing},
+	{"vo",		1,	1,	hgd_cmd_vote_off},
+	{"vo",		0,	1,	hgd_cmd_vote_off_noarg},
+	{"ls",		0,	1,	hgd_cmd_playlist},
+	{"user",	1,	1,	hgd_cmd_user},
+	{"q",		2,	1,	hgd_cmd_queue},
+	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
+	{"encrypt",	0,	0,	hgd_cmd_encrypt},
+	{"bye",		0,	0,	NULL},	/* bye is special */
+	{NULL,		0,	0,	NULL}	/* terminate */
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
@@ -608,6 +608,20 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	/* bye has special meaning */
 	if (strcmp(correct_desp->cmd, "bye") == 0) {
 		bye = 1;
+		goto clean;
+	}
+
+	/* if the server is *only* accepting SSL connections, a number
+	 * of commands will be out of bounds until encryption is
+	 * established.
+	 */
+	if ((crypto_pref == HGD_CRYPTO_PREF_ALWAYS) &&
+	    (correct_desp->secure) &&
+	    (sess->ssl == NULL)) {
+		DPRINTF(HGD_D_WARN, "Client '%s' is trying to bypass SSL",
+		    sess->cli_str);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|ssl_only");
+		num_bad_commands++;
 		goto clean;
 	}
 
