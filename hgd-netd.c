@@ -842,6 +842,7 @@ hgd_usage()
 	printf("  -c		Set path to TLS certificate file\n");
 	printf("  -d		Set hgd state directory\n");
 	printf("  -E		Disable TLS encryption support\n");
+	printf("  -e		Force TLS encryption support\n");
 	printf("  -f		Don't fork - service single client (debug)\n");
 	printf("  -h		Show this message and exit\n");
 	printf("  -k		Set path to TLS private key file\n");
@@ -864,7 +865,7 @@ main(int argc, char **argv)
 	hgd_dir = strdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "c:d:Efhk:n:p:s:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:d:Eefhk:n:p:s:vx:y:")) != -1) {
 		switch (ch) {
 		case 'c':
 			ssl_cert_path = optarg;

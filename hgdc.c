@@ -77,6 +77,23 @@ hgd_encrypt(int fd)
 {
 	int			 ssl_res = 0;
 	char			*ok_str = NULL;
+	char			*ok_tokens[2];
+	char			*next;
+	int			n_toks = 0;
+
+	hgd_sock_send_line(fd, NULL, "encrypt?");
+	next = ok_str = hgd_sock_recv_line(fd, NULL);
+
+	do {
+		ok_tokens[n_toks] = strdup(strsep(&next, "|"));
+		DPRINTF(HGD_D_DEBUG, "tok %d: \"%s\"", n_toks, ok_tokens[n_toks]);
+	} while ((n_toks++ < 2) && (next != NULL));
+	if (strcmp (ok_tokens[0], "err") == 0) {
+		DPRINTF(HGD_D_ERROR, "Server does not support SSL");
+		return (-1);
+	}
+
+
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
