@@ -96,15 +96,23 @@ struct hgd_session {
 /* server command despatch */
 struct hgd_cmd_despatch {
 	char			*cmd;
-	uint8_t			n_args;
+	uint8_t			 n_args;
+	/*
+	 * read carefully:
+	 * 'secure' means that when the server is ONLY accepting SSL
+	 * connections, the client must have sent an 'encrypt' command
+	 * which has completed successfully before this command can
+	 * be used.
+	 */
+	uint8_t			 secure;
 	int			(*handler)(struct hgd_session *, char **);
 };
 
 /* client request despatch */
 struct hgd_req_despatch {
 	char			*req;
-	uint8_t			n_args;
-	int			(*handler)(char **);
+	uint8_t			 n_args;
+	int			 (*handler)(char **);
 };
 
 /* debug levels */
