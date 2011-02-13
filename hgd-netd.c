@@ -830,7 +830,7 @@ hgd_usage()
 	printf("  -c		Set path to SSL certificate file\n");
 	printf("  -d		Set hgd state directory\n");
 	printf("  -E		Disable SSL encryption support\n");
-	printf("  -e		Force SSL encryption support\n");
+	printf("  -e		Require SSL encryption from clients\n");
 	printf("  -f		Don't fork - service single client (debug)\n");
 	printf("  -h		Show this message and exit\n");
 	printf("  -k		Set path to SSL private key file\n");

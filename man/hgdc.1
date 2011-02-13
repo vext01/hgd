@@ -21,7 +21,7 @@
 .Sh SYNOPSIS
 .Nm hgdc
 .Bk -words
-.Op Fl ehv
+.Op Fl Eehv
 .Op Fl p Ar port
 .Op Fl s Ar host
 .Op Fl x Ar debug-level
@@ -36,8 +36,9 @@ suitable for hackathons, internet cafes, LAN parties etc.
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl e
-Encrypt network communications using SSL. Requires that the server is
-accepting SSL communications.
+Require server to supply an SSL encrypted channel, or exit.
+.It Fl E
+Don't use SSL encryption. The server has the rights to reject your connection.
 .It Fl h
 Show the usage help and exit.
 .It Fl p Ar port
@@ -64,6 +65,16 @@ Queue the given file in the playlist.
 .It vo
 Vote-off the currently playing track.
 .El
+.Sh A NOTE ABOUT ENCRYPTION
+
+You can turn off SSL encryption or refuse speak to servers if they don't
+support SSL with -E and -e respectively; however the default behaviour
+involves a handshake between the client and server, favouring an
+encrypted connection if possible, otherwise falling back onto
+unencrypted socket communication.
+
+A warning is always printed if SSL encryption is not enabled.
+
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
