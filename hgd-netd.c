@@ -38,12 +38,6 @@
 
 #include <openssl/ssl.h>
 
-enum CRYPT_STATE {
-	encypt_disable,
-	encypt_enable,
-	encypt_force
-};
-
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
@@ -58,7 +52,7 @@ char				*vote_sound = NULL;
 SSL_METHOD			*method = NULL;
 SSL_CTX				*ctx = NULL;
 
-enum CRYPT_STATE 		 crypt_option = encypt_enable;
+uint8_t				 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
 uint8_t				 ssl_capable = 0;
 char				*ssl_cert_path = HGD_DFL_CERT_FILE;
 char				*ssl_key_path = HGD_DFL_KEY_FILE;
@@ -72,13 +66,6 @@ hgd_exit_nicely()
 {
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-netd was interrupted or crashed");
-
-	/* XXX remove mplayer PID if existing */
-
-	/* Clean this up
-	if (ssl) {
-		SSL_free(ssl);
-	}*/
 
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
@@ -482,17 +469,15 @@ hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
 
 int
 hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused) {
-	unused = unused;
 
-	if (crypt_option == encypt_enable || crypt_option == encypt_force) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "ok|tlsv2");
-	} else {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		   "err|nocrypto");
-	}
-	return 0;
+	unused = unused; /* lalalala */
 
+	if ((crypto_pref != HGD_CRYPTO_PREF_NEVER) && (ssl_capable))
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|tlsv2");
+	else
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|nocrypto");
+
+	return (0);
 }
 
 int
@@ -507,9 +492,8 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 		return (-1);
 	}
 
-	if (crypt_option == encypt_enable || crypt_option == encypt_force) {
-		DPRINTF(HGD_D_WARN,
-		    "User tried to enable TLS when it is turned off");
+	if ((!ssl_capable) || (crypto_pref == HGD_CRYPTO_PREF_NEVER)) {
+		DPRINTF(HGD_D_WARN, "User tried encrypt, when not possible");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|nossl");
 		return (-1);
 	}
@@ -557,17 +541,17 @@ clean:
 
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
-	/* cmd,		n_args,	allow_uncrypted,handler_function	*/
-	{"np",		0,	0,	hgd_cmd_now_playing},
-	{"vo",		1,	0,	hgd_cmd_vote_off},
-	{"vo",		0,	0,	hgd_cmd_vote_off_noarg},
-	{"ls",		0,	0,	hgd_cmd_playlist},
-	{"user",	1,	0,	hgd_cmd_user},
-	{"q",		2,	0,	hgd_cmd_queue},
-	{"encrypt?",	0,	1,	hgd_cmd_encrypt_questionmark},
-	{"encrypt",	0,	1,	hgd_cmd_encrypt},
-	{"bye",		0,	1,	NULL},	/* bye is special */
-	{NULL,		0,	1,	NULL}	/* terminate */
+	/* cmd,		n_args,	handler_function */
+	{"np",		0,	hgd_cmd_now_playing},
+	{"vo",		1,	hgd_cmd_vote_off},
+	{"vo",		0,	hgd_cmd_vote_off_noarg},
+	{"ls",		0,	hgd_cmd_playlist},
+	{"user",	1,	hgd_cmd_user},
+	{"q",		2,	hgd_cmd_queue},
+	{"encrypt?",	0,	hgd_cmd_encrypt_questionmark},
+	{"encrypt",	0,	hgd_cmd_encrypt},
+	{"bye",		0,	NULL},	/* bye is special */
+	{NULL,		0,	NULL}	/* terminate */
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
@@ -628,27 +612,17 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	}
 
 	/* otherwise despatch */
-
-
-	if (crypt_option == encypt_force && correct_desp->allow_uncrypted == 0) {
-		DPRINTF(HGD_D_INFO, "user tried to call '%s' un-encrypted when encryption is forced",
-					    tokens[0]);
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sslrequired");
+	if (correct_desp->handler(sess, &tokens[1]) < 0) {
+		/*
+		 * This happens often, ie when a client tries to
+		 * vote off twice, and that is fine, so we put the message
+		 * in INFO rather than WARN.
+		 */
+		DPRINTF(HGD_D_INFO, "despatch of '%s' for '%s' returned -1",
+		    tokens[0], sess->cli_str);
 		num_bad_commands++;
-	} else {
-		if (correct_desp->handler(sess, &tokens[1]) < 0) {
-			/*
-			 * this happens often, ie when a client tries to
-			 * vote off twice, and that is fine, so we put the message
-			 * in INFO rather than WARN
-			 */
-			DPRINTF(HGD_D_INFO, "despatch of '%s' for '%s' returned -1",
-			    tokens[0], sess->cli_str);
-			num_bad_commands++;
-		} else
-			num_bad_commands = 0;
-	}
-
+	} else
+		num_bad_commands = 0;
 clean:
 	/* free tokens */
 	for (; n_toks > 0; )
@@ -878,14 +852,12 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
 			break;
 		case 'e':
-			crypt_option = encypt_force;
-			DPRINTF(HGD_D_DEBUG,
-			    "disabled encyption");
+			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
+			DPRINTF(HGD_D_DEBUG, "Server will insist on crypto");
 			break;
 		case 'E':
-			crypt_option = encypt_disable;
-			DPRINTF(HGD_D_DEBUG,
-			    "disabled encyption");
+			crypto_pref = HGD_CRYPTO_PREF_NEVER;
+			DPRINTF(HGD_D_WARN, "Encryption disabled manually");
 			break;
 		case 'f':
 			single_client = 1;
@@ -948,18 +920,27 @@ main(int argc, char **argv)
 	if (db == NULL)
 		hgd_exit_nicely();
 
-	sqlite3_close(db);
+	sqlite3_close(db); /* re-opened later */
 	db = NULL;
 
-	if (crypt_option == encypt_enable || crypt_option == encypt_force) {
+	/* unless the user actively disables SSL, we try to be capable */
+	if (crypto_pref != HGD_CRYPTO_PREF_NEVER) {
 		if (hgd_setup_ssl_ctx(&method, &ctx, 1,
-			    ssl_cert_path, ssl_key_path) == -1) {
-			if (crypt_option == encypt_enable) {
-				crypt_option = encypt_disable;
-			} else {
-				/* XXX: we need to crap out here */
-			}
+		    ssl_cert_path, ssl_key_path) == 0) {
+			DPRINTF(HGD_D_INFO, "Server is SSL capable");
+			ssl_capable = 1;
+		} else {
+			DPRINTF(HGD_D_WARN, "Server is SSL incapable");
 		}
+	} else {
+		DPRINTF(HGD_D_INFO, "Server was forced SSL incapable");
+	}
+
+	/* if -e, but something screwed up in the above, bail */
+	if ((crypto_pref == HGD_CRYPTO_PREF_ALWAYS) && (ssl_capable != 1)) {
+		DPRINTF(HGD_D_ERROR,
+		    "Crypto was forced on, but server is incapable");
+		hgd_exit_nicely();
 	}
 
 	hgd_listen_loop();

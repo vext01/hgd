@@ -46,6 +46,10 @@
 #define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"
 #define HGD_DFL_KEY_FILE	HGD_DFL_SVR_CONF_DIR "/privkey.key"
 
+#define	HGD_CRYPTO_PREF_ALWAYS	0
+#define HGD_CRYPTO_PREF_IF_POSS	1
+#define HGD_CRYPTO_PREF_NEVER	2
+
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
 #define HGD_PID_STR_SZ		10
@@ -57,7 +61,6 @@
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-
 
 extern int8_t			 hgd_debug;
 extern uint8_t			 dying;
@@ -94,7 +97,6 @@ struct hgd_session {
 struct hgd_cmd_despatch {
 	char			*cmd;
 	uint8_t			n_args;
-	uint8_t			allow_uncrypted;
 	int			(*handler)(struct hgd_session *, char **);
 };
 
@@ -110,7 +112,6 @@ struct hgd_req_despatch {
 #define HGD_D_WARN		1
 #define HGD_D_INFO		2
 #define HGD_D_DEBUG		3
-
 
 /* simple debug facility */
 #define DPRINTF(level, x...)						\
@@ -130,7 +131,7 @@ struct hgd_req_despatch {
 		unsigned long err;					\
 		err = ERR_get_error();					\
 		ERR_error_string_n(err, error, sizeof(error));		\
-		DPRINTF (HGD_D_ERROR, "%s: %s\n", msg, error);		\
+		DPRINTF(HGD_D_ERROR, "%s: %s", msg, error);		\
 	} while(0)
 
 /* generic error string */

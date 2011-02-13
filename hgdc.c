@@ -34,13 +34,14 @@
 #include "hgd.h"
 
 char			*user, *host = "127.0.0.1";
-int			 will_encrypt = 0;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
 SSL			*ssl = NULL;
 SSL_METHOD		*method;
 SSL_CTX			*ctx;
+uint8_t			 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
+uint8_t			 server_ssl_capable = 0;
 
 /* protos */
 int			 hgd_check_svr_response(char *resp, uint8_t x);
@@ -51,7 +52,6 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_INFO,
 		    "hgdc was interrupted or crashed - cleaning up");
-
 
 	if (ssl) {
 		/* clean up ssl structures */
@@ -72,28 +72,50 @@ hgd_exit_nicely()
 	_exit(!exit_ok);
 }
 
+/*
+ * see if the server supports encryption
+ * return: 1 = yes, 0 = no, -1 = error
+ */
+int
+hgd_negotiate_crypto()
+{
+	int			n_toks = 0;
+	char			*next, *ok_str;
+	char			*ok_tokens[2];
+
+	if (crypto_pref == HGD_CRYPTO_PREF_NEVER)
+		return (0);	/* fine, no crypto then */
+
+	hgd_sock_send_line(sock_fd, NULL, "encrypt?");
+	next = ok_str = hgd_sock_recv_line(sock_fd, NULL);
+
+	hgd_check_svr_response(next, 1);
+
+	do {
+		ok_tokens[n_toks] = strdup(strsep(&next, "|"));
+	} while ((n_toks++ < 2) && (next != NULL));
+
+	if (strcmp(ok_tokens[1], "nocrypto") != 0) {
+		server_ssl_capable = 1;
+		DPRINTF(HGD_D_INFO, "Server supports %s crypto", ok_tokens[1]);
+	}
+
+	if ((!server_ssl_capable) && (crypto_pref == HGD_CRYPTO_PREF_ALWAYS)) {
+		DPRINTF(HGD_D_ERROR,
+		    "User forced crypto, but server is incapable");
+		free(next);
+		hgd_exit_nicely();
+	}
+	free(next);
+
+	return (0);
+}
+
 int
 hgd_encrypt(int fd)
 {
 	int			 ssl_res = 0;
 	char			*ok_str = NULL;
-	char			*ok_tokens[2];
-	char			*next;
-	int			n_toks = 0;
-
-	hgd_sock_send_line(fd, NULL, "encrypt?");
-	next = ok_str = hgd_sock_recv_line(fd, NULL);
-
-	do {
-		ok_tokens[n_toks] = strdup(strsep(&next, "|"));
-		DPRINTF(HGD_D_DEBUG, "tok %d: \"%s\"", n_toks, ok_tokens[n_toks]);
-	} while ((n_toks++ < 2) && (next != NULL));
-	if (strcmp (ok_tokens[0], "err") == 0) {
-		DPRINTF(HGD_D_ERROR, "Server does not support SSL");
-		return (-1);
-	}
-
-
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
@@ -255,14 +277,17 @@ hgd_setup_socket()
 		hgd_exit_nicely();
 	}
 
-	if (will_encrypt) {
-
-		if (hgd_encrypt(sock_fd) != 0) {
-			/* XXX do something when encrypt fails? */
-		}
+	hgd_negotiate_crypto();
+	if ((server_ssl_capable) && (crypto_pref != HGD_CRYPTO_PREF_NEVER)) {
+		if (hgd_encrypt(sock_fd) != 0)
+			hgd_exit_nicely();
 	}
 
-	if ( hgd_client_login(sock_fd, ssl, user) != 0) {
+	/* annoying error message for those too lazy to set up crypto */
+	if (ssl == NULL)
+		DPRINTF(HGD_D_WARN, "Connection is not encrypted");
+
+	if (hgd_client_login(sock_fd, ssl, user) != 0) {
 		/* XXX do something on failed login */
 	}
 }
@@ -278,7 +303,8 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
-	printf("    -e\t\t\tUse TLS encryption\n");
+	printf("    -e\t\t\tAlways require encryption\n");
+	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -s host/ip\t\tSet connection address\n");
@@ -510,10 +536,13 @@ hgd_exec_req(int argc, char **argv)
 
 	/* once we know that the hgdc is used properly, open connection */
 	hgd_setup_socket();
+
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	correct_desp->handler(&argv[1]);
 }
 
+#if 0
+remove? XXX
 int
 ssl_connect(int fd)
 {
@@ -528,17 +557,23 @@ ssl_connect(int fd)
 
 	return (0);
 }
+#endif
 
 int
 main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "ehp:s:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "Eehp:s:vx:")) != -1) {
 		switch (ch) {
 		case 'e':
-			DPRINTF(HGD_D_DEBUG, "Enabled encryption");
-			will_encrypt = 1;
+			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
+			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
+			break;
+		case 'E':
+			DPRINTF(HGD_D_DEBUG, "Client will insist upon "
+			   " no crypto");
+			crypto_pref = HGD_CRYPTO_PREF_NEVER;
 			break;
 		case 's':
 			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
@@ -570,8 +605,6 @@ main(int argc, char **argv)
 
 	argc -= optind;
 	argv += optind;
-
-
 
 	/* do whatever the user wants */
 	hgd_exec_req(argc, argv);
