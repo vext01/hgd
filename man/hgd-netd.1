@@ -21,7 +21,7 @@
 .Sh SYNOPSIS
 .Nm hgd-netd
 .Bk -words
-.Op Fl Efhv
+.Op Fl eEfhv
 .Op Fl c Ar path-to-tls-cert
 .Op Fl d Ar state-dir
 .Op Fl k Ar path-to-tls-key
@@ -47,19 +47,21 @@ the currently playing song, if the user dislikes the song.
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl c Ar file
-Set the path to the TLS certificate file.
+Set the path to the SSL certificate file.
 .It Fl d Ar dir
 Set the HGD state directory where the SQLite database and uploaded files will
 be stored. This defaults to /var/hgd.
 .It Fl E
-Disable TLS support.
+Disable SSL support.
+.It Fl e
+Require clients to use SSL encryption.
 .It Fl f
 Don't fork and service a single client only. This is useful for debugging
 purposes only.
 .It Fl h
 Show the usage help and exit.
 .It Fl k Ar file
-Set the path to the TLS private key.
+Set the path to the SSL private key.
 .It Fl n Ar num
 Set the number of votes required to "vote-off" a song. This defaults to 3.
 .It Fl p Ar port
@@ -74,8 +76,8 @@ Set the debug level: 0=errors, 1=warnings, 2=info, 3=debug. Defaults to 1.
 Set the path to a sound file to play when a vote-off is successful. None by
 default.
 .El
-.Sh ENCRYPTING WITH TLS
-You can use self signed TLS on the server to encrypt all network
+.Sh ENCRYPTING WITH SSL
+You can use self signed SSL on the server to encrypt all network
 communications, thus protecting passwords. The simplest way to do this
 is to do the following:
 .Bl -tag -width Ds
@@ -83,9 +85,19 @@ is to do the following:
 .It openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout \\
 	privkey.key -out certificate.crt 
 .El
-When hgd-netd sees a valid TLS certificate and private key, it will allow
-SSL network communications from clients. You should ensure that the TLS
-private key remains secure on your file-system.
+When hgd-netd sees a valid SSL certificate and private key, it will allow
+SSL network communications from clients.
+
+You can turn off or require clients to use SSL with -E and -e
+respectively; however the default behaviour involves a handshake between
+the client and server, favouring an encrypted connection if possible,
+otherwise falling back onto unencrypted socket communication.
+
+A warning is always printed if SSL encryption is not enabled.
+
+You should ensure that the SSL private key remains secure on your
+file-system.
+
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
