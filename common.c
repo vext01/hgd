@@ -148,10 +148,9 @@ xmalloc(size_t sz)
 		hgd_exit_nicely();
 	}
 
-	return ptr;
+	return (ptr);
 
 }
-
 
 void *
 xcalloc(size_t sz, size_t size)
@@ -164,7 +163,7 @@ xcalloc(size_t sz, size_t size)
 		hgd_exit_nicely();
 	}
 
-	return ptr;
+	return (ptr);
 }
 
 void *
@@ -178,7 +177,7 @@ xrealloc(void *old_p, size_t sz)
 		hgd_exit_nicely();
 	}
 
-	return ptr;
+	return (ptr);
 }
 
 int
@@ -195,7 +194,7 @@ xasprintf(char **buf, char *fmt, ...)
 		hgd_exit_nicely();
 	}
 
-	return ret;
+	return (ret);
 }
 
 void
@@ -309,7 +308,6 @@ hgd_sock_send_line_nossl(int fd, char *msg)
 
 }
 
-
 /* send a \r\n terminated line */
 void
 hgd_sock_send_line(int fd, SSL *ssl, char *msg)
@@ -376,7 +374,7 @@ hgd_sock_recv_bin_nossl(int fd, ssize_t len)
 
 	if (tries_left == 0) {
 		DPRINTF(HGD_D_ERROR, "Gave up trying to recieve: %s", SERROR);
-		return NULL;
+		return (NULL);
 	}
 
 	return (full_msg);
@@ -412,9 +410,9 @@ char *
 hgd_sock_recv_bin(int fd, SSL *ssl, ssize_t len)
 {
 	if (ssl == NULL) {
-		return hgd_sock_recv_bin_nossl(fd, len);
+		return (hgd_sock_recv_bin_nossl(fd, len));
 	} else {
-		return hgd_sock_recv_bin_ssl(ssl, len);
+		return (hgd_sock_recv_bin_ssl(ssl, len));
 	}
 
 }
@@ -532,9 +530,9 @@ char *
 hgd_sock_recv_line(int fd, SSL *ssl)
 {
 	if (ssl == NULL) {
-		return hgd_sock_recv_line_nossl(fd);
+		return (hgd_sock_recv_line_nossl(fd));
 	} else {
-		return hgd_sock_recv_line_ssl(ssl);
+		return (hgd_sock_recv_line_ssl(ssl));
 	}
 }
 
@@ -560,7 +558,7 @@ hgd_is_ip_addr(char *str)
 	int			res;
 
 	res = inet_pton(AF_INET, str, &(sa.sin_addr));
-	return res != 0;
+	return (res != 0);
 }
 
 /* make state dir if not existing */

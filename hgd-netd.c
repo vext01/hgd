@@ -575,7 +575,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|no_tokens_sent");
 		num_bad_commands++;
-		return 0;
+		return (-1);
 	}
 
 	/* now we look up which function to call */
@@ -642,7 +642,7 @@ clean:
 	for (; n_toks > 0; )
 		free(tokens[--n_toks]);
 
-	return bye;
+	return (bye);
 }
 
 void
