@@ -188,7 +188,7 @@ hgd_check_svr_response(char *resp, uint8_t x)
 		hgd_exit_nicely();
 	}
 
-	return err;
+	return (err);
 }
 
 int
@@ -346,7 +346,7 @@ hgd_req_queue(char **args)
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == -1) {
 		free(resp);
-		return -1;
+		return (-1);
 	}
 	free(resp);
 
@@ -354,7 +354,7 @@ hgd_req_queue(char **args)
 	f = fopen(filename, "r");
 	if (f == NULL) {
 		DPRINTF(HGD_D_ERROR, "fopen %s: %s", filename, SERROR);
-		return -1;
+		return (-1);
 	}
 
 	while (written != fsize) {
@@ -378,7 +378,7 @@ hgd_req_queue(char **args)
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == -1) {
 		free(resp);
-		return -1;
+		return (-1);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Transfer complete");
@@ -446,14 +446,14 @@ hgd_req_playlist(char **args)
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == -1) {
 		free(resp);
-		return -1;
+		return (-1);
 	}
 
 	for (p = resp; (*p != 0 && *p != '|'); p ++);
 	if (*p != '|') {
 		DPRINTF(HGD_D_ERROR, "didn't find a argument separator");
 		free(resp);
-		return -1;
+		return (-1);
 	}
 
 	n_items = atoi(++p);
@@ -493,14 +493,13 @@ hgd_req_hud(char **args)
 		system("clear");
 	}
 
-	return 0;
+	return (0);
 }
 
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 	{"ls",		0,	hgd_req_playlist},
 	{"hud",		0,	hgd_req_hud},
-	/*"np",		0,	hgd_req_now_playing}, */
 	{"vo",		0,	hgd_req_vote_off},
 	{"q",		1,	hgd_req_queue},
 	{NULL,		0,	NULL} /* terminate */
@@ -540,24 +539,6 @@ hgd_exec_req(int argc, char **argv)
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	correct_desp->handler(&argv[1]);
 }
-
-#if 0
-remove? XXX
-int
-ssl_connect(int fd)
-{
-	OpenSSL_add_all_algorithms();
-	SSL_load_error_strings();
-	method = (SSL_METHOD *) SSLv2_client_method();
-	ctx = SSL_CTX_new(method);
-
-	ssl = SSL_new(ctx);
-	SSL_set_fd(ssl, fd);
-	SSL_connect(ssl);
-
-	return (0);
-}
-#endif
 
 int
 main(int argc, char **argv)

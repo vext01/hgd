@@ -153,24 +153,27 @@ void				 hgd_free_playlist(struct hgd_playlist *);
 void				*xmalloc(size_t);
 void				*xrealloc(void *, size_t);
 int				 xasprintf(char **buf, char *fmt, ...);
+void				*xcalloc(size_t sz, size_t size);
 
 /* socket ops */
 void				 hgd_sock_send(int fd, char *msg);
-void				 hgd_sock_send_line(int fd, SSL* ssl, char *msg);
-char				*hgd_sock_recv_bin(int fd, SSL* ssl, ssize_t len);
+void				 hgd_sock_send_line(int fd, SSL* ssl,
+				     char *msg);
+char				*hgd_sock_recv_bin(int fd, SSL* ssl,
+				     ssize_t len);
 char				*hgd_sock_recv_line(int fd, SSL* ssl);
-void				 hgd_sock_send_bin(int fd, SSL* ssl, char *, ssize_t);
-
-void				 hgd_exit_nicely();
-void				 hgd_kill_sighandler(int sig);
-void				 hgd_register_sig_handlers();
+void				 hgd_sock_send_bin(int fd, SSL* ssl,
+				     char *, ssize_t);
+int				 hgd_setup_ssl_ctx(SSL_METHOD **method,
+				     SSL_CTX **ctx, int server,
+				     char *, char *);
 
 /* misc */
 uint8_t				 hgd_is_ip_addr(char *str);
 void				 hgd_mk_state_dir();
 void				 hgd_print_version();
-
-int				 hgd_setup_ssl_ctx(SSL_METHOD **method,
-				     SSL_CTX **ctx, int server, char *, char *);
+void				 hgd_exit_nicely();
+void				 hgd_kill_sighandler(int sig);
+void				 hgd_register_sig_handlers();
 
 #endif

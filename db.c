@@ -84,7 +84,7 @@ hgd_open_db(char *db_path)
 		return (NULL);
 	}
 
-	return db;
+	return (db);
 }
 
 int
@@ -105,7 +105,7 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 	t->filename = strdup(data[1]);
 	t->user = strdup(data[2]);
 
-	return SQLITE_OK;
+	return (SQLITE_OK);
 }
 
 int
@@ -157,7 +157,6 @@ hgd_get_num_votes()
 	DPRINTF(HGD_D_DEBUG, "%d votes so far", num);
 	return (num);
 }
-
 
 int
 hgd_insert_track(char *filename, char *user)
@@ -309,7 +308,7 @@ hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
 	item_t->playing = 0;
 	item_t->finished = 0;
 
-	return SQLITE_OK;
+	return (SQLITE_OK);
 }
 
 /* get the next track (if there is one) */
@@ -461,5 +460,3 @@ hgd_clear_playlist()
 
 	return (0);
 }
-
-
