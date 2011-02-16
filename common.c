@@ -31,6 +31,7 @@
 #include <arpa/inet.h>
 
 #include <openssl/ssl.h>
+#include <openssl/evp.h>
 
 #include "hgd.h"
 
@@ -588,3 +589,61 @@ hgd_print_version()
 	printf("Hackathon Gunther Daemon v" HGD_VERSION "\n");
 	printf("(C) Edd Barrett 2011\n");
 }
+
+
+/*
+ * Use openssl to make a SHA1 hex hash of a string.
+ * User must free.
+ */
+char *
+hgd_sha1(char *msg)
+{
+	EVP_MD_CTX		 md_ctx;
+	const			 EVP_MD *md;
+	char			*hash_str = NULL, *tmp;
+	unsigned char		 md_value[EVP_MAX_MD_SIZE];
+	int			 md_len, i;
+
+	OpenSSL_add_all_digests();
+
+	md = EVP_get_digestbyname("sha1");
+
+	if (!md) {
+		DPRINTF(HGD_D_WARN, "EVP_get_digestbyname");
+		return (NULL);
+	}
+
+	EVP_MD_CTX_init(&md_ctx);
+
+	if (!EVP_DigestInit_ex(&md_ctx, md, NULL)) {
+		DPRINTF(HGD_D_WARN, "EVP_DigestInit_ex");
+		return (NULL);
+	}
+
+	if (!EVP_DigestUpdate(&md_ctx, msg, strlen(msg))) {
+		DPRINTF(HGD_D_WARN, "EVP_DigestInit_ex");
+		return (NULL);
+	}
+
+	if (!EVP_DigestFinal_ex(&md_ctx, md_value, &md_len)) {
+		DPRINTF(HGD_D_WARN, "EVP_DigestInit_ex");
+		return (NULL);
+	}
+
+	EVP_MD_CTX_cleanup(&md_ctx);
+
+	/* if we are ever looking to speed up hgd; look here! */
+	for (i = 0; i < md_len; i++) {
+		tmp = hash_str;
+		if (hash_str)
+			xasprintf(&hash_str, "%s%02x", hash_str, md_value[i]);
+		else
+			xasprintf(&hash_str, "%02x", md_value[i]);
+
+		if (tmp)
+			free(tmp);
+	}
+
+	return (hash_str);
+}
+
