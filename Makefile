@@ -37,17 +37,19 @@ hgdc: common.o hgdc.c hgd.h
 	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${SSL_LDFLAGS} \
 		-o hgdc common.o hgdc.c
 
-hgd-admin: common.o db.o hgd.h
+hgd-admin: common.o db.o hgd.h hgd-admin.c
 	${CC} ${CPPFLAGS} ${CFLAGS} ${SQL_CPPFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} \
 		-o hgd-admin common.o db.o hgd-admin.c
 
 
 .PHONY: install
-install: hgd-playd hgd-netd hgdc
+install: hgd-playd hgd-netd hgdc hgd-admin
 	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
+	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
 	${INSTALL} hgdc ${DESTDIR}${bindir}
 	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}
+	#${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
