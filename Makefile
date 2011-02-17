@@ -1,7 +1,7 @@
 SQL_CPPFLAGS=`pkg-config --cflags sqlite3`
 SQL_LDFLAGS=`pkg-config --libs sqlite3`
 
-SSL_LD_FLAGS=-lssl -lcrypto
+SSL_LDFLAGS=-lssl -lcrypto
 
 CFLAGS+=-Wall -Wextra -g
 
@@ -11,7 +11,7 @@ sbindir?=${prefix}/sbin
 bindir?=${prefix}/bin
 
 .PHONY: all
-all: hgd-playd hgd-netd hgdc
+all: hgd-playd hgd-netd hgd-admin hgdc
 
 .PHONY: clean
 clean:
@@ -25,17 +25,23 @@ db.o: db.c hgd.h
 
 hgd-playd: common.o db.o hgd-playd.c hgd.h
 	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LD_FLAGS} ${LDFLAGS} -o hgd-playd \
+		${SSL_LDFLAGS} ${LDFLAGS} -o hgd-playd \
 		db.o common.o hgd-playd.c
 
 hgd-netd: common.o hgd-netd.c hgd.h db.o
 	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LD_FLAGS} ${LDFLAGS} -o hgd-netd \
+		${SSL_LDFLAGS} ${LDFLAGS} -o hgd-netd \
 		common.o db.o hgd-netd.c
 
 hgdc: common.o hgdc.c hgd.h
-	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${SSL_LD_FLAGS} \
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${SSL_LDFLAGS} \
 		-o hgdc common.o hgdc.c
+
+hgd-admin: common.o db.o hgd.h
+	${CC} ${CPPFLAGS} ${CFLAGS} ${SQL_CPPFLAGS} ${SQL_LDFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} \
+		-o hgd-admin common.o db.o hgd-admin.c
+
 
 .PHONY: install
 install: hgd-playd hgd-netd hgdc
