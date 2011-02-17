@@ -94,6 +94,12 @@ struct hgd_session {
 	SSL			*ssl;
 };
 
+struct hgd_admin_cmd {
+	char			*cmd;
+	int			num_args;
+	int			(*handler)(char **args);
+};
+
 /* server command despatch */
 struct hgd_cmd_despatch {
 	char			*cmd;

@@ -61,6 +61,45 @@ hgd_usage()
 }
 
 int
+hgd_acmd_user_add(char **args)
+{
+	args = args;
+	return (0);
+}
+
+struct hgd_admin_cmd admin_cmds[] = {
+	{ "user-add", 2, hgd_acmd_user_add },
+#if 0
+	{ "user-disable", 1, hgd_acmd_user_disable },
+	{ "user-chpw", 1, hgd_acmd_user_chpw },
+	{ "user-enable", 1, hgd_acmd_user_enable },
+#endif
+	{ 0, 0, NULL }
+};
+
+int
+hgd_parse_command(int argc, char **argv)
+{
+	struct hgd_admin_cmd	*acmd, *correct_acmd = NULL;
+
+	DPRINTF(HGD_D_DEBUG, "Looking for command handler for '%s'", argv[0]);
+
+	for (acmd = admin_cmds; acmd->cmd != 0; acmd++) {
+		if ((strcmp(acmd->cmd, argv[0]) == 0) &&
+		    (acmd->num_args == argc - 1))
+			correct_acmd = acmd;
+	}
+
+	if (correct_acmd == NULL) {
+		DPRINTF(HGD_D_WARN, "Incorrect usage: '%s' with %d args",
+		    argv[0], argc - 1);
+		return (-1);
+	}
+
+	return (0);
+}
+
+int
 main(int argc, char **argv)
 {
 	char			 ch;
@@ -107,6 +146,9 @@ main(int argc, char **argv)
 	db = hgd_open_db(db_path);
 	if (db == NULL)
 		hgd_exit_nicely();
+
+	if (hgd_parse_command(argc, argv) == -1)
+		hgd_usage();
 
 	exit_ok = 1;
 	hgd_exit_nicely();
