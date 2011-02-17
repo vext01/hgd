@@ -595,6 +595,7 @@ hgd_print_version()
  * Use openssl to make a SHA1 hex hash of a string.
  * User must free.
  */
+/* XXX add salt */
 char *
 hgd_sha1(char *msg)
 {
