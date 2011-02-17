@@ -85,6 +85,22 @@ hgd_open_db(char *db_path)
 		return (NULL);
 	}
 
+	DPRINTF(HGD_D_DEBUG, "making user table (if needed)");
+	sql_res = sqlite3_exec(db,
+	    "CREATE TABLE IF NOT EXISTS users ("
+	    "username VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY, "
+	    "hash VARCHAR(20), "	/* as we use sha1 */
+	    "salt VARCHAR(20)"
+	    ");",
+	    NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
+		    DERROR);
+		sqlite3_close(db);
+		return (NULL);
+	}
+
 	return (db);
 }
 
