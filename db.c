@@ -90,7 +90,8 @@ hgd_open_db(char *db_path)
 	    "CREATE TABLE IF NOT EXISTS users ("
 	    "username VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY, "
 	    "hash VARCHAR(20), "	/* as we use sha1 */
-	    "salt VARCHAR(20)"
+	    "salt VARCHAR(20),"
+	    "enabled INTEGER"
 	    ");",
 	    NULL, NULL, NULL);
 
