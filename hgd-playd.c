@@ -204,10 +204,10 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		};
-
-		argc -= optind;
-		argv += optind;
 	}
+
+	argc -= optind;
+	argv += optind;
 
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
