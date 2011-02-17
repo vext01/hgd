@@ -21,6 +21,8 @@
 /* database schema */
 #define HGD_DBS_FILENAME_LEN	"50"
 #define HGD_DBS_USERNAME_LEN	"15"
+#define HGD_DBS_SALT_LEN	"20"
+#define HGD_DBS_HASH_LEN	"20"
 
 /* sqlite database error string (from global db ptr) */
 #define DERROR			sqlite3_errmsg(db)
@@ -48,5 +50,6 @@ int				 hgd_mark_finished(int id, uint8_t purge);
 int				 hgd_clear_votes();
 int				 hgd_clear_playlist();
 int				 hgd_init_playstate();
+int				 hgd_add_user(char *user, char *pass);
 
 #endif

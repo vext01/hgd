@@ -89,8 +89,8 @@ hgd_open_db(char *db_path)
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS users ("
 	    "username VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY, "
-	    "hash VARCHAR(20), "	/* as we use sha1 */
-	    "salt VARCHAR(20),"
+	    "hash VARCHAR( "HGD_DBS_HASH_LEN "), "	/* as we use sha1 */
+	    "salt VARCHAR(" HGD_DBS_SALT_LEN "), "
 	    "enabled INTEGER"
 	    ");",
 	    NULL, NULL, NULL);
@@ -476,5 +476,21 @@ hgd_clear_playlist()
 		return (-1);
 	}
 
+	return (0);
+}
+
+int
+hgd_add_user(char *user, char *pass)
+{
+	char			salt[21];
+
+	pass = pass; /* XXX */
+
+	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
+
+	memset(salt, 0, HGD_SHA_SALT_SZ);
+	arc4random_buf(salt, HGD_SHA_SALT_SZ);
+
+	/* XXX hash user's password and insert into db */
 	return (0);
 }

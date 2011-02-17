@@ -63,7 +63,7 @@ hgd_usage()
 int
 hgd_acmd_user_add(char **args)
 {
-	args = args;
+	hgd_add_user(args[0], args[1]);
 	return (0);
 }
 
@@ -95,6 +95,8 @@ hgd_parse_command(int argc, char **argv)
 		    argv[0], argc - 1);
 		return (-1);
 	}
+
+	correct_acmd->handler(++argv);
 
 	return (0);
 }
