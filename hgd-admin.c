@@ -24,6 +24,11 @@
 #include <err.h>
 #include <sys/types.h>
 
+/* pull in libbsd-dev for arc4random */
+#ifdef __Linux__
+#include <bsd/stdlib.h>
+#endif
+
 #include <sqlite3.h>
 
 #include "hgd.h"
