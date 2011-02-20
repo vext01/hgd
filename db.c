@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <openssl/rand.h>
 #include <sqlite3.h>
 
 #include "hgd.h"
@@ -482,14 +483,17 @@ hgd_clear_playlist()
 int
 hgd_add_user(char *user, char *pass)
 {
-	char			salt[21];
+	char			salt[HGD_SHA_SALT_SZ];
 
 	pass = pass; /* XXX */
 
 	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
 
 	memset(salt, 0, HGD_SHA_SALT_SZ);
-	arc4random_buf(salt, HGD_SHA_SALT_SZ);
+	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
+		DPRINTF(HGD_D_ERROR, "can not generate salt");
+		return (-1);
+	}
 
 	/* XXX hash user's password and insert into db */
 	return (0);
