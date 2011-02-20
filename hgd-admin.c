@@ -85,8 +85,8 @@ hgd_parse_command(int argc, char **argv)
 	DPRINTF(HGD_D_DEBUG, "Looking for command handler for '%s'", argv[0]);
 
 	for (acmd = admin_cmds; acmd->cmd != 0; acmd++) {
-		if ((strcmp(acmd->cmd, argv[0]) == 0) &&
-		    (acmd->num_args == argc - 1))
+		if ((acmd->num_args == argc -1) &&
+		    (strcmp(acmd->cmd, argv[0]) == 0))
 			correct_acmd = acmd;
 	}
 
