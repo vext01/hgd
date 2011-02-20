@@ -184,5 +184,6 @@ void				 hgd_exit_nicely();
 void				 hgd_kill_sighandler(int sig);
 void				 hgd_register_sig_handlers();
 char				*hgd_sha1(char *msg);
+char				*hgd_bytes_to_hex(unsigned char *bs, int len);
 
 #endif

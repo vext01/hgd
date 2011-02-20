@@ -648,3 +648,22 @@ hgd_sha1(char *msg)
 	return (hash_str);
 }
 
+/*
+ * Turn bytes into hex for storage.
+ * Caller must free.
+ */
+char *
+hgd_bytes_to_hex(unsigned char *bytes, int len)
+{
+	char			*hex;
+	int			 i, hex_len;
+
+	hex_len = len * 2 + 1;
+	hex = xmalloc(hex_len);	/* two hex chars for each byte */
+	memset(hex, 0, hex_len);
+
+	for (i = 0; i < len; i++)
+		snprintf(hex, hex_len, "%s%02x", hex, bytes[i]);
+
+	return (hex);
+}

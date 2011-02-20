@@ -483,7 +483,8 @@ hgd_clear_playlist()
 int
 hgd_add_user(char *user, char *pass)
 {
-	char			salt[HGD_SHA_SALT_SZ];
+	char			 salt[HGD_SHA_SALT_SZ];
+	char			*salt_hex;
 
 	pass = pass; /* XXX */
 
@@ -495,6 +496,12 @@ hgd_add_user(char *user, char *pass)
 		return (-1);
 	}
 
-	/* XXX hash user's password and insert into db */
+	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
+	DPRINTF(HGD_D_DEBUG, "salt '%s'", salt_hex);
+
+	/* XXX hash user's password with salt and insert into db */
+
+	free(salt_hex);
+
 	return (0);
 }
