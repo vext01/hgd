@@ -47,6 +47,14 @@ hgd_open_db(char *db_path)
 		return (NULL);
 	}
 
+	/* no-one else should do this at the same time */
+	sql_res = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
+		sqlite3_close(db);
+		return (NULL);
+	}
+
 	DPRINTF(HGD_D_DEBUG, "Setting database timeout");
 	sql_res = sqlite3_busy_timeout(db, 2000);
 
@@ -98,6 +106,13 @@ hgd_open_db(char *db_path)
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
 		    DERROR);
+		sqlite3_close(db);
+		return (NULL);
+	}
+
+	sql_res = sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
 		sqlite3_close(db);
 		return (NULL);
 	}
