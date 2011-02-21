@@ -25,7 +25,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <openssl/rand.h>
 #include <sqlite3.h>
 
 #include "hgd.h"
@@ -480,28 +479,43 @@ hgd_clear_playlist()
 	return (0);
 }
 
+/*
+ * add a user to the database
+ */
 int
-hgd_add_user(char *user, char *pass)
+hgd_add_user(char *user, char *salt, char *hash)
 {
-	char			 salt[HGD_SHA_SALT_SZ];
-	char			*salt_hex;
+	int			 sql_res, ret = -1;
+	sqlite3_stmt		*stmt;
+	char			*sql = "INSERT INTO users "
+				    "(username, salt, hash) VALUES (?, ?, ?)";
 
-	pass = pass; /* XXX */
-
-	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
-
-	memset(salt, 0, HGD_SHA_SALT_SZ);
-	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
-		DPRINTF(HGD_D_ERROR, "can not generate salt");
-		return (-1);
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
 	}
 
-	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
-	DPRINTF(HGD_D_DEBUG, "salt '%s'", salt_hex);
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	sql_res |= sqlite3_bind_text(stmt, 2, salt, -1, SQLITE_TRANSIENT);
+	sql_res |= sqlite3_bind_text(stmt, 3, hash, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
 
-	/* XXX hash user's password with salt and insert into db */
+	sql_res = sqlite3_step(stmt);
+	if (sql_res == SQLITE_CONSTRAINT) {
+		DPRINTF(HGD_D_ERROR, "User '%s' already exists", user);
+		goto clean;
+	} else if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
 
-	free(salt_hex);
-
-	return (0);
+	ret = 0;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
 }
