@@ -51,9 +51,14 @@ int
 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
     int server, char *cert_path, char *key_path) {
 
+	char		*home;
+	char		*keystore_path = NULL;
+
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
+
+
 
 	DPRINTF(HGD_D_DEBUG, "Setting up TLSv1_client_method");
 	if (server) {
@@ -68,6 +73,17 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			PRINT_SSL_ERR ("TLSv1_client_method");
 			return (-1);
 		}
+
+		home = getenv("HOME");
+		if (!home) {
+			/* XXX: crapout? */
+			DPRINTF(HGD_D_ERROR, "Could not get home env value");
+			exit (-1);
+		}
+
+
+		xasprintf(&keystore_path, "%s%s", home, "/.hgdc/certs");
+		/* xxx: create  certpath if it doesn't exist*/
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Setting up SSL_CTX_new");
@@ -77,8 +93,17 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 		return (-1);
 	}
 
-	if (!server)
+	if (!server) {
+		if(! SSL_CTX_load_verify_locations(*ctx, NULL, keystore_path))
+		{
+			DPRINTF(HGD_D_ERROR,
+			    "Could not load verify location: %s",
+			    keystore_path);
+			/* XXX: Handle failed load here */
+			exit (-1);
+		}
 		goto done;
+	}
 
 	/* set the local certificate from CertFile */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
@@ -603,7 +628,7 @@ hgd_sha1(char *msg)
 	const			 EVP_MD *md;
 	char			*hash_str = NULL, *tmp;
 	unsigned char		 md_value[EVP_MAX_MD_SIZE];
-	int			 md_len, i;
+	unsigned int		 i, md_len;
 
 	OpenSSL_add_all_digests();
 

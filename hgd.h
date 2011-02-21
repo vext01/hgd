@@ -63,6 +63,7 @@
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <openssl/evp.h>
 
 extern int8_t			 hgd_debug;
 extern uint8_t			 dying;

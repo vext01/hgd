@@ -117,6 +117,10 @@ hgd_encrypt(int fd)
 {
 	int			 ssl_res = 0;
 	char			*ok_str = NULL;
+	X509			*cert;
+	X509_NAME		*cert_name;
+	EVP_PKEY		*public_key;
+	BIO 			*bio;
 
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
@@ -140,6 +144,27 @@ hgd_encrypt(int fd)
 	ssl_res = SSL_connect(ssl);
 	if (ssl_res != 1) {
 		PRINT_SSL_ERR ("SSL_connect");
+		return (-1);
+	}
+
+
+	cert = SSL_get_peer_certificate(ssl);
+	if (!cert) {
+		DPRINTF(HGD_D_ERROR, "could not get remote cert");
+		exit (-1);
+	}
+
+	if(SSL_get_verify_result(ssl) != X509_V_OK)
+	{
+		PRINT_SSL_ERR ("SSL_connect");
+
+		cert_name =  X509_get_subject_name(cert);
+
+		X509_NAME_print_ex_fp(stdout, cert_name, 0, XN_FLAG_MULTILINE);
+
+		public_key = X509_get_pubkey(cert);
+
+
 		return (-1);
 	}
 
