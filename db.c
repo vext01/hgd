@@ -91,7 +91,7 @@ hgd_open_db(char *db_path)
 	    "username VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY, "
 	    "hash VARCHAR( "HGD_DBS_HASH_LEN "), "	/* as we use sha1 */
 	    "salt VARCHAR(" HGD_DBS_SALT_LEN "), "
-	    "enabled INTEGER"
+	    "perms INTEGER"
 	    ");",
 	    NULL, NULL, NULL);
 
