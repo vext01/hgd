@@ -536,13 +536,15 @@ clean:
 }
 
 struct hgd_user *
-hgd_get_user_info(char *user)
+hgd_authenticate_user(char *user, char *pass)
 {
 	int			 sql_res;
 	sqlite3_stmt		*stmt;
 	char			*sql = "SELECT username, salt, hash, perms "
 				    "FROM users WHERE username=?";
 	struct hgd_user		*user_info = NULL;
+	char			*stored_hash, *salt;
+	char			*hash = NULL;
 
 	DPRINTF(HGD_D_DEBUG, "Get user info for '%s'", user);
 
@@ -568,13 +570,24 @@ hgd_get_user_info(char *user)
 		goto clean;
 	}
 
+	/* these will be thrown away soon */
+	salt = (char *) sqlite3_column_text(stmt, 1);
+	stored_hash = (char *) sqlite3_column_text(stmt, 2);
+
+	hash = hgd_sha1(pass, salt);
+	if (strcmp(hash, stored_hash) != 0) {
+		DPRINTF(HGD_D_WARN, "User '%s': authentication failed", user);
+		goto clean;
+	}
+
 	user_info = xmalloc(sizeof(struct hgd_user));
 	user_info->user = strdup(sqlite3_column_text(stmt, 1));
-	user_info->salt = strdup(sqlite3_column_text(stmt, 2));
-	user_info->user = strdup(sqlite3_column_text(stmt, 3));
 	user_info->perms = sqlite3_column_int(stmt, 4);
 
 clean:
+	if (hash)
+		free(hash);
+
 	sqlite3_finalize(stmt);
 	return (user_info);
 }

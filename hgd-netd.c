@@ -177,21 +177,16 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
 	    sess->cli_str, args[0]);
 
 	/* get salt */
-	info = hgd_get_user_info(args[0]);
+	info = hgd_authenticate_user(args[0], args[1]);
 	if (info == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|denied");
 		return (-1);
 	}
 
-	DPRINTF(HGD_D_DEBUG, "User '%s': %s - %s - %d",
-	    info->user, info->salt, info->hash, info->perms);
-
-	/* concat */
-	/* hash */
-	/* get stored hash */
-	/* compare */
+	DPRINTF(HGD_D_INFO, "User '%s' successfully authenticated", args[0]);
 
 	/* only if successful do we set the user name */
+	/* XXX put the entire struct in here and find a place to free it */
 	sess->user = strdup(args[0]);
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 

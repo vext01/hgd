@@ -596,7 +596,7 @@ hgd_print_version()
  * User must free.
  */
 char *
-hgd_sha1(char *msg, char *salt)
+hgd_sha1(const char *msg, const char *salt)
 {
 	EVP_MD_CTX		 md_ctx;
 	const			 EVP_MD *md;
