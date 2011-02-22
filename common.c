@@ -73,7 +73,8 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			PRINT_SSL_ERR ("TLSv1_client_method");
 			return (HGD_FAIL);
 		}
-
+/* XXX: if'd out because we won't get this finished before barcamp*/
+#if 0
 		home = getenv("HOME");
 		if (!home) {
 			/* XXX: crapout? */
@@ -84,6 +85,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 
 		xasprintf(&keystore_path, "%s%s", home, "/.hgdc/certs");
 		/* xxx: create  certpath if it doesn't exist*/
+#endif
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Setting up SSL_CTX_new");
