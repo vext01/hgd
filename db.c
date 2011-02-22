@@ -560,14 +560,11 @@ hgd_get_user_info(char *user)
 	}
 
 	sql_res = sqlite3_step(stmt);
-	if (sql_res != SQLITE_DONE) {
-		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
-		goto clean;
-	}
-
-
-	if (sqlite3_column_text(stmt, 1) == NULL) {
+	if (sql_res == SQLITE_DONE) {
 		DPRINTF(HGD_D_WARN, "User '%s', does not exist", user);
+		goto clean;
+	} else if (sql_res != SQLITE_ROW) { /* we expect exactly one row */
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
 		goto clean;
 	}
 
