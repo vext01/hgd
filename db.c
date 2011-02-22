@@ -597,3 +597,40 @@ clean:
 	sqlite3_finalize(stmt);
 	return (user_info);
 }
+
+/*
+ * remove user from db forever
+ */
+int
+hgd_delete_user(char *user)
+{
+	int			 sql_res, ret = HGD_FAIL;
+	sqlite3_stmt		*stmt;
+	char			*sql = "DELETE FROM users WHERE username=?";
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
+
+

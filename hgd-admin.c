@@ -90,9 +90,20 @@ hgd_acmd_user_add(char **args)
 	return (HGD_OK);
 }
 
+int
+hgd_acmd_user_del(char **args)
+{
+	if (hgd_delete_user(args[0]) != HGD_OK)
+		return (HGD_FAIL);
+
+	return (HGD_OK);
+}
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
+	{ "user-del", 1, hgd_acmd_user_del },
 #if 0
+	{ "user-list", 0, hgd_acmd_user_list },
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },
 	{ "user-enable", 1, hgd_acmd_user_enable },
