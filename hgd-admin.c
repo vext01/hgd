@@ -58,7 +58,17 @@ hgd_exit_nicely()
 void
 hgd_usage()
 {
-	printf("XXX\n");
+        printf("Usage: hgdc [opts] command [args]\n\n");
+        printf("  Commands include:\n");
+        printf("    user-add <username> <password> :\tAdd a user.\n");
+        /* printf("    user-disable <username>\tDisable a user account (without deleting it)\n"); */
+        /* printf("    user-chpw <username>\t\t\tChange a users password\n"); */
+        /* printf("    user-enable <username>\t\t\Re-enable a user\n\n"); */
+        printf("  Options include:\n");
+        printf("    -d\t\t\tLocation of state directory\n");
+        printf("    -h\t\t\tShow this message and exit\n");
+        printf("    -x level\t\tSet debug level (0-3)\n");
+        printf("    -v\t\t\tShow version and exit\n");
 }
 
 int
