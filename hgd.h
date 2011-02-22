@@ -55,6 +55,7 @@
 #define HGD_DFL_REQ_VOTES	3
 #define HGD_PID_STR_SZ		10
 #define HGD_SHA_SALT_SZ		20
+#define HGD_MAX_PASS_SZ		20
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -73,6 +74,11 @@ extern pid_t			 pid;
 
 extern char			*hgd_dir;
 extern char			*filestore_path;
+
+struct hgd_user {
+	char			*user;
+	int			 perms;
+};
 
 struct hgd_playlist_item {
 	int			 id;
@@ -184,7 +190,7 @@ void				 hgd_print_version();
 void				 hgd_exit_nicely();
 void				 hgd_kill_sighandler(int sig);
 void				 hgd_register_sig_handlers();
-char				*hgd_sha1(char *msg);
+char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
 
 #endif

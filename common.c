@@ -620,18 +620,21 @@ hgd_print_version()
  * Use openssl to make a SHA1 hex hash of a string.
  * User must free.
  */
-/* XXX add salt */
 char *
-hgd_sha1(char *msg)
+hgd_sha1(const char *msg, const char *salt)
 {
 	EVP_MD_CTX		 md_ctx;
 	const			 EVP_MD *md;
-	char			*hash_str = NULL, *tmp;
-	unsigned char		 md_value[EVP_MAX_MD_SIZE];
-	unsigned int		 i, md_len;
+	char			*concat, *no_salt = "";
+	unsigned char		 hash[EVP_MAX_MD_SIZE + 1];
+	unsigned int		 hash_len;
+
+	if (salt == NULL)
+		salt = no_salt;
+
+	memset(hash, 0, EVP_MAX_MD_SIZE + 1);
 
 	OpenSSL_add_all_digests();
-
 	md = EVP_get_digestbyname("sha1");
 
 	if (!md) {
@@ -646,31 +649,22 @@ hgd_sha1(char *msg)
 		return (NULL);
 	}
 
-	if (!EVP_DigestUpdate(&md_ctx, msg, strlen(msg))) {
+	xasprintf(&concat, "%s%s", salt, msg);
+	if (!EVP_DigestUpdate(&md_ctx, concat, strlen(concat))) {
 		DPRINTF(HGD_D_WARN, "EVP_DigestInit_ex");
+		free(concat);
 		return (NULL);
 	}
+	free(concat);
 
-	if (!EVP_DigestFinal_ex(&md_ctx, md_value, &md_len)) {
+	if (!EVP_DigestFinal_ex(&md_ctx, hash, &hash_len)) {
 		DPRINTF(HGD_D_WARN, "EVP_DigestInit_ex");
 		return (NULL);
 	}
 
 	EVP_MD_CTX_cleanup(&md_ctx);
 
-	/* if we are ever looking to speed up hgd; look here! */
-	for (i = 0; i < md_len; i++) {
-		tmp = hash_str;
-		if (hash_str)
-			xasprintf(&hash_str, "%s%02x", hash_str, md_value[i]);
-		else
-			xasprintf(&hash_str, "%02x", md_value[i]);
-
-		if (tmp)
-			free(tmp);
-	}
-
-	return (hash_str);
+	return (hgd_bytes_to_hex(hash, hash_len));
 }
 
 /*

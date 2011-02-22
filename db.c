@@ -25,7 +25,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <openssl/rand.h>
 #include <sqlite3.h>
 
 #include "hgd.h"
@@ -45,6 +44,14 @@ hgd_open_db(char *db_path)
 	DPRINTF(HGD_D_DEBUG, "opening database");
 	if (sqlite3_open(db_path, &db) != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't open db: %s", DERROR);
+		return (NULL);
+	}
+
+	/* no-one else should do this at the same time */
+	sql_res = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
+		sqlite3_close(db);
 		return (NULL);
 	}
 
@@ -92,13 +99,20 @@ hgd_open_db(char *db_path)
 	    "username VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY, "
 	    "hash VARCHAR( "HGD_DBS_HASH_LEN "), "	/* as we use sha1 */
 	    "salt VARCHAR(" HGD_DBS_SALT_LEN "), "
-	    "enabled INTEGER"
+	    "perms INTEGER"
 	    ");",
 	    NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
 		    DERROR);
+		sqlite3_close(db);
+		return (NULL);
+	}
+
+	sql_res = sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
 		sqlite3_close(db);
 		return (NULL);
 	}
@@ -480,28 +494,100 @@ hgd_clear_playlist()
 	return (0);
 }
 
+/*
+ * add a user to the database
+ */
 int
-hgd_add_user(char *user, char *pass)
+hgd_add_user(char *user, char *salt, char *hash)
 {
-	char			 salt[HGD_SHA_SALT_SZ];
-	char			*salt_hex;
+	int			 sql_res, ret = -1;
+	sqlite3_stmt		*stmt;
+	char			*sql = "INSERT INTO users "
+				    "(username, salt, hash) VALUES (?, ?, ?)";
 
-	pass = pass; /* XXX */
-
-	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
-
-	memset(salt, 0, HGD_SHA_SALT_SZ);
-	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
-		DPRINTF(HGD_D_ERROR, "can not generate salt");
-		return (-1);
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
 	}
 
-	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
-	DPRINTF(HGD_D_DEBUG, "salt '%s'", salt_hex);
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	sql_res |= sqlite3_bind_text(stmt, 2, salt, -1, SQLITE_TRANSIENT);
+	sql_res |= sqlite3_bind_text(stmt, 3, hash, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
 
-	/* XXX hash user's password with salt and insert into db */
+	sql_res = sqlite3_step(stmt);
+	if (sql_res == SQLITE_CONSTRAINT) {
+		DPRINTF(HGD_D_ERROR, "User '%s' already exists", user);
+		goto clean;
+	} else if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
 
-	free(salt_hex);
+	ret = 0;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
 
-	return (0);
+struct hgd_user *
+hgd_authenticate_user(char *user, char *pass)
+{
+	int			 sql_res;
+	sqlite3_stmt		*stmt;
+	char			*sql = "SELECT username, salt, hash, perms "
+				    "FROM users WHERE username=?";
+	struct hgd_user		*user_info = NULL;
+	char			*stored_hash, *salt;
+	char			*hash = NULL;
+
+	DPRINTF(HGD_D_DEBUG, "Get user info for '%s'", user);
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res == SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "User '%s', does not exist", user);
+		goto clean;
+	} else if (sql_res != SQLITE_ROW) { /* we expect exactly one row */
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* these will be thrown away soon */
+	salt = (char *) sqlite3_column_text(stmt, 1);
+	stored_hash = (char *) sqlite3_column_text(stmt, 2);
+
+	hash = hgd_sha1(pass, salt);
+	if (strcmp(hash, stored_hash) != 0) {
+		DPRINTF(HGD_D_WARN, "User '%s': authentication failed", user);
+		goto clean;
+	}
+
+	user_info = xmalloc(sizeof(struct hgd_user));
+	user_info->user = strdup(sqlite3_column_text(stmt, 1));
+	user_info->perms = sqlite3_column_int(stmt, 4);
+
+clean:
+	if (hash)
+		free(hash);
+
+	sqlite3_finalize(stmt);
+	return (user_info);
 }

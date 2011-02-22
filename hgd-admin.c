@@ -25,6 +25,7 @@
 #include <sys/types.h>
 
 #include <sqlite3.h>
+#include <openssl/rand.h>
 
 #include "hgd.h"
 #include "db.h"
@@ -63,7 +64,29 @@ hgd_usage()
 int
 hgd_acmd_user_add(char **args)
 {
-	hgd_add_user(args[0], args[1]);
+	char			 salt[HGD_SHA_SALT_SZ];
+	char			*salt_hex, *hash_hex;
+	char			*user = args[0], *pass = args[1];
+
+	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
+
+	memset(salt, 0, HGD_SHA_SALT_SZ);
+	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
+		DPRINTF(HGD_D_ERROR, "can not generate salt");
+		return (-1);
+	}
+
+	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
+	DPRINTF(HGD_D_DEBUG, "new user's salt '%s'", salt_hex);
+
+	hash_hex = hgd_sha1(pass, salt_hex);
+	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_hex);
+
+	hgd_add_user(args[0], salt_hex, hash_hex);
+
+	free(salt_hex);
+	free(hash_hex);
+
 	return (0);
 }
 

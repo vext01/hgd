@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <readpassphrase.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -218,10 +219,23 @@ hgd_check_svr_response(char *resp, uint8_t x)
 int
 hgd_client_login(int fd, SSL *ssl, char *username)
 {
-	char			*resp, *user_cmd;
+	char			*resp, *user_cmd, pass[HGD_MAX_PASS_SZ];
 	int			 login_ok = -1;
+	char			*prompt;
 
-	xasprintf(&user_cmd, "user|%s", username);
+	xasprintf(&prompt, "Password for %s@%s: ", user, host);
+	if (readpassphrase(prompt, pass, HGD_MAX_PASS_SZ,
+	    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Problem reading password from user");
+		memset(pass, 0, HGD_MAX_PASS_SZ);
+		free(prompt);
+		return (-1);
+	}
+	memset(pass, 0, HGD_MAX_PASS_SZ);
+	free(prompt);
+
+	/* XXX send password */
+	xasprintf(&user_cmd, "user|%s|%s", username, pass);
 	hgd_sock_send_line(fd, ssl, user_cmd);
 	free(user_cmd);
 
