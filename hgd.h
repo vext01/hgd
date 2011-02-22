@@ -80,7 +80,7 @@ extern char			*hgd_dir;
 extern char			*filestore_path;
 
 struct hgd_user {
-	char			*user;
+	char			*name;
 	int			 perms;
 };
 
@@ -102,7 +102,7 @@ struct hgd_session {
 	int			sock_fd;
 	struct sockaddr_in	*cli_addr;
 	char			*cli_str;
-	char			*user;
+	struct hgd_user		*user;
 	SSL			*ssl;
 };
 
