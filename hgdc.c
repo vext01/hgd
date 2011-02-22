@@ -198,7 +198,8 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 	char			*resp, *user_cmd;
 	int			 login_ok = -1;
 
-	xasprintf(&user_cmd, "user|%s", username);
+	/* XXX send password */
+	xasprintf(&user_cmd, "user|%s|XXX", username);
 	hgd_sock_send_line(fd, ssl, user_cmd);
 	free(user_cmd);
 
