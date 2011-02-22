@@ -96,6 +96,8 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	}
 
 	if (!server) {
+/* XXX: if'd out because we won't get this finished before barcamp*/
+#if 0
 		if(! SSL_CTX_load_verify_locations(*ctx, NULL, keystore_path))
 		{
 			DPRINTF(HGD_D_ERROR,
@@ -105,6 +107,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			exit (HGD_FAIL);
 		}
 		goto done;
+#endif
 	}
 
 	/* set the local certificate from CertFile */
