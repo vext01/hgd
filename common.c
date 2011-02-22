@@ -51,14 +51,14 @@ int
 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
     int server, char *cert_path, char *key_path) {
 
+#if 0
 	char		*home;
 	char		*keystore_path = NULL;
+#endif
 
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
-
-
 
 	DPRINTF(HGD_D_DEBUG, "Setting up TLSv1_client_method");
 	if (server) {
