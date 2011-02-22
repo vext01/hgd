@@ -213,12 +213,12 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 		free(prompt);
 		return (-1);
 	}
-	memset(pass, 0, HGD_MAX_PASS_SZ);
 	free(prompt);
 
 	/* XXX send password */
 	xasprintf(&user_cmd, "user|%s|%s", username, pass);
 	hgd_sock_send_line(fd, ssl, user_cmd);
+	memset(pass, 0, HGD_MAX_PASS_SZ);
 	free(user_cmd);
 
 	resp = hgd_sock_recv_line(fd, ssl);
