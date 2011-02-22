@@ -51,6 +51,7 @@ int
 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
     int server, char *cert_path, char *key_path) {
 
+	/* XXX For semi-implemented certificate verification - FAO mex */
 #if 0
 	char		*home;
 	char		*keystore_path = NULL;
@@ -106,7 +107,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			/* XXX: Handle failed load here */
 			exit (HGD_FAIL);
 		}
-		#endif
+#endif
 		goto done;
 	}
 
