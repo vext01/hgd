@@ -158,12 +158,10 @@ hgd_encrypt(int fd)
 	{
 		PRINT_SSL_ERR ("SSL_connect");
 
-		cert_name =  X509_get_subject_name(cert);
+		cert = SSL_get_peer_certificate(ssl);
 
-		X509_NAME_print_ex_fp(stdout, cert_name, 0, XN_FLAG_MULTILINE);
-
-		public_key = X509_get_pubkey(cert);
-
+		cert->
+		//PEM_write_x509(fp!,cert);-
 
 		return (-1);
 	}
