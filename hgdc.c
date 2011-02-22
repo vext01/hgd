@@ -39,7 +39,7 @@
 
 #include "hgd.h"
 
-char			*user, *host = "127.0.0.1";
+char			*user = NULL, *host = "127.0.0.1";
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
@@ -322,7 +322,10 @@ hgd_setup_socket()
 	DPRINTF(HGD_D_DEBUG, "Connected to %s", host);
 
 	/* identify ourselves */
-	user = getenv("USER");
+	if (user == NULL) {
+		/* If the user did not set their name use thier system login */
+		user = getenv("USER");
+	}
 	if (user == NULL) {
 		DPRINTF(HGD_D_ERROR, "can't get username");
 		hgd_exit_nicely();
@@ -359,6 +362,7 @@ hgd_usage()
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -s host/ip\t\tSet connection address\n");
+	printf("    -u username\t\tSet username\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
 	printf("    -e\t\t\tEnable Encyption\n");
@@ -597,7 +601,7 @@ main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "Eehp:s:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
 		switch (ch) {
 		case 'e':
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
@@ -615,6 +619,10 @@ main(int argc, char **argv)
 		case 'p':
 			port = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
+			break;
+		case 'u':
+			user = optarg;
+			DPRINTF(HGD_D_DEBUG, "set username to %s", user);
 			break;
 		case 'v':
 			hgd_print_version();
