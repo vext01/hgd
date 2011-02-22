@@ -55,6 +55,7 @@
 #define HGD_DFL_REQ_VOTES	3
 #define HGD_PID_STR_SZ		10
 #define HGD_SHA_SALT_SZ		20
+#define HGD_MAX_PASS_SZ		20
 
 #include <sys/types.h>
 #include <unistd.h>
