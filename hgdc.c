@@ -25,7 +25,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#ifdef __Linux__
+#include <bsd/readpassphrase.h>
+#else
 #include <readpassphrase.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/socket.h>
