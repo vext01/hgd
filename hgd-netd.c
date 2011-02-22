@@ -945,6 +945,8 @@ main(int argc, char **argv)
 	/* set up paths */
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
+
+	umask(~S_IRWXU);
 	hgd_mk_state_dir();
 
 	/* Created tables if needed */

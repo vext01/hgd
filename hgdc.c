@@ -648,6 +648,9 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
+	/* secure mask */
+	umask(~S_IRWXU);
+
 	/* do whatever the user wants */
 	hgd_exec_req(argc, argv);
 
