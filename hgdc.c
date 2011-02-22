@@ -25,7 +25,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#ifdef __Linux__
+#include <bsd/readpassphrase.h>
+#else
 #include <readpassphrase.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -44,6 +48,7 @@ SSL_METHOD		*method;
 SSL_CTX			*ctx;
 uint8_t			 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
 uint8_t			 server_ssl_capable = 0;
+uint8_t			 authenticated = 0;
 
 /* protos */
 int			 hgd_check_svr_response(char *resp, uint8_t x);
@@ -541,11 +546,12 @@ hgd_req_hud(char **args)
 
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
-	{"ls",		0,	hgd_req_playlist},
-	{"hud",		0,	hgd_req_hud},
-	{"vo",		0,	hgd_req_vote_off},
-	{"q",		1,	hgd_req_queue},
-	{NULL,		0,	NULL} /* terminate */
+/*	cmd,		n_args,	need_auth,	handler */
+	{"ls",		0,	0,		hgd_req_playlist},
+	{"hud",		0,	0,		hgd_req_hud},
+	{"vo",		0,	1,		hgd_req_vote_off},
+	{"q",		1,	1,		hgd_req_queue},
+	{NULL,		0,	0,		NULL} /* terminate */
 };
 
 /* parse command line args */
