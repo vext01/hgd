@@ -186,13 +186,17 @@ hgd_encrypt(int fd)
 
 	DPRINTF(HGD_D_INFO, "SSL connection established");
 
-	return (0);
+	return (HGD_OK);
 }
 
+/*
+ * if x == 1 you do not need to check the return value of this method as
+ * hgd will have exited before this returns.
+ */
 int
 hgd_check_svr_response(char *resp, uint8_t x)
 {
-	int			len, err = 0;
+	int			len, err = HGD_OK;
 	char			*trunc = NULL;
 
 	if (resp == NULL) {
@@ -212,16 +216,16 @@ hgd_check_svr_response(char *resp, uint8_t x)
 
 	if (len < 2) {
 		DPRINTF(HGD_D_ERROR, "Malformed server response");
-		err = -1;
+		err = HGD_FAIL;
 	} else if ((resp[0] != 'o') || (resp[1] != 'k')) {
 		if (len < 5)
 			DPRINTF(HGD_D_ERROR, "Malformed server response");
 		else
 			DPRINTF(HGD_D_ERROR, "Failure: %s", &resp[4]);
-		err = -1;
+		err = HGD_FAIL;
 	}
 
-	if ((err == -1) && (x)) {
+	if ((err == HGD_FAIL) && (x)) {
 		free(resp);
 		hgd_exit_nicely();
 	}
@@ -242,7 +246,7 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 		DPRINTF(HGD_D_ERROR, "Problem reading password from user");
 		memset(pass, 0, HGD_MAX_PASS_SZ);
 		free(prompt);
-		return (-1);
+		return (HGD_FAIL);
 	}
 	memset(pass, 0, HGD_MAX_PASS_SZ);
 	free(prompt);
@@ -257,7 +261,7 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 
 	free(resp);
 
-	if (login_ok == 0)
+	if (login_ok == HGD_OK)
 		DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
 	else
 		DPRINTF(HGD_D_WARN, "Login as %s failed", user);
@@ -333,7 +337,7 @@ hgd_setup_socket()
 
 	hgd_negotiate_crypto();
 	if ((server_ssl_capable) && (crypto_pref != HGD_CRYPTO_PREF_NEVER)) {
-		if (hgd_encrypt(sock_fd) != 0)
+		if (hgd_encrypt(sock_fd) != HGD_OK)
 			hgd_exit_nicely();
 	}
 
@@ -341,7 +345,7 @@ hgd_setup_socket()
 	if (ssl == NULL)
 		DPRINTF(HGD_D_WARN, "Connection is not encrypted");
 
-	if (hgd_client_login(sock_fd, ssl, user) != 0) {
+	if (hgd_client_login(sock_fd, ssl, user) != HGD_OK) {
 		/* XXX do something on failed login */
 	}
 }
@@ -399,9 +403,9 @@ hgd_req_queue(char **args)
 
 	/* check we are allowed */
 	resp = hgd_sock_recv_line(sock_fd, ssl);
-	if (hgd_check_svr_response(resp, 0) == -1) {
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
 		free(resp);
-		return (-1);
+		return (HGD_FAIL);
 	}
 	free(resp);
 
@@ -409,7 +413,7 @@ hgd_req_queue(char **args)
 	f = fopen(filename, "r");
 	if (f == NULL) {
 		DPRINTF(HGD_D_ERROR, "fopen %s: %s", filename, SERROR);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	while (written != fsize) {
@@ -431,15 +435,15 @@ hgd_req_queue(char **args)
 	}
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
-	if (hgd_check_svr_response(resp, 0) == -1) {
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
 		free(resp);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Transfer complete");
 	free(resp);
 
-	return (0);
+	return (HGD_OK);
 }
 
 void
@@ -484,9 +488,10 @@ hgd_req_vote_off(char **args)
 	hgd_sock_send_line(sock_fd, ssl, "vo");
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
+	/* XXX: should we check the return value of this? */
 	hgd_check_svr_response(resp, 0);
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -499,16 +504,16 @@ hgd_req_playlist(char **args)
 
 	hgd_sock_send_line(sock_fd, ssl, "ls");
 	resp = hgd_sock_recv_line(sock_fd, ssl);
-	if (hgd_check_svr_response(resp, 0) == -1) {
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
 		free(resp);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	for (p = resp; (*p != 0 && *p != '|'); p ++);
 	if (*p != '|') {
 		DPRINTF(HGD_D_ERROR, "didn't find a argument separator");
 		free(resp);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	n_items = atoi(++p);
@@ -528,7 +533,7 @@ hgd_req_playlist(char **args)
 		free(track_resp);
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 /*
@@ -543,12 +548,13 @@ hgd_req_hud(char **args)
 	system("clear");
 	while (1) {
 		printf("HGD Server @ %s -- Playlist:\n\n", host);
+		/* XXX Check return value of this? */
 		hgd_req_playlist(NULL);
 		sleep(1);
 		system("clear");
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 /* lookup for request despatch */

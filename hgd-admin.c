@@ -120,6 +120,7 @@ hgd_parse_command(int argc, char **argv)
 		return (HGD_FAIL);
 	}
 
+	/* XXX: Should we check the return state of this? */
 	correct_acmd->handler(++argv);
 
 	return (HGD_OK);
