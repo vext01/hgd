@@ -63,7 +63,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	FILE			*pid_file;
 
 	DPRINTF(HGD_D_INFO, "Playing '%s' for '%s'", t->filename, t->user);
-	if (hgd_mark_playing(t->id) == -1)
+	if (hgd_mark_playing(t->id) == HGD_FAIL)
 		hgd_exit_nicely();
 
 	pid = fork();
@@ -107,7 +107,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
-	if (hgd_mark_finished(t->id, purge_finished_db) == -1)
+	if (hgd_mark_finished(t->id, purge_finished_db) == HGD_FAIL)
 		DPRINTF(HGD_D_WARN,
 		    "Could not purge/mark finished -- trying to continue");
 }
@@ -122,13 +122,14 @@ hgd_play_loop()
 	while (!dying) {
 		memset(&track, 0, sizeof(track));
 
-		if (hgd_get_next_track(&track) == -1) {
+		if (hgd_get_next_track(&track) == HGD_FAIL) {
 			hgd_exit_nicely();
 		}
 
 		if (track.filename != NULL) {
 			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
 			    track.filename);
+			/* XXX: Should we check the return val of this? */
 			hgd_clear_votes();
 			hgd_play_track(&track);
 		} else {
@@ -217,9 +218,11 @@ main(int argc, char **argv)
 	if (db == NULL)
 		hgd_exit_nicely();
 
+	/* XXX: Should we check the return state of this? */
 	hgd_init_playstate();
 
 	if (clear_playlist_on_start)
+		/* XXX: Should we check the return state of this? */
 		hgd_clear_playlist();
 
 	/* start */

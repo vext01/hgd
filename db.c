@@ -169,7 +169,7 @@ hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
 	names = names;
 
 	*num = atoi(data[0]);
-	return (HGD_OK);
+	return (SQLITE_OK);
 }
 
 int

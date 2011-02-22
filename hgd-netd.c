@@ -142,7 +142,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	args = args; /* silence compiler */
 
 	memset(&playing, 0, sizeof(playing));
-	if (hgd_get_playing_item(&playing) == -1) {
+	if (hgd_get_playing_item(&playing) == HGD_FAIL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 		hgd_free_playlist_item(&playing);
 		return (HGD_FAIL);
@@ -299,7 +299,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	payload = NULL;
 
 	/* insert track into db */
-	if (hgd_insert_track(basename(unique_fn), sess->user->name) == -1) {
+	if (hgd_insert_track(basename(unique_fn), sess->user->name) == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
@@ -333,7 +333,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	/* shhh */
 	args = args;
 
-	if (hgd_get_playlist(&list) == -1) {
+	if (hgd_get_playlist(&list) == HGD_FAIL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		return (HGD_FAIL);
 	}
@@ -375,7 +375,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	memset(&playing, 0, sizeof(playing));
-	if (hgd_get_playing_item(&playing) == -1) {
+	if (hgd_get_playing_item(&playing) == HGD_FAIL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 		return (HGD_FAIL);
 	}
@@ -403,7 +403,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	/* insert vote */
 	switch (hgd_insert_vote(sess->user->name)) {
-	case 0:
+	case HGD_OK:
 		break; /* good */
 	case 1:
 		/* duplicate vote */
@@ -413,6 +413,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		    "err|duplicate_vote");
 		return (HGD_OK);
 		break;
+	case HGD_FAIL:
 	default:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		return (HGD_FAIL);

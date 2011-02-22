@@ -134,33 +134,33 @@ hgd_encrypt(int fd)
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
 	if (hgd_setup_ssl_ctx(&method, &ctx, 0, 0, 0) != 0) {
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Setting up SSL_new");
 	ssl = SSL_new(ctx);
 	if (ssl == NULL) {
 		PRINT_SSL_ERR ("SSL_new");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	ssl_res = SSL_set_fd(ssl, fd);
 	if (ssl_res == 0) {
 		PRINT_SSL_ERR ("SSL_set_fd");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	ssl_res = SSL_connect(ssl);
 	if (ssl_res != 1) {
 		PRINT_SSL_ERR ("SSL_connect");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 
 	cert = SSL_get_peer_certificate(ssl);
 	if (!cert) {
 		DPRINTF(HGD_D_ERROR, "could not get remote cert");
-		exit (-1);
+		exit (HGD_FAIL);
 	}
 
 /*

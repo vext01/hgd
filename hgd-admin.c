@@ -82,6 +82,7 @@ hgd_acmd_user_add(char **args)
 	hash_hex = hgd_sha1(pass, salt_hex);
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_hex);
 
+	/* XXX: Should we check the return state of this? */
 	hgd_add_user(args[0], salt_hex, hash_hex);
 
 	free(salt_hex);
