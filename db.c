@@ -21,8 +21,9 @@
 #include <stdarg.h>
 #include <string.h>
 #include <err.h>
-
 #include <sys/types.h>
+#include <sys/stat.h>
+
 #include <sys/socket.h>
 
 #include <sqlite3.h>
@@ -45,6 +46,11 @@ hgd_open_db(char *db_path)
 	if (sqlite3_open(db_path, &db) != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't open db: %s", DERROR);
 		return (NULL);
+	}
+
+	/* make database secure */
+	if (chmod(db_path, S_IRUSR | S_IWUSR) != 0) {
+		DPRINTF(HGD_D_WARN, "Could not make database file secure");
 	}
 
 	/* no-one else should do this at the same time */

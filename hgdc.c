@@ -125,11 +125,11 @@ hgd_encrypt(int fd)
 	char			*ok_str = NULL;
 	X509			*cert;
 
-/* we will need these variables when we want to save the certs to disk */
+	/* XXX For semi-implemented certificate verification - FAO mex */
 #if 0
 	X509_NAME		*cert_name;
 	EVP_PKEY		*public_key;
-	BIO 			*bio;
+	BIO			*bio;
 #endif
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
@@ -165,7 +165,7 @@ hgd_encrypt(int fd)
 
 /*
  * unfinished work on checking SSL certs.  Need to work out how to get the
- * hash from the cert to know where to write the cert to.
+ * hash from the cert to know where to write the cert to. XXX
  */
 #if 0
 	if(SSL_get_verify_result(ssl) != X509_V_OK)
@@ -248,12 +248,12 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 		free(prompt);
 		return (HGD_FAIL);
 	}
-	memset(pass, 0, HGD_MAX_PASS_SZ);
 	free(prompt);
 
 	/* XXX send password */
 	xasprintf(&user_cmd, "user|%s|%s", username, pass);
 	hgd_sock_send_line(fd, ssl, user_cmd);
+	memset(pass, 0, HGD_MAX_PASS_SZ);
 	free(user_cmd);
 
 	resp = hgd_sock_recv_line(fd, ssl);
@@ -348,6 +348,7 @@ hgd_setup_socket()
 	if (hgd_client_login(sock_fd, ssl, user) != HGD_OK) {
 		/* XXX do something on failed login */
 	}
+
 }
 
 /* NOTE! -c is reserved for 'config file path' */
@@ -599,6 +600,11 @@ hgd_exec_req(int argc, char **argv)
 	hgd_setup_socket();
 
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
+	if ((!authenticated) && (correct_desp->need_auth)) {
+		/* XXX replace 0 with HGD_OK */
+		if (hgd_client_login(sock_fd, ssl, user) != 0)
+			hgd_exit_nicely();
+	}
 	correct_desp->handler(&argv[1]);
 }
 
@@ -652,6 +658,9 @@ main(int argc, char **argv)
 
 	argc -= optind;
 	argv += optind;
+
+	/* secure mask */
+	umask(~S_IRWXU);
 
 	/* do whatever the user wants */
 	hgd_exec_req(argc, argv);

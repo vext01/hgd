@@ -86,6 +86,9 @@ hgd_play_track(struct hgd_playlist_item *t)
 			hgd_exit_nicely();
 		}
 
+		if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
+			DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
+
 		fprintf(pid_file, "%d", pid);
 		fclose(pid_file);
 		wait(&status);
@@ -212,6 +215,8 @@ main(int argc, char **argv)
 
 	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
+
+	umask(~S_IRWXU);
 	hgd_mk_state_dir();
 
 	db = hgd_open_db(db_path);

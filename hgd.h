@@ -38,7 +38,7 @@
 #define HGD_MAX_LINE		256
 #define HGD_MAX_BAD_COMMANDS	3
 #define HGD_BINARY_CHUNK	4096
-#define HGD_BINARY_RECV_SZ	(2 << 8)
+#define HGD_BINARY_RECV_SZ	16384
 #define	HGD_MAX_PROTO_TOKS	3
 #define HGD_GREET		"ok|HGD-" HGD_VERSION
 #define HGD_BYE			"ok|Catch you later d00d!"
