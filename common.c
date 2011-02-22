@@ -51,34 +51,61 @@ int
 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
     int server, char *cert_path, char *key_path) {
 
+	char		*home;
+	char		*keystore_path = NULL;
+
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
+
+
 
 	DPRINTF(HGD_D_DEBUG, "Setting up TLSv1_client_method");
 	if (server) {
 		*method = (SSL_METHOD *) TLSv1_server_method();
 		if (*method == NULL) {
 			PRINT_SSL_ERR ("TLSv1_server_method");
-			return (-1);
+			return (HGD_FAIL);
 		}
 	} else {
 		*method = (SSL_METHOD *) TLSv1_client_method();
 		if (*method == NULL) {
 			PRINT_SSL_ERR ("TLSv1_client_method");
-			return (-1);
+			return (HGD_FAIL);
 		}
+/* XXX: if'd out because we won't get this finished before barcamp*/
+#if 0
+		home = getenv("HOME");
+		if (!home) {
+			/* XXX: crapout? */
+			DPRINTF(HGD_D_ERROR, "Could not get home env value");
+			exit (HGD_FAIL);
+		}
+
+
+		xasprintf(&keystore_path, "%s%s", home, "/.hgdc/certs");
+		/* xxx: create  certpath if it doesn't exist*/
+#endif
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Setting up SSL_CTX_new");
 	*ctx = SSL_CTX_new(*method);
 	if (*ctx == NULL) {
 		PRINT_SSL_ERR ("SSL_CTX_new");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
-	if (!server)
+	if (!server) {
+		if(! SSL_CTX_load_verify_locations(*ctx, NULL, keystore_path))
+		{
+			DPRINTF(HGD_D_ERROR,
+			    "Could not load verify location: %s",
+			    keystore_path);
+			/* XXX: Handle failed load here */
+			exit (HGD_FAIL);
+		}
 		goto done;
+	}
 
 	/* set the local certificate from CertFile */
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
@@ -86,7 +113,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	    *ctx, cert_path, SSL_FILETYPE_PEM)) {
 		DPRINTF(HGD_D_ERROR, "Can't load SSL cert: %s", cert_path);
 		PRINT_SSL_ERR("SSL_CTX_use_certificate_file");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* set the private key from KeyFile */
@@ -95,7 +122,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	    *ctx, key_path, SSL_FILETYPE_PEM)) {
 		DPRINTF(HGD_D_ERROR, "Can't load SSL key: %s", key_path);
 		PRINT_SSL_ERR("SSL_CTX_use_PrivateKey_file");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* verify private key */
@@ -103,11 +130,11 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	if (!SSL_CTX_check_private_key(*ctx)) {
 		DPRINTF(HGD_D_ERROR, "Can't verify SSL key: %s", key_path);
 		PRINT_SSL_ERR("SSL_CTX_check_private_key");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 done:
-	return (0);
+	return (HGD_OK);
 }
 
 /*
@@ -602,7 +629,7 @@ hgd_sha1(const char *msg, const char *salt)
 	const			 EVP_MD *md;
 	char			*concat, *no_salt = "";
 	unsigned char		 hash[EVP_MAX_MD_SIZE + 1];
-	int			 hash_len;
+	unsigned int		 hash_len;
 
 	if (salt == NULL)
 		salt = no_salt;

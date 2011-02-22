@@ -145,7 +145,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	if (hgd_get_playing_item(&playing) == -1) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
 		hgd_free_playlist_item(&playing);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	if (playing.filename == NULL) {
@@ -160,7 +160,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 
 	hgd_free_playlist_item(&playing);
 
-	return (0);
+	return (HGD_OK);
 }
 
 /*
@@ -180,7 +180,7 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
 	info = hgd_authenticate_user(args[0], args[1]);
 	if (info == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|denied");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	DPRINTF(HGD_D_INFO, "User '%s' successfully authenticated", args[0]);
@@ -189,7 +189,7 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
 	sess->user = info;
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 
-	return (0);
+	return (HGD_OK);
 }
 
 /*
@@ -212,7 +212,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	char			*filename_p = args[0], *payload = NULL;
 	size_t			bytes = atoi(args[1]);
 	char			*unique_fn = NULL;
-	int			f = -1, ret = 0;
+	int			f = -1, ret = HGD_OK;
 	size_t			bytes_recvd = 0, to_write;
 	ssize_t			write_ret;
 	char			*filename;
@@ -222,14 +222,14 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	if ((bytes == 0) || (bytes > max_upload_size)) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
-		ret = -1;
+		ret = HGD_FAIL;
 		goto clean;
 	}
 
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|user_not_identified");
-		ret = -1;
+		ret = HGD_FAIL;
 		goto clean;
 	}
 
@@ -242,7 +242,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		DPRINTF(HGD_D_ERROR, "mkstemp: %s: %s",
 		    filestore_path, SERROR);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
-		ret = -1;
+		ret = HGD_FAIL;
 		goto clean;
 	}
 
@@ -272,7 +272,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 			    sess->ssl, "err|internal");
 
 			unlink(filename); /* don't much care if this fails */
-			ret = -1;
+			ret = HGD_FAIL;
 			goto clean;
 		}
 		write_ret = write(f, payload, to_write);
@@ -284,7 +284,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 			hgd_sock_send_line(sess->sock_fd,
 			    sess->ssl, "err|internal");
 			unlink(filename); /* don't much care if this fails */
-			ret = -1;
+			ret = HGD_FAIL;
 			goto clean;
 		}
 
@@ -315,7 +315,7 @@ clean:
 		free(unique_fn);
 
 	if (bytes_recvd != bytes)
-		ret = -1;
+		ret = HGD_FAIL;
 
 	return (ret);
 }
@@ -335,7 +335,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 
 	if (hgd_get_playlist(&list) == -1) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* and respond to client */
@@ -352,7 +352,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 
 	hgd_free_playlist(&list);
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -371,13 +371,13 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|user_not_identified");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	memset(&playing, 0, sizeof(playing));
 	if (hgd_get_playing_item(&playing) == -1) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* is *anything* playing? */
@@ -385,7 +385,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		DPRINTF(HGD_D_INFO, "No track is playing, can't vote off");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|not_playing");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* is the file they are voting off playing? */
@@ -396,7 +396,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 			hgd_sock_send_line(sess->sock_fd, sess->ssl,
 			    "err|wrong_track");
 			hgd_free_playlist_item(&playing);
-			return (-1);
+			return (HGD_FAIL);
 		}
 	}
 	hgd_free_playlist_item(&playing);
@@ -411,11 +411,11 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		    sess->user->name);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|duplicate_vote");
-		return (0);
+		return (HGD_OK);
 		break;
 	default:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
-		return (-1);
+		return (HGD_FAIL);
 	};
 
 	/* play a sound on skipping? */
@@ -437,7 +437,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	/* are we at the vote limit yet? */
 	if (hgd_get_num_votes() < req_votes) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-		return (0);
+		return (HGD_OK);
 	}
 
 	DPRINTF(HGD_D_INFO, "Vote limit exceeded - kill track");
@@ -449,7 +449,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		DPRINTF(HGD_D_WARN,
 		    "Can't find mplayer pid file: %s: %s", pid_path, SERROR);
 		free(pid_path);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	free(pid_path);
@@ -458,7 +458,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		if (!feof(pid_file)) {
 			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
 			fclose(pid_file);
-			return (-1);
+			return (HGD_FAIL);
 		}
 	}
 	fclose(pid_file);
@@ -471,7 +471,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	/* Note: player daemon will empty the votes table */
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -491,7 +491,7 @@ hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused) {
 	else
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|nocrypto");
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -503,13 +503,13 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 
 	if (sess->ssl != NULL) {
 		DPRINTF(HGD_D_WARN, "User tried to enable encyption twice");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	if ((!ssl_capable) || (crypto_pref == HGD_CRYPTO_PREF_NEVER)) {
 		DPRINTF(HGD_D_WARN, "User tried encrypt, when not possible");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|nossl");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "New SSL for session");
@@ -536,10 +536,10 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	/* This cannot fail so no error check */
 	SSL_CTX_set_mode(ctx, SSL_MODE_AUTO_RETRY);
 
-	ret = 0; /* all is well */
+	ret = HGD_OK; /* all is well */
 clean:
 
-	if (ret == -1) {
+	if (ret == HGD_FAIL) {
 
 		DPRINTF(HGD_D_INFO, "SSL connection failed");
 		/* XXX do we clean anything up on failure? */
@@ -589,7 +589,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|no_tokens_sent");
 		num_bad_commands++;
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* now we look up which function to call */

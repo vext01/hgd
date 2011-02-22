@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#ifdef __Linux__
+#ifdef __linux__
 #include <bsd/readpassphrase.h>
 #else
 #include <readpassphrase.h>
@@ -39,7 +39,7 @@
 
 #include "hgd.h"
 
-char			*user, *host = "127.0.0.1";
+char			*user = NULL, *host = "127.0.0.1";
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
@@ -123,7 +123,14 @@ hgd_encrypt(int fd)
 {
 	int			 ssl_res = 0;
 	char			*ok_str = NULL;
+	X509			*cert;
 
+/* we will need these variables when we want to save the certs to disk */
+#if 0
+	X509_NAME		*cert_name;
+	EVP_PKEY		*public_key;
+	BIO 			*bio;
+#endif
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
 	if (hgd_setup_ssl_ctx(&method, &ctx, 0, 0, 0) != 0) {
@@ -149,6 +156,30 @@ hgd_encrypt(int fd)
 		return (-1);
 	}
 
+
+	cert = SSL_get_peer_certificate(ssl);
+	if (!cert) {
+		DPRINTF(HGD_D_ERROR, "could not get remote cert");
+		exit (-1);
+	}
+
+/*
+ * unfinished work on checking SSL certs.  Need to work out how to get the
+ * hash from the cert to know where to write the cert to.
+ */
+#if 0
+	if(SSL_get_verify_result(ssl) != X509_V_OK)
+	{
+		PRINT_SSL_ERR ("SSL_connect");
+
+		cert = SSL_get_peer_certificate(ssl);
+
+		cert->
+		/* PEM_write_x509(fp!,cert);- */
+
+		return (-1);
+	}
+#endif
 	ok_str = hgd_sock_recv_line(fd, ssl);
 	hgd_check_svr_response(ok_str, 1);
 	free(ok_str);
@@ -291,7 +322,10 @@ hgd_setup_socket()
 	DPRINTF(HGD_D_DEBUG, "Connected to %s", host);
 
 	/* identify ourselves */
-	user = getenv("USER");
+	if (user == NULL) {
+		/* If the user did not set their name use thier system login */
+		user = getenv("USER");
+	}
 	if (user == NULL) {
 		DPRINTF(HGD_D_ERROR, "can't get username");
 		hgd_exit_nicely();
@@ -324,6 +358,7 @@ hgd_usage()
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -s host/ip\t\tSet connection address\n");
+	printf("    -u username\t\tSet username\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
 	printf("    -e\t\t\tEnable Encyption\n");
@@ -567,7 +602,7 @@ main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "Eehp:s:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
 		switch (ch) {
 		case 'e':
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
@@ -585,6 +620,10 @@ main(int argc, char **argv)
 		case 'p':
 			port = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
+			break;
+		case 'u':
+			user = optarg;
+			DPRINTF(HGD_D_DEBUG, "set username to %s", user);
 			break;
 		case 'v':
 			hgd_print_version();
