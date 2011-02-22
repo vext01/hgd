@@ -534,3 +534,50 @@ clean:
 	sqlite3_finalize(stmt);
 	return (ret);
 }
+
+struct hgd_user *
+hgd_get_user_info(char *user)
+{
+	int			 sql_res;
+	sqlite3_stmt		*stmt;
+	char			*sql = "SELECT username, salt, hash, perms "
+				    "FROM users WHERE username=?";
+	struct hgd_user		*user_info = NULL;
+
+	DPRINTF(HGD_D_DEBUG, "Get user info for '%s'", user);
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+
+	if (sqlite3_column_text(stmt, 1) == NULL) {
+		DPRINTF(HGD_D_WARN, "User '%s', does not exist", user);
+		goto clean;
+	}
+
+	user_info = xmalloc(sizeof(struct hgd_user));
+	user_info->user = strdup(sqlite3_column_text(stmt, 1));
+	user_info->salt = strdup(sqlite3_column_text(stmt, 2));
+	user_info->user = strdup(sqlite3_column_text(stmt, 3));
+	user_info->perms = sqlite3_column_int(stmt, 4);
+
+clean:
+	sqlite3_finalize(stmt);
+	return (user_info);
+}

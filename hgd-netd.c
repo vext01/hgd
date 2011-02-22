@@ -166,14 +166,32 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 /*
  * Identify yourself to the server
  *
- * args: username
+ * args: username, pass
  */
 int
 hgd_cmd_user(struct hgd_session *sess, char **args)
 {
-	DPRINTF(HGD_D_DEBUG, "User on host '%s' identified as '%s'",
+	struct hgd_user		*info;
+
+	DPRINTF(HGD_D_INFO, "User on host '%s' authenticating as '%s'",
 	    sess->cli_str, args[0]);
 
+	/* get salt */
+	info = hgd_get_user_info(args[0]);
+	if (info == NULL) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|denied");
+		return (-1);
+	}
+
+	DPRINTF(HGD_D_DEBUG, "User '%s': %s - %s - %d",
+	    info->user, info->salt, info->hash, info->perms);
+
+	/* concat */
+	/* hash */
+	/* get stored hash */
+	/* compare */
+
+	/* only if successful do we set the user name */
 	sess->user = strdup(args[0]);
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 
@@ -547,7 +565,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"vo",		1,	1,	hgd_cmd_vote_off},
 	{"vo",		0,	1,	hgd_cmd_vote_off_noarg},
 	{"ls",		0,	1,	hgd_cmd_playlist},
-	{"user",	1,	1,	hgd_cmd_user},
+	{"user",	2,	1,	hgd_cmd_user},
 	{"q",		2,	1,	hgd_cmd_queue},
 	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
 	{"encrypt",	0,	0,	hgd_cmd_encrypt},

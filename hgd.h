@@ -73,6 +73,13 @@ extern pid_t			 pid;
 extern char			*hgd_dir;
 extern char			*filestore_path;
 
+struct hgd_user {
+	char			*user;
+	char			*salt;
+	char			*hash;
+	int			 perms;
+};
+
 struct hgd_playlist_item {
 	int			 id;
 	char			*filename;

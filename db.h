@@ -51,5 +51,6 @@ int				 hgd_clear_votes();
 int				 hgd_clear_playlist();
 int				 hgd_init_playstate();
 int				 hgd_add_user(char *usr, char *slt, char *hash);
+struct hgd_user			*hgd_get_user_info(char *user);
 
 #endif
