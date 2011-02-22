@@ -641,7 +641,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	}
 
 	/* otherwise despatch */
-	if (correct_desp->handler(sess, &tokens[1]) < 0) {
+	if (correct_desp->handler(sess, &tokens[1]) < HGD_OK) {
 		/*
 		 * This happens often, ie when a client tries to
 		 * vote off twice, and that is fine, so we put the message
