@@ -124,10 +124,13 @@ hgd_encrypt(int fd)
 	int			 ssl_res = 0;
 	char			*ok_str = NULL;
 	X509			*cert;
+
+/* we will need these variables when we want to save the certs to disk */
+#if 0
 	X509_NAME		*cert_name;
 	EVP_PKEY		*public_key;
 	BIO 			*bio;
-
+#endif
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
 	if (hgd_setup_ssl_ctx(&method, &ctx, 0, 0, 0) != 0) {
