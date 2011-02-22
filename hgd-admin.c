@@ -64,7 +64,7 @@ hgd_usage()
 int
 hgd_acmd_user_add(char **args)
 {
-	char			 salt[HGD_SHA_SALT_SZ];
+	unsigned char		 salt[HGD_SHA_SALT_SZ];
 	char			*salt_hex, *hash_hex;
 	char			*user = args[0], *pass = args[1];
 
@@ -73,7 +73,7 @@ hgd_acmd_user_add(char **args)
 	memset(salt, 0, HGD_SHA_SALT_SZ);
 	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
 		DPRINTF(HGD_D_ERROR, "can not generate salt");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
@@ -87,7 +87,7 @@ hgd_acmd_user_add(char **args)
 	free(salt_hex);
 	free(hash_hex);
 
-	return (0);
+	return (HGD_OK);
 }
 
 struct hgd_admin_cmd admin_cmds[] = {
@@ -116,12 +116,12 @@ hgd_parse_command(int argc, char **argv)
 	if (correct_acmd == NULL) {
 		DPRINTF(HGD_D_WARN, "Incorrect usage: '%s' with %d args",
 		    argv[0], argc - 1);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	correct_acmd->handler(++argv);
 
-	return (0);
+	return (HGD_OK);
 }
 
 int

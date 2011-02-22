@@ -65,20 +65,20 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 		*method = (SSL_METHOD *) TLSv1_server_method();
 		if (*method == NULL) {
 			PRINT_SSL_ERR ("TLSv1_server_method");
-			return (-1);
+			return (HGD_FAIL);
 		}
 	} else {
 		*method = (SSL_METHOD *) TLSv1_client_method();
 		if (*method == NULL) {
 			PRINT_SSL_ERR ("TLSv1_client_method");
-			return (-1);
+			return (HGD_FAIL);
 		}
 
 		home = getenv("HOME");
 		if (!home) {
 			/* XXX: crapout? */
 			DPRINTF(HGD_D_ERROR, "Could not get home env value");
-			exit (-1);
+			exit (HGD_FAIL);
 		}
 
 
@@ -90,7 +90,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	*ctx = SSL_CTX_new(*method);
 	if (*ctx == NULL) {
 		PRINT_SSL_ERR ("SSL_CTX_new");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	if (!server) {
@@ -100,7 +100,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			    "Could not load verify location: %s",
 			    keystore_path);
 			/* XXX: Handle failed load here */
-			exit (-1);
+			exit (HGD_FAIL);
 		}
 		goto done;
 	}
@@ -111,7 +111,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	    *ctx, cert_path, SSL_FILETYPE_PEM)) {
 		DPRINTF(HGD_D_ERROR, "Can't load SSL cert: %s", cert_path);
 		PRINT_SSL_ERR("SSL_CTX_use_certificate_file");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* set the private key from KeyFile */
@@ -120,7 +120,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	    *ctx, key_path, SSL_FILETYPE_PEM)) {
 		DPRINTF(HGD_D_ERROR, "Can't load SSL key: %s", key_path);
 		PRINT_SSL_ERR("SSL_CTX_use_PrivateKey_file");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 	/* verify private key */
@@ -128,11 +128,11 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	if (!SSL_CTX_check_private_key(*ctx)) {
 		DPRINTF(HGD_D_ERROR, "Can't verify SSL key: %s", key_path);
 		PRINT_SSL_ERR("SSL_CTX_check_private_key");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
 done:
-	return (0);
+	return (HGD_OK);
 }
 
 /*

@@ -153,10 +153,10 @@ hgd_get_playing_item(struct hgd_playlist_item *playing)
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s", DERROR);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -169,7 +169,7 @@ hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
 	names = names;
 
 	*num = atoi(data[0]);
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -183,7 +183,7 @@ hgd_get_num_votes()
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get votes: %s", DERROR);
 		free(sql);
-		return (-1);
+		return (HGD_FAIL);
 	}
 	free(sql);
 
@@ -194,7 +194,7 @@ hgd_get_num_votes()
 int
 hgd_insert_track(char *filename, char *user)
 {
-	int			 ret = -1;
+	int			 ret = HGD_FAIL;
 	int			 sql_res;
 	sqlite3_stmt		*stmt;
 	char			*sql = "INSERT INTO playlist "
@@ -221,7 +221,7 @@ hgd_insert_track(char *filename, char *user)
 		goto clean;
 	}
 
-	ret = 0; /* everything went ok */
+	ret = HGD_OK; /* everything went ok */
 clean:
 	sqlite3_finalize(stmt);
 	return (ret);
@@ -230,7 +230,7 @@ clean:
 int
 hgd_insert_vote(char *user)
 {
-	int			 ret = -1;
+	int			 ret = HGD_FAIL;
 	int			 sql_res;
 	sqlite3_stmt		*stmt;
 	char			*sql = "INSERT INTO votes (user) VALUES (?)";
@@ -258,7 +258,7 @@ hgd_insert_vote(char *user)
 		goto clean;
 	}
 
-	ret = 0; /* everything went ok */
+	ret = HGD_OK; /* everything went ok */
 clean:
 	sqlite3_finalize(stmt);
 	return (ret);
@@ -315,10 +315,10 @@ hgd_get_playlist(struct hgd_playlist *list)
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s", DERROR);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -357,17 +357,17 @@ hgd_get_next_track(struct hgd_playlist_item *track)
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get next track: %s", DERROR);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 /* mark it as playing in the database */
 int
 hgd_mark_playing(int id)
 {
-	int			 sql_res, ret = -1;
+	int			 sql_res, ret = HGD_FAIL;
 	sqlite3_stmt		*stmt;
 	char			*sql = "UPDATE playlist SET playing=1 "
 				    "WHERE id=?";
@@ -391,7 +391,7 @@ hgd_mark_playing(int id)
 		goto clean;
 	}
 
-	ret = 0;
+	ret = HGD_OK;
 clean:
 	sqlite3_finalize(stmt);
 	return (ret);
@@ -407,7 +407,7 @@ hgd_mark_finished(int id, uint8_t purge)
 				    " finished=1 WHERE id=?";
 	char			*sql = NULL;
 	sqlite3_stmt		*stmt;
-	int			 ret = -1;
+	int			 ret = HGD_FAIL;
 
 	/* mark it as finished or delete in the database */
 	if (purge) {
@@ -437,7 +437,7 @@ hgd_mark_finished(int id, uint8_t purge)
 		goto clean;
 	}
 
-	ret = 0;
+	ret = HGD_OK;
 clean:
 	sqlite3_finalize(stmt);
 	return (ret);
@@ -454,10 +454,10 @@ hgd_clear_votes()
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't clear vote list");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -471,10 +471,10 @@ hgd_init_playstate()
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't clear db flags: %s", DERROR);
-		return (-1);
+		return (HGD_FAIL);
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 int
@@ -488,10 +488,10 @@ hgd_clear_playlist()
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't clear playlist");
-		return (-1);
+		return (HGD_FAIL);
 	}
 
-	return (0);
+	return (HGD_OK);
 }
 
 /*
@@ -500,7 +500,7 @@ hgd_clear_playlist()
 int
 hgd_add_user(char *user, char *salt, char *hash)
 {
-	int			 sql_res, ret = -1;
+	int			 sql_res, ret = HGD_FAIL;
 	sqlite3_stmt		*stmt;
 	char			*sql = "INSERT INTO users "
 				    "(username, salt, hash) VALUES (?, ?, ?)";
@@ -529,7 +529,7 @@ hgd_add_user(char *user, char *salt, char *hash)
 		goto clean;
 	}
 
-	ret = 0;
+	ret = HGD_OK;
 clean:
 	sqlite3_finalize(stmt);
 	return (ret);
@@ -581,7 +581,7 @@ hgd_authenticate_user(char *user, char *pass)
 	}
 
 	user_info = xmalloc(sizeof(struct hgd_user));
-	user_info->user = strdup(sqlite3_column_text(stmt, 1));
+	user_info->user = strdup((const char*) sqlite3_column_text(stmt, 1));
 	user_info->perms = sqlite3_column_int(stmt, 4);
 
 clean:

@@ -57,6 +57,10 @@
 #define HGD_SHA_SALT_SZ		20
 #define HGD_MAX_PASS_SZ		20
 
+/* Function return values */
+#define HGD_FAIL		(-1)
+#define HGD_OK			(0)
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>
