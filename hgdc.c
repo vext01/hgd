@@ -155,6 +155,11 @@ hgd_encrypt(int fd)
 		exit (-1);
 	}
 
+/*
+ * unfinished work on checking SSL certs.  Need to work out how to get the
+ * hash from the cert to know where to write the cert to.
+ */
+#if 0
 	if(SSL_get_verify_result(ssl) != X509_V_OK)
 	{
 		PRINT_SSL_ERR ("SSL_connect");
@@ -162,11 +167,11 @@ hgd_encrypt(int fd)
 		cert = SSL_get_peer_certificate(ssl);
 
 		cert->
-		//PEM_write_x509(fp!,cert);-
+		/* PEM_write_x509(fp!,cert);- */
 
 		return (-1);
 	}
-
+#endif
 	ok_str = hgd_sock_recv_line(fd, ssl);
 	hgd_check_svr_response(ok_str, 1);
 	free(ok_str);
