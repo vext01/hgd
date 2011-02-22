@@ -185,9 +185,8 @@ hgd_cmd_user(struct hgd_session *sess, char **args)
 
 	DPRINTF(HGD_D_INFO, "User '%s' successfully authenticated", args[0]);
 
-	/* only if successful do we set the user name */
-	/* XXX put the entire struct in here and find a place to free it */
-	sess->user = strdup(args[0]);
+	/* only if successful do we assign the info struct */
+	sess->user = info;
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 
 	return (0);
@@ -250,7 +249,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok...");
 
 	DPRINTF(HGD_D_INFO, "Recving %d byte payload '%s' from %s into %s",
-	    (int) bytes, filename, sess->user, unique_fn);
+	    (int) bytes, filename, sess->user->name, unique_fn);
 
 	/* recieve bytes in small chunks so that we dont use moar RAM */
 	while (bytes_recvd != bytes) {
@@ -300,7 +299,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	payload = NULL;
 
 	/* insert track into db */
-	if (hgd_insert_track(basename(unique_fn), sess->user) == -1) {
+	if (hgd_insert_track(basename(unique_fn), sess->user->name) == -1) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
@@ -367,7 +366,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	size_t				read;
 	int				tid = -1, scmd_ret;
 
-	DPRINTF(HGD_D_INFO, "%s wants to kill track %d", sess->user, tid);
+	DPRINTF(HGD_D_INFO, "%s wants to kill track", sess->user->name);
 
 	if (sess->user == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
@@ -403,12 +402,13 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	hgd_free_playlist_item(&playing);
 
 	/* insert vote */
-	switch (hgd_insert_vote(sess->user)) {
+	switch (hgd_insert_vote(sess->user->name)) {
 	case 0:
 		break; /* good */
 	case 1:
 		/* duplicate vote */
-		DPRINTF(HGD_D_INFO, "User '%s' already voted", sess->user);
+		DPRINTF(HGD_D_INFO, "User '%s' already voted",
+		    sess->user->name);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|duplicate_vote");
 		return (0);
@@ -703,8 +703,12 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		free(sess.cli_str);
 	if (sess.ssl != NULL)
 		SSL_free(sess.ssl);
-	if (sess.user)
+
+	if (sess.user) {
+		if (sess.user->name)
+			free(sess.user->name);
 		free(sess.user);
+	}
 }
 
 void

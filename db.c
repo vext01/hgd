@@ -581,8 +581,8 @@ hgd_authenticate_user(char *user, char *pass)
 	}
 
 	user_info = xmalloc(sizeof(struct hgd_user));
-	user_info->user = strdup(sqlite3_column_text(stmt, 1));
-	user_info->perms = sqlite3_column_int(stmt, 4);
+	user_info->name = strdup(sqlite3_column_text(stmt, 0));
+	user_info->perms = sqlite3_column_int(stmt, 3);
 
 clean:
 	if (hash)
