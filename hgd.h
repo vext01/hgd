@@ -126,6 +126,7 @@ struct hgd_cmd_despatch {
 struct hgd_req_despatch {
 	char			*req;
 	uint8_t			 n_args;
+	uint8_t			 need_auth;
 	int			 (*handler)(char **);
 };
 
