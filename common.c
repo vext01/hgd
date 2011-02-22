@@ -105,9 +105,9 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			    keystore_path);
 			/* XXX: Handle failed load here */
 			exit (HGD_FAIL);
+		#endif
 		}
 		goto done;
-#endif
 	}
 
 	/* set the local certificate from CertFile */
