@@ -306,10 +306,6 @@ hgd_setup_socket()
 	/* annoying error message for those too lazy to set up crypto */
 	if (ssl == NULL)
 		DPRINTF(HGD_D_WARN, "Connection is not encrypted");
-
-	if (hgd_client_login(sock_fd, ssl, user) != 0) {
-		/* XXX do something on failed login */
-	}
 }
 
 /* NOTE! -c is reserved for 'config file path' */
@@ -558,6 +554,11 @@ hgd_exec_req(int argc, char **argv)
 	hgd_setup_socket();
 
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
+	if ((!authenticated) && (correct_desp->need_auth)) {
+		/* XXX replace 0 with HGD_OK */
+		if (hgd_client_login(sock_fd, ssl, user) != 0)
+			hgd_exit_nicely();
+	}
 	correct_desp->handler(&argv[1]);
 }
 
