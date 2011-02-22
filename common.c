@@ -51,14 +51,15 @@ int
 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
     int server, char *cert_path, char *key_path) {
 
+	/* XXX For semi-implemented certificate verification - FAO mex */
+#if 0
 	char		*home;
 	char		*keystore_path = NULL;
+#endif
 
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
 	SSL_load_error_strings();
-
-
 
 	DPRINTF(HGD_D_DEBUG, "Setting up TLSv1_client_method");
 	if (server) {
@@ -106,7 +107,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			/* XXX: Handle failed load here */
 			exit (HGD_FAIL);
 		}
-		#endif
+#endif
 		goto done;
 	}
 
@@ -597,7 +598,7 @@ hgd_is_ip_addr(char *str)
 void
 hgd_mk_state_dir()
 {
-	if (mkdir(hgd_dir, 0700) != 0) {
+	if (mkdir(hgd_dir, S_IRWXU) != 0) {
 		if (errno != EEXIST) {
 			DPRINTF(HGD_D_ERROR, "%s: %s", hgd_dir, SERROR);
 			hgd_exit_nicely();
@@ -605,12 +606,19 @@ hgd_mk_state_dir()
 	}
 
 	/* make filestore if not existing */
-	if (mkdir(filestore_path, 0700) != 0) {
+	if (mkdir(filestore_path, S_IRWXU) != 0) {
 		if (errno != EEXIST) {
 			DPRINTF(HGD_D_ERROR, "%s:%s", filestore_path, SERROR);
 			hgd_exit_nicely();
 		}
 	}
+
+	/*correct any insecure perms (user may think he knows better) */
+	if (chmod(filestore_path, S_IRWXU) != 0)
+		DPRINTF(HGD_D_WARN, "Could not make filestore secure");
+
+	if (chmod(hgd_dir, S_IRWXU) != 0)
+		DPRINTF(HGD_D_WARN, "Could not make state dir secure");
 }
 
 void

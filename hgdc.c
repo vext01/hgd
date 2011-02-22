@@ -125,11 +125,11 @@ hgd_encrypt(int fd)
 	char			*ok_str = NULL;
 	X509			*cert;
 
-/* we will need these variables when we want to save the certs to disk */
+	/* XXX For semi-implemented certificate verification - FAO mex */
 #if 0
 	X509_NAME		*cert_name;
 	EVP_PKEY		*public_key;
-	BIO 			*bio;
+	BIO			*bio;
 #endif
 	hgd_sock_send_line(fd, NULL, "encrypt");
 
@@ -165,7 +165,7 @@ hgd_encrypt(int fd)
 
 /*
  * unfinished work on checking SSL certs.  Need to work out how to get the
- * hash from the cert to know where to write the cert to.
+ * hash from the cert to know where to write the cert to. XXX
  */
 #if 0
 	if(SSL_get_verify_result(ssl) != X509_V_OK)
@@ -647,6 +647,9 @@ main(int argc, char **argv)
 
 	argc -= optind;
 	argv += optind;
+
+	/* secure mask */
+	umask(~S_IRWXU);
 
 	/* do whatever the user wants */
 	hgd_exec_req(argc, argv);
