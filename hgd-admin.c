@@ -60,7 +60,7 @@ hgd_usage()
 {
         printf("Usage: hgdc [opts] command [args]\n\n");
         printf("  Commands include:\n");
-        printf("    user-add username password\t\tAdd a user.\n");
+        printf("    user-add username [password]\tAdd a user.\n");
         printf("    user-del username\t\t\tDelete a user.\n");
         printf("    user-list\t\t\t\tList users.\n");
 	/*
@@ -105,6 +105,21 @@ hgd_acmd_user_add(char **args)
 }
 
 int
+hgd_acmd_user_add_prompt(char **args)
+{
+	char			 pass[HGD_MAX_PASS_SZ];
+	char			*new_args[2];
+
+	if (hgd_readpassphrase_confirmed(pass) != HGD_OK)
+		return (HGD_FAIL);
+
+	new_args[0] = args[0];
+	new_args[1] = pass;
+
+	return (hgd_acmd_user_add(new_args));
+}
+
+int
 hgd_acmd_user_del(char **args)
 {
 	if (hgd_delete_user(args[0]) != HGD_OK)
@@ -134,6 +149,7 @@ hgd_acmd_user_list(char **args)
 
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
+	{ "user-add", 1, hgd_acmd_user_add_prompt },
 	{ "user-del", 1, hgd_acmd_user_del },
 	{ "user-list", 0, hgd_acmd_user_list },
 #if 0
