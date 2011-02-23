@@ -84,6 +84,11 @@ struct hgd_user {
 	int			 perms;
 };
 
+struct hgd_user_list {
+	struct hgd_user		**users;
+	int			 n_users;
+};
+
 struct hgd_playlist_item {
 	int			 id;
 	char			*filename;
@@ -168,6 +173,8 @@ struct hgd_req_despatch {
 void				 hgd_free_playlist_item(
 				    struct hgd_playlist_item *);
 void				 hgd_free_playlist(struct hgd_playlist *);
+void				 hgd_free_user(struct hgd_user *u);
+void				 hgd_free_user_list(struct hgd_user_list *ul);
 
 /* wrappers */
 void				*xmalloc(size_t);

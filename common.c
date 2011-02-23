@@ -710,3 +710,23 @@ hgd_bytes_to_hex(unsigned char *bytes, int len)
 
 	return (hex);
 }
+
+/* free a user struct's members */
+void
+hgd_free_user(struct hgd_user *u)
+{
+	/* looks silly now, but I am sure we will add more stuff later */
+	free(u->name);
+}
+
+/* free a user list struct's members */
+void
+hgd_free_user_list(struct hgd_user_list *ul)
+{
+	int			i;
+
+	for (i = 0; i < ul->n_users; i++) {
+		hgd_free_user(ul->users[i]);
+		free(ul->users[i]);
+	}
+}

@@ -60,11 +60,15 @@ hgd_usage()
 {
         printf("Usage: hgdc [opts] command [args]\n\n");
         printf("  Commands include:\n");
-        printf("    user-add <username> <password> :\tAdd a user.\n");
-        /* printf("    user-disable <username>\tDisable a user account (without deleting it)\n"); */
-        /* printf("    user-chpw <username>\t\t\tChange a users password\n"); */
-        /* printf("    user-enable <username>\t\t\Re-enable a user\n\n"); */
-        printf("  Options include:\n");
+        printf("    user-add username password\t\tAdd a user.\n");
+        printf("    user-del username\t\t\tDelete a user.\n");
+        printf("    user-list\t\t\t\tList users.\n");
+	/*
+        printf("    user-disable username\tDisable a user account");
+        printf("    user-chpw username\t\t\tChange a users password\n");
+        printf("    user-enable username\t\t\Re-enable a user\n\n");
+	*/
+        printf("\n  Options include:\n");
         printf("    -d\t\t\tLocation of state directory\n");
         printf("    -h\t\t\tShow this message and exit\n");
         printf("    -x level\t\tSet debug level (0-3)\n");
@@ -109,11 +113,30 @@ hgd_acmd_user_del(char **args)
 	return (HGD_OK);
 }
 
+int
+hgd_acmd_user_list(char **args)
+{
+	struct hgd_user_list	*list = hgd_get_all_users();
+	int			 i;
+
+	/* sssh */
+	args = args;
+
+	for (i = 0; i < list->n_users; i++)
+		printf("%s\n", list->users[i]->name);
+
+	hgd_free_user_list(list);
+	free(list);
+
+	return (HGD_OK);
+
+}
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-del", 1, hgd_acmd_user_del },
-#if 0
 	{ "user-list", 0, hgd_acmd_user_list },
+#if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },
 	{ "user-enable", 1, hgd_acmd_user_enable },
