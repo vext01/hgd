@@ -205,5 +205,7 @@ void				 hgd_kill_sighandler(int sig);
 void				 hgd_register_sig_handlers();
 char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
+int				 hgd_readpassphrase_confirmed(
+				     char buf[HGD_MAX_PASS_SZ]);
 
 #endif

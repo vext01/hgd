@@ -23,6 +23,7 @@
 #include <err.h>
 #include <errno.h>
 #include <signal.h>
+#include <readpassphrase.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -729,4 +730,37 @@ hgd_free_user_list(struct hgd_user_list *ul)
 		hgd_free_user(ul->users[i]);
 		free(ul->users[i]);
 	}
+}
+
+/*
+ * read a password twice and return if the same
+ */
+int
+hgd_readpassphrase_confirmed(char buf[HGD_MAX_PASS_SZ])
+{
+	char			p1[HGD_MAX_PASS_SZ], p2[HGD_MAX_PASS_SZ];
+	uint8_t			again = 1;
+
+	while (again) {
+		if (readpassphrase("Password: ", p1, HGD_MAX_PASS_SZ,
+			    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Can't read password");
+			return (HGD_FAIL);
+		}
+
+		if (readpassphrase("Again: ", p2, HGD_MAX_PASS_SZ,
+			    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Can't read password");
+			return (HGD_FAIL);
+		}
+
+		if (strcmp(p1, p2) == 0)
+			again = 0;
+		else
+			DPRINTF(HGD_D_ERROR, "Passwords did not match!");
+	}
+
+	strncpy(buf, p1, HGD_MAX_PASS_SZ);
+
+	return (HGD_OK);
 }
