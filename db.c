@@ -662,7 +662,7 @@ struct hgd_user_list *
 hgd_get_all_users()
 {
 	int			 sql_res;
-	struct hgd_user_list	*list = xmalloc(sizeof(struct hgd_user_list));
+	struct hgd_user_list	*list = xcalloc(1, sizeof(struct hgd_user_list));
 
 	sql_res = sqlite3_exec(db,
 	    "SELECT username, perms FROM users",
