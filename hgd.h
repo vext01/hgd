@@ -174,6 +174,7 @@ void				*xmalloc(size_t);
 void				*xrealloc(void *, size_t);
 int				 xasprintf(char **buf, char *fmt, ...);
 void				*xcalloc(size_t sz, size_t size);
+char				*xstrdup(const char *s);
 
 /* socket ops */
 void				 hgd_sock_send(int fd, char *msg);

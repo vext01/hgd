@@ -206,11 +206,22 @@ xrealloc(void *old_p, size_t sz)
 
 	ptr = realloc(old_p, sz);
 	if (!ptr) {
-		DPRINTF(HGD_D_ERROR,"Could not reallocate");
+		DPRINTF(HGD_D_ERROR, "Could not reallocate");
 		hgd_exit_nicely();
 	}
 
 	return (ptr);
+}
+
+char *
+xstrdup(const char *s)
+{
+	char *dup = strdup(s);
+
+	if (dup == NULL)
+		DPRINTF(HGD_D_ERROR, "Could not duplicate string");
+
+	return (dup);
 }
 
 int
