@@ -560,7 +560,7 @@ hgd_sock_recv_line_ssl(SSL *ssl)
 
 	DPRINTF(HGD_D_DEBUG, "SSL recvd:'%s'", buffer);
 
-	line = strdup(buffer);
+	line = xstrdup(buffer);
 	free(buffer);
 
 	return (line);

@@ -99,7 +99,7 @@ hgd_negotiate_crypto()
 	hgd_check_svr_response(next, 1);
 
 	do {
-		ok_tokens[n_toks] = strdup(strsep(&next, "|"));
+		ok_tokens[n_toks] = xstrdup(strsep(&next, "|"));
 	} while ((n_toks++ < 2) && (next != NULL));
 
 	if (strcmp(ok_tokens[1], "nocrypto") != 0) {
@@ -204,7 +204,7 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	len = strlen(resp);
 
 	if (hgd_debug) {
-		trunc = strdup(resp);
+		trunc = xstrdup(resp);
 		DPRINTF(HGD_D_DEBUG, "Check reponse '%s'", trunc);
 		free(trunc);
 	} else
@@ -445,7 +445,7 @@ hgd_print_track(char *resp)
 	char			*tokens[3] = {NULL, NULL, NULL};
 
 	do {
-		tokens[n_toks] = strdup(strsep(&resp, "|"));
+		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
 	} while ((n_toks++ < 3) && (resp != NULL));
 
 	if (n_toks == 3)

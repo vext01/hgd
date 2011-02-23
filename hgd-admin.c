@@ -151,14 +151,14 @@ main(int argc, char **argv)
 	char			 ch;
 
 	hgd_register_sig_handlers();
-	hgd_dir = strdup(HGD_DFL_DIR);
+	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "d:hvx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
-			hgd_dir = strdup(optarg);
+			hgd_dir = xstrdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "set hgd dir to '%s'", hgd_dir);
 			break;
 		case 'v':

@@ -580,7 +580,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	/* tokenise */
 	do {
-		tokens[n_toks] = strdup(strsep(&next, "|"));
+		tokens[n_toks] = xstrdup(strsep(&next, "|"));
 		DPRINTF(HGD_D_DEBUG, "tok %d: \"%s\"", n_toks, tokens[n_toks]);
 	} while ((n_toks++ < HGD_MAX_PROTO_TOKS) && (next != NULL));
 
@@ -868,7 +868,7 @@ main(int argc, char **argv)
 	/* if killed, die nicely */
 	hgd_register_sig_handlers();
 
-	hgd_dir = strdup(HGD_DFL_DIR);
+	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "c:d:Eefhk:n:p:s:vx:y:")) != -1) {
@@ -880,7 +880,7 @@ main(int argc, char **argv)
 			break;
 		case 'd':
 			free(hgd_dir);
-			hgd_dir = strdup(optarg);
+			hgd_dir = xstrdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
 			break;
 		case 'e':
