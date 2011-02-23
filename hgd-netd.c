@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <libgen.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -365,6 +367,14 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	FILE				*pid_file;
 	size_t				read;
 	int				tid = -1, scmd_ret;
+	struct flock			fl;
+
+	fl.l_type   = F_RDLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+	fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+	fl.l_start  = 0;        /* Offset from l_whence         */
+	fl.l_len    = 0;        /* length, 0 = to EOF           */
+	fl.l_pid    = getpid(); /* our PID                      */
+
 
 	DPRINTF(HGD_D_INFO, "%s wants to kill track", sess->user->name);
 
@@ -444,11 +454,20 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	/* kill mplayer then */
 	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+
+
+
+
 	pid_file = fopen(pid_path, "r");
 	if (pid_file == NULL) {
 		DPRINTF(HGD_D_WARN,
 		    "Can't find mplayer pid file: %s: %s", pid_path, SERROR);
 		free(pid_path);
+		return (HGD_FAIL);
+	}
+	if (fcntl(fileno(pid_file), F_SETLKW, &fl) == -1) {
+		DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
+		fclose(pid_file);
 		return (HGD_FAIL);
 	}
 
@@ -461,6 +480,10 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 			return (HGD_FAIL);
 		}
 	}
+
+	fl.l_type = F_UNLCK;
+	fcntl(fileno(pid_file), F_SETLK, &fl);  /* F_GETLK, F_SETLK, F_SETLKW */
+
 	fclose(pid_file);
 
 	pid = atoi(pid_str);
