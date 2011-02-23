@@ -26,7 +26,6 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-
 #include <sqlite3.h>
 
 #include "hgd.h"
@@ -71,12 +70,9 @@ hgd_play_track(struct hgd_playlist_item *t)
 	fl.l_len    = 0;        /* length, 0 = to EOF           */
 	fl.l_pid    = getpid(); /* our PID                      */
 
-
-
 	DPRINTF(HGD_D_INFO, "Playing '%s' for '%s'", t->filename, t->user);
 	if (hgd_mark_playing(t->id) == -1)
 		hgd_exit_nicely();
-
 
 	/* we will write away child pid */
 	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
@@ -96,8 +92,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 	if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
 		DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
 
-
-
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
@@ -108,8 +102,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
 		hgd_exit_nicely();
 	} else {
-
-
 		fprintf(pid_file, "%d", pid);
 
 		fl.l_type = F_UNLCK;  /* set to unlock same region */

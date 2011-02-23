@@ -27,7 +27,6 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -455,9 +454,6 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	/* kill mplayer then */
 	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
 
-
-
-
 	pid_file = fopen(pid_path, "r");
 	if (pid_file == NULL) {
 		DPRINTF(HGD_D_WARN,
@@ -465,6 +461,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		free(pid_path);
 		return (HGD_FAIL);
 	}
+
 	if (fcntl(fileno(pid_file), F_SETLKW, &fl) == -1) {
 		DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
 		fclose(pid_file);
