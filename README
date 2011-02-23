@@ -28,6 +28,7 @@ To build, you will need:
  * SQLite3 libs and headers (if building servers).
  * OpenSSL libs and headers.
  * LibBSD (linux only) libs and headers.
+ * Mplayer (for the server)
 
 Building
 --------
