@@ -23,10 +23,11 @@ Prerequisites
 To build, you will need:
 
  * Linux or OpenBSD (possibly others, not tested)
- * make (either GNU or BSD)
- * gcc or clang
- * sqlite3 libraries and headers (if building servers).
- * libbsd (on linux)
+ * Make (either GNU or BSD)
+ * GCC or Clang
+ * SQLite3 libs and headers (if building servers).
+ * OpenSSL libs and headers.
+ * LibBSD (linux only) libs and headers.
 
 Building
 --------

@@ -71,8 +71,22 @@ hgd_exit_nicely()
 
 	if (sock_fd > 0) {
 		/* try to close connection */
+#ifndef __APPLE__
+		/*
+		 * MAC OSX sockets behave differently!
+		 *
+		 * If one side of the socket closes, the connection in
+		 * one direction, the corresponding socket on the other side
+		 * will fail to shutdown(). This is hinted at in the python
+		 * manual:
+		 * http://docs.python.org/library/socket.html
+		 *
+		 * Long story short:
+		 * On OSX the server will do the shutdown for us.
+		 */
 		if (shutdown(sock_fd, SHUT_RDWR) == -1)
 			DPRINTF(HGD_D_WARN, "Couldn't shutdown socket");
+#endif
 		close(sock_fd);
 	}
 
