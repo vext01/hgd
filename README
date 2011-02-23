@@ -26,6 +26,7 @@ To build, you will need:
  * make (either GNU or BSD)
  * gcc or clang
  * sqlite3 libraries and headers (if building servers).
+ * libbsd (on linux)
 
 Building
 --------
