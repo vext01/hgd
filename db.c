@@ -657,6 +657,38 @@ hgd_get_all_users_cb(void *arg, int argc, char **data, char **names)
 	return (SQLITE_OK);
 }
 
+int
+hgd_num_tracks_user(char *username)
+{
+	int			 sql_res, ret = HGD_FAIL;
+	sqlite3_stmt		*stmt;
+	char			*sql = "SELECT COUNT(*) FROM playlist WHERE user=? AND finished=0";
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, username, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_ROW) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = sqlite3_column_int(stmt, 0);
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
+
 /* get all users from the db, caler must free */
 struct hgd_user_list *
 hgd_get_all_users()

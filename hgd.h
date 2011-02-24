@@ -56,6 +56,7 @@
 #define HGD_PID_STR_SZ		10
 #define HGD_SHA_SALT_SZ		20
 #define HGD_MAX_PASS_SZ		20
+#define HGD_MAX_USER_QUEUE	5 /* XXX Make configurable */
 
 /* Function return values */
 #define HGD_FAIL		(-1)

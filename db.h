@@ -54,5 +54,6 @@ int				 hgd_add_user(char *usr, char *slt, char *hash);
 struct hgd_user			*hgd_authenticate_user(char *user, char *pass);
 int				 hgd_delete_user(char *user);
 struct hgd_user_list		*hgd_get_all_users();
+int				 hgd_num_tracks_user(char *username);
 
 #endif

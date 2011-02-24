@@ -218,10 +218,17 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	ssize_t			write_ret;
 	char			*filename;
 
+	if (hgd_num_tracks_user(sess->user->name) > HGD_MAX_USER_QUEUE) {
+		DPRINTF(HGD_D_WARN, "User '%s' trigger flood protection", sess->user->name);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|floodprotection");
+		return (HGD_FAIL);
+	}
+
 	/* strip path, we don't care about that */
 	filename = basename(filename_p);
 
 	if ((bytes == 0) || (bytes > max_upload_size)) {
+		DPRINTF(HGD_D_WARN, "Incorrect file size");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
 		ret = HGD_FAIL;
 		goto clean;
