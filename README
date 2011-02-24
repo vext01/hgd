@@ -75,7 +75,7 @@ Developers
 
  * Code style is as described in the style(9) OpenBSD manual page.
    http://www.openbsd.org/cgi-bin/man.cgi?query=style&sektion=9
- * All of our functions are prefixed 'hgd_'
+ * All of our functions (other than helpers funcs) are prefixed 'hgd_'
  * All of our macros are defined in .h files and are prefixed HGD_ other
    than in certain (generic) cases (SERROR).
  * All database code should go in db.c.
@@ -89,8 +89,7 @@ Developers
    Mail the diff to <vext01 (at) gmail (dot) com> for review.
  * Make sure you have your git client configured correctly with respect
    to user.name and user.email. They should be the same as on github.
-   (Yes, older commits have other usernames, that's because the code was
-   imported from privately hosted CVS).
+ * If you update a manual, bump the date at the top also.
 
 Bugs
 ----
