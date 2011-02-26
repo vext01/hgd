@@ -604,8 +604,7 @@ hgd_exec_req(int argc, char **argv)
 
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	if ((!authenticated) && (correct_desp->need_auth)) {
-		/* XXX replace 0 with HGD_OK */
-		if (hgd_client_login(sock_fd, ssl, user) != 0)
+		if (hgd_client_login(sock_fd, ssl, user) != HGD_OK)
 			hgd_exit_nicely();
 	}
 	correct_desp->handler(&argv[1]);
