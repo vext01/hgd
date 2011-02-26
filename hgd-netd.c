@@ -605,6 +605,9 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	struct hgd_cmd_despatch *desp, *correct_desp;
 	uint8_t			bye = 0;
 
+	DPRINTF(HGD_D_DEBUG, "Parsing line: %s", line);
+	if (line == NULL) return HGD_FAIL;
+
 	/* tokenise */
 	do {
 		tokens[n_toks] = xstrdup(strsep(&next, "|"));
