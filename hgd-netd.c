@@ -295,8 +295,9 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 				DPRINTF(HGD_D_WARN,
 				    "can't unlink partial upload: '%s': %s",
 				    unique_fn, SERROR);
-				ret = HGD_FAIL;
 			}
+
+			ret = HGD_FAIL;
 			goto clean;
 		}
 		write_ret = write(f, payload, to_write);
