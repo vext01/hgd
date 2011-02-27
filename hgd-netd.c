@@ -26,6 +26,7 @@
 #include <libgen.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -274,13 +275,28 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 		payload = hgd_sock_recv_bin(sess->sock_fd,
 		    sess->ssl, to_write);
+
 		if (payload == NULL) {
 			DPRINTF(HGD_D_ERROR, "failed to recv binary");
 			hgd_sock_send_line(sess->sock_fd,
 			    sess->ssl, "err|internal");
 
-			unlink(filename); /* don't much care if this fails */
-			ret = HGD_FAIL;
+			/* try to clean up a partial upload */
+			if (fsync(f) < 0)
+				DPRINTF(HGD_D_WARN,
+				    "can't sync partial file: %s", SERROR);
+
+			if (close(f) < 0)
+				DPRINTF(HGD_D_WARN,
+				    "can't close partial file: %s", SERROR);
+			f = -1;
+
+			if (unlink(unique_fn) < 0) {
+				DPRINTF(HGD_D_WARN,
+				    "can't unlink partial upload: '%s': %s",
+				    unique_fn, SERROR);
+				ret = HGD_FAIL;
+			}
 			goto clean;
 		}
 		write_ret = write(f, payload, to_write);
@@ -315,7 +331,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	DPRINTF(HGD_D_INFO, "Transfer of '%s' complete", filename);
 clean:
-	if (f == -1)
+	if (f != -1)
 		close(f);
 	if (payload)
 		free(payload);

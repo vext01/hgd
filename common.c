@@ -362,11 +362,10 @@ hgd_sock_send_line_nossl(int fd, char *msg)
 void
 hgd_sock_send_line(int fd, SSL *ssl, char *msg)
 {
-	if (ssl == NULL) {
-		hgd_sock_send_line_nossl(fd, msg);
-	} else {
-		hgd_sock_send_line_ssl(ssl, msg);
-	}
+	if (ssl == NULL)
+		return (hgd_sock_send_line_nossl(fd, msg));
+	else
+		return (hgd_sock_send_line_ssl(ssl, msg));
 }
 
 /* recieve a specific size, free when done */
@@ -443,9 +442,10 @@ hgd_sock_recv_bin_ssl(SSL *ssl, ssize_t len)
 	while (recvd_tot != len) {
 		recvd = SSL_read(ssl, msg, len - recvd_tot);
 
-		if (recvd < 0) {
-			DPRINTF(HGD_D_WARN, "No bytes recvd");
+		if (recvd <= 0) {
+			PRINT_SSL_ERR(__func__);
 			recvd = 0;
+			return (NULL);
 		}
 
 		msg += recvd;
@@ -459,12 +459,10 @@ hgd_sock_recv_bin_ssl(SSL *ssl, ssize_t len)
 char *
 hgd_sock_recv_bin(int fd, SSL *ssl, ssize_t len)
 {
-	if (ssl == NULL) {
+	if (ssl == NULL)
 		return (hgd_sock_recv_bin_nossl(fd, len));
-	} else {
+	else
 		return (hgd_sock_recv_bin_ssl(ssl, len));
-	}
-
 }
 
 char *
