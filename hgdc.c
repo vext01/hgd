@@ -387,6 +387,7 @@ hgd_req_queue(char **args)
 	ssize_t			written = 0, fsize, chunk_sz;
 	char			chunk[HGD_BINARY_CHUNK], *filename = args[0];
 	char			*q_req, *resp;
+	int			 bar = 0, iters = 0;
 
 	DPRINTF(HGD_D_DEBUG, "Will queue '%s'", args[0]);
 
@@ -422,7 +423,18 @@ hgd_req_queue(char **args)
 		return (-1);
 	}
 
+	/*
+	 * start sending the file
+	 */
 	while (written != fsize) {
+
+		if ((iters % 50 == 0) && (hgd_debug <= 1)) {
+			bar = ((float) written/fsize) * 100;
+			printf("\r%3d%%", bar);
+			fflush(stdout);
+		}
+		iters++;
+
 		if (fsize - written < HGD_BINARY_CHUNK)
 			chunk_sz = fsize - written;
 		else
@@ -439,6 +451,8 @@ hgd_req_queue(char **args)
 		DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
 		   (int)  written, (int) fsize);
 	}
+	printf("\r     \r");
+	fflush(stdout);
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == -1) {
