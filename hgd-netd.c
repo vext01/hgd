@@ -84,7 +84,7 @@ hgd_exit_nicely()
 	if (db)
 		sqlite3_close(db);
 
-	_exit (!EXIT_SUCCESS);
+	_exit (!exit_ok);
 }
 
 /* return some kind of host identifier, free when done */
