@@ -1,0 +1,7 @@
+common.o
+db.o
+hgd-admin
+hgd-netd
+hgd-playd
+hgdc
+tags
