@@ -42,16 +42,23 @@ only make.
 Running
 -------
 
-If you are happy with putting HGD state in /var/hgd, then you can run the
-two servers with no arguments:
+First you should make user accounts:
+
+ % hgd-admin user-add <username>
+
+Then you can run the hgd daemons:
+
  % hgd-netd
  % hgd-playd
+
+If you don't have permission to /var/hgd, you can use a different place for
+the state directory; pass '-d <path>' to hgd-playd, hgd-netd and hgd-admin.
 
 Then you can queue tracks:
  % hgdc q <some media file>
 
 Each command has a manual page for detailed usage instructions. Also,
-each command has a '-h' option for quick help.
+each command has a '-h' option for quick help. 
 
 If you do not want to show the video of media files, 'unset DISPLAY'
 before running hgd-playd.
