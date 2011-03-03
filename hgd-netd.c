@@ -324,7 +324,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	payload = NULL;
 
 	/* insert track into db */
-	if (hgd_insert_track(basename(unique_fn), sess->user->name) == HGD_OK) {
+	if (hgd_insert_track(basename(unique_fn), sess->user->name) != HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
