@@ -358,11 +358,6 @@ hgd_setup_socket()
 	/* annoying error message for those too lazy to set up crypto */
 	if (ssl == NULL)
 		DPRINTF(HGD_D_WARN, "Connection is not encrypted");
-
-	if (hgd_client_login(sock_fd, ssl, user) != HGD_OK) {
-		/* XXX do something on failed login */
-	}
-
 }
 
 /* NOTE! -c is reserved for 'config file path' */
