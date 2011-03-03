@@ -701,7 +701,7 @@ main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
+	while ((ch = getopt(argc, argv, "x:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -715,7 +715,7 @@ main(int argc, char **argv)
 
 		read_config();
 
-		while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
+		while ((ch = getopt(argc, argv, "Eehp:s:vu:")) != -1) {
 			switch (ch) {
 			case 'e':
 				DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
