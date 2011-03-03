@@ -56,6 +56,7 @@
 #define HGD_PID_STR_SZ		10
 #define HGD_SHA_SALT_SZ		20
 #define HGD_MAX_PASS_SZ		20
+#define HGD_MAX_USER_QUEUE	5 /* XXX Make configurable */
 
 /* Function return values */
 #define HGD_FAIL		(-1)
@@ -82,6 +83,11 @@ extern char			*filestore_path;
 struct hgd_user {
 	char			*name;
 	int			 perms;
+};
+
+struct hgd_user_list {
+	struct hgd_user		**users;
+	int			 n_users;
 };
 
 struct hgd_playlist_item {
@@ -168,12 +174,15 @@ struct hgd_req_despatch {
 void				 hgd_free_playlist_item(
 				    struct hgd_playlist_item *);
 void				 hgd_free_playlist(struct hgd_playlist *);
+void				 hgd_free_user(struct hgd_user *u);
+void				 hgd_free_user_list(struct hgd_user_list *ul);
 
 /* wrappers */
 void				*xmalloc(size_t);
 void				*xrealloc(void *, size_t);
 int				 xasprintf(char **buf, char *fmt, ...);
 void				*xcalloc(size_t sz, size_t size);
+char				*xstrdup(const char *s);
 
 /* socket ops */
 void				 hgd_sock_send(int fd, char *msg);
@@ -197,5 +206,7 @@ void				 hgd_kill_sighandler(int sig);
 void				 hgd_register_sig_handlers();
 char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
+int				 hgd_readpassphrase_confirmed(
+				     char buf[HGD_MAX_PASS_SZ]);
 
 #endif

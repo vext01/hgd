@@ -24,6 +24,7 @@
 #include <err.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #include <sqlite3.h>
 
@@ -61,10 +62,35 @@ hgd_play_track(struct hgd_playlist_item *t)
 	int			status = 0, pid;
 	char			*pid_path;
 	FILE			*pid_file;
+	struct flock		fl;
+
+	fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+	fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+	fl.l_start  = 0;        /* Offset from l_whence         */
+	fl.l_len    = 0;        /* length, 0 = to EOF           */
+	fl.l_pid    = getpid(); /* our PID                      */
 
 	DPRINTF(HGD_D_INFO, "Playing '%s' for '%s'", t->filename, t->user);
 	if (hgd_mark_playing(t->id) == HGD_FAIL)
 		hgd_exit_nicely();
+
+	/* we will write away child pid */
+	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+
+	pid_file = fopen(pid_path, "w");
+	if (pid_file == NULL) {
+		DPRINTF(HGD_D_ERROR, "Can't open '%s'", pid_path);
+		free(pid_path);
+		hgd_exit_nicely();
+	}
+
+	if (fcntl(fileno(pid_file), F_SETLKW, &fl) == -1) {
+		DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
+		hgd_exit_nicely();
+	}
+
+	if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
+		DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
 
 	pid = fork();
 	if (!pid) {
@@ -76,20 +102,15 @@ hgd_play_track(struct hgd_playlist_item *t)
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
 		hgd_exit_nicely();
 	} else {
-		/* we will write away child pid */
-		xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+		fprintf(pid_file, "%d", pid);
 
-		pid_file = fopen(pid_path, "w");
-		if (pid_file == NULL) {
-			DPRINTF(HGD_D_ERROR, "Can't open '%s'", pid_path);
-			free(pid_path);
+		fl.l_type = F_UNLCK;  /* set to unlock same region */
+
+		if (fcntl(fileno(pid_file), F_SETLK, &fl) == -1) {
+			DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
 			hgd_exit_nicely();
 		}
 
-		if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
-			DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
-
-		fprintf(pid_file, "%d", pid);
 		fclose(pid_file);
 		wait(&status);
 
@@ -166,7 +187,7 @@ main(int argc, char **argv)
 	char			 ch;
 
 	hgd_register_sig_handlers();
-	hgd_dir = strdup(HGD_DFL_DIR);
+	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
@@ -178,7 +199,7 @@ main(int argc, char **argv)
 			break;
 		case 'd':
 			free(hgd_dir);
-			hgd_dir = strdup(optarg);
+			hgd_dir = xstrdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "set hgd dir to '%s'", hgd_dir);
 			break;
 		case 'p':

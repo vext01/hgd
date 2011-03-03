@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <libgen.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -83,7 +85,7 @@ hgd_exit_nicely()
 	if (db)
 		sqlite3_close(db);
 
-	_exit (!EXIT_SUCCESS);
+	_exit (!exit_ok);
 }
 
 /* return some kind of host identifier, free when done */
@@ -217,10 +219,17 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	ssize_t			write_ret;
 	char			*filename;
 
+	if (hgd_num_tracks_user(sess->user->name) > HGD_MAX_USER_QUEUE) {
+		DPRINTF(HGD_D_WARN, "User '%s' trigger flood protection", sess->user->name);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|floodprotection");
+		return (HGD_FAIL);
+	}
+
 	/* strip path, we don't care about that */
 	filename = basename(filename_p);
 
 	if ((bytes == 0) || (bytes > max_upload_size)) {
+		DPRINTF(HGD_D_WARN, "Incorrect file size");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
 		ret = HGD_FAIL;
 		goto clean;
@@ -266,12 +275,28 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 		payload = hgd_sock_recv_bin(sess->sock_fd,
 		    sess->ssl, to_write);
+
 		if (payload == NULL) {
 			DPRINTF(HGD_D_ERROR, "failed to recv binary");
 			hgd_sock_send_line(sess->sock_fd,
 			    sess->ssl, "err|internal");
 
-			unlink(filename); /* don't much care if this fails */
+			/* try to clean up a partial upload */
+			if (fsync(f) < 0)
+				DPRINTF(HGD_D_WARN,
+				    "can't sync partial file: %s", SERROR);
+
+			if (close(f) < 0)
+				DPRINTF(HGD_D_WARN,
+				    "can't close partial file: %s", SERROR);
+			f = -1;
+
+			if (unlink(unique_fn) < 0) {
+				DPRINTF(HGD_D_WARN,
+				    "can't unlink partial upload: '%s': %s",
+				    unique_fn, SERROR);
+			}
+
 			ret = HGD_FAIL;
 			goto clean;
 		}
@@ -307,7 +332,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	DPRINTF(HGD_D_INFO, "Transfer of '%s' complete", filename);
 clean:
-	if (f == -1)
+	if (f != -1)
 		close(f);
 	if (payload)
 		free(payload);
@@ -365,6 +390,14 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	FILE				*pid_file;
 	size_t				read;
 	int				tid = -1, scmd_ret;
+	struct flock			fl;
+
+	fl.l_type   = F_RDLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+	fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+	fl.l_start  = 0;        /* Offset from l_whence         */
+	fl.l_len    = 0;        /* length, 0 = to EOF           */
+	fl.l_pid    = getpid(); /* our PID                      */
+
 
 	DPRINTF(HGD_D_INFO, "%s wants to kill track", sess->user->name);
 
@@ -445,11 +478,18 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	/* kill mplayer then */
 	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+
 	pid_file = fopen(pid_path, "r");
 	if (pid_file == NULL) {
 		DPRINTF(HGD_D_WARN,
 		    "Can't find mplayer pid file: %s: %s", pid_path, SERROR);
 		free(pid_path);
+		return (HGD_FAIL);
+	}
+
+	if (fcntl(fileno(pid_file), F_SETLKW, &fl) == -1) {
+		DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
+		fclose(pid_file);
 		return (HGD_FAIL);
 	}
 
@@ -462,6 +502,10 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 			return (HGD_FAIL);
 		}
 	}
+
+	fl.l_type = F_UNLCK;
+	fcntl(fileno(pid_file), F_SETLK, &fl);  /* F_GETLK, F_SETLK, F_SETLKW */
+
 	fclose(pid_file);
 
 	pid = atoi(pid_str);
@@ -579,9 +623,12 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	struct hgd_cmd_despatch *desp, *correct_desp;
 	uint8_t			bye = 0;
 
+	DPRINTF(HGD_D_DEBUG, "Parsing line: %s", line);
+	if (line == NULL) return HGD_FAIL;
+
 	/* tokenise */
 	do {
-		tokens[n_toks] = strdup(strsep(&next, "|"));
+		tokens[n_toks] = xstrdup(strsep(&next, "|"));
 		DPRINTF(HGD_D_DEBUG, "tok %d: \"%s\"", n_toks, tokens[n_toks]);
 	} while ((n_toks++ < HGD_MAX_PROTO_TOKS) && (next != NULL));
 
@@ -869,7 +916,7 @@ main(int argc, char **argv)
 	/* if killed, die nicely */
 	hgd_register_sig_handlers();
 
-	hgd_dir = strdup(HGD_DFL_DIR);
+	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "c:d:Eefhk:n:p:s:vx:y:")) != -1) {
@@ -881,7 +928,7 @@ main(int argc, char **argv)
 			break;
 		case 'd':
 			free(hgd_dir);
-			hgd_dir = strdup(optarg);
+			hgd_dir = xstrdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
 			break;
 		case 'e':

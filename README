@@ -23,15 +23,18 @@ Prerequisites
 To build, you will need:
 
  * Linux or OpenBSD (possibly others, not tested)
- * make (either GNU or BSD)
- * gcc or clang
- * sqlite3 libraries and headers (if building servers).
+ * Make (either GNU or BSD)
+ * GCC or Clang
+ * SQLite3 libs and headers (if building servers).
+ * OpenSSL libs and headers.
+ * LibBSD (linux only) libs and headers.
+ * Mplayer (for the server)
 
 Building
 --------
 
-The build system is both bmake and gmake compatible, as it stands we use only
-make.
+The build system is both bmake and gmake compatible, as it stands we use
+only make.
 
  * To build everything, type 'make'.
  * To build only the client type 'make hgdc'.
@@ -39,21 +42,29 @@ make.
 Running
 -------
 
-If you are happy with putting HGD state in /var/hgd, then you can run the
-two servers with no arguments:
+First you should make user accounts:
+
+ % hgd-admin user-add <username>
+
+Then you can run the hgd daemons:
+
  % hgd-netd
  % hgd-playd
+
+If you don't have permission to /var/hgd, you can use a different place for
+the state directory; pass '-d <path>' to hgd-playd, hgd-netd and hgd-admin.
 
 Then you can queue tracks:
  % hgdc q <some media file>
 
 Each command has a manual page for detailed usage instructions. Also,
-each command has a '-h' option for quick help.
+each command has a '-h' option for quick help. 
 
-If you do not want to show the video of media files, 'unset DISPLAY' before
-running hgd-playd.
+If you do not want to show the video of media files, 'unset DISPLAY'
+before running hgd-playd.
 
-For information on TLS encryption, see the manual page for hgd-netd(1).
+For information on SSL (TLSv1) crypto, see the manual page for
+hgd-netd(1).
 
 History
 -------
@@ -65,6 +76,7 @@ Roadmap
 -------
 
  * 0.3 - Admin commands and mplayer slave mode.
+         SSL Certificate acceptance prompt.
  * 0.4 - Fair share playlist
 
 Developers
@@ -72,7 +84,7 @@ Developers
 
  * Code style is as described in the style(9) OpenBSD manual page.
    http://www.openbsd.org/cgi-bin/man.cgi?query=style&sektion=9
- * All of our functions are prefixed 'hgd_'
+ * All of our functions (other than helpers funcs) are prefixed 'hgd_'
  * All of our macros are defined in .h files and are prefixed HGD_ other
    than in certain (generic) cases (SERROR).
  * All database code should go in db.c.
@@ -86,8 +98,7 @@ Developers
    Mail the diff to <vext01 (at) gmail (dot) com> for review.
  * Make sure you have your git client configured correctly with respect
    to user.name and user.email. They should be the same as on github.
-   (Yes, older commits have other usernames, that's because the code was
-   imported from privately hosted CVS).
+ * If you update a manual, bump the date at the top also.
 
 Bugs
 ----

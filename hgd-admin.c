@@ -58,7 +58,21 @@ hgd_exit_nicely()
 void
 hgd_usage()
 {
-	printf("XXX\n");
+        printf("Usage: hgdc [opts] command [args]\n\n");
+        printf("  Commands include:\n");
+        printf("    user-add username [password]\tAdd a user.\n");
+        printf("    user-del username\t\t\tDelete a user.\n");
+        printf("    user-list\t\t\t\tList users.\n");
+	/*
+        printf("    user-disable username\tDisable a user account");
+        printf("    user-chpw username\t\t\tChange a users password\n");
+        printf("    user-enable username\t\t\Re-enable a user\n\n");
+	*/
+        printf("\n  Options include:\n");
+        printf("    -d\t\t\tLocation of state directory\n");
+        printf("    -h\t\t\tShow this message and exit\n");
+        printf("    -x level\t\tSet debug level (0-3)\n");
+        printf("    -v\t\t\tShow version and exit\n");
 }
 
 int
@@ -80,6 +94,7 @@ hgd_acmd_user_add(char **args)
 	DPRINTF(HGD_D_DEBUG, "new user's salt '%s'", salt_hex);
 
 	hash_hex = hgd_sha1(pass, salt_hex);
+	memset(pass, 0, strlen(pass));
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_hex);
 
 	/* XXX: Should we check the return state of this? */
@@ -91,8 +106,54 @@ hgd_acmd_user_add(char **args)
 	return (HGD_OK);
 }
 
+int
+hgd_acmd_user_add_prompt(char **args)
+{
+	char			 pass[HGD_MAX_PASS_SZ];
+	char			*new_args[2];
+
+	if (hgd_readpassphrase_confirmed(pass) != HGD_OK)
+		return (HGD_FAIL);
+
+	new_args[0] = args[0];
+	new_args[1] = pass;
+
+	return (hgd_acmd_user_add(new_args));
+}
+
+int
+hgd_acmd_user_del(char **args)
+{
+	if (hgd_delete_user(args[0]) != HGD_OK)
+		return (HGD_FAIL);
+
+	return (HGD_OK);
+}
+
+int
+hgd_acmd_user_list(char **args)
+{
+	struct hgd_user_list	*list = hgd_get_all_users();
+	int			 i;
+
+	/* sssh */
+	args = args;
+
+	for (i = 0; i < list->n_users; i++)
+		printf("%s\n", list->users[i]->name);
+
+	hgd_free_user_list(list);
+	free(list);
+
+	return (HGD_OK);
+
+}
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
+	{ "user-add", 1, hgd_acmd_user_add_prompt },
+	{ "user-del", 1, hgd_acmd_user_del },
+	{ "user-list", 0, hgd_acmd_user_list },
 #if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },
@@ -132,14 +193,14 @@ main(int argc, char **argv)
 	char			 ch;
 
 	hgd_register_sig_handlers();
-	hgd_dir = strdup(HGD_DFL_DIR);
+	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "d:hvx:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);
-			hgd_dir = strdup(optarg);
+			hgd_dir = xstrdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "set hgd dir to '%s'", hgd_dir);
 			break;
 		case 'v':

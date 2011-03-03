@@ -23,6 +23,12 @@
 #include <err.h>
 #include <errno.h>
 #include <signal.h>
+#ifdef __linux__
+#include <bsd/readpassphrase.h>
+#else
+#include <readpassphrase.h>
+#endif
+
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -206,11 +212,22 @@ xrealloc(void *old_p, size_t sz)
 
 	ptr = realloc(old_p, sz);
 	if (!ptr) {
-		DPRINTF(HGD_D_ERROR,"Could not reallocate");
+		DPRINTF(HGD_D_ERROR, "Could not reallocate");
 		hgd_exit_nicely();
 	}
 
 	return (ptr);
+}
+
+char *
+xstrdup(const char *s)
+{
+	char *dup = strdup(s);
+
+	if (dup == NULL)
+		DPRINTF(HGD_D_ERROR, "Could not duplicate string");
+
+	return (dup);
 }
 
 int
@@ -345,11 +362,10 @@ hgd_sock_send_line_nossl(int fd, char *msg)
 void
 hgd_sock_send_line(int fd, SSL *ssl, char *msg)
 {
-	if (ssl == NULL) {
-		hgd_sock_send_line_nossl(fd, msg);
-	} else {
-		hgd_sock_send_line_ssl(ssl, msg);
-	}
+	if (ssl == NULL)
+		return (hgd_sock_send_line_nossl(fd, msg));
+	else
+		return (hgd_sock_send_line_ssl(ssl, msg));
 }
 
 /* recieve a specific size, free when done */
@@ -426,9 +442,10 @@ hgd_sock_recv_bin_ssl(SSL *ssl, ssize_t len)
 	while (recvd_tot != len) {
 		recvd = SSL_read(ssl, msg, len - recvd_tot);
 
-		if (recvd < 0) {
-			DPRINTF(HGD_D_WARN, "No bytes recvd");
+		if (recvd <= 0) {
+			PRINT_SSL_ERR(__func__);
 			recvd = 0;
+			return (NULL);
 		}
 
 		msg += recvd;
@@ -442,12 +459,10 @@ hgd_sock_recv_bin_ssl(SSL *ssl, ssize_t len)
 char *
 hgd_sock_recv_bin(int fd, SSL *ssl, ssize_t len)
 {
-	if (ssl == NULL) {
+	if (ssl == NULL)
 		return (hgd_sock_recv_bin_nossl(fd, len));
-	} else {
+	else
 		return (hgd_sock_recv_bin_ssl(ssl, len));
-	}
-
 }
 
 char *
@@ -549,7 +564,7 @@ hgd_sock_recv_line_ssl(SSL *ssl)
 
 	DPRINTF(HGD_D_DEBUG, "SSL recvd:'%s'", buffer);
 
-	line = strdup(buffer);
+	line = xstrdup(buffer);
 	free(buffer);
 
 	return (line);
@@ -698,4 +713,57 @@ hgd_bytes_to_hex(unsigned char *bytes, int len)
 		snprintf(hex, hex_len, "%s%02x", hex, bytes[i]);
 
 	return (hex);
+}
+
+/* free a user struct's members */
+void
+hgd_free_user(struct hgd_user *u)
+{
+	/* looks silly now, but I am sure we will add more stuff later */
+	free(u->name);
+}
+
+/* free a user list struct's members */
+void
+hgd_free_user_list(struct hgd_user_list *ul)
+{
+	int			i;
+
+	for (i = 0; i < ul->n_users; i++) {
+		hgd_free_user(ul->users[i]);
+		free(ul->users[i]);
+	}
+}
+
+/*
+ * read a password twice and return if the same
+ */
+int
+hgd_readpassphrase_confirmed(char buf[HGD_MAX_PASS_SZ])
+{
+	char			p1[HGD_MAX_PASS_SZ], p2[HGD_MAX_PASS_SZ];
+	uint8_t			again = 1;
+
+	while (again) {
+		if (readpassphrase("Password: ", p1, HGD_MAX_PASS_SZ,
+			    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Can't read password");
+			return (HGD_FAIL);
+		}
+
+		if (readpassphrase("Again: ", p2, HGD_MAX_PASS_SZ,
+			    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Can't read password");
+			return (HGD_FAIL);
+		}
+
+		if (strcmp(p1, p2) == 0)
+			again = 0;
+		else
+			DPRINTF(HGD_D_ERROR, "Passwords did not match!");
+	}
+
+	strncpy(buf, p1, HGD_MAX_PASS_SZ);
+
+	return (HGD_OK);
 }

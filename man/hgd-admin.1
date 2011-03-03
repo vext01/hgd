@@ -16,43 +16,31 @@
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
 .Dd February 24 2011
-.Dt HGDC 1
+.Dt HGD-ADMIN 1
 .Os
 .Sh NAME
-.Nm hgdc
-.Nd Client for the Hackathon Gunther Daemon.
+.Nm hgd-admin
+.Nd Administration program for the Hackathon Gunther Daemon.
 .Sh SYNOPSIS
 .Nm hgdc
 .Bk -words
-.Op Fl Eehv
-.Op Fl p Ar port
-.Op Fl s Ar host
-.Op Fl u Ar user
+.Op Fl hv
+.Op Fl d Ar dir
 .Op Fl x Ar debug-level
 .Ar Command
 .Ar Args
 .Ek
 .Sh DESCRIPTION
 .Nm
-is a client for the Hackathon Gunther Daemon; a music system
+is an administration program for the Hackathon Gunther Daemon; a music system
 suitable for hackathons, internet cafes, LAN parties etc.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl e
-Require server to supply an SSL encrypted channel, or exit.
-.It Fl E
-Don't use SSL encryption. The server has the rights to reject your connection.
+.It Fl d Ar dir
+Set the path to the HGD state directory.
 .It Fl h
 Show the usage help and exit.
-.It Fl p Ar port
-Set the TCP port to connect to
-.Xr hgd-netd 1
-on. Defaults to 6633.
-.It Fl s Ar host
-Set the server host name or IP.
-.It Fl u Ar user
-Set username to authenticate with.
 .It Fl v
 Show version information and exit.
 .It Fl x Ar level
@@ -61,25 +49,16 @@ Set the debug level: 0=errors, 1=warnings, 2=info, 3=debug. Defaults to 1.
 .Pp
 The commands are as follows:
 .Bl -tag -width Ds
-.It hud
-Enter `heads up display mode'; shows the playlist updating every second.
-A persistent server connection is used.
-.It ls
-Show playlist.
-.It q Ar filename
-Queue the given file in the playlist.
-.It vo
-Vote-off the currently playing track.
+.It user-add Ar user [pass]
+Add a user to the system. The password parameter is optional; if no password is
+given, 
+.Nm
+will prompt for one.
+.It user-del Ar user
+Delete a user from the system.
+.It user-list
+List users in the system.
 .El
-.Sh A NOTE ABOUT ENCRYPTION
-
-You can turn off SSL encryption or refuse speak to servers if they don't
-support SSL with -E and -e respectively; however the default behaviour
-involves a handshake between the client and server, favouring an
-encrypted connection if possible, otherwise falling back onto
-unencrypted socket communication.
-
-A warning is always printed if SSL encryption is not enabled.
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS

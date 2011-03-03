@@ -71,8 +71,22 @@ hgd_exit_nicely()
 
 	if (sock_fd > 0) {
 		/* try to close connection */
+#ifndef __APPLE__
+		/*
+		 * MAC OSX sockets behave differently!
+		 *
+		 * If one side of the socket closes, the connection in
+		 * one direction, the corresponding socket on the other side
+		 * will fail to shutdown(). This is hinted at in the python
+		 * manual:
+		 * http://docs.python.org/library/socket.html
+		 *
+		 * Long story short:
+		 * On OSX the server will do the shutdown for us.
+		 */
 		if (shutdown(sock_fd, SHUT_RDWR) == -1)
 			DPRINTF(HGD_D_WARN, "Couldn't shutdown socket");
+#endif
 		close(sock_fd);
 	}
 
@@ -99,7 +113,7 @@ hgd_negotiate_crypto()
 	hgd_check_svr_response(next, 1);
 
 	do {
-		ok_tokens[n_toks] = strdup(strsep(&next, "|"));
+		ok_tokens[n_toks] = xstrdup(strsep(&next, "|"));
 	} while ((n_toks++ < 2) && (next != NULL));
 
 	if (strcmp(ok_tokens[1], "nocrypto") != 0) {
@@ -208,7 +222,7 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	len = strlen(resp);
 
 	if (hgd_debug) {
-		trunc = strdup(resp);
+		trunc = xstrdup(resp);
 		DPRINTF(HGD_D_DEBUG, "Check reponse '%s'", trunc);
 		free(trunc);
 	} else
@@ -382,6 +396,7 @@ hgd_req_queue(char **args)
 	ssize_t			written = 0, fsize, chunk_sz;
 	char			chunk[HGD_BINARY_CHUNK], *filename = args[0];
 	char			*q_req, *resp;
+	int			 bar = 0, iters = 0;
 
 	DPRINTF(HGD_D_DEBUG, "Will queue '%s'", args[0]);
 
@@ -417,7 +432,18 @@ hgd_req_queue(char **args)
 		return (HGD_FAIL);
 	}
 
+	/*
+	 * start sending the file
+	 */
 	while (written != fsize) {
+
+		if ((iters % 50 == 0) && (hgd_debug <= 1)) {
+			bar = ((float) written/fsize) * 100;
+			printf("\r%3d%%", bar);
+			fflush(stdout);
+		}
+		iters++;
+
 		if (fsize - written < HGD_BINARY_CHUNK)
 			chunk_sz = fsize - written;
 		else
@@ -434,6 +460,8 @@ hgd_req_queue(char **args)
 		DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
 		   (int)  written, (int) fsize);
 	}
+	printf("\r     \r");
+	fflush(stdout);
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
@@ -454,7 +482,7 @@ hgd_print_track(char *resp)
 	char			*tokens[3] = {NULL, NULL, NULL};
 
 	do {
-		tokens[n_toks] = strdup(strsep(&resp, "|"));
+		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
 	} while ((n_toks++ < 3) && (resp != NULL));
 
 	if (n_toks == 3)
@@ -601,8 +629,7 @@ hgd_exec_req(int argc, char **argv)
 
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	if ((!authenticated) && (correct_desp->need_auth)) {
-		/* XXX replace 0 with HGD_OK */
-		if (hgd_client_login(sock_fd, ssl, user) != 0)
+		if (hgd_client_login(sock_fd, ssl, user) != HGD_OK)
 			hgd_exit_nicely();
 	}
 	correct_desp->handler(&argv[1]);

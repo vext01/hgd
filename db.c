@@ -141,8 +141,8 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 
 	/* populate a struct that we pick up later */
 	t->id = atoi(data[0]);
-	t->filename = strdup(data[1]);
-	t->user = strdup(data[2]);
+	t->filename = xstrdup(data[1]);
+	t->user = xstrdup(data[2]);
 
 	return (SQLITE_OK);
 }
@@ -285,8 +285,8 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 	item = xmalloc(sizeof(struct hgd_playlist_item));
 
 	item->id = atoi(data[0]);
-	item->filename = strdup(data[1]);
-	item->user = strdup(data[2]);
+	item->filename = xstrdup(data[1]);
+	item->user = xstrdup(data[2]);
 	item->playing = 0;	/* don't need */
 	item->finished = 0;	/* don't need */
 
@@ -343,7 +343,7 @@ hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
 	/* populate a struct that we pick up later */
 	item_t->id = atoi(data[0]);
 	xasprintf(&(item_t->filename), "%s/%s", filestore_path, data[1]);
-	item_t->user = strdup(data[2]);
+	item_t->user = xstrdup(data[2]);
 	item_t->playing = 0;
 	item_t->finished = 0;
 
@@ -509,7 +509,8 @@ hgd_add_user(char *user, char *salt, char *hash)
 	int			 sql_res, ret = HGD_FAIL;
 	sqlite3_stmt		*stmt;
 	char			*sql = "INSERT INTO users "
-				    "(username, salt, hash) VALUES (?, ?, ?)";
+				   "(username, salt, hash, perms) "
+				   " VALUES (?, ?, ?, 0)";
 
 	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
@@ -587,7 +588,7 @@ hgd_authenticate_user(char *user, char *pass)
 	}
 
 	user_info = xmalloc(sizeof(struct hgd_user));
-	user_info->name = strdup((const char*)sqlite3_column_text(stmt, 0));
+	user_info->name = xstrdup((const char *) sqlite3_column_text(stmt, 0));
 	user_info->perms = sqlite3_column_int(stmt, 3);
 
 clean:
@@ -596,4 +597,113 @@ clean:
 
 	sqlite3_finalize(stmt);
 	return (user_info);
+}
+
+/*
+ * remove user from db forever
+ */
+int
+hgd_delete_user(char *user)
+{
+	int			 sql_res, ret = HGD_FAIL;
+	sqlite3_stmt		*stmt;
+	char			*sql = "DELETE FROM users WHERE username=?";
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
+
+int
+hgd_get_all_users_cb(void *arg, int argc, char **data, char **names)
+{
+	struct hgd_user		*user;
+	struct hgd_user_list	*list = (struct hgd_user_list *) arg;
+
+	/* ssh */
+	names = names;
+
+	if (argc != 2)
+		DPRINTF(HGD_D_WARN, "incorrect param count");
+
+	user = xmalloc(sizeof(struct hgd_user));
+	user->name = strdup(data[0]);
+	user->perms = atoi(data[1]);
+
+	list->users = xrealloc(list->users,
+	    ++(list->n_users) * sizeof(struct hgd_user));
+	list->users[list->n_users - 1] = user;
+
+	return (SQLITE_OK);
+}
+
+int
+hgd_num_tracks_user(char *username)
+{
+	int			 sql_res, ret = HGD_FAIL;
+	sqlite3_stmt		*stmt;
+	char			*sql = "SELECT COUNT(*) FROM playlist WHERE user=? AND finished=0";
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, username, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_ROW) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = sqlite3_column_int(stmt, 0);
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
+
+/* get all users from the db, caler must free */
+struct hgd_user_list *
+hgd_get_all_users()
+{
+	int			 sql_res;
+	struct hgd_user_list	*list = xcalloc(1, sizeof(struct hgd_user_list));
+
+	sql_res = sqlite3_exec(db,
+	    "SELECT username, perms FROM users",
+	    hgd_get_all_users_cb, list, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't get users: %s", DERROR);
+		return (NULL);
+	}
+
+	return (list);
 }
