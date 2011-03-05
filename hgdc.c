@@ -514,9 +514,13 @@ hgd_req_vote_off(char **args)
 	hgd_sock_send_line(sock_fd, ssl, "vo");
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
-	hgd_check_svr_response(resp, 0);
-	free(resp);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		DPRINTF(HGD_D_ERROR, "Vote off failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
 
+	free(resp);
 	return (HGD_OK);
 }
 
