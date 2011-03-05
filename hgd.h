@@ -51,6 +51,12 @@
 #define HGD_CRYPTO_PREF_IF_POSS	1
 #define HGD_CRYPTO_PREF_NEVER	2
 
+/* CONFIG files */
+#define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR "/config"
+#define HGD_USR_CFG_DIR		"/.config/hgd"
+
+#define HGD_C_CFG		"/hgdc.cfg"
+
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
 #define HGD_PID_STR_SZ		10
