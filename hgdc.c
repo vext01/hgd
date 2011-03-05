@@ -514,8 +514,8 @@ hgd_req_vote_off(char **args)
 	hgd_sock_send_line(sock_fd, ssl, "vo");
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
-	/* XXX: should we check the return value of this? */
 	hgd_check_svr_response(resp, 0);
+	free(resp);
 
 	return (HGD_OK);
 }
