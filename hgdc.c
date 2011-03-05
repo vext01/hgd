@@ -101,21 +101,21 @@ int
 hgd_negotiate_crypto()
 {
 	int			n_toks = 0;
-	char			*next;
+	char			*first, *next;
 	char			*ok_tokens[2];
 
 	if (crypto_pref == HGD_CRYPTO_PREF_NEVER)
 		return (0);	/* fine, no crypto then */
 
 	hgd_sock_send_line(sock_fd, NULL, "encrypt?");
-	next = hgd_sock_recv_line(sock_fd, NULL);
+	first = next = hgd_sock_recv_line(sock_fd, NULL);
 
 	hgd_check_svr_response(next, 1);
 
 	do {
 		ok_tokens[n_toks] = xstrdup(strsep(&next, "|"));
 	} while ((n_toks++ < 2) && (next != NULL));
-	free(next);
+	free(first);
 
 	if (strcmp(ok_tokens[1], "tlsv1") == 0) {
 		server_ssl_capable = 1;
