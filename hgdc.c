@@ -637,101 +637,45 @@ main(int argc, char **argv)
 
 	while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
 		switch (ch) {
+		case 'e':
+			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
+			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
+			break;
+		case 'E':
+			DPRINTF(HGD_D_DEBUG, "Client will insist upon "
+			   " no crypto");
+			crypto_pref = HGD_CRYPTO_PREF_NEVER;
+			break;
+		case 's':
+			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
+			host = optarg;
+			break;
+		case 'p':
+			port = atoi(optarg);
+			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
+			break;
+		case 'u':
+			user = optarg;
+			DPRINTF(HGD_D_DEBUG, "set username to %s", user);
+			break;
+		case 'v':
+			hgd_print_version();
+			exit_ok = 1;
+			hgd_exit_nicely();
+			break;
 		case 'x':
 			hgd_debug = atoi(optarg);
 			if (hgd_debug > 3)
 				hgd_debug = 3;
 			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
 			break;
+		case 'h':
 		default:
+			hgd_usage();
+			exit_ok = 1;
+			hgd_exit_nicely();
 			break;
 		};
-
-		read_config();
-
-		while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
-			switch (ch) {
-			case 'e':
-				DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
-				crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
-				break;
-			case 'E':
-				DPRINTF(HGD_D_DEBUG, "Client will insist upon "
-				   " no crypto");
-				crypto_pref = HGD_CRYPTO_PREF_NEVER;
-				break;
-			case 's':
-				DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
-				host = optarg;
-				break;
-			case 'p':
-				port = atoi(optarg);
-				DPRINTF(HGD_D_DEBUG, "set port to %d", port);
-				break;
-			case 'u':
-				user = optarg;
-				DPRINTF(HGD_D_DEBUG, "set username to %s", user);
-				break;
-			case 'v':
-				hgd_print_version();
-				exit_ok = 1;
-				hgd_exit_nicely();
-				break;
-			case 'x':
-				hgd_debug = atoi(optarg);
-				if (hgd_debug > 3)
-					hgd_debug = 3;
-				DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
-				break;
-			case 'h':
-			default:
-				hgd_usage();
-				exit_ok = 1;
-				hgd_exit_nicely();
-				break;
-			};
-		}	while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
-			switch (ch) {
-			case 'e':
-				DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
-				crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
-				break;
-			case 'E':
-				DPRINTF(HGD_D_DEBUG, "Client will insist upon "
-				   " no crypto");
-				crypto_pref = HGD_CRYPTO_PREF_NEVER;
-				break;
-			case 's':
-				DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
-				host = optarg;
-				break;
-			case 'p':
-				port = atoi(optarg);
-				DPRINTF(HGD_D_DEBUG, "set port to %d", port);
-				break;
-			case 'u':
-				user = optarg;
-				DPRINTF(HGD_D_DEBUG, "set username to %s", user);
-				break;
-			case 'v':
-				hgd_print_version();
-				exit_ok = 1;
-				hgd_exit_nicely();
-				break;
-			case 'x':
-				hgd_debug = atoi(optarg);
-				if (hgd_debug > 3)
-					hgd_debug = 3;
-				DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
-				break;
-			case 'h':
-			default:
-				hgd_usage();
-				exit_ok = 1;
-				hgd_exit_nicely();
-				break;
-			};
-		}
 	}
 
 	argc -= optind;
