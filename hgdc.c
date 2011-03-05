@@ -131,7 +131,7 @@ hgd_negotiate_crypto()
 	free(next);
 
 	while (n_toks > 0)
-		free(ok_tokens[n_toks -1]);
+		free(ok_tokens[--n_toks]);
 
 	return (0);
 }
