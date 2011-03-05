@@ -116,7 +116,7 @@ hgd_negotiate_crypto()
 		ok_tokens[n_toks] = xstrdup(strsep(&next, "|"));
 	} while ((n_toks++ < 2) && (next != NULL));
 
-	if (strcmp(ok_tokens[1], "nocrypto") != 0) {
+	if (strcmp(ok_tokens[1], "tlsv1") == 0) {
 		server_ssl_capable = 1;
 		DPRINTF(HGD_D_INFO, "Server supports %s crypto", ok_tokens[1]);
 	}
@@ -128,6 +128,9 @@ hgd_negotiate_crypto()
 		hgd_exit_nicely();
 	}
 	free(next);
+
+	while (n_toks > 0)
+		free(ok_tokens[n_toks -1]);
 
 	return (0);
 }

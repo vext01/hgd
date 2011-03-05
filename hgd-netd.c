@@ -532,7 +532,7 @@ hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused) {
 	unused = unused; /* lalalala */
 
 	if ((crypto_pref != HGD_CRYPTO_PREF_NEVER) && (ssl_capable))
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|tlsv2");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|tlsv1");
 	else
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|nocrypto");
 
