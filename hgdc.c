@@ -115,6 +115,7 @@ hgd_negotiate_crypto()
 	do {
 		ok_tokens[n_toks] = xstrdup(strsep(&next, "|"));
 	} while ((n_toks++ < 2) && (next != NULL));
+	free(next);
 
 	if (strcmp(ok_tokens[1], "tlsv1") == 0) {
 		server_ssl_capable = 1;
