@@ -25,15 +25,12 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <libconfig.h>
-
-
 #ifdef __linux__
 #include <bsd/readpassphrase.h>
 #else
 #include <readpassphrase.h>
 #endif
- #include <libconfig.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -633,75 +630,12 @@ hgd_exec_req(int argc, char **argv)
 	correct_desp->handler(&argv[1]);
 }
 
-
-int
-read_config()
-{
-	config_t 		 cfg, *cf;
-	char			 *usr_dir;
-
-	cf = &cfg;
-	config_init(cf);
-
-
-	xasprintf(&usr_dir, "%s%s", getenv("HOME"), HGD_USR_CFG_DIR HGD_C_CFG );
-
-	/* Try and open usr config */
-	DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n", usr_dir);
-	if (!config_read_file(cf, usr_dir)) {
-		DPRINTF(HGD_D_ERROR, "%d - %s\n",
-		    config_error_line(cf),
-		    config_error_text(cf));
-
-		config_destroy(cf);
-
-		/* Well that failed */
-		/* Try and open global config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n", HGD_GLOBAL_CFG_DIR HGD_GLOBAL_CFG_DIR);
-		if (!config_read_file(cf, HGD_GLOBAL_CFG_DIR HGD_C_CFG)) {
-			DPRINTF(HGD_D_ERROR, "%d - %s\n",
-			    config_error_line(cf),
-			    config_error_text(cf));
-			config_destroy(cf);
-			return(HGD_FAIL);
-		}
-	}
-
-
-	/*
-	 * XXX -e
-	 * XXX -E
-	 */
-
-	/* -s */
-	if (config_lookup_string(cf, "hostname", &host)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: host=%s", host);
-	}
-
-	/* -p */
-	if (config_lookup_int(cf, "port", &port)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: port=%s", port);
-	}
-
-
-	/* -u */
-	if (config_lookup_string(cf, "username", &user)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: user=%s", user);
-	}
-
-	/* XXX -x */
-
-
-	/* XXX add "config_destroy(cf);" to cleanup */
-	return (HGD_OK);
-}
-
 int
 main(int argc, char **argv)
 {
 	char			*resp, ch;
 
-	while ((ch = getopt(argc, argv, "x:")) != -1) {
+	while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -715,7 +649,7 @@ main(int argc, char **argv)
 
 		read_config();
 
-		while ((ch = getopt(argc, argv, "Eehp:s:vu:")) != -1) {
+		while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
 			switch (ch) {
 			case 'e':
 				DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
