@@ -101,14 +101,14 @@ int
 hgd_negotiate_crypto()
 {
 	int			n_toks = 0;
-	char			*next, *ok_str;
+	char			*next;
 	char			*ok_tokens[2];
 
 	if (crypto_pref == HGD_CRYPTO_PREF_NEVER)
 		return (0);	/* fine, no crypto then */
 
 	hgd_sock_send_line(sock_fd, NULL, "encrypt?");
-	next = ok_str = hgd_sock_recv_line(sock_fd, NULL);
+	next = hgd_sock_recv_line(sock_fd, NULL);
 
 	hgd_check_svr_response(next, 1);
 
@@ -125,10 +125,8 @@ hgd_negotiate_crypto()
 	if ((!server_ssl_capable) && (crypto_pref == HGD_CRYPTO_PREF_ALWAYS)) {
 		DPRINTF(HGD_D_ERROR,
 		    "User forced crypto, but server is incapable");
-		free(next);
 		hgd_exit_nicely();
 	}
-	free(next);
 
 	while (n_toks > 0)
 		free(ok_tokens[--n_toks]);
