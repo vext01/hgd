@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd February 24 2011
+.Dd February 24, 2011
 .Dt HGD-NETD 1
 .Os
 .Sh NAME
@@ -85,20 +85,20 @@ communications, thus protecting passwords. The simplest way to do this
 is to do the following:
 .Bl -tag -width Ds
 .It cd /etc/hgd
-.It openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout \\
-	privkey.key -out certificate.crt 
+.It openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout
+privkey.key -out certificate.crt
 .El
-
+.Pp
 When hgd-netd sees a valid SSL certificate and private key, it will allow
 SSL network communications from clients.
-
+.Pp
 You can turn off or require clients to use SSL with -E and -e
 respectively; however the default behaviour involves a handshake between
 the client and server, favouring an encrypted connection if possible,
 otherwise falling back onto unencrypted socket communication.
-
+.Pp
 A warning is always printed if SSL encryption is not enabled.
-
+.Pp
 You should ensure that the SSL private key remains secure on your
 file-system.
 .Sh HISTORY
