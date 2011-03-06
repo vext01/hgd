@@ -52,4 +52,4 @@ install: hgd-playd hgd-netd hgdc hgd-admin
 	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}
-	#${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
+	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
