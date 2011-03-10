@@ -5,3 +5,4 @@ hgd-netd
 hgd-playd
 hgdc
 tags
+*.core
