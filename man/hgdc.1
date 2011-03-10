@@ -72,6 +72,9 @@ Queue the given file in the playlist.
 Vote-off the currently playing track.
 .El
 .Sh A NOTE ABOUT ENCRYPTION
+NOTE: SSL support in HGD is fine as-is for encryption purposes, but host
+authentication (proving the server identity) is NOT (yet) implemented.
+.Pp
 You can turn off SSL encryption or refuse speak to servers if they don't
 support SSL with -E and -e respectively; however the default behaviour
 involves a handshake between the client and server, favouring an

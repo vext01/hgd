@@ -66,11 +66,15 @@ before running hgd-playd.
 For information on SSL (TLSv1) crypto, see the manual page for
 hgd-netd(1).
 
+Please note that SSL support in HGD is only partially implemented at
+this time.  You may use it for encrypting traffic, but not for server
+identity.
+
 History
 -------
 
  * 0.1 - basic functionality
- * 0.2 - TLS crypto support and authentication.
+ * 0.2 - SSL crypto support and user authentication.
 
 Roadmap
 -------
@@ -108,4 +112,4 @@ Inevitable. Please report bugs on github.
 Feedback / Questions
 --------------------
 
-Go to #hgd on freenode. If you liked and use hgd, please get me a beer.
+Go to #hgd on freenode. If you liked and use hgd, please buy us a beer.

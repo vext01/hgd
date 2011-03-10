@@ -80,6 +80,9 @@ Set the path to a sound file to play when a vote-off is successful. None by
 default.
 .El
 .Sh ENCRYPTING WITH SSL
+NOTE: SSL support in HGD is fine as-is for encryption purposes, but host
+authentication (proving the server identity) is NOT (yet) implemented.
+.Pp
 You can use self signed SSL on the server to encrypt all network
 communications, thus protecting passwords. The simplest way to do this
 is to do the following:
