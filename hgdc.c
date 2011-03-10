@@ -104,22 +104,23 @@ int
 hgd_negotiate_crypto()
 {
 	int			n_toks = 0;
-	char			*next, *ok_str;
+	char			*first, *next;
 	char			*ok_tokens[2];
 
 	if (crypto_pref == HGD_CRYPTO_PREF_NEVER)
 		return (0);	/* fine, no crypto then */
 
 	hgd_sock_send_line(sock_fd, NULL, "encrypt?");
-	next = ok_str = hgd_sock_recv_line(sock_fd, NULL);
+	first = next = hgd_sock_recv_line(sock_fd, NULL);
 
 	hgd_check_svr_response(next, 1);
 
 	do {
 		ok_tokens[n_toks] = xstrdup(strsep(&next, "|"));
 	} while ((n_toks++ < 2) && (next != NULL));
+	free(first);
 
-	if (strcmp(ok_tokens[1], "nocrypto") != 0) {
+	if (strcmp(ok_tokens[1], "tlsv1") == 0) {
 		server_ssl_capable = 1;
 		DPRINTF(HGD_D_INFO, "Server supports %s crypto", ok_tokens[1]);
 	}
@@ -127,10 +128,11 @@ hgd_negotiate_crypto()
 	if ((!server_ssl_capable) && (crypto_pref == HGD_CRYPTO_PREF_ALWAYS)) {
 		DPRINTF(HGD_D_ERROR,
 		    "User forced crypto, but server is incapable");
-		free(next);
 		hgd_exit_nicely();
 	}
-	free(next);
+
+	while (n_toks > 0)
+		free(ok_tokens[--n_toks]);
 
 	return (0);
 }
@@ -515,9 +517,13 @@ hgd_req_vote_off(char **args)
 	hgd_sock_send_line(sock_fd, ssl, "vo");
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
-	/* XXX: should we check the return value of this? */
-	hgd_check_svr_response(resp, 0);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		DPRINTF(HGD_D_ERROR, "Vote off failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
 
+	free(resp);
 	return (HGD_OK);
 }
 
@@ -709,54 +715,11 @@ main(int argc, char **argv)
 				hgd_debug = 3;
 			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
 			break;
-		default:
-			break;
-		};
+		}
 
 		read_config();
 
 		while ((ch = getopt(argc, argv, "Eehp:s:vu:")) != -1) {
-			switch (ch) {
-			case 'e':
-				DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
-				crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
-				break;
-			case 'E':
-				DPRINTF(HGD_D_DEBUG, "Client will insist upon "
-				   " no crypto");
-				crypto_pref = HGD_CRYPTO_PREF_NEVER;
-				break;
-			case 's':
-				DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
-				host = optarg;
-				break;
-			case 'p':
-				port = atoi(optarg);
-				DPRINTF(HGD_D_DEBUG, "set port to %d", port);
-				break;
-			case 'u':
-				user = optarg;
-				DPRINTF(HGD_D_DEBUG, "set username to %s", user);
-				break;
-			case 'v':
-				hgd_print_version();
-				exit_ok = 1;
-				hgd_exit_nicely();
-				break;
-			case 'x':
-				hgd_debug = atoi(optarg);
-				if (hgd_debug > 3)
-					hgd_debug = 3;
-				DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
-				break;
-			case 'h':
-			default:
-				hgd_usage();
-				exit_ok = 1;
-				hgd_exit_nicely();
-				break;
-			};
-		}	while ((ch = getopt(argc, argv, "Eehp:s:vx:u:")) != -1) {
 			switch (ch) {
 			case 'e':
 				DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
