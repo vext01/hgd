@@ -46,10 +46,10 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c
 
 .PHONY: install
 install: hgd-playd hgd-netd hgdc hgd-admin
-	${INSTALL} -d ${DESDTIR}${sbindir}
-	${INSTALL} -d ${DESDTIR}${bindir}
-	${INSTALL} -d ${DESDTIR}${mandir}
-	${INSTALL} -d ${DESDTIR}${sharedir}
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${mandir}
+	${INSTALL} -d ${DESTDIR}${sharedir}
 	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
