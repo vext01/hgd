@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <err.h>
 #include <sys/types.h>
+#include <libconfig.h>
 
 #include <sqlite3.h>
 #include <openssl/rand.h>
@@ -188,14 +189,90 @@ hgd_parse_command(int argc, char **argv)
 }
 
 int
+hgd_read_config(char **config_locations)
+{
+	config_t 		 cfg, *cf;
+	char			*cypto_pref;
+	int			 dont_fork = dont_fork;
+
+	cf = &cfg;
+	config_init(cf);
+
+	while (*config_locations != NULL) {
+		/* Try and open usr config */
+		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		    *config_locations);
+		if (config_read_file(cf, *config_locations)) {
+			break;
+		} else {
+			DPRINTF(HGD_D_ERROR, "%d - %s\n",
+			    config_error_line(cf),
+			    config_error_text(cf));
+
+			config_destroy(cf);
+			config_locations--;
+		}
+	}
+
+	DPRINTF(HGD_D_DEBUG, "DONE");
+
+	if (*config_locations == NULL) {
+		return (HGD_OK);
+	}
+
+	/* -d */
+	if (config_lookup_string(cf, "files", &hgd_dir)) {
+		hgd_dir = xstrdup(hgd_dir);
+		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
+	}
+
+	/* XXX -x */
+	if (config_lookup_int(cf, "debug", &hgd_debug)) {
+		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
+	}
+	return (HGD_OK);
+}
+
+
+int
 main(int argc, char **argv)
 {
 	char			 ch;
+	char			*config_path[4] = {NULL,NULL,NULL,NULL};
+	int			num_config = 2;
+
+	config_path[0] = NULL;
+	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
+	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
+	    HGD_USR_CFG_DIR HGD_SERV_CFG );
 
 	hgd_register_sig_handlers();
 	hgd_dir = xstrdup(HGD_DFL_DIR);
 
-	DPRINTF(HGD_D_DEBUG, "Parsing options");
+	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
+	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
+		switch (ch) {
+		case 'c':
+			num_config++;
+			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
+			    optarg);
+			config_path[num_config] = optarg;
+			break;
+		case 'x':
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			DPRINTF(HGD_D_DEBUG,
+			    "set debug level to %d", hgd_debug);
+			break;
+		default:
+			break;
+		};
+	}
+
+	hgd_read_config(config_path + num_config);
+
+	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
 	while ((ch = getopt(argc, argv, "d:hvx:")) != -1) {
 		switch (ch) {
 		case 'd':
