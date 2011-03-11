@@ -245,9 +245,39 @@ int
 main(int argc, char **argv)
 {
 	char			 ch;
+	char			*config_path[4] = {NULL,NULL,NULL,NULL};
+	int			num_config = 2;
+
+	config_path[0] = NULL;
+	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
+	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
+	    HGD_USR_CFG_DIR HGD_SERV_CFG );
 
 	hgd_register_sig_handlers();
 	hgd_dir = xstrdup(HGD_DFL_DIR);
+
+	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
+	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
+		switch (ch) {
+		case 'c':
+			num_config++;
+			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
+			    optarg);
+			config_path[num_config] = optarg;
+			break;
+		case 'x':
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			DPRINTF(HGD_D_DEBUG,
+			    "set debug level to %d", hgd_debug);
+			break;
+		default:
+			break;
+		};
+	}
+
+	hgd_read_config(config_path + num_config);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {

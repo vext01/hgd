@@ -1031,9 +1031,9 @@ main(int argc, char **argv)
 	int			num_config = 2;
 
 	config_path[0] = NULL;
-	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_C_CFG );
+	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
-	    HGD_USR_CFG_DIR HGD_C_CFG );
+	    HGD_USR_CFG_DIR HGD_SERV_CFG );
 
 	/* if killed, die nicely */
 	hgd_register_sig_handlers();
