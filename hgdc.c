@@ -376,6 +376,7 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
+	printf("    -c\t\tSet config location\n");
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
@@ -651,7 +652,8 @@ read_config(char **config_locations)
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n", *config_locations);
+		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		    *config_locations);
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
@@ -680,9 +682,11 @@ read_config(char **config_locations)
 			   " no crypto");
 			crypto_pref = HGD_CRYPTO_PREF_NEVER;
 		} else if (strcmp(cypto_pref, "if_avaliable") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Client will use crypto if avaliable");
+			DPRINTF(HGD_D_DEBUG,
+			    "Client will use crypto if avaliable");
 		} else {
-			DPRINTF(HGD_D_WARN, "Invalid crypto option, using default");
+			DPRINTF(HGD_D_WARN,
+			    "Invalid crypto option, using default");
 		}
 
 		DPRINTF(HGD_D_DEBUG, "cfg: host=%s", host);
@@ -722,9 +726,13 @@ main(int argc, char **argv)
 
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_C_CFG );
-	xasprintf(&config_path[2], "%s%s", getenv("HOME"), HGD_USR_CFG_DIR HGD_C_CFG );
+	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
+	    HGD_USR_CFG_DIR HGD_C_CFG );
 
-	/* XXX why twice*/
+	/*
+	 * Need to do getopt twice because x and c need to be done before
+	 * reading the config
+	 */
 	while ((ch = getopt(argc, argv, "x:c:")) != -1) {
 		switch (ch) {
 		case 'x':
@@ -735,7 +743,8 @@ main(int argc, char **argv)
 			break;
 		case 'c':
 			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config, optarg);
+			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
+			    optarg);
 			config_path[num_config] = optarg;
 			break;
 		default:

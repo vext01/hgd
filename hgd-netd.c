@@ -27,6 +27,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <libconfig.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -888,12 +889,124 @@ start:
 	/* NOREACH */
 }
 
-/* NOTE! -c is reserved for 'config file path' */
+int
+hgd_read_config(char **config_locations)
+{
+	config_t 		 cfg, *cf;
+	char			*cypto_pref;
+	int			 dont_fork = dont_fork;
+
+	cf = &cfg;
+	config_init(cf);
+
+	while (*config_locations != NULL) {
+		/* Try and open usr config */
+		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		    *config_locations);
+		if (config_read_file(cf, *config_locations)) {
+			break;
+		} else {
+			DPRINTF(HGD_D_ERROR, "%d - %s\n",
+			    config_error_line(cf),
+			    config_error_text(cf));
+
+			config_destroy(cf);
+			config_locations--;
+		}
+	}
+
+	DPRINTF(HGD_D_DEBUG, "DONE");
+
+	if (*config_locations == NULL) {
+		return (HGD_OK);
+	}
+
+	/* -d */
+	if (config_lookup_string(cf, "files", &hgd_dir)) {
+		hgd_dir = xstrdup(hgd_dir);
+		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
+	}
+
+	/* -e -E */
+	if (config_lookup_string(cf, "crypto", &crypto_pref)) {
+		if (strcmp(cypto_pref, "always") == 0) {
+			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
+			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
+		} else if (strcmp(cypto_pref, "never") == 0) {
+			DPRINTF(HGD_D_DEBUG, "Client will insist upon "
+			   " no crypto");
+			crypto_pref = HGD_CRYPTO_PREF_NEVER;
+		} else if (strcmp(cypto_pref, "if_avaliable") == 0) {
+			DPRINTF(HGD_D_DEBUG,
+			    "Client will use crypto if avaliable");
+		} else {
+			DPRINTF(HGD_D_WARN,
+			    "Invalid crypto option, using default");
+		}
+
+	}
+
+	/* -f */
+	if (config_lookup_bool(cf, "dont_fork", &dont_fork)) {
+		if (dont_fork) {
+			single_client = 1;
+		} else {
+			single_client = 0;
+		}
+	}
+
+	/* -k */
+	if (config_lookup_string(cf, "netd.ssl.privatekey", &ssl_key_path)) {
+		hgd_dir = xstrdup(hgd_dir);
+		DPRINTF(HGD_D_DEBUG,
+		    "set ssl private key path to %s", ssl_key_path);
+	}
+
+	/* -n */
+	if (config_lookup_int(cf, "netd.votoff_count", &req_votes)) {
+		DPRINTF(HGD_D_DEBUG,
+		    "Set required-votes to %d", req_votes);
+	}
+
+	/* -p */
+	if (config_lookup_int(cf, "netd.port", &port)) {
+		DPRINTF(HGD_D_DEBUG,
+		    "Set required-votes to %d", req_votes);
+	}
+
+	/* -s*/
+	if (config_lookup_int(cf, "netd.max_file_size", &max_upload_size)) {
+		/* XXX: unmagic number this */
+		max_upload_size = max_upload_size * (1024 * 1024);
+		DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
+		    (int) max_upload_size);
+	}
+
+	/* -S */
+	if (config_lookup_string(cf, "netd.ssl.cert", &ssl_cert_path)) {
+		hgd_dir = xstrdup(hgd_dir);
+		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
+	}
+
+	/* XXX -x */
+	if (config_lookup_int(cf, "debug", &ssl_key_path)) {
+		DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
+	}
+	/* -y */
+	if (config_lookup_string(cf, "voteoff_sound", &vote_sound)) {
+		hgd_dir = xstrdup(hgd_dir);
+		DPRINTF(HGD_D_DEBUG, "Set voteoff sound to '%s'", vote_sound);
+	}
+
+	/* XXX add "config_destroy(cf);" to cleanup */
+	return (HGD_OK);
+}
+
 void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
-	printf("  -c		Set path to SSL certificate file\n");
+	printf("  -c		Set config location\n");
 	printf("  -d		Set hgd state directory\n");
 	printf("  -E		Disable SSL encryption support\n");
 	printf("  -e		Require SSL encryption from clients\n");
@@ -903,6 +1016,7 @@ hgd_usage()
 	printf("  -n		Set number of votes required to vote-off\n");
 	printf("  -p		Set network port number\n");
 	printf("  -s		Set maximum upload size (in MB)\n");
+	printf("  -S		Set path to SSL certificate file\n");
 	printf("  -v		Show version and exit\n");
 	printf("  -x		Set debug level (0-3)\n");
 	printf("  -y		Set path to noise to play when voting off\n");
@@ -912,20 +1026,46 @@ int
 main(int argc, char **argv)
 {
 	char			ch;
+	char			*config_path[4] = {NULL,NULL,NULL,NULL};
+	int			num_config = 2;
+
+	config_path[0] = NULL;
+	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_C_CFG );
+	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
+	    HGD_USR_CFG_DIR HGD_C_CFG );
 
 	/* if killed, die nicely */
 	hgd_register_sig_handlers();
 
 	hgd_dir = xstrdup(HGD_DFL_DIR);
 
-	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "c:d:Eefhk:n:p:s:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "x:")) != -1) {
+
+	}
+
+	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
+	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
 		switch (ch) {
 		case 'c':
-			ssl_cert_path = optarg;
-			DPRINTF(HGD_D_DEBUG,
-			    "set ssl cert path to %s", ssl_cert_path);
+			num_config++;
+			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
+			    optarg);
+			config_path[num_config] = optarg;
 			break;
+		case 'x':
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
+			break;
+		}
+	}
+
+	hgd_read_config(config_path + num_config);
+
+	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
+	while ((ch = getopt(argc, argv, "d:Eefhk:n:p:s:S:vx:y:")) != -1) {
+		switch (ch) {
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = xstrdup(optarg);
@@ -958,10 +1098,15 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
 			break;
 		case 's':
+			/* XXX: unmagic number this */
 			max_upload_size = atoi(optarg) * (1024 * 1024);
 			DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
 			    (int) max_upload_size);
 			break;
+		case 'S':
+			ssl_cert_path = optarg;
+			DPRINTF(HGD_D_DEBUG,
+			    "set ssl cert path to %s", ssl_cert_path);
 		case 'v':
 			hgd_print_version();
 			exit_ok = 1;
