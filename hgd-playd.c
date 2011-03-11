@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <libconfig.h>
 
 #include <sqlite3.h>
 
@@ -167,7 +168,66 @@ hgd_play_loop()
 		hgd_exit_nicely();
 }
 
-/* NOTE! -c is reserved for 'config file path' */
+int
+hgd_read_config(char **config_locations)
+{
+	config_t 		 cfg, *cf;
+	char			*cypto_pref;
+	int			 dont_fork = dont_fork;
+
+	cf = &cfg;
+	config_init(cf);
+
+	while (*config_locations != NULL) {
+		/* Try and open usr config */
+		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		    *config_locations);
+		if (config_read_file(cf, *config_locations)) {
+			break;
+		} else {
+			DPRINTF(HGD_D_ERROR, "%d - %s\n",
+			    config_error_line(cf),
+			    config_error_text(cf));
+
+			config_destroy(cf);
+			config_locations--;
+		}
+	}
+
+	DPRINTF(HGD_D_DEBUG, "DONE");
+
+	if (*config_locations == NULL) {
+		return (HGD_OK);
+	}
+
+	/* -d */
+	if (config_lookup_string(cf, "files", &hgd_dir)) {
+		hgd_dir = xstrdup(hgd_dir);
+		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
+	}
+
+
+	/* -p */
+	if (config_lookup_bool(cf, "playd.purge", &purge_finished_fs)) {
+		DPRINTF(HGD_D_DEBUG,
+		    "purgin is %d", (purge_finished_fs ? "on" : "off"));
+	}
+
+	/* -p */
+	if (config_lookup_bool(cf, "playd.purge", &purge_finished_fs)) {
+		DPRINTF(HGD_D_DEBUG,
+		    "purgin is %d", (purge_finished_fs ? "on" : "off"));
+	}
+
+	/* XXX -x */
+	if (config_lookup_int(cf, "debug", &hgd_debug)) {
+		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
+	}
+
+	/* XXX add "config_destroy(cf);" to cleanup */
+	return (HGD_OK);
+}
+
 void
 hgd_usage()
 {

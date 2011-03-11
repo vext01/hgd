@@ -989,9 +989,10 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* XXX -x */
-	if (config_lookup_int(cf, "debug", &ssl_key_path)) {
-		DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
+	if (config_lookup_int(cf, "debug", &hgd_debug)) {
+		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
+
 	/* -y */
 	if (config_lookup_string(cf, "voteoff_sound", &vote_sound)) {
 		hgd_dir = xstrdup(hgd_dir);
