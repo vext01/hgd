@@ -67,7 +67,7 @@ For information on SSL (TLSv1) crypto, see the manual page for
 hgd-netd(1).
 
 Please note that SSL support in HGD is only partially implemented at
-this time.  You may use it for encrypting traffic, but not for server
+this time. You may use it for encrypting traffic, but not for server
 identity.
 
 History
