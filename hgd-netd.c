@@ -893,7 +893,6 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
-	printf("  -c		Set path to SSL certificate file\n");
 	printf("  -d		Set hgd state directory\n");
 	printf("  -E		Disable SSL encryption support\n");
 	printf("  -e		Require SSL encryption from clients\n");
@@ -903,6 +902,7 @@ hgd_usage()
 	printf("  -n		Set number of votes required to vote-off\n");
 	printf("  -p		Set network port number\n");
 	printf("  -s		Set maximum upload size (in MB)\n");
+	printf("  -S		Set path to SSL certificate file\n");
 	printf("  -v		Show version and exit\n");
 	printf("  -x		Set debug level (0-3)\n");
 	printf("  -y		Set path to noise to play when voting off\n");
@@ -919,13 +919,8 @@ main(int argc, char **argv)
 	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "c:d:Eefhk:n:p:s:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:Eefhk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
-		case 'c':
-			ssl_cert_path = optarg;
-			DPRINTF(HGD_D_DEBUG,
-			    "set ssl cert path to %s", ssl_cert_path);
-			break;
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = xstrdup(optarg);
@@ -961,6 +956,11 @@ main(int argc, char **argv)
 			max_upload_size = atoi(optarg) * (1024 * 1024);
 			DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
 			    (int) max_upload_size);
+			break;
+		case 'S':
+			ssl_cert_path = optarg;
+			DPRINTF(HGD_D_DEBUG,
+			    "set ssl cert path to %s", ssl_cert_path);
 			break;
 		case 'v':
 			hgd_print_version();
