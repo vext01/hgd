@@ -11,6 +11,7 @@ prefix?=/usr/local
 mandir?=${prefix}/man/man1
 sbindir?=${prefix}/sbin
 bindir?=${prefix}/bin
+sharedir?=${prefix}/share/doc/hgd
 
 .PHONY: all
 all: hgd-playd hgd-netd hgd-admin hgdc
@@ -47,6 +48,10 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c
 
 .PHONY: install
 install: hgd-playd hgd-netd hgdc hgd-admin
+	${INSTALL} -d ${DESDTIR}${sbindir}
+	${INSTALL} -d ${DESDTIR}${bindir}
+	${INSTALL} -d ${DESDTIR}${mandir}
+	${INSTALL} -d ${DESDTIR}${sharedir}
 	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
@@ -55,3 +60,4 @@ install: hgd-playd hgd-netd hgdc hgd-admin
 	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
+	${INSTALL} README ${DESTDIR}${sharedir}

@@ -385,7 +385,7 @@ hgd_usage()
 	printf("    -u username\t\tSet username\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
-	printf("    -e\t\t\tEnable Encyption\n");
+	printf("    -e\t\t\tEnable Encryption\n");
 }
 
 /* upload and queue a file to the playlist */

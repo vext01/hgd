@@ -1040,10 +1040,6 @@ main(int argc, char **argv)
 
 	hgd_dir = xstrdup(HGD_DFL_DIR);
 
-	while ((ch = getopt(argc, argv, "x:")) != -1) {
-
-	}
-
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
 	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
 		switch (ch) {
@@ -1108,6 +1104,7 @@ main(int argc, char **argv)
 			ssl_cert_path = optarg;
 			DPRINTF(HGD_D_DEBUG,
 			    "set ssl cert path to %s", ssl_cert_path);
+			break;
 		case 'v':
 			hgd_print_version();
 			exit_ok = 1;

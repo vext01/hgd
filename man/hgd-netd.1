@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd February 24, 2011
+.Dd March 11, 2011
 .Dt HGD-NETD 1
 .Os
 .Sh NAME
@@ -25,11 +25,11 @@
 .Nm hgd-netd
 .Bk -words
 .Op Fl eEfhv
-.Op Fl c Ar path-to-tls-cert
 .Op Fl d Ar state-dir
-.Op Fl k Ar path-to-tls-key
+.Op Fl k Ar path-to-ssl-key
 .Op Fl n Ar num-votes
 .Op Fl p Ar port
+.Op Fl S Ar path-to-ssl-cert
 .Op Fl x Ar debug-level
 .Op Fl y Ar path-to-vote-sound
 .Ek
@@ -49,8 +49,6 @@ the currently playing song, if the user dislikes the song.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl c Ar file
-Set the path to the SSL certificate file.
 .It Fl d Ar dir
 Set the HGD state directory where the SQLite database and uploaded files will
 be stored. This defaults to /var/hgd.
@@ -70,7 +68,9 @@ Set the number of votes required to "vote-off" a song. This defaults to 3.
 .It Fl p Ar port
 Set the TCP port to listen on. Defaults to 6633.
 .It Fl s Ar mb
-Set the maximum file upload size in MB. Defaults to 50MB.
+Set the maximum file upload size in MB. Defaults to 100MB.
+.It Fl S Ar file
+Set the path to the SSL certificate file.
 .It Fl v
 Show version information and exit.
 .It Fl x Ar level
@@ -80,6 +80,9 @@ Set the path to a sound file to play when a vote-off is successful. None by
 default.
 .El
 .Sh ENCRYPTING WITH SSL
+NOTE: SSL support in HGD is fine as-is for encryption purposes, but host
+authentication (proving the server identity) is NOT (yet) implemented.
+.Pp
 You can use self signed SSL on the server to encrypt all network
 communications, thus protecting passwords. The simplest way to do this
 is to do the following:
