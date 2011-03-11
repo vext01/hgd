@@ -22,7 +22,7 @@
 #define INFTIM -1
 #endif
 
-#define HGD_VERSION		"0.2rc1"
+#define HGD_VERSION		"0.2"
 
 /* paths */
 #define HGD_DFL_DIR		"/var/hgd"
