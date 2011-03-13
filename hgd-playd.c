@@ -173,6 +173,8 @@ hgd_read_config(char **config_locations)
 {
 	config_t 		 cfg, *cf;
 	long int		 dont_fork = dont_fork;
+	long int		 tmp_hgd_debug;
+	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
 
 	cf = &cfg;
 	config_init(cf);
@@ -207,19 +209,22 @@ hgd_read_config(char **config_locations)
 
 
 	/* -p */
-	if (config_lookup_bool(cf, "playd.purge", &purge_finished_fs)) {
+	if (config_lookup_bool(cf, "playd.purge_fs", &tmp_purge_fin_fs)) {
+		purge_finished_fs = tmp_purge_fin_fs;
 		DPRINTF(HGD_D_DEBUG,
 		    "purgin is %s", (purge_finished_fs ? "on" : "off"));
 	}
 
 	/* -p */
-	if (config_lookup_bool(cf, "playd.purge", &purge_finished_fs)) {
+	if (config_lookup_bool(cf, "playd.purge_ds", &tmp_purge_fin_db)) {
+		purge_finished_db = tmp_purge_fin_db;
 		DPRINTF(HGD_D_DEBUG,
-		    "purgin is %s", (purge_finished_fs ? "on" : "off"));
+		    "purgin is %s", (purge_finished_db ? "on" : "off"));
 	}
 
 	/* XXX -x */
-	if (config_lookup_int(cf, "debug", &hgd_debug)) {
+	if (config_lookup_int(cf, "debug", &tmp_hgd_debug)) {
+		hgd_debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
 
