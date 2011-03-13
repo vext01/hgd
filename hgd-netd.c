@@ -893,7 +893,7 @@ int
 hgd_read_config(char **config_locations)
 {
 	config_t 		 cfg, *cf;
-	char			*cypto_pref;
+	char			*cypto_pref = cypto_pref;
 	int			 dont_fork = dont_fork;
 
 	cf = &cfg;
@@ -922,13 +922,13 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", &hgd_dir)) {
+	if (config_lookup_string(cf, "files", (const char**)&hgd_dir)) {
 		hgd_dir = xstrdup(hgd_dir);
 		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
 	}
 
 	/* -e -E */
-	if (config_lookup_string(cf, "crypto", &crypto_pref)) {
+	if (config_lookup_string(cf, "crypto", (const char**)&crypto_pref)) {
 		if (strcmp(cypto_pref, "always") == 0) {
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -956,7 +956,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -k */
-	if (config_lookup_string(cf, "netd.ssl.privatekey", &ssl_key_path)) {
+	if (config_lookup_string(cf, "netd.ssl.privatekey", (const char**)&ssl_key_path)) {
 		hgd_dir = xstrdup(hgd_dir);
 		DPRINTF(HGD_D_DEBUG,
 		    "set ssl private key path to %s", ssl_key_path);
@@ -983,7 +983,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -S */
-	if (config_lookup_string(cf, "netd.ssl.cert", &ssl_cert_path)) {
+	if (config_lookup_string(cf, "netd.ssl.cert", (const char**)&ssl_cert_path)) {
 		hgd_dir = xstrdup(hgd_dir);
 		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
 	}
@@ -994,7 +994,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -y */
-	if (config_lookup_string(cf, "voteoff_sound", &vote_sound)) {
+	if (config_lookup_string(cf, "voteoff_sound", (const char**)&vote_sound)) {
 		hgd_dir = xstrdup(hgd_dir);
 		DPRINTF(HGD_D_DEBUG, "Set voteoff sound to '%s'", vote_sound);
 	}

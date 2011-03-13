@@ -647,6 +647,9 @@ read_config(char **config_locations)
 	config_t 		 cfg, *cf;
 	char			*cypto_pref;
 
+	/* temp variables */
+	long int		tmp_dbglevel, tmp_port;
+
 	cf = &cfg;
 	config_init(cf);
 
@@ -673,7 +676,7 @@ read_config(char **config_locations)
 	}
 
 	/* -e -E */
-	if (config_lookup_string(cf, "crypto", &cypto_pref)) {
+	if (config_lookup_string(cf, "crypto", (const char**)&cypto_pref)) {
 		if (strcmp(cypto_pref, "always") == 0) {
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -693,24 +696,26 @@ read_config(char **config_locations)
 	}
 
 	/* -s */
-	if (config_lookup_string(cf, "hostname", &host)) {
+	if (config_lookup_string(cf, "hostname", (const char**)&host)) {
 		DPRINTF(HGD_D_DEBUG, "cfg: host=%s", host);
 	}
 
 	/* -p */
-	if (config_lookup_int(cf, "port", &port)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: port=%s", port);
+	if (config_lookup_int(cf, "port", &tmp_port)) {
+		port = tmp_port;
+		DPRINTF(HGD_D_DEBUG, "cfg: port=%d", port);
 	}
 
 
 	/* -u */
-	if (config_lookup_string(cf, "username", &user)) {
+	if (config_lookup_string(cf, "username", (const char**)&user)) {
 		DPRINTF(HGD_D_DEBUG, "cfg: user=%s", user);
 	}
 
 	/* XXX -x */
-	if (config_lookup_int(cf, "debug", &hgd_debug)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: debug level=%s", hgd_debug);
+	if (config_lookup_int(cf, "debug", &tmp_dbglevel)) {
+		hgd_debug = (int8_t)tmp_dbglevel;
+		DPRINTF(HGD_D_DEBUG, "cfg: debug level=%d", hgd_debug);
 	}
 
 	/* XXX add "config_destroy(cf);" to cleanup */

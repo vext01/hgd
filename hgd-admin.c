@@ -192,8 +192,10 @@ int
 hgd_read_config(char **config_locations)
 {
 	config_t 		 cfg, *cf;
-	char			*cypto_pref;
 	int			 dont_fork = dont_fork;
+
+	/* temp variables */
+	long int		tmp_debuglevel;
 
 	cf = &cfg;
 	config_init(cf);
@@ -221,13 +223,14 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", &hgd_dir)) {
+	if (config_lookup_string(cf, "files", (const char**)&hgd_dir)) {
 		hgd_dir = xstrdup(hgd_dir);
 		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
 	}
 
 	/* XXX -x */
-	if (config_lookup_int(cf, "debug", &hgd_debug)) {
+	if (config_lookup_int(cf, "debug", &tmp_debuglevel)) {
+		hgd_debug = tmp_debuglevel;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
 	return (HGD_OK);
