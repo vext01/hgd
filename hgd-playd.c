@@ -172,8 +172,7 @@ int
 hgd_read_config(char **config_locations)
 {
 	config_t 		 cfg, *cf;
-	char			*cypto_pref;
-	int			 dont_fork = dont_fork;
+	long int		 dont_fork = dont_fork;
 
 	cf = &cfg;
 	config_init(cf);
@@ -201,7 +200,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", &hgd_dir)) {
+	if (config_lookup_string(cf, "files", (const char**)&hgd_dir)) {
 		hgd_dir = xstrdup(hgd_dir);
 		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
 	}
@@ -210,13 +209,13 @@ hgd_read_config(char **config_locations)
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge", &purge_finished_fs)) {
 		DPRINTF(HGD_D_DEBUG,
-		    "purgin is %d", (purge_finished_fs ? "on" : "off"));
+		    "purgin is %s", (purge_finished_fs ? "on" : "off"));
 	}
 
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge", &purge_finished_fs)) {
 		DPRINTF(HGD_D_DEBUG,
-		    "purgin is %d", (purge_finished_fs ? "on" : "off"));
+		    "purgin is %s", (purge_finished_fs ? "on" : "off"));
 	}
 
 	/* XXX -x */
