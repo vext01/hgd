@@ -171,9 +171,14 @@ hgd_play_loop()
 int
 hgd_read_config(char **config_locations)
 {
+	/*
+	 * config_lookup_int64 is used because lib_config changed
+	 * config_lookup_int from returning a long int, to a int, and debian
+	 * still uses the old version.
+	 */
 	config_t 		 cfg, *cf;
 	long int		 dont_fork = dont_fork;
-	long int		 tmp_hgd_debug;
+	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
 
 	cf = &cfg;
@@ -223,7 +228,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* XXX -x */
-	if (config_lookup_int(cf, "debug", &tmp_hgd_debug)) {
+	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
 		hgd_debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}

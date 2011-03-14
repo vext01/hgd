@@ -892,9 +892,16 @@ start:
 int
 hgd_read_config(char **config_locations)
 {
+	/*
+	 * config_lookup_int64 is used because lib_config changed
+	 * config_lookup_int from returning a long int, to a int, and debian
+	 * still uses the old version.
+	 */
 	config_t 		 cfg, *cf;
 	char			*cypto_pref = cypto_pref;
-	int			 dont_fork = dont_fork;
+	int		 	 tmp_dont_fork;
+	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
+	long long int		 tmp_hgd_debug;
 
 	cf = &cfg;
 	config_init(cf);
@@ -947,12 +954,9 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -f */
-	if (config_lookup_bool(cf, "dont_fork", &dont_fork)) {
-		if (dont_fork) {
-			single_client = 1;
-		} else {
-			single_client = 0;
-		}
+	if (config_lookup_bool(cf, "dont_fork", &tmp_dont_fork)) {
+		tmp_dont_fork = tmp_dont_fork;
+		single_client = (tmp_dont_fork) ? 1 : 0;
 	}
 
 	/* -k */
@@ -963,21 +967,23 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -n */
-	if (config_lookup_int(cf, "netd.votoff_count", &req_votes)) {
+	if (config_lookup_int64(cf, "netd.votoff_count", &tmp_req_votes)) {
+		req_votes = tmp_req_votes;
 		DPRINTF(HGD_D_DEBUG,
 		    "Set required-votes to %d", req_votes);
 	}
 
 	/* -p */
-	if (config_lookup_int(cf, "netd.port", &port)) {
+	if (config_lookup_int64(cf, "netd.port", &tmp_port)) {
+		port = tmp_port;
 		DPRINTF(HGD_D_DEBUG,
 		    "Set required-votes to %d", req_votes);
 	}
 
 	/* -s*/
-	if (config_lookup_int(cf, "netd.max_file_size", &max_upload_size)) {
+	if (config_lookup_int64(cf, "netd.max_file_size", &tmp_max_upload_size)) {
 		/* XXX: unmagic number this */
-		max_upload_size = max_upload_size * (1024 * 1024);
+		max_upload_size = tmp_max_upload_size * (1024 * 1024);
 		DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
 		    (int) max_upload_size);
 	}
@@ -989,7 +995,8 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* XXX -x */
-	if (config_lookup_int(cf, "debug", &hgd_debug)) {
+	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
+		tmp_hgd_debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
 

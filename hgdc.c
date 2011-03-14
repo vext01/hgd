@@ -644,11 +644,16 @@ hgd_exec_req(int argc, char **argv)
 int
 read_config(char **config_locations)
 {
+	/*
+	 * config_lookup_int64 is used because lib_config changed
+	 * config_lookup_int from returning a long int, to a int, and debian
+	 * still uses the old version.
+	 */
 	config_t 		 cfg, *cf;
 	char			*cypto_pref;
 
 	/* temp variables */
-	long int		tmp_dbglevel, tmp_port;
+	long long int		tmp_dbglevel, tmp_port;
 
 	cf = &cfg;
 	config_init(cf);
@@ -701,7 +706,7 @@ read_config(char **config_locations)
 	}
 
 	/* -p */
-	if (config_lookup_int(cf, "port", &tmp_port)) {
+	if (config_lookup_int64(cf, "port", &tmp_port)) {
 		port = tmp_port;
 		DPRINTF(HGD_D_DEBUG, "cfg: port=%d", port);
 	}
@@ -713,7 +718,7 @@ read_config(char **config_locations)
 	}
 
 	/* XXX -x */
-	if (config_lookup_int(cf, "debug", &tmp_dbglevel)) {
+	if (config_lookup_int64(cf, "debug", &tmp_dbglevel)) {
 		hgd_debug = (int8_t)tmp_dbglevel;
 		DPRINTF(HGD_D_DEBUG, "cfg: debug level=%d", hgd_debug);
 	}
