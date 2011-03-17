@@ -743,7 +743,7 @@ main(int argc, char **argv)
 	 * Need to do getopt twice because x and c need to be done before
 	 * reading the config
 	 */
-	while ((ch = getopt(argc, argv, "x:c:")) != -1) {
+	while ((ch = getopt(argc, argv, "x:c:" "Eehp:s:vu:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -764,7 +764,9 @@ main(int argc, char **argv)
 
 	read_config(config_path + num_config);
 
-	while ((ch = getopt(argc, argv, "Eehp:s:vu:")) != -1) {
+	RESET_GETOPT();
+
+	while ((ch = getopt(argc, argv, "Eehp:s:vu:" "x:c:")) != -1) {
 		switch (ch) {
 		case 'e':
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");

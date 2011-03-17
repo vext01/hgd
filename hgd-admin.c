@@ -258,7 +258,7 @@ main(int argc, char **argv)
 	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:x:" "d:hvx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			num_config++;
@@ -280,8 +280,10 @@ main(int argc, char **argv)
 
 	hgd_read_config(config_path + num_config);
 
+	RESET_GETOPT();
+
 	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
-	while ((ch = getopt(argc, argv, "d:hvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "d:hvx:" "c:x:")) != -1) {
 		switch (ch) {
 		case 'd':
 			free(hgd_dir);

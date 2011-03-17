@@ -255,7 +255,7 @@ main(int argc, char **argv)
 {
 	char			 ch;
 	char			*config_path[4] = {NULL,NULL,NULL,NULL};
-	int			num_config = 2;
+	int			 num_config = 2;
 
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
@@ -287,6 +287,8 @@ main(int argc, char **argv)
 	}
 
 	hgd_read_config(config_path + num_config);
+
+	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {

@@ -1065,6 +1065,8 @@ main(int argc, char **argv)
 		}
 	}
 
+	RESET_GETOPT();
+
 	hgd_read_config(config_path + num_config);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:2");

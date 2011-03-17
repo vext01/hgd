@@ -175,6 +175,16 @@ struct hgd_req_despatch {
 		DPRINTF(HGD_D_ERROR, "%s: %s", msg, error);		\
 	} while(0)
 
+
+#if defined(__linux__)
+	#define RESET_GETOPT() do {optind = 1;} while (0)
+#elif defined (__OpenBSD__) || defined(__FreeBSD__)
+	#define RESET_GETOPT() do {optind = 1;optreset = 1;} while (0)
+#else
+	#define RESET_GETOPT() do {optind = 1;} while (0
+	#warning "RESET_GETOPT() has not been tested on your system"
+#endif
+
 /* generic error string */
 #define SERROR			strerror(errno)
 
