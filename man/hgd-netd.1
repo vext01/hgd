@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd March 11, 2011
+.Dd March 19, 2011
 .Dt HGD-NETD 1
 .Os
 .Sh NAME
@@ -24,7 +24,7 @@
 .Sh SYNOPSIS
 .Nm hgd-netd
 .Bk -words
-.Op Fl eEfhv
+.Op Fl DeEfhv
 .Op Fl d Ar state-dir
 .Op Fl k Ar path-to-ssl-key
 .Op Fl n Ar num-votes
@@ -49,6 +49,9 @@ the currently playing song, if the user dislikes the song.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl D
+Disable reverse DNS lookups of clients. This will prevent connection
+delays on networks which do not provide reverse DNS.
 .It Fl d Ar dir
 Set the HGD state directory where the SQLite database and uploaded files will
 be stored. This defaults to /var/hgd.
