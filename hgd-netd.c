@@ -46,6 +46,7 @@ int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
 uint8_t				num_bad_commands = 0;
+uint8_t				lookup_client_dns = 1;
 
 int				req_votes = HGD_DFL_REQ_VOTES;
 uint8_t				single_client = 0;
@@ -99,16 +100,20 @@ hgd_identify_client(struct sockaddr_in *cli_addr)
 
 	DPRINTF(HGD_D_DEBUG, "Servicing client");
 
-	found_name = getnameinfo((struct sockaddr *) cli_addr,
-	    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host), cli_serv,
-	    sizeof(cli_serv), NI_NAMEREQD | NI_NOFQDN);
+	/* first try to get a valid DNS name for the client */
+	if (lookup_client_dns) {
+		found_name = getnameinfo((struct sockaddr *) cli_addr,
+		    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host), cli_serv,
+		    sizeof(cli_serv), NI_NAMEREQD | NI_NOFQDN);
 
-	if (found_name == 0)
-		goto found; /* found a hostname */
+		if (found_name == 0)
+			goto found; /* found a hostname */
 
-	DPRINTF(HGD_D_WARN, "Client hostname *not* found: %s",
-	    gai_strerror(found_name));
+		DPRINTF(HGD_D_WARN, "Client hostname *not* found: %s",
+		    gai_strerror(found_name));
+	}
 
+	/* fallback on an ip address to identify the client */
 	found_name = getnameinfo((struct sockaddr *) cli_addr,
 	    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host),
 	    cli_serv, sizeof(cli_serv), NI_NUMERICHOST);
@@ -893,6 +898,7 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
+	printf("  -D		Disable reverse DNS lookups for clients\n");
 	printf("  -d		Set hgd state directory\n");
 	printf("  -E		Disable SSL encryption support\n");
 	printf("  -e		Require SSL encryption from clients\n");
@@ -919,8 +925,12 @@ main(int argc, char **argv)
 	hgd_dir = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "d:Eefhk:n:p:s:S:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "Dd:Eefhk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
+		case 'D':
+			DPRINTF(HGD_D_DEBUG, "No client DNS lookups");
+			lookup_client_dns = 0;
+			break;
 		case 'd':
 			free(hgd_dir);
 			hgd_dir = xstrdup(optarg);
