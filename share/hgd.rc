@@ -1,0 +1,39 @@
+/* netd specific options */ 
+netd : {
+	/*
+	 * Do reverse DNS lookup of ip addresses for logs.
+	 * Diabeling this will speed up connections on some networks
+	 * Defaults to true
+	 */
+	#rdns_lookup = true;
+	
+	/*
+	 * Do not fork daemon on new connections.
+	 * Mostly used for debugging.
+	 * defaults to true
+	 */ 
+	#dont_fork = false;
+	
+	/* SSL options */
+	ssl : {
+		#privatekey = "";
+		#cert = "";
+	}
+	
+	#voteoff_count = 3;
+	#port = 6633;
+	#max_file_size = 104857600;
+}
+
+files = /var/hgd;
+
+/*
+ * Set crypto options.
+ * Valid options are always/never/if_avaliable
+ * Defaults to if_avaliable
+ */
+#crypto = if_avaliable;
+#debug = 1;
+
+/* Defaults to NULL */
+#voteoff_sound = ""

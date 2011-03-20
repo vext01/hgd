@@ -965,7 +965,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -f */
-	if (config_lookup_bool(cf, "dont_fork", &tmp_dont_fork)) {
+	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork)) {
 		tmp_dont_fork = tmp_dont_fork;
 		single_client = (tmp_dont_fork) ? 1 : 0;
 	}
