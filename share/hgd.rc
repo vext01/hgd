@@ -25,7 +25,12 @@ netd : {
 	#max_file_size = 104857600;
 }
 
-files = /var/hgd;
+playd : {
+	#purge_fs = true;
+	#purge_db = true;
+}
+
+#files = /var/hgd;
 
 /*
  * Set crypto options.

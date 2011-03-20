@@ -1,0 +1,5 @@
+#crypto = if_avaliable;
+#hostname = "localhost";
+#port = 6633;
+#username = "";
+debug = 1;
