@@ -1,11 +1,13 @@
 SQL_CPPFLAGS=`pkg-config --cflags sqlite3`
-SQL_LDFLAGS=`pkg-config --libs sqlite3`
 
+SQL_LDFLAGS=`pkg-config --libs sqlite3`
 SSL_LDFLAGS=-lssl -lcrypto
 
 CFLAGS+=-Wall -Wextra -g -I/usr/local/include
 LDFLAGS+=-lconfig
 
+
+INSTALL?=install
 
 prefix?=/usr/local
 mandir?=${prefix}/man/man1
