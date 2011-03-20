@@ -904,7 +904,7 @@ hgd_read_config(char **config_locations)
 	 */
 	config_t 		 cfg, *cf;
 	char			*cypto_pref = cypto_pref;
-	int		 	 tmp_dont_fork;
+	int		 	 tmp_dont_fork, tmp_no_rdns;
 	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
 	long long int		 tmp_hgd_debug;
 
@@ -931,6 +931,12 @@ hgd_read_config(char **config_locations)
 
 	if (*config_locations == NULL) {
 		return (HGD_OK);
+	}
+
+	/* -D */
+	if (config_lookup_bool(cf, "netd.rdns_lookup", &tmp_no_rdns)) {
+		lookup_client_dns = tmp_no_rdns;
+		DPRINTF(HGD_D_DEBUG, "Not doing rdns");
 	}
 
 	/* -d */
