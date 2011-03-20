@@ -1,44 +1,55 @@
-/* netd specific options */ 
+##netd specific options
 netd : {
-	/*
-	 * Do reverse DNS lookup of ip addresses for logs.
-	 * Diabeling this will speed up connections on some networks
-	 * Defaults to true
-	 */
+	
+	## Do reverse DNS lookup of ip addresses for logs.
+	## Disabeling this will speed up connections on some networks
 	#rdns_lookup = true;
 	
-	/*
-	 * Do not fork daemon on new connections.
-	 * Mostly used for debugging.
-	 * defaults to true
-	 */ 
+	## Do not fork daemon on new connections.
+	## Mostly used for debugging.
 	#dont_fork = false;
 	
-	/* SSL options */
+	##SSL options
 	ssl : {
-		#privatekey = "";
-		#cert = "";
+		## Location of SSL private key. 
+		#privatekey = "/etc/hgd/privkey.key";
+		
+		## Location of SSL certificate
+		#cert = "/etc/hgd/certificate.crt";
 	}
 	
+	## Number of votes needed to vote of a song
 	#voteoff_count = 3;
+	
+	## Port server should listen on
 	#port = 6633;
+	
+	## Max file size in bytes
 	#max_file_size = 104857600;
 }
 
+## playd specific options
 playd : {
+	## If true files will be removed from the file system after they are
+	## played.
 	#purge_fs = true;
+	
+	## If true details will be removed from the databse after they are
+	## played.
 	#purge_db = true;
 }
 
+## Location to store program state.
 #files = /var/hgd;
 
-/*
- * Set crypto options.
- * Valid options are always/never/if_avaliable
- * Defaults to if_avaliable
- */
+## Set crypto/SSL options.
+## Valid options are always/never/if_avaliable
 #crypto = if_avaliable;
+
+## Debug level.  Controls logging.
+## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
 #debug = 1;
 
-/* Defaults to NULL */
+## Location of voteoff sound
+## If not set no sound will be played
 #voteoff_sound = ""
