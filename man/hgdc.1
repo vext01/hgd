@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd February 24, 2011
+.Dd March 21, 2010
 .Dt HGDC 1
 .Os
 .Sh NAME
@@ -25,6 +25,7 @@
 .Nm hgdc
 .Bk -words
 .Op Fl Eehv
+.Op Fl c Ar config
 .Op Fl p Ar port
 .Op Fl s Ar host
 .Op Fl u Ar user
@@ -39,6 +40,8 @@ suitable for hackathons, internet cafes, LAN parties etc.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.IT Fl c Ar config
+Location of config file.
 .It Fl e
 Require server to supply an SSL encrypted channel, or exit.
 .It Fl E

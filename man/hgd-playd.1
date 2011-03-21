@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd February 24, 2011
+.Dd March 21, 2011
 .Dt HGD-PLAYD 1
 .Os
 .Sh NAME
@@ -25,6 +25,7 @@
 .Nm hgd-playd
 .Bk -words
 .Op Fl Chpqv
+.Op Fl c Ar config
 .Op Fl d Ar state-dir
 .Op Fl x Ar debug-level
 .Ek
@@ -44,6 +45,8 @@ files (if DISPLAY is set).
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.If Fl c Ar config
+Location of the config file.
 .It Fl C
 Clear the playlist at startup.
 .It Fl d Ar dir

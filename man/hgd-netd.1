@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd March 19, 2011
+.Dd March 21, 2011
 .Dt HGD-NETD 1
 .Os
 .Sh NAME
@@ -25,6 +25,7 @@
 .Nm hgd-netd
 .Bk -words
 .Op Fl DeEfhv
+.Op Fl c Ar config
 .Op Fl d Ar state-dir
 .Op Fl k Ar path-to-ssl-key
 .Op Fl n Ar num-votes
@@ -49,6 +50,8 @@ the currently playing song, if the user dislikes the song.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl c Ar config
+Location fo the config file.
 .It Fl D
 Disable reverse DNS lookups of clients. This will prevent connection
 delays on networks which do not provide reverse DNS.
