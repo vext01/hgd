@@ -208,6 +208,7 @@ hgd_read_config(char **config_locations)
 
 	/* -d */
 	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
+		/* XXX: not sure if this strdup is needed */
 		state_path = xstrdup(state_path);
 		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
 	}
@@ -221,7 +222,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -p */
-	if (config_lookup_bool(cf, "playd.purge_ds", &tmp_purge_fin_db)) {
+	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
 		purge_finished_db = tmp_purge_fin_db;
 		DPRINTF(HGD_D_DEBUG,
 		    "purgin is %s", (purge_finished_db ? "on" : "off"));

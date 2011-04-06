@@ -1001,19 +1001,21 @@ hgd_read_config(char **config_locations)
 
 	/* -S */
 	if (config_lookup_string(cf, "netd.ssl.cert", (const char**)&ssl_cert_path)) {
-		state_path = xstrdup(state_path);
+		/* XXX: Note sure if this strdup is needed */
+		ssl_cert_path = xstrdup(ssl_cert_path);
 		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
 	}
 
-	/* XXX -x */
+	/* XXX : Added for completness probably not usefull though */
 	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
-		tmp_hgd_debug = tmp_hgd_debug;
+		hgd_debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
 
 	/* -y */
 	if (config_lookup_string(cf, "voteoff_sound", (const char**)&vote_sound)) {
-		state_path = xstrdup(state_path);
+		/* XXX: Note sure if this strdup is needed */
+		vote_sound = xstrdup(vote_sound);
 		DPRINTF(HGD_D_DEBUG, "Set voteoff sound to '%s'", vote_sound);
 	}
 
