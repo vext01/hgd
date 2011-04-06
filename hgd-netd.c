@@ -913,7 +913,7 @@ hgd_read_config(char **config_locations)
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		DPRINTF(HGD_D_ERROR, "Trying to read config from - %s\n",
 		    *config_locations);
 		if (config_read_file(cf, *config_locations)) {
 			break;
@@ -927,7 +927,7 @@ hgd_read_config(char **config_locations)
 		}
 	}
 
-	DPRINTF(HGD_D_DEBUG, "DONE");
+	DPRINTF(HGD_D_DEBUG, "Finished trying to find config files.");
 
 	if (*config_locations == NULL) {
 		return (HGD_OK);
@@ -948,15 +948,15 @@ hgd_read_config(char **config_locations)
 	/* -e -E */
 	if (config_lookup_string(cf, "crypto", (const char**)&crypto_pref)) {
 		if (strcmp(cypto_pref, "always") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
+			DPRINTF(HGD_D_DEBUG, "Server will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
 		} else if (strcmp(cypto_pref, "never") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Client will insist upon "
+			DPRINTF(HGD_D_DEBUG, "Server will insist upon "
 			   " no crypto");
 			crypto_pref = HGD_CRYPTO_PREF_NEVER;
 		} else if (strcmp(cypto_pref, "if_avaliable") == 0) {
 			DPRINTF(HGD_D_DEBUG,
-			    "Client will use crypto if avaliable");
+			    "Server will use crypto if avaliable");
 		} else {
 			DPRINTF(HGD_D_WARN,
 			    "Invalid crypto option, using default");
@@ -966,15 +966,15 @@ hgd_read_config(char **config_locations)
 
 	/* -f */
 	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork)) {
-		tmp_dont_fork = tmp_dont_fork;
 		single_client = (tmp_dont_fork) ? 1 : 0;
 	}
 
 	/* -k */
 	if (config_lookup_string(cf, "netd.ssl.privatekey", (const char**)&ssl_key_path)) {
-		state_path = xstrdup(state_path);
+		/* XXX: Not sure if this strdup is needed. */
+		ssl_key_path = xstrdup(ssl_key_path);
 		DPRINTF(HGD_D_DEBUG,
-		    "set ssl private key path to %s", ssl_key_path);
+		    "Set ssl private key path to %s", ssl_key_path);
 	}
 
 	/* -n */

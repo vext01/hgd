@@ -233,7 +233,7 @@ hgd_read_config(char **config_locations)
 		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
 	}
 
-	/* XXX -x */
+	/* -x : Added for completeness, probably not needed */
 	if (config_lookup_int64(cf, "debug", &tmp_debuglevel)) {
 		hgd_debug = tmp_debuglevel;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
