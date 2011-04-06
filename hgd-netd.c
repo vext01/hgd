@@ -82,8 +82,8 @@ hgd_exit_nicely()
 		free(db_path);
 	if (filestore_path)
 		free(filestore_path);
-	if (hgd_dir)
-		free(hgd_dir);
+	if (state_path)
+		free(state_path);
 	if (db)
 		sqlite3_close(db);
 
@@ -483,7 +483,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	DPRINTF(HGD_D_INFO, "Vote limit exceeded - kill track");
 
 	/* kill mplayer then */
-	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
 
 	pid_file = fopen(pid_path, "r");
 	if (pid_file == NULL) {
@@ -940,9 +940,9 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", (const char**)&hgd_dir)) {
-		hgd_dir = xstrdup(hgd_dir);
-		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
+	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
+		state_path = xstrdup(state_path);
+		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
 	}
 
 	/* -e -E */
@@ -972,7 +972,7 @@ hgd_read_config(char **config_locations)
 
 	/* -k */
 	if (config_lookup_string(cf, "netd.ssl.privatekey", (const char**)&ssl_key_path)) {
-		hgd_dir = xstrdup(hgd_dir);
+		state_path = xstrdup(state_path);
 		DPRINTF(HGD_D_DEBUG,
 		    "set ssl private key path to %s", ssl_key_path);
 	}
@@ -1001,7 +1001,7 @@ hgd_read_config(char **config_locations)
 
 	/* -S */
 	if (config_lookup_string(cf, "netd.ssl.cert", (const char**)&ssl_cert_path)) {
-		hgd_dir = xstrdup(hgd_dir);
+		state_path = xstrdup(state_path);
 		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
 	}
 
@@ -1013,7 +1013,7 @@ hgd_read_config(char **config_locations)
 
 	/* -y */
 	if (config_lookup_string(cf, "voteoff_sound", (const char**)&vote_sound)) {
-		hgd_dir = xstrdup(hgd_dir);
+		state_path = xstrdup(state_path);
 		DPRINTF(HGD_D_DEBUG, "Set voteoff sound to '%s'", vote_sound);
 	}
 
@@ -1057,7 +1057,7 @@ main(int argc, char **argv)
 	/* if killed, die nicely */
 	hgd_register_sig_handlers();
 
-	hgd_dir = xstrdup(HGD_DFL_DIR);
+	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
 	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
@@ -1089,9 +1089,9 @@ main(int argc, char **argv)
 			lookup_client_dns = 0;
 			break;
 		case 'd':
-			free(hgd_dir);
-			hgd_dir = xstrdup(optarg);
-			DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
+			free(state_path);
+			state_path = xstrdup(optarg);
+			DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
 			break;
 		case 'e':
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -1159,8 +1159,8 @@ main(int argc, char **argv)
 	argv += optind;
 
 	/* set up paths */
-	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
-	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
+	xasprintf(&db_path, "%s/%s", state_path, HGD_DB_NAME);
+	xasprintf(&filestore_path, "%s/%s", state_path, HGD_FILESTORE_NAME);
 
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();

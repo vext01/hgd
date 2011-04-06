@@ -84,7 +84,7 @@ extern uint8_t			 exit_ok;
 extern char			*debug_names[];
 extern pid_t			 pid;
 
-extern char			*hgd_dir;
+extern char			*state_path;
 extern char			*filestore_path;
 
 struct hgd_user {

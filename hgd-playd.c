@@ -47,8 +47,8 @@ hgd_exit_nicely()
 
 	if (db)
 		sqlite3_close(db);
-	if (hgd_dir)
-		free(hgd_dir);
+	if (state_path)
+		free(state_path);
 	if (db_path)
 		free (db_path);
 	if (filestore_path)
@@ -76,7 +76,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 		hgd_exit_nicely();
 
 	/* we will write away child pid */
-	xasprintf(&pid_path, "%s/%s", hgd_dir, HGD_MPLAYER_PID_NAME);
+	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
 
 	pid_file = fopen(pid_path, "w");
 	if (pid_file == NULL) {
@@ -207,9 +207,9 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", (const char**)&hgd_dir)) {
-		hgd_dir = xstrdup(hgd_dir);
-		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", hgd_dir);
+	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
+		state_path = xstrdup(state_path);
+		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
 	}
 
 
@@ -263,7 +263,7 @@ main(int argc, char **argv)
 	    HGD_USR_CFG_DIR HGD_SERV_CFG );
 
 	hgd_register_sig_handlers();
-	hgd_dir = xstrdup(HGD_DFL_DIR);
+	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
 	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
@@ -296,12 +296,12 @@ main(int argc, char **argv)
 		case 'C':
 			clear_playlist_on_start = 1;
 			DPRINTF(HGD_D_DEBUG, "will clear playlist '%s'",
-			    hgd_dir);
+			    state_path);
 			break;
 		case 'd':
-			free(hgd_dir);
-			hgd_dir = xstrdup(optarg);
-			DPRINTF(HGD_D_DEBUG, "set hgd dir to '%s'", hgd_dir);
+			free(state_path);
+			state_path = xstrdup(optarg);
+			DPRINTF(HGD_D_DEBUG, "set hgd dir to '%s'", state_path);
 			break;
 		case 'p':
 			DPRINTF(HGD_D_DEBUG, "No purging from fs");
@@ -335,8 +335,8 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	xasprintf(&db_path, "%s/%s", hgd_dir, HGD_DB_NAME);
-	xasprintf(&filestore_path, "%s/%s", hgd_dir, HGD_FILESTORE_NAME);
+	xasprintf(&db_path, "%s/%s", state_path, HGD_DB_NAME);
+	xasprintf(&filestore_path, "%s/%s", state_path, HGD_FILESTORE_NAME);
 
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();

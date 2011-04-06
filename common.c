@@ -50,7 +50,7 @@ char				*debug_names[] = {
 				    "error", "warn", "info", "debug"};
 
 /* these are unused in client */
-char				*hgd_dir = NULL;
+char				*state_path = NULL;
 char				*filestore_path = NULL;
 
 int
@@ -613,9 +613,9 @@ hgd_is_ip_addr(char *str)
 void
 hgd_mk_state_dir()
 {
-	if (mkdir(hgd_dir, S_IRWXU) != 0) {
+	if (mkdir(state_path, S_IRWXU) != 0) {
 		if (errno != EEXIST) {
-			DPRINTF(HGD_D_ERROR, "%s: %s", hgd_dir, SERROR);
+			DPRINTF(HGD_D_ERROR, "%s: %s", state_path, SERROR);
 			hgd_exit_nicely();
 		}
 	}
@@ -632,7 +632,7 @@ hgd_mk_state_dir()
 	if (chmod(filestore_path, S_IRWXU) != 0)
 		DPRINTF(HGD_D_WARN, "Could not make filestore secure");
 
-	if (chmod(hgd_dir, S_IRWXU) != 0)
+	if (chmod(state_path, S_IRWXU) != 0)
 		DPRINTF(HGD_D_WARN, "Could not make state dir secure");
 }
 
