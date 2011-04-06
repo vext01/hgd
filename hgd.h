@@ -55,7 +55,7 @@
 #define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR "/config"
 #define HGD_USR_CFG_DIR		"/.config/hgd"
 
-#define HGD_C_CFG		"/hgdc.rc"
+#define HGD_CLI_CFG		"/hgdc.rc"
 #define HGD_SERV_CFG		"/hgd.rc"
 
 /* misc */

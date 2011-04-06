@@ -735,9 +735,9 @@ main(int argc, char **argv)
 	int			num_config = 2;
 
 	config_path[0] = NULL;
-	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_C_CFG );
+	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
-	    HGD_USR_CFG_DIR HGD_C_CFG );
+	    HGD_USR_CFG_DIR HGD_CLI_CFG );
 
 	/*
 	 * Need to do getopt twice because x and c need to be done before
