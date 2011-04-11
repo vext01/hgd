@@ -258,7 +258,7 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:x:" "d:hvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
 		switch (ch) {
 		case 'c':
 			num_config++;
@@ -274,7 +274,7 @@ main(int argc, char **argv)
 			    "set debug level to %d", hgd_debug);
 			break;
 		default:
-			break;
+			break; /* next getopt will catch errors */
 		};
 	}
 
@@ -283,8 +283,10 @@ main(int argc, char **argv)
 	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
-	while ((ch = getopt(argc, argv, "d:hvx:" "c:x:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:d:hvx:" "c:x:")) != -1) {
 		switch (ch) {
+		case 'c':
+			break; /* already handled */
 		case 'd':
 			free(state_path);
 			state_path = xstrdup(optarg);
@@ -296,12 +298,7 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
-			hgd_debug = atoi(optarg);
-			if (hgd_debug > 3)
-				hgd_debug = 3;
-			DPRINTF(HGD_D_DEBUG,
-			    "set debug level to %d", hgd_debug);
-			break;
+			break; /* already handled */
 		case 'h':
 		default:
 			hgd_usage();
