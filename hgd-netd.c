@@ -918,9 +918,9 @@ hgd_read_config(char **config_locations)
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
-			DPRINTF(HGD_D_ERROR, "%d - %s\n",
-			    config_error_line(cf),
-			    config_error_text(cf));
+			DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
+			    config_error_text(cf),
+			    config_error_line(cf));
 
 			config_destroy(cf);
 			config_locations--;
