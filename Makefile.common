@@ -4,8 +4,7 @@ SQL_LDFLAGS=`pkg-config --libs sqlite3`
 SSL_LDFLAGS=-lssl -lcrypto
 
 CFLAGS+=-Wall -Wextra -g -I/usr/local/include
-LDFLAGS+=-lconfig
-
+LDFLAGS+=-L/usr/local/lib -lconfig
 
 INSTALL?=install
 
