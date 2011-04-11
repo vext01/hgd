@@ -228,9 +228,9 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
+	if (config_lookup_string(cf, "state_path", (const char**)&state_path)) {
 		state_path = xstrdup(state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
+		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
 	/* -x : Added for completeness, probably not needed */
