@@ -147,13 +147,13 @@ hgd_play_loop()
 	while (!dying) {
 		memset(&track, 0, sizeof(track));
 
-		if (hgd_get_next_track(&track) == HGD_FAIL) {
+		if (hgd_get_next_track(&track) == HGD_FAIL)
 			hgd_exit_nicely();
-		}
 
 		if (track.filename != NULL) {
 			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
 			    track.filename);
+
 			/* XXX: Should we check the return val of this? */
 			hgd_clear_votes();
 			hgd_play_track(&track);
@@ -176,8 +176,7 @@ hgd_read_config(char **config_locations)
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
 	 */
-	config_t 		 cfg, *cf;
-	long int		 dont_fork = dont_fork;
+	config_t		 cfg, *cf;
 	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
 
@@ -185,8 +184,9 @@ hgd_read_config(char **config_locations)
 	config_init(cf);
 
 	while (*config_locations != NULL) {
+
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
 		    *config_locations);
 		if (config_read_file(cf, *config_locations)) {
 			break;
@@ -200,33 +200,27 @@ hgd_read_config(char **config_locations)
 		}
 	}
 
-	DPRINTF(HGD_D_DEBUG, "DONE");
-
-	if (*config_locations == NULL) {
+	if (*config_locations == NULL)
 		return (HGD_OK);
-	}
 
 	/* -d */
 	if (config_lookup_string(cf, "state_path",
-	    (const char**)&state_path)) {
-		/* XXX: not sure if this strdup is needed */
-		state_path = xstrdup(state_path);
+	    (const char **) &state_path)) {
 		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
-
 
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge_fs", &tmp_purge_fin_fs)) {
 		purge_finished_fs = tmp_purge_fin_fs;
 		DPRINTF(HGD_D_DEBUG,
-		    "purgin is %s", (purge_finished_fs ? "on" : "off"));
+		    "fs purging is %s", (purge_finished_fs ? "on" : "off"));
 	}
 
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
 		purge_finished_db = tmp_purge_fin_db;
 		DPRINTF(HGD_D_DEBUG,
-		    "purgin is %s", (purge_finished_db ? "on" : "off"));
+		    "db purging is %s", (purge_finished_db ? "on" : "off"));
 	}
 
 	/* XXX -x */
@@ -257,7 +251,7 @@ int
 main(int argc, char **argv)
 {
 	char			 ch;
-	char			*config_path[4] = {NULL,NULL,NULL,NULL};
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
 	config_path[0] = NULL;
@@ -269,7 +263,7 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			num_config++;
@@ -348,8 +342,8 @@ main(int argc, char **argv)
 	/* XXX: Should we check the return state of this? */
 	hgd_init_playstate();
 
+	/* XXX: Should we check the return state of this? */
 	if (clear_playlist_on_start)
-		/* XXX: Should we check the return state of this? */
 		hgd_clear_playlist();
 
 	/* start */

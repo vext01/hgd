@@ -902,9 +902,9 @@ hgd_read_config(char **config_locations)
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
 	 */
-	config_t 		 cfg, *cf;
+	config_t		 cfg, *cf;
 	char			*cypto_pref = cypto_pref;
-	int		 	 tmp_dont_fork, tmp_no_rdns;
+	int			 tmp_dont_fork, tmp_no_rdns;
 	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
 	long long int		 tmp_hgd_debug;
 
@@ -912,9 +912,11 @@ hgd_read_config(char **config_locations)
 	config_init(cf);
 
 	while (*config_locations != NULL) {
+
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "Trying to read config from - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from - %s\n",
 		    *config_locations);
+
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
@@ -927,27 +929,23 @@ hgd_read_config(char **config_locations)
 		}
 	}
 
-	DPRINTF(HGD_D_DEBUG, "Finished trying to find config files.");
-
-	if (*config_locations == NULL) {
+	if (*config_locations == NULL)
 		return (HGD_OK);
-	}
 
 	/* -D */
 	if (config_lookup_bool(cf, "netd.rdns_lookup", &tmp_no_rdns)) {
 		lookup_client_dns = tmp_no_rdns;
-		DPRINTF(HGD_D_DEBUG, "Not doing rdns");
+		DPRINTF(HGD_D_DEBUG, "Not doing reverse dns lookups");
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "state_path", (const char**)&state_path)) {
-		/* XXX check strdup */
-		state_path = xstrdup(state_path);
+	if (config_lookup_string(cf,
+	    "state_path", (const char **) &state_path)) {
 		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
 	/* -e -E */
-	if (config_lookup_string(cf, "crypto", (const char**)&crypto_pref)) {
+	if (config_lookup_string(cf, "crypto", (const char **) &crypto_pref)) {
 		if (strcmp(cypto_pref, "always") == 0) {
 			DPRINTF(HGD_D_DEBUG, "Server will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -966,12 +964,12 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -f */
-	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork)) {
+	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork))
 		single_client = (tmp_dont_fork) ? 1 : 0;
-	}
 
 	/* -k */
-	if (config_lookup_string(cf, "netd.ssl.privatekey", (const char**)&ssl_key_path)) {
+	if (config_lookup_string(cf,
+	    "netd.ssl.privatekey", (const char**)&ssl_key_path)) {
 		/* XXX: Not sure if this strdup is needed. */
 		ssl_key_path = xstrdup(ssl_key_path);
 		DPRINTF(HGD_D_DEBUG,
@@ -981,19 +979,18 @@ hgd_read_config(char **config_locations)
 	/* -n */
 	if (config_lookup_int64(cf, "netd.votoff_count", &tmp_req_votes)) {
 		req_votes = tmp_req_votes;
-		DPRINTF(HGD_D_DEBUG,
-		    "Set required-votes to %d", req_votes);
+		DPRINTF(HGD_D_DEBUG, "Set required-votes to %d", req_votes);
 	}
 
 	/* -p */
 	if (config_lookup_int64(cf, "netd.port", &tmp_port)) {
 		port = tmp_port;
-		DPRINTF(HGD_D_DEBUG,
-		    "Set required-votes to %d", req_votes);
+		DPRINTF(HGD_D_DEBUG, "Set required-votes to %d", req_votes);
 	}
 
 	/* -s*/
-	if (config_lookup_int64(cf, "netd.max_file_size", &tmp_max_upload_size)) {
+	if (config_lookup_int64(cf,
+	    "netd.max_file_size", &tmp_max_upload_size)) {
 		/* XXX: unmagic number this */
 		max_upload_size = tmp_max_upload_size * (1024 * 1024);
 		DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
@@ -1001,7 +998,8 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -S */
-	if (config_lookup_string(cf, "netd.ssl.cert", (const char**)&ssl_cert_path)) {
+	if (config_lookup_string(cf,
+	    "netd.ssl.cert", (const char **) &ssl_cert_path)) {
 		/* XXX: Note sure if this strdup is needed */
 		ssl_cert_path = xstrdup(ssl_cert_path);
 		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
@@ -1014,8 +1012,13 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -y */
-	if (config_lookup_string(cf, "voteoff_sound", (const char**)&vote_sound)) {
-		/* XXX: Note sure if this strdup is needed */
+	if (config_lookup_string(cf, "voteoff_sound",
+		    (const char **) &vote_sound)) {
+		/*
+		 * XXX: Note sure if this strdup is needed
+		 * Mex, if it is, you need to consistently heap alloc
+		 * it in the other places and remember to free also.
+		 */
 		vote_sound = xstrdup(vote_sound);
 		DPRINTF(HGD_D_DEBUG, "Set voteoff sound to '%s'", vote_sound);
 	}
@@ -1048,9 +1051,9 @@ hgd_usage()
 int
 main(int argc, char **argv)
 {
-	char			ch;
-	char			*config_path[4] = {NULL,NULL,NULL,NULL};
-	int			num_config = 2;
+	char			 ch;
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
+	int			 num_config = 2;
 
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
@@ -1063,7 +1066,7 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Dd:Eefhk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
 		case 'c':
 			num_config++;
@@ -1077,6 +1080,8 @@ main(int argc, char **argv)
 				hgd_debug = 3;
 			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
 			break;
+		default:
+			break; /* next getopt will catch errors */
 		}
 	}
 

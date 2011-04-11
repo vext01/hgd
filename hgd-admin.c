@@ -196,7 +196,7 @@ hgd_read_config(char **config_locations)
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
 	 */
-	config_t 		 cfg, *cf;
+	config_t		 cfg, *cf;
 	int			 dont_fork = dont_fork;
 
 	/* temp variables */
@@ -207,11 +207,16 @@ hgd_read_config(char **config_locations)
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
 		    *config_locations);
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
+			/*
+			 * XXX Mex - failing to find a config should not be
+			 * an error, but an info. Syntax errors however
+			 * are indeed errors
+			 */
 			DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
 			    config_error_text(cf),
 			    config_error_line(cf));
@@ -221,15 +226,12 @@ hgd_read_config(char **config_locations)
 		}
 	}
 
-	DPRINTF(HGD_D_DEBUG, "DONE");
-
-	if (*config_locations == NULL) {
+	if (*config_locations == NULL)
 		return (HGD_OK);
-	}
 
 	/* -d */
-	if (config_lookup_string(cf, "state_path", (const char**)&state_path)) {
-		state_path = xstrdup(state_path);
+	if (config_lookup_string(cf, "state_path",
+	    (const char **) &state_path)) {
 		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
@@ -238,6 +240,7 @@ hgd_read_config(char **config_locations)
 		hgd_debug = tmp_debuglevel;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
+
 	return (HGD_OK);
 }
 
@@ -246,11 +249,11 @@ int
 main(int argc, char **argv)
 {
 	char			 ch;
-	char			*config_path[4] = {NULL,NULL,NULL,NULL};
-	int			num_config = 2;
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
+	int			 num_config = 2;
 
 	config_path[0] = NULL;
-	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
+	xasprintf(&config_path[1], "%s", HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
 	    HGD_USR_CFG_DIR HGD_SERV_CFG );
 
@@ -258,12 +261,12 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:d:hvx:" "c:x:")) != -1) {
 		switch (ch) {
 		case 'c':
 			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
-			    optarg);
+			DPRINTF(HGD_D_DEBUG, "added config %d %s",
+			    num_config, optarg);
 			config_path[num_config] = optarg;
 			break;
 		case 'x':

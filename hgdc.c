@@ -640,7 +640,6 @@ hgd_exec_req(int argc, char **argv)
 	correct_desp->handler(&argv[1]);
 }
 
-
 int
 read_config(char **config_locations)
 {
@@ -649,7 +648,7 @@ read_config(char **config_locations)
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
 	 */
-	config_t 		 cfg, *cf;
+	config_t		 cfg, *cf;
 	char			*cypto_pref;
 
 	/* temp variables */
@@ -660,7 +659,7 @@ read_config(char **config_locations)
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
 		    *config_locations);
 		if (config_read_file(cf, *config_locations)) {
 			break;
@@ -674,14 +673,12 @@ read_config(char **config_locations)
 		}
 	}
 
-	DPRINTF(HGD_D_DEBUG, "DONE");
-
-	if (*config_locations == NULL) {
+	if (*config_locations == NULL)
 		return (HGD_OK);
-	}
 
 	/* -e -E */
-	if (config_lookup_string(cf, "crypto", (const char**)&cypto_pref)) {
+	if (config_lookup_string(cf, "crypto", (const char **) &cypto_pref)) {
+
 		if (strcmp(cypto_pref, "always") == 0) {
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -696,31 +693,27 @@ read_config(char **config_locations)
 			DPRINTF(HGD_D_WARN,
 			    "Invalid crypto option, using default");
 		}
-
-		DPRINTF(HGD_D_DEBUG, "cfg: host=%s", host);
 	}
 
 	/* -s */
-	if (config_lookup_string(cf, "hostname", (const char**)&host)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: host=%s", host);
-	}
+	if (config_lookup_string(cf, "hostname", (const char **) &host))
+		DPRINTF(HGD_D_DEBUG, "host=%s", host);
 
 	/* -p */
 	if (config_lookup_int64(cf, "port", &tmp_port)) {
 		port = tmp_port;
-		DPRINTF(HGD_D_DEBUG, "cfg: port=%d", port);
+		DPRINTF(HGD_D_DEBUG, "port=%d", port);
 	}
-
 
 	/* -u */
 	if (config_lookup_string(cf, "username", (const char**)&user)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: user=%s", user);
+		DPRINTF(HGD_D_DEBUG, "user=%s", user);
 	}
 
 	/* XXX -x */
 	if (config_lookup_int64(cf, "debug", &tmp_dbglevel)) {
-		hgd_debug = (int8_t)tmp_dbglevel;
-		DPRINTF(HGD_D_DEBUG, "cfg: debug level=%d", hgd_debug);
+		hgd_debug = tmp_dbglevel;
+		DPRINTF(HGD_D_DEBUG, "debug level=%d", hgd_debug);
 	}
 
 	/* XXX add "config_destroy(cf);" to cleanup */
@@ -731,7 +724,7 @@ int
 main(int argc, char **argv)
 {
 	char			*resp, ch;
-	char			*config_path[4] = {NULL,NULL,NULL,NULL};
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			num_config = 2;
 
 	config_path[0] = NULL;
@@ -743,7 +736,7 @@ main(int argc, char **argv)
 	 * Need to do getopt twice because x and c need to be done before
 	 * reading the config
 	 */
-	while ((ch = getopt(argc, argv, "x:c:" "Eehp:s:vu:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Eehp:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -758,7 +751,7 @@ main(int argc, char **argv)
 			config_path[num_config] = optarg;
 			break;
 		default:
-			break;
+			break; /* catch badness on next getopt */
 		}
 	}
 
@@ -806,7 +799,6 @@ main(int argc, char **argv)
 			break;
 		};
 	}
-
 
 	argc -= optind;
 	argv += optind;
