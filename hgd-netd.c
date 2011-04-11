@@ -910,7 +910,8 @@ hgd_read_config(char **config_locations)
 	int			 tmp_dont_fork, tmp_no_rdns;
 	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
 	long long int		 tmp_hgd_debug;
-	char			*temp_state_path, *crypto;
+	char			*temp_state_path, *crypto, *tmp_vote_sound;
+	char			*tmp_ssl_cert_path, *tmp_ssl_key_path;
 
 	cf = &cfg;
 	config_init(cf);
@@ -970,14 +971,17 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -f */
-	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork))
+	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork)) {
 		single_client = (tmp_dont_fork) ? 1 : 0;
+		DPRINTF(HGD_D_DEBUG, 
+		    "Chose to %s fork", single_client ? "" : "not");
+	}
 
 	/* -k */
 	if (config_lookup_string(cf,
-	    "netd.ssl.privatekey", (const char**)&ssl_key_path)) {
-		/* XXX: Not sure if this strdup is needed. */
-		ssl_key_path = xstrdup(ssl_key_path);
+	    "netd.ssl.privatekey", (const char**)&tmp_ssl_key_path)) {
+		free(ssl_key_path);
+		ssl_key_path = xstrdup(tmp_ssl_key_path);
 		DPRINTF(HGD_D_DEBUG,
 		    "Set ssl private key path to %s", ssl_key_path);
 	}
@@ -1005,9 +1009,9 @@ hgd_read_config(char **config_locations)
 
 	/* -S */
 	if (config_lookup_string(cf,
-	    "netd.ssl.cert", (const char **) &ssl_cert_path)) {
-		/* XXX: Note sure if this strdup is needed */
-		ssl_cert_path = xstrdup(ssl_cert_path);
+	    "netd.ssl.cert", (const char **) &tmp_ssl_cert_path)) {
+		free(ssl_cert_path);
+		ssl_cert_path = xstrdup(tmp_ssl_cert_path);
 		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
 	}
 
@@ -1019,17 +1023,15 @@ hgd_read_config(char **config_locations)
 
 	/* -y */
 	if (config_lookup_string(cf, "voteoff_sound",
-		    (const char **) &vote_sound)) {
-		/*
-		 * XXX: Note sure if this strdup is needed
-		 * Mex, if it is, you need to consistently heap alloc
-		 * it in the other places and remember to free also.
-		 */
-		vote_sound = xstrdup(vote_sound);
+		    (const char **) &tmp_vote_sound)) {
+		free(vote_sound);
+		vote_sound = xstrdup(tmp_vote_sound);
 		DPRINTF(HGD_D_DEBUG, "Set voteoff sound to '%s'", vote_sound);
 	}
 
-	/* XXX add "config_destroy(cf);" to cleanup */
+	/* we can destory config here because we copy all heap alloc'd stuff */
+	config_destroy(cf);
+	
 	return (HGD_OK);
 }
 
@@ -1122,6 +1124,7 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "Single client debug mode on");
 			break;
 		case 'k':
+			free(ssl_key_path);
 			ssl_key_path = optarg;
 			DPRINTF(HGD_D_DEBUG,
 			    "set ssl private key path to %s", ssl_key_path);
@@ -1142,6 +1145,7 @@ main(int argc, char **argv)
 			    (int) max_upload_size);
 			break;
 		case 'S':
+			free(ssl_cert_path);
 			ssl_cert_path = optarg;
 			DPRINTF(HGD_D_DEBUG,
 			    "set ssl cert path to %s", ssl_cert_path);
@@ -1154,6 +1158,7 @@ main(int argc, char **argv)
 		case 'x':
 			break; /* already handled */
 		case 'y':
+			free(vote_sound);
 			vote_sound = optarg;
 			DPRINTF(HGD_D_DEBUG,
 			    "set voteoff sound %s", vote_sound);
