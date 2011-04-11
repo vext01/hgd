@@ -16,7 +16,7 @@ netd : {
 		
 		## Location of SSL certificate
 		#cert = "/etc/hgd/certificate.crt";
-	}
+	};
 	
 	## Number of votes needed to vote of a song
 	#voteoff_count = 3;
@@ -26,7 +26,7 @@ netd : {
 	
 	## Max file size in bytes
 	#max_file_size = 104857600;
-}
+};
 
 ## playd specific options
 playd : {
@@ -37,7 +37,7 @@ playd : {
 	## If true details will be removed from the databse after they are
 	## played.
 	#purge_db = true;
-}
+};
 
 ## Location to store program state.
 #state_path = /var/hgd;
