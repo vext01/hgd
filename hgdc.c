@@ -42,7 +42,6 @@
 
 #include "hgd.h"
 
-#define DEFAULT_HOST "128.0.0.1"
 
 char			*user = NULL, *host = NULL;
 int			 port = HGD_DFL_PORT;
@@ -700,7 +699,7 @@ read_config(char **config_locations)
 	/* -s */
 	if (config_lookup_string(cf, "hostname", (const char **) &tmp_host))
 		free(host);
-		host = strdup(tmp_host);
+		host = xstrdup(tmp_host);
 		DPRINTF(HGD_D_DEBUG, "host=%s", host);
 
 	/* -p */
@@ -733,7 +732,7 @@ main(int argc, char **argv)
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			num_config = 2;
 
-	host = strdup(DEFAULT_HOST);
+	host = xstrdup(HGD_DFL_HOST);
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),

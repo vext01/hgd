@@ -33,6 +33,7 @@
 
 /* networking */
 #define HGD_DFL_PORT		6633
+#define HGD_DFL_HOST		"127.0.0.1"
 #define HGD_DFL_BACKLOG		10
 #define HGD_DFL_MAX_UPLOAD	(1024 * 1024 * 100)
 #define HGD_MAX_LINE		256
