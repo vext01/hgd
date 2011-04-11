@@ -894,6 +894,10 @@ start:
 	/* NOREACH */
 }
 
+/*
+ * XXX make sure all strings that can be assigned from config
+ * are heap allocated and freed properly
+ */
 int
 hgd_read_config(char **config_locations)
 {
@@ -903,10 +907,10 @@ hgd_read_config(char **config_locations)
 	 * still uses the old version.
 	 */
 	config_t		 cfg, *cf;
-	char			*cypto_pref = cypto_pref;
 	int			 tmp_dont_fork, tmp_no_rdns;
 	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
 	long long int		 tmp_hgd_debug;
+	char			*temp_state_path, *crypto;
 
 	cf = &cfg;
 	config_init(cf);
@@ -940,20 +944,22 @@ hgd_read_config(char **config_locations)
 
 	/* -d */
 	if (config_lookup_string(cf,
-	    "state_path", (const char **) &state_path)) {
+	    "state_path", (const char **) &temp_state_path)) {
+		free(state_path);
+		state_path = strdup(temp_state_path);
 		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
 	/* -e -E */
-	if (config_lookup_string(cf, "crypto", (const char **) &crypto_pref)) {
-		if (strcmp(cypto_pref, "always") == 0) {
+	if (config_lookup_string(cf, "crypto", (const char **) &crypto)) {
+		if (strcmp(crypto, "always") == 0) {
 			DPRINTF(HGD_D_DEBUG, "Server will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
-		} else if (strcmp(cypto_pref, "never") == 0) {
+		} else if (strcmp(crypto, "never") == 0) {
 			DPRINTF(HGD_D_DEBUG, "Server will insist upon "
 			   " no crypto");
 			crypto_pref = HGD_CRYPTO_PREF_NEVER;
-		} else if (strcmp(cypto_pref, "if_avaliable") == 0) {
+		} else if (strcmp(crypto, "if_avaliable") == 0) {
 			DPRINTF(HGD_D_DEBUG,
 			    "Server will use crypto if avaliable");
 		} else {

@@ -179,6 +179,7 @@ hgd_read_config(char **config_locations)
 	config_t		 cfg, *cf;
 	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
+	char			*tmp_state_path;
 
 	cf = &cfg;
 	config_init(cf);
@@ -205,7 +206,9 @@ hgd_read_config(char **config_locations)
 
 	/* -d */
 	if (config_lookup_string(cf, "state_path",
-	    (const char **) &state_path)) {
+	    (const char **) &tmp_state_path)) {
+		free(state_path);
+		state_path = xstrdup(tmp_state_path);
 		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
