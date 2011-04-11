@@ -649,7 +649,7 @@ read_config(char **config_locations)
 	 * still uses the old version.
 	 */
 	config_t		 cfg, *cf;
-	char			*cypto_pref;
+	char			*cypto_pref, *tmp_host, *tmp_user;
 
 	/* temp variables */
 	long long int		tmp_dbglevel, tmp_port;
@@ -696,7 +696,9 @@ read_config(char **config_locations)
 	}
 
 	/* -s */
-	if (config_lookup_string(cf, "hostname", (const char **) &host))
+	if (config_lookup_string(cf, "hostname", (const char **) &tmp_host))
+		free(host);
+		host = strdup(tmp_host);
 		DPRINTF(HGD_D_DEBUG, "host=%s", host);
 
 	/* -p */
@@ -706,7 +708,9 @@ read_config(char **config_locations)
 	}
 
 	/* -u */
-	if (config_lookup_string(cf, "username", (const char**)&user)) {
+	if (config_lookup_string(cf, "username", (const char**)&tmp_user)) {
+		free(user);
+		user = strdup(tmp_user);
 		DPRINTF(HGD_D_DEBUG, "user=%s", user);
 	}
 
@@ -745,6 +749,7 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
 			break;
 		case 'c':
+			/* XXX: this doesn't look right! */
 			num_config++;
 			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
 			    optarg);
@@ -774,14 +779,16 @@ main(int argc, char **argv)
 			break;
 		case 's':
 			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
-			host = optarg;
+			free (host);
+			host = strdup(optarg);
 			break;
 		case 'p':
 			port = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
 			break;
 		case 'u':
-			user = optarg;
+			free(user);
+			user = strdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "set username to %s", user);
 			break;
 		case 'v':
