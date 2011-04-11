@@ -42,7 +42,9 @@
 
 #include "hgd.h"
 
-char			*user = NULL, *host = "127.0.0.1";
+#define DEFAULT_HOST "128.0.0.1"
+
+char			*user = NULL, *host = NULL;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
@@ -731,10 +733,12 @@ main(int argc, char **argv)
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			num_config = 2;
 
+	host = strdup(DEFAULT_HOST);
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
 	    HGD_USR_CFG_DIR HGD_CLI_CFG );
+
 
 	/*
 	 * Need to do getopt twice because x and c need to be done before
