@@ -40,11 +40,11 @@ playd : {
 };
 
 ## Location to store program state.
-#state_path = /var/hgd;
+#state_path = "/var/hgd";
 
 ## Set crypto/SSL options.
 ## Valid options are always/never/if_avaliable
-#crypto = if_avaliable;
+#crypto = "if_avaliable";
 
 ## Debug level.  Controls logging.
 ## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
