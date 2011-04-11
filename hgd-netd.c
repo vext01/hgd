@@ -940,9 +940,9 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
+	if (config_lookup_string(cf, "state_path", (const char**)&state_path)) {
 		state_path = xstrdup(state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
+		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
 	/* -e -E */
@@ -1027,7 +1027,7 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
-	printf("  -c		Set config location\n");
+	printf("  -c		Path to a config file to use\n");
 	printf("  -D		Disable reverse DNS lookups for clients\n");
 	printf("  -d		Set hgd state directory\n");
 	printf("  -E		Disable SSL encryption support\n");
@@ -1084,8 +1084,10 @@ main(int argc, char **argv)
 	hgd_read_config(config_path + num_config);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
-	while ((ch = getopt(argc, argv, "Dd:Eefhk:n:p:s:S:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Dd:Eefhk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
+		case 'c':
+			break; /* already handled */
 		case 'D':
 			DPRINTF(HGD_D_DEBUG, "No client DNS lookups");
 			lookup_client_dns = 0;
@@ -1138,11 +1140,7 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
-			hgd_debug = atoi(optarg);
-			if (hgd_debug > 3)
-				hgd_debug = 3;
-			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
-			break;
+			break; /* already handled */
 		case 'y':
 			vote_sound = optarg;
 			DPRINTF(HGD_D_DEBUG,

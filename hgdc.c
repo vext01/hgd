@@ -766,8 +766,10 @@ main(int argc, char **argv)
 
 	RESET_GETOPT();
 
-	while ((ch = getopt(argc, argv, "Eehp:s:vu:" "x:c:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Eehp:s:u:vx:")) != -1) {
 		switch (ch) {
+		case 'c':
+			break; /* already handled */
 		case 'e':
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -795,11 +797,7 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
-			hgd_debug = atoi(optarg);
-			if (hgd_debug > 3)
-				hgd_debug = 3;
-			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
-			break;
+			break; /* already handled */
 		case 'h':
 		default:
 			hgd_usage();

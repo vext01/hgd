@@ -207,10 +207,11 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
+	if (config_lookup_string(cf, "state_path",
+	    (const char**)&state_path)) {
 		/* XXX: not sure if this strdup is needed */
 		state_path = xstrdup(state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
+		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
 
@@ -242,6 +243,7 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
+	printf("  -c	Path to a config file to use\n");
 	printf("  -C	Clear playlist on startup\n");
 	printf("  -d	Set hgd state directory\n");
 	printf("  -h	Show this message and exit\n");
@@ -267,7 +269,7 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:x:")) != -1) {
 		switch (ch) {
 		case 'c':
 			num_config++;
@@ -283,7 +285,7 @@ main(int argc, char **argv)
 			    "set debug level to %d", hgd_debug);
 			break;
 		default:
-			break;
+			break; /* catch badness in next getopt */
 		};
 	}
 
@@ -292,8 +294,10 @@ main(int argc, char **argv)
 	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
 		switch (ch) {
+		case 'c':
+			break; /* already handled */
 		case 'C':
 			clear_playlist_on_start = 1;
 			DPRINTF(HGD_D_DEBUG, "will clear playlist '%s'",
@@ -318,12 +322,7 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
-			hgd_debug = atoi(optarg);
-			if (hgd_debug > 3)
-				hgd_debug = 3;
-			DPRINTF(HGD_D_DEBUG,
-			    "set debug level to %d", hgd_debug);
-			break;
+			break; /* already handled */
 		case 'h':
 		default:
 			hgd_usage();

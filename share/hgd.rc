@@ -40,7 +40,7 @@ playd : {
 }
 
 ## Location to store program state.
-#files = /var/hgd;
+#config_path = /var/hgd;
 
 ## Set crypto/SSL options.
 ## Valid options are always/never/if_avaliable
