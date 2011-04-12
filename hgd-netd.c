@@ -45,7 +45,7 @@
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
-size_t				max_upload_size = HGD_DFL_MAX_UPLOAD;
+long int			max_upload_size = HGD_DFL_MAX_UPLOAD;
 uint8_t				num_bad_commands = 0;
 uint8_t				lookup_client_dns = 1;
 
@@ -234,7 +234,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	/* strip path, we don't care about that */
 	filename = basename(filename_p);
 
-	if ((bytes == 0) || (bytes > max_upload_size)) {
+	if ((bytes == 0) || ((long int) bytes > max_upload_size)) {
 		DPRINTF(HGD_D_WARN, "Incorrect file size");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
 		ret = HGD_FAIL;
@@ -996,16 +996,18 @@ hgd_read_config(char **config_locations)
 	/* -p */
 	if (config_lookup_int64(cf, "netd.port", &tmp_port)) {
 		port = tmp_port;
-		DPRINTF(HGD_D_DEBUG, "Set required-votes to %d", req_votes);
+		DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
 	}
 
 	/* -s*/
 	if (config_lookup_int64(cf,
 	    "netd.max_file_size", &tmp_max_upload_size)) {
 		/* XXX: unmagic number this */
-		max_upload_size = tmp_max_upload_size * (1024 * 1024);
-		DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
-		    (int) max_upload_size);
+		/* XXX: check for overflow... */
+		tmp_max_upload_size *= (1024L * 1024L);
+		max_upload_size = (long int) tmp_max_upload_size;
+		DPRINTF(HGD_D_DEBUG, "Set max upload size to %ld",
+		    max_upload_size);
 	}
 
 	/* -S */

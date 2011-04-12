@@ -52,4 +52,4 @@ playd : {
 
 ## Location of voteoff sound
 ## If not set no sound will be played
-#voteoff_sound = ""
+#voteoff_sound = "";
