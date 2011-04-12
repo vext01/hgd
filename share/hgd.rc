@@ -19,13 +19,13 @@ netd : {
 	};
 	
 	## Number of votes needed to vote of a song
-	#voteoff_count = 3;
+	#voteoff_count = 3L;
 	
 	## Port server should listen on
-	#port = 6633;
+	#port = 6633L;
 	
 	## Max file size in bytes
-	#max_file_size = 104857600;
+	#max_file_size = 104857600L;
 };
 
 ## playd specific options
@@ -48,7 +48,7 @@ playd : {
 
 ## Debug level.  Controls logging.
 ## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
-#debug = 1;
+#debug = 1L;
 
 ## Location of voteoff sound
 ## If not set no sound will be played

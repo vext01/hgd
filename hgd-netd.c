@@ -59,8 +59,8 @@ SSL_CTX				*ctx = NULL;
 
 uint8_t				 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
 uint8_t				 ssl_capable = 0;
-char				*ssl_cert_path = HGD_DFL_CERT_FILE;
-char				*ssl_key_path = HGD_DFL_KEY_FILE;
+char				*ssl_cert_path = NULL; 
+char				*ssl_key_path = NULL; 
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
@@ -940,7 +940,8 @@ hgd_read_config(char **config_locations)
 	/* -D */
 	if (config_lookup_bool(cf, "netd.rdns_lookup", &tmp_no_rdns)) {
 		lookup_client_dns = tmp_no_rdns;
-		DPRINTF(HGD_D_DEBUG, "Not doing reverse dns lookups");
+		DPRINTF(HGD_D_DEBUG, "%s reverse dns lookups",
+		    lookup_client_dns ? "Doing" : "Not doing");
 	}
 
 	/* -d */
@@ -972,9 +973,9 @@ hgd_read_config(char **config_locations)
 
 	/* -f */
 	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork)) {
-		single_client = (tmp_dont_fork) ? 1 : 0;
+		single_client = tmp_dont_fork;
 		DPRINTF(HGD_D_DEBUG, 
-		    "Chose to %s fork", single_client ? "" : "not");
+		    "Chose to %sfork", single_client ? "not " : "");
 	}
 
 	/* -k */
@@ -983,11 +984,11 @@ hgd_read_config(char **config_locations)
 		free(ssl_key_path);
 		ssl_key_path = xstrdup(tmp_ssl_key_path);
 		DPRINTF(HGD_D_DEBUG,
-		    "Set ssl private key path to %s", ssl_key_path);
+		    "Set ssl private key path to '%s'", ssl_key_path);
 	}
 
 	/* -n */
-	if (config_lookup_int64(cf, "netd.votoff_count", &tmp_req_votes)) {
+	if (config_lookup_int64(cf, "netd.voteoff_count", &tmp_req_votes)) {
 		req_votes = tmp_req_votes;
 		DPRINTF(HGD_D_DEBUG, "Set required-votes to %d", req_votes);
 	}
@@ -1072,13 +1073,15 @@ main(int argc, char **argv)
 	hgd_register_sig_handlers();
 
 	state_path = xstrdup(HGD_DFL_DIR);
+	ssl_key_path = xstrdup(HGD_DFL_KEY_FILE);
+	ssl_cert_path = xstrdup(HGD_DFL_CERT_FILE);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
 	while ((ch = getopt(argc, argv, "c:Dd:Eefhk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
 		case 'c':
 			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
+			DPRINTF(HGD_D_DEBUG, "added config %d '%s'", num_config,
 			    optarg);
 			config_path[num_config] = optarg;
 			break;
@@ -1127,7 +1130,7 @@ main(int argc, char **argv)
 			free(ssl_key_path);
 			ssl_key_path = optarg;
 			DPRINTF(HGD_D_DEBUG,
-			    "set ssl private key path to %s", ssl_key_path);
+			    "set ssl private key path to '%s'", ssl_key_path);
 			break;
 		case 'n':
 			req_votes = atoi(optarg);
@@ -1148,7 +1151,7 @@ main(int argc, char **argv)
 			free(ssl_cert_path);
 			ssl_cert_path = optarg;
 			DPRINTF(HGD_D_DEBUG,
-			    "set ssl cert path to %s", ssl_cert_path);
+			    "set ssl cert path to '%s'", ssl_cert_path);
 			break;
 		case 'v':
 			hgd_print_version();
