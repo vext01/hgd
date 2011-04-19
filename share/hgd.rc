@@ -1,3 +1,7 @@
+## Debug level.  Controls logging. Always put first.
+## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
+#debug = 1L;
+
 ##netd specific options
 netd : {
 	
@@ -45,10 +49,6 @@ playd : {
 ## Set crypto/SSL options.
 ## Valid options are always/never/if_avaliable
 #crypto = "if_avaliable";
-
-## Debug level.  Controls logging.
-## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
-#debug = 1L;
 
 ## Location of voteoff sound
 ## If not set no sound will be played

@@ -1,17 +1,16 @@
+## Debug level.  Controls logging.
+## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
+#debug = 1L;
+
 ## Set crypto options.
 ## Valid options are always/never/if_avaliable
-#crypto = if_avaliable;
+#crypto = "if_avaliable";
 
 ## hostname to connect to.
 #hostname = "localhost";
 
 ## port to connect to.
-#port = 6633;
+#port = 6633L;
 
 ## User name to use.  If not set defaults to `whoami`.
-#username = "";
-
-
-## Debug level.  Controls logging.
-## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
-#debug = 1;
+#username = "sunshinegirls";
