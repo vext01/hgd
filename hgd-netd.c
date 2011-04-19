@@ -75,7 +75,7 @@ hgd_exit_nicely()
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
 			DPRINTF(HGD_D_WARN,
-			    "Can't shutdown socket: %s",SERROR);
+			    "Can't shutdown socket: %s", SERROR);
 		close(svr_fd);
 	}
 	if (db_path)
@@ -718,7 +718,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 {
 	struct hgd_session	 sess;
 	char			*recv_line;
-	uint8_t			 exit;
+	uint8_t			 exit, ssl_dead = 0;
 
 	sess.cli_str = hgd_identify_client(cli_addr);
 	sess.sock_fd = cli_fd;
@@ -755,8 +755,13 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	/* free up the hgd_session members */
 	if (sess.cli_str != NULL)
 		free(sess.cli_str);
-	if (sess.ssl != NULL)
+
+	if (sess.ssl != NULL) {
+		while (!ssl_dead)
+			ssl_dead = SSL_shutdown(sess.ssl);
+
 		SSL_free(sess.ssl);
+	}
 
 	if (sess.user) {
 		if (sess.user->name)
