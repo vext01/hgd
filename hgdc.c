@@ -275,7 +275,7 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 	}
 	free(prompt);
 
-	/* XXX send password */
+	/* send password */
 	xasprintf(&user_cmd, "user|%s|%s", username, pass);
 	hgd_sock_send_line(fd, ssl, user_cmd);
 	memset(pass, 0, HGD_MAX_PASS_SZ);
@@ -393,7 +393,7 @@ hgd_usage()
 	printf("    -u username\t\tSet username\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
-	printf("    -e\t\t\tEnable Encryption\n");
+	printf("    -e\t\t\tEnable encryption\n");
 }
 
 /* upload and queue a file to the playlist */
