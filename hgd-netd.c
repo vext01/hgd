@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <libgen.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <libconfig.h>
@@ -910,6 +911,7 @@ hgd_read_config(char **config_locations)
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
+	 * See hgd-playd.c for how to remove the stat when deb get into gear
 	 */
 	config_t		 cfg, *cf;
 	int			 tmp_dont_fork, tmp_no_rdns;
@@ -917,6 +919,7 @@ hgd_read_config(char **config_locations)
 	long long int		 tmp_hgd_debug;
 	char			*temp_state_path, *crypto, *tmp_vote_sound;
 	char			*tmp_ssl_cert_path, *tmp_ssl_key_path;
+	struct stat		 st;
 
 	cf = &cfg;
 	config_init(cf);
@@ -924,23 +927,31 @@ hgd_read_config(char **config_locations)
 	while (*config_locations != NULL) {
 
 		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from - %s",
 		    *config_locations);
 
+		if ( stat (*config_locations, &st) < 0 ) {
+			DPRINTF(HGD_D_INFO, "Could not stat %s",
+			    *config_locations);
+			config_locations--;
+			continue;
+		} 
+		
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
-			DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
+			DPRINTF(HGD_D_ERROR, "%s (line: %d)",
 			    config_error_text(cf),
 			    config_error_line(cf));
 
-			config_destroy(cf);
 			config_locations--;
 		}
 	}
 
-	if (*config_locations == NULL)
+	if (*config_locations == NULL) {
+		config_destroy(cf);
 		return (HGD_OK);
+	}
 
 	/* -D */
 	if (config_lookup_bool(cf, "netd.rdns_lookup", &tmp_no_rdns)) {
