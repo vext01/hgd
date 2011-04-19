@@ -275,7 +275,7 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 	}
 	free(prompt);
 
-	/* XXX send password */
+	/* send password */
 	xasprintf(&user_cmd, "user|%s|%s", username, pass);
 	hgd_sock_send_line(fd, ssl, user_cmd);
 	memset(pass, 0, HGD_MAX_PASS_SZ);
