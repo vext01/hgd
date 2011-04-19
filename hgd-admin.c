@@ -16,6 +16,7 @@
  */
 
 #define _GNU_SOURCE	/* linux */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -23,8 +24,9 @@
 #include <errno.h>
 #include <err.h>
 #include <sys/types.h>
-#include <libconfig.h>
+#include <sys/stat.h>
 
+#include <libconfig.h>
 #include <sqlite3.h>
 #include <openssl/rand.h>
 
@@ -200,6 +202,7 @@ hgd_read_config(char **config_locations)
 	int			 dont_fork = dont_fork;
 	long long int		 tmp_debuglevel;
 	char			*tmp_state_path;
+	struct stat		 st;
 
 	cf = &cfg;
 	config_init(cf);
@@ -208,21 +211,28 @@ hgd_read_config(char **config_locations)
 		/* Try and open usr config */
 		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
 		    *config_locations);
+
+		/*
+		 * XXX: can be removed when deb get new libconfig
+		 * see hgd-playd.c
+		 */
+		if (stat(*config_locations, &st) < 0) {
+			DPRINTF(HGD_D_INFO, "Could not stat %s",
+			    *config_locations);
+			config_locations--;
+			continue;
+		} 
+
 		if (config_read_file(cf, *config_locations)) {
 			break;
-		} else {
-			/*
-			 * XXX Mex - failing to find a config should not be
-			 * an error, but an info. Syntax errors however
-			 * are indeed errors
-			 */
-			DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
-			    config_error_text(cf),
-			    config_error_line(cf));
-
-			config_destroy(cf);
-			config_locations--;
 		}
+
+		DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
+				config_error_text(cf),
+				config_error_line(cf));
+
+		config_destroy(cf);
+		config_locations--;
 	}
 
 	if (*config_locations == NULL)
