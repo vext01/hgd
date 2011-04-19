@@ -242,6 +242,7 @@ hgd_read_config(char **config_locations)
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
 
+	config_destroy(cf);
 	return (HGD_OK);
 }
 
