@@ -651,6 +651,7 @@ read_config(char **config_locations)
 	 */
 	config_t		 cfg, *cf;
 	char			*cypto_pref, *tmp_host, *tmp_user;
+	int			 ret = HGD_OK;
 
 	/* temp variables */
 	long long int		tmp_dbglevel, tmp_port;
@@ -674,6 +675,7 @@ read_config(char **config_locations)
 		}
 	}
 
+	/* if no configs found, cf already freed */
 	if (*config_locations == NULL)
 		return (HGD_OK);
 
@@ -697,10 +699,11 @@ read_config(char **config_locations)
 	}
 
 	/* -s */
-	if (config_lookup_string(cf, "hostname", (const char **) &tmp_host))
+	if (config_lookup_string(cf, "hostname", (const char **) &tmp_host)) {
 		free(host);
 		host = xstrdup(tmp_host);
 		DPRINTF(HGD_D_DEBUG, "host=%s", host);
+	}
 
 	/* -p */
 	if (config_lookup_int64(cf, "port", &tmp_port)) {
@@ -715,14 +718,14 @@ read_config(char **config_locations)
 		DPRINTF(HGD_D_DEBUG, "user=%s", user);
 	}
 
-	/* XXX -x */
+	/* -x */
 	if (config_lookup_int64(cf, "debug", &tmp_dbglevel)) {
 		hgd_debug = tmp_dbglevel;
 		DPRINTF(HGD_D_DEBUG, "debug level=%d", hgd_debug);
 	}
 
-	/* XXX add "config_destroy(cf);" to cleanup */
-	return (HGD_OK);
+	config_destroy(cf);
+	return (ret);
 }
 
 int
