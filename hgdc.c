@@ -33,7 +33,7 @@
 #else
 #include <readpassphrase.h>
 #endif
- #include <libconfig.h>
+#include <libconfig.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -655,10 +655,12 @@ hgd_read_config(char **config_locations)
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
+	 * see hgd-playd.c for how to remove need for stat.
 	 */
 	config_t		 cfg, *cf;
 	char			*cypto_pref, *tmp_host, *tmp_user;
 	int			 ret = HGD_OK;
+	struct stat		 st;
 
 	/* temp variables */
 	long long int		tmp_dbglevel, tmp_port;
@@ -668,24 +670,31 @@ hgd_read_config(char **config_locations)
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
 		    *config_locations);
+		
+		if ( stat (*config_locations, &st) < 0 ) {
+			DPRINTF(HGD_D_INFO, "Could not stat %s",
+			    *config_locations);
+			config_locations--;
+			continue;
+		} 
 
 		/* if we find a config, use it */
-		if (config_read_file(cf, *config_locations))
+		if (config_read_file(cf, *config_locations)) 
 			break;
 
 		/* otherwise look for another */
-		DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
+		DPRINTF(HGD_D_ERROR, "%s (line: %d)",
 		    config_error_text(cf), config_error_line(cf));
-
-		config_destroy(cf);
 		config_locations--;
 	}
 
-	/* if no configs found, cf already freed */
-	if (*config_locations == NULL)
+	/* if no configs found */
+	if (*config_locations == NULL) {
+		config_destroy(cf);
 		return (HGD_OK);
+	}
 
 	/* -e -E */
 	if (config_lookup_string(cf, "crypto", (const char **) &cypto_pref)) {
