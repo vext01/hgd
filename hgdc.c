@@ -587,13 +587,15 @@ hgd_req_hud(char **args)
 {
 	args = args; /* silence */
 
-	system("clear");
+	/* pretty clunky ;) */
 	while (1) {
-		printf("HGD Server @ %s -- Playlist:\n\n", host);
-		/* XXX Check return value of this? */
-		hgd_req_playlist(NULL);
-		sleep(1);
 		system("clear");
+		printf("HGD Server @ %s -- Playlist:\n\n", host);
+
+		if (hgd_req_playlist(NULL) != HGD_OK)
+			return (HGD_FAIL);
+
+		sleep(1);
 	}
 
 	return (HGD_OK);
