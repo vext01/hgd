@@ -663,16 +663,17 @@ read_config(char **config_locations)
 		/* Try and open usr config */
 		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
 		    *config_locations);
-		if (config_read_file(cf, *config_locations)) {
-			break;
-		} else {
-			DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
-			    config_error_text(cf),
-			    config_error_line(cf));
 
-			config_destroy(cf);
-			config_locations--;
-		}
+		/* if we find a config, use it */
+		if (config_read_file(cf, *config_locations))
+			break;
+
+		/* otherwise look for another */
+		DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
+		    config_error_text(cf), config_error_line(cf));
+
+		config_destroy(cf);
+		config_locations--;
 	}
 
 	/* if no configs found, cf already freed */
