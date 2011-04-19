@@ -293,10 +293,16 @@ main(int argc, char **argv)
 	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
 		switch (ch) {
 		case 'c':
-			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
-			    optarg);
-			config_path[num_config] = optarg;
+			if (num_config < 3) {
+				num_config++;
+				DPRINTF(HGD_D_DEBUG, "added config %d %s",
+				    num_config, optarg);
+				config_path[num_config] = optarg;
+			} else {
+				DPRINTF(HGD_D_WARN,
+				    "Too many config files specified");
+				hgd_exit_nicely();
+			}
 			break;
 		case 'x':
 			hgd_debug = atoi(optarg);
