@@ -774,11 +774,16 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
 			break;
 		case 'c':
-			/* XXX: this doesn't look right! */
-			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
-			    optarg);
-			config_path[num_config] = optarg;
+			if (num_config < 3) {
+				num_config++;
+				DPRINTF(HGD_D_DEBUG, "added config %d %s",
+				    num_config, optarg);
+				config_path[num_config] = optarg;
+			} else {
+				DPRINTF(HGD_D_WARN,
+				    "Too many config files specified");
+				hgd_exit_nicely();
+			}
 			break;
 		default:
 			break; /* catch badness on next getopt */

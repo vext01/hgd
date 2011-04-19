@@ -459,7 +459,7 @@ hgd_clear_votes()
 	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't clear vote list");
+		DPRINTF(HGD_D_WARN, "Can't clear vote list");
 		return (HGD_FAIL);
 	}
 

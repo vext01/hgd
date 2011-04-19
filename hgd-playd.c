@@ -154,7 +154,6 @@ hgd_play_loop()
 			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
 			    track.filename);
 
-			/* XXX: Should we check the return val of this? */
 			hgd_clear_votes();
 			hgd_play_track(&track);
 		} else {
@@ -197,30 +196,29 @@ hgd_read_config(char **config_locations)
 			    *config_locations);
 			config_locations--;
 			continue;
-		} 
-		
+		}
+
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
-
 #if 1
-			
 			DPRINTF(HGD_D_ERROR, "%s (line: %d)",
 			    config_error_text(cf), config_error_line(cf));
 #else
-			/* 
-			 * XXX: we can use this verion when debian 
-			 * get new linconfig 
+			/*
+			 * XXX: we can use this verion when debian
+			 * get new linconfig
 			 */
                         if (config_error_type (cf) == CONFIG_ERR_FILE_IO) {
 				DPRINTF(HGD_D_INFO, "%s (line: %d)",
-				    config_error_text(cf), config_error_line(cf));
+				    config_error_text(cf),
+				    config_error_line(cf));
 			} else {
 				DPRINTF(HGD_D_ERROR, "%s (line: %d)",
-				    config_error_text(cf), config_error_line(cf));
+				    config_error_text(cf),
+				    config_error_line(cf));
 			}
 #endif
-
 			config_locations--;
 		}
 	}
@@ -252,13 +250,12 @@ hgd_read_config(char **config_locations)
 		    "db purging is %s", (purge_finished_db ? "on" : "off"));
 	}
 
-	/* XXX -x */
+	/* -x */
 	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
 		hgd_debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
 
-	/* XXX add "config_destroy(cf);" to cleanup */
 	config_destroy(cf);
 	return (HGD_OK);
 }
@@ -369,12 +366,13 @@ main(int argc, char **argv)
 	if (db == NULL)
 		hgd_exit_nicely();
 
-	/* XXX: Should we check the return state of this? */
-	hgd_init_playstate();
+	if (hgd_init_playstate() != HGD_OK)
+		hgd_exit_nicely();
 
-	/* XXX: Should we check the return state of this? */
-	if (clear_playlist_on_start)
-		hgd_clear_playlist();
+	if (clear_playlist_on_start) {
+		if (hgd_clear_playlist() != HGD_OK)
+			hgd_exit_nicely();
+	}
 
 	/* start */
 	hgd_play_loop();

@@ -100,8 +100,8 @@ hgd_acmd_user_add(char **args)
 	memset(pass, 0, strlen(pass));
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_hex);
 
-	/* XXX: Should we check the return state of this? */
-	hgd_add_user(args[0], salt_hex, hash_hex);
+	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
+		return (HGD_FAIL);
 
 	free(salt_hex);
 	free(hash_hex);
@@ -184,8 +184,8 @@ hgd_parse_command(int argc, char **argv)
 		return (HGD_FAIL);
 	}
 
-	/* XXX: Should we check the return state of this? */
-	correct_acmd->handler(++argv);
+	if (correct_acmd->handler(++argv) != HGD_OK)
+		return (HGD_FAIL);
 
 	return (HGD_OK);
 }

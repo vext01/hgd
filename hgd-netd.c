@@ -592,10 +592,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 clean:
 
 	if (ret == HGD_FAIL) {
-
 		DPRINTF(HGD_D_INFO, "SSL connection failed");
-		/* XXX do we clean anything up on failure? */
-
 		hgd_exit_nicely(); /* be paranoid and kick client */
 	} else {
 		DPRINTF(HGD_D_INFO, "SSL connection established");
@@ -900,10 +897,6 @@ start:
 	/* NOREACH */
 }
 
-/*
- * XXX make sure all strings that can be assigned from config
- * are heap allocated and freed properly
- */
 int
 hgd_read_config(char **config_locations)
 {
@@ -1018,9 +1011,8 @@ hgd_read_config(char **config_locations)
 	/* -s*/
 	if (config_lookup_int64(cf,
 	    "netd.max_file_size", &tmp_max_upload_size)) {
-		/* XXX: unmagic number this */
-		/* XXX: check for overflow... */
-		tmp_max_upload_size *= (1024L * 1024L);
+		/* XXX: check for overflow? */
+		tmp_max_upload_size *= HGD_MB;
 		max_upload_size = (long int) tmp_max_upload_size;
 		DPRINTF(HGD_D_DEBUG, "Set max upload size to %ld",
 		    max_upload_size);
@@ -1034,7 +1026,7 @@ hgd_read_config(char **config_locations)
 		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
 	}
 
-	/* XXX : Added for completness probably not usefull though */
+	/* -x */
 	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
 		hgd_debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
@@ -1160,8 +1152,8 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
 			break;
 		case 's':
-			/* XXX: unmagic number this */
-			max_upload_size = atoi(optarg) * (1024 * 1024);
+			/* XXX overflow? */
+			max_upload_size = atoi(optarg) * HGD_MB;
 			DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
 			    (int) max_upload_size);
 			break;

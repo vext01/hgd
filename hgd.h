@@ -24,6 +24,14 @@
 
 #define HGD_VERSION		"0.3-current"
 
+/* misc */
+#define HGD_DFL_REQ_VOTES	3
+#define HGD_PID_STR_SZ		10
+#define HGD_SHA_SALT_SZ		20
+#define HGD_MAX_PASS_SZ		20
+#define HGD_MAX_USER_QUEUE	5 /* XXX Make configurable */
+#define HGD_MB			(1024L * 1024L)
+
 /* paths */
 #define HGD_DFL_DIR		"/var/hgd"
 #define HGD_DB_NAME		"hgd.db"
@@ -35,7 +43,7 @@
 #define HGD_DFL_PORT		6633
 #define HGD_DFL_HOST		"127.0.0.1"
 #define HGD_DFL_BACKLOG		10
-#define HGD_DFL_MAX_UPLOAD	(1024 * 1024 * 100)
+#define HGD_DFL_MAX_UPLOAD	(HGD_MB * 100L)
 #define HGD_MAX_LINE		256
 #define HGD_MAX_BAD_COMMANDS	3
 #define HGD_BINARY_CHUNK	4096
@@ -58,13 +66,6 @@
 
 #define HGD_CLI_CFG		"/hgdc.rc"
 #define HGD_SERV_CFG		"/hgd.rc"
-
-/* misc */
-#define HGD_DFL_REQ_VOTES	3
-#define HGD_PID_STR_SZ		10
-#define HGD_SHA_SALT_SZ		20
-#define HGD_MAX_PASS_SZ		20
-#define HGD_MAX_USER_QUEUE	5 /* XXX Make configurable */
 
 /* Function return values */
 #define HGD_FAIL		(-1)
