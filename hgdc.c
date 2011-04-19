@@ -60,18 +60,24 @@ int			 hgd_check_svr_response(char *resp, uint8_t x);
 void
 hgd_exit_nicely()
 {
+	uint8_t			ssl_dead = 0;
+
 	if (!exit_ok)
 		DPRINTF(HGD_D_INFO,
 		    "hgdc was interrupted or crashed - cleaning up");
 
 	if (ssl) {
 		/* clean up ssl structures */
+		while (!ssl_dead)
+			ssl_dead = SSL_shutdown(ssl);
 		SSL_free(ssl);
 	}
 
-	if (ctx) {
+	if (ctx)
 		SSL_CTX_free(ctx);
-	}
+
+	if (host)
+		free(host);
 
 	if (sock_fd > 0) {
 		/* try to close connection */
@@ -175,7 +181,6 @@ hgd_encrypt(int fd)
 		PRINT_SSL_ERR ("SSL_connect");
 		return (HGD_FAIL);
 	}
-
 
 	cert = SSL_get_peer_certificate(ssl);
 	if (!cert) {
@@ -309,7 +314,9 @@ hgd_setup_socket()
 			hgd_exit_nicely();
 		}
 
-		host = inet_ntoa( *(struct in_addr*)(he->h_addr_list[0]));
+		free(host);
+		host = xstrdup(
+		    inet_ntoa( *(struct in_addr*)(he->h_addr_list[0])));
 		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
 	}
 
@@ -786,8 +793,8 @@ main(int argc, char **argv)
 			break;
 		case 's':
 			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
-			free (host);
-			host = strdup(optarg);
+			free(host);
+			host = xstrdup(optarg);
 			break;
 		case 'p':
 			port = atoi(optarg);
