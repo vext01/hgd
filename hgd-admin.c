@@ -209,7 +209,7 @@ hgd_read_config(char **config_locations)
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
 		    *config_locations);
 
 		/*
@@ -221,7 +221,7 @@ hgd_read_config(char **config_locations)
 			    *config_locations);
 			config_locations--;
 			continue;
-		} 
+		}
 
 		if (config_read_file(cf, *config_locations)) {
 			break;
@@ -246,7 +246,7 @@ hgd_read_config(char **config_locations)
 		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
-	/* -x : Added for completeness, probably not needed */
+	/* -x */
 	if (config_lookup_int64(cf, "debug", &tmp_debuglevel)) {
 		hgd_debug = tmp_debuglevel;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
