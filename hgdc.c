@@ -649,7 +649,7 @@ hgd_exec_req(int argc, char **argv)
 }
 
 int
-read_config(char **config_locations)
+hgd_read_config(char **config_locations)
 {
 	/*
 	 * config_lookup_int64 is used because lib_config changed
@@ -774,7 +774,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	read_config(config_path + num_config);
+	hgd_read_config(config_path + num_config);
 
 	RESET_GETOPT();
 

@@ -233,6 +233,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* XXX add "config_destroy(cf);" to cleanup */
+	config_destroy(cf);
 	return (HGD_OK);
 }
 
