@@ -27,9 +27,9 @@ Debugging
 
 Debugging is done via DPRINTF at the appropriate debug level. Generally
 speaking:
-#define HGD_D_ERROR	- Failures which we can not recover from 
-#define HGD_D_WARN	- Warnings which we can be recovered rom 
-#define HGD_D_INFO	- Info that migh tbe useful at runtime.
+#define HGD_D_ERROR	- Failures which we can not recover from.
+#define HGD_D_WARN	- Warnings which we can be recovered from.
+#define HGD_D_INFO	- Info that might tbe useful at runtime.
 #define HGD_D_DEBUG	- Very verbose info for debugging.
 
 When debugging netd, there is the -f flag which causes netd to not fork; this
@@ -58,6 +58,24 @@ If you pull in a new library, add it to the list of prerequisites in README.
 When you add a command line switch, update the manual and don't forget to bump
 the .Dd line too. The format of .Dd is 'Month DD, YYYY'. If you are on OpenBSD,
 lint the manual using 'mandoc -Tlint'.
+
+Rolling a Release
+-----------------
+
+ 1.  You have already valgrinded and tested ;)
+ 2.  Turn off debug flag.
+ 3.  Bump version macro.
+ 4.  Tag the version in git. It should be taggd as 'x.x.x', eg '0.2.1'
+ 5.  Get a tarball of tag off github.
+ 6.  Untar it and rename.
+ 7.  Rename the directory hgd-x.x.x
+ 8.  Tar it up as hgd-x.x.x.tar.gz
+ 9.  Upload it to github.
+
+ Optionally:
+ 10. Send notification to reddit.com/r/software ;)
+ 11. ??????
+ 12. PROFIT!
 
 Want To Contribute?
 -------------------
