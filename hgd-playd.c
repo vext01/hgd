@@ -180,6 +180,7 @@ hgd_read_config(char **config_locations)
 	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
 	char			*tmp_state_path;
+	struct stat		 st;
 
 	cf = &cfg;
 	config_init(cf);
@@ -187,22 +188,47 @@ hgd_read_config(char **config_locations)
 	while (*config_locations != NULL) {
 
 		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
 		    *config_locations);
+
+		/* XXX: can be removed when deb get new libconfig */
+		if ( stat (*config_locations, &st) < 0 ) {
+			DPRINTF(HGD_D_INFO, "Could not stat %s",
+			    *config_locations);
+			config_locations--;
+			continue;
+		} 
+		
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
-			DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
-			    config_error_text(cf),
-			    config_error_line(cf));
 
-			config_destroy(cf);
+#if 1
+			
+			DPRINTF(HGD_D_ERROR, "%s (line: %d)",
+			    config_error_text(cf), config_error_line(cf));
+#else
+			/* 
+			 * XXX: we can use this verion when debian 
+			 * get new linconfig 
+			 */
+                        if (config_error_type (cf) == CONFIG_ERR_FILE_IO) {
+				DPRINTF(HGD_D_INFO, "%s (line: %d)",
+				    config_error_text(cf), config_error_line(cf));
+			} else {
+				DPRINTF(HGD_D_ERROR, "%s (line: %d)",
+				    config_error_text(cf), config_error_line(cf));
+			}
+#endif
+
 			config_locations--;
 		}
 	}
 
-	if (*config_locations == NULL)
+	if (*config_locations == NULL) {
+		config_destroy(cf);
 		return (HGD_OK);
+	}
 
 	/* -d */
 	if (config_lookup_string(cf, "state_path",
