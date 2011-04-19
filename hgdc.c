@@ -731,10 +731,10 @@ hgd_read_config(char **config_locations)
 	}
 
 	/* -u */
-	if (config_lookup_string(cf, "username", (const char**)&tmp_user)) {
+	if (config_lookup_string(cf, "username", (const char**) &tmp_user)) {
 		free(user);
 		user = strdup(tmp_user);
-		DPRINTF(HGD_D_DEBUG, "user=%s", user);
+		DPRINTF(HGD_D_DEBUG, "user='%s'", user);
 	}
 
 	/* -x */
@@ -759,7 +759,6 @@ main(int argc, char **argv)
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
 	    HGD_USR_CFG_DIR HGD_CLI_CFG );
-
 
 	/*
 	 * Need to do getopt twice because x and c need to be done before
