@@ -73,20 +73,20 @@ identity.
 History
 -------
 
- * 0.1 - basic functionality
+ * 0.1 - basic functionality.
  * 0.2 - SSL crypto support and user authentication.
+ * 0.3 - Config file support.
 
 Roadmap
 -------
 
- * 0.3 - Admin commands and mplayer slave mode.
-         SSL Certificate acceptance prompt.
- * 0.4 - Fair share playlist
+https://github.com/vext01/hgd/issues/milestones
 
 Bugs
 ----
 
-Inevitable. Please report bugs on github.
+Inevitable. Please report bugs on github:
+https://github.com/vext01/hgd/issues/
 
 Feedback / Questions
 --------------------
