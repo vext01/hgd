@@ -30,7 +30,7 @@
 #define HGD_PID_STR_SZ		10
 #define HGD_SHA_SALT_SZ		20
 #define HGD_MAX_PASS_SZ		20
-#define HGD_MAX_USER_QUEUE	5 /* XXX Make configurable */
+#define HGD_MAX_USER_QUEUE	5
 #define HGD_MB			(1024L * 1024L)
 
 /* paths */
