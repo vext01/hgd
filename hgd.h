@@ -62,7 +62,7 @@
 #define HGD_CRYPTO_PREF_NEVER	2
 
 /* Config files */
-#define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR "/config"
+#define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR
 #define HGD_USR_CFG_DIR		"/.config/hgd"
 
 #define HGD_CLI_CFG		"/hgdc.rc"
