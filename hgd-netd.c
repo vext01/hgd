@@ -61,8 +61,8 @@ SSL_CTX				*ctx = NULL;
 
 uint8_t				 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
 uint8_t				 ssl_capable = 0;
-char				*ssl_cert_path = NULL; 
-char				*ssl_key_path = NULL; 
+char				*ssl_cert_path = NULL;
+char				*ssl_key_path = NULL;
 
 /*
  * clean up and exit, if the flag 'exit_ok' is not 1, upon call,
@@ -540,7 +540,8 @@ hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
 }
 
 int
-hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused) {
+hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused)
+{
 
 	unused = unused; /* lalalala */
 
@@ -548,6 +549,19 @@ hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|tlsv1");
 	else
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|nocrypto");
+
+	return (HGD_OK);
+}
+
+int
+hgd_cmd_proto(struct hgd_session *sess, char **unused)
+{
+	char			*reply;
+
+	unused = unused; /* lalalala */
+	xasprintf(&reply, "ok|%d", HGD_PROTO_VERSION);
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
+	free(reply);
 
 	return (HGD_OK);
 }
@@ -615,6 +629,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"vo",		1,	1,	hgd_cmd_vote_off},
 	{"vo",		0,	1,	hgd_cmd_vote_off_noarg},
 	{"ls",		0,	1,	hgd_cmd_playlist},
+	{"proto",	0,	0,	hgd_cmd_proto},
 	{"user",	2,	1,	hgd_cmd_user},
 	{"q",		2,	1,	hgd_cmd_queue},
 	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
@@ -934,8 +949,8 @@ hgd_read_config(char **config_locations)
 			    *config_locations);
 			config_locations--;
 			continue;
-		} 
-		
+		}
+
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {

@@ -23,6 +23,7 @@
 #endif
 
 #define HGD_VERSION		"0.3-current"
+#define HGD_PROTO_VERSION	2
 
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
