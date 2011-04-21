@@ -39,6 +39,11 @@ only make.
  * To build everything, type 'make'.
  * To build only the client type 'make hgdc'.
 
+On MacOS X, you may have to jump through hoops. Others have succeeded using
+macports for libconfig and sqlite3 dependencies. You may need to set the
+include path and library path to /opt/include and /opt/lib respectively (good
+luck).
+
 Running
 -------
 
