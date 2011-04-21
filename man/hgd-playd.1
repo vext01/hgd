@@ -15,12 +15,12 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd March 21, 2011
+.Dd April 21, 2011
 .Dt HGD-PLAYD 1
 .Os
 .Sh NAME
 .Nm hgd-playd
-.Nd Network daemon for the Hackathon Gunther Daemon.
+.Nd Player daemon for the Hackathon Gunther Daemon.
 .Sh SYNOPSIS
 .Nm hgd-playd
 .Bk -words
@@ -31,7 +31,7 @@
 .Ek
 .Sh DESCRIPTION
 .Nm
-is  the player daemon for the Hackathon Gunther Daemon; a music system
+is the player daemon for the Hackathon Gunther Daemon; a music system
 suitable for hackathons, internet cafes, LAN parties etc.
 .Pp
 .Nm
@@ -45,7 +45,7 @@ files (if DISPLAY is set).
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.If Fl c Ar config
+.It Fl c Ar config
 Location of the config file.
 .It Fl C
 Clear the playlist at startup.
@@ -63,6 +63,25 @@ Show version information and exit.
 .It Fl x Ar level
 Set the debug level: 0=errors, 1=warnings, 2=info, 3=debug. Defaults to 1.
 .El
+.Sh FILES
+.Nm
+can read it's settings from a config file. The following locations
+(in the order shown) are searched:
+.Pp
+.Bl -enum -compact -width Ds
+.It
+A path specific by '-c' if it was specified.
+.It
+/etc/hgd/hgd.rc
+.It
+~/.config/hgd/hgd.rc
+.El
+.Pp
+The first config file found is used. If no config file is found, default
+settings are used.
+.Pp
+Sample config files are supplied in the source tarball and should be
+supplied by binary packagers.
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
@@ -73,4 +92,4 @@ was written by
 and
 .An Martin Ellis Aq ellism88@gmail.com .
 .Sh BUGS
-Probably
+Probably.

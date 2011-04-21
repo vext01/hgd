@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd March 21, 2010
+.Dd April 21, 2010
 .Dt HGDC 1
 .Os
 .Sh NAME
@@ -40,7 +40,7 @@ suitable for hackathons, internet cafes, LAN parties etc.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.IT Fl c Ar config
+.It Fl c Ar config
 Location of config file.
 .It Fl e
 Require server to supply an SSL encrypted channel, or exit.
@@ -85,6 +85,25 @@ encrypted connection if possible, otherwise falling back onto
 unencrypted socket communication.
 .Pp
 A warning is always printed if SSL encryption is not enabled.
+.Sh FILES
+.Nm
+can read it's settings from a config file. The following locations
+(in the order shown) are searched:
+.Pp
+.Bl -enum -compact -width Ds
+.It
+A path specific by '-c' if it was specified.
+.It
+/etc/hgd/hgdc.rc
+.It
+~/.config/hgd/hgdc.rc
+.El
+.Pp
+The first config file found is used. If no config file is found, default
+settings are used.
+.Pp
+Sample config files are supplied in the source tarball and should be
+supplied by binary packagers.
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
@@ -95,4 +114,4 @@ was written by
 and
 .An Martin Ellis Aq ellism88@gmail.com .
 .Sh BUGS
-Probably
+Probably.

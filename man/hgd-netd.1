@@ -98,7 +98,7 @@ communications, thus protecting passwords. The simplest way to do this
 is to do the following:
 .Bl -tag -width Ds
 .It cd /etc/hgd
-.It openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout
+.It openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout \\
 privkey.key -out certificate.crt
 .El
 .Pp
@@ -114,6 +114,25 @@ A warning is always printed if SSL encryption is not enabled.
 .Pp
 You should ensure that the SSL private key remains secure on your
 file-system.
+.Sh FILES
+.Nm
+can read it's settings from a config file. The following locations
+(in the order shown) are searched:
+.Pp
+.Bl -enum -compact -width Ds
+.It
+A path specific by '-c' if it was specified.
+.It
+/etc/hgd/hgd.rc
+.It
+~/.config/hgd/hgd.rc
+.El
+.Pp
+The first config file found is used. If no config file is found, default
+settings are used.
+.Pp
+Sample config files are supplied in the source tarball and should be
+supplied by binary packagers.
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
@@ -124,4 +143,4 @@ was written by
 and
 .An Martin Ellis Aq ellism88@gmail.com .
 .Sh BUGS
-Probably
+Probably.
