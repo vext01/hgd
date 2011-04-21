@@ -59,6 +59,12 @@ When you add a command line switch, update the manual and don't forget to bump
 the .Dd line too. The format of .Dd is 'Month DD, YYYY'. If you are on OpenBSD,
 lint the manual using 'mandoc -Tlint'.
 
+Misc
+----
+
+If you break backward compatibility in the network protocol, then you must bump
+HGD_PROTO_VERSION in hgd.h.
+
 Rolling a Release
 -----------------
 
