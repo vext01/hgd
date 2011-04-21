@@ -27,6 +27,7 @@
 .Op Fl DeEfhv
 .Op Fl c Ar config
 .Op Fl d Ar state-dir
+.Op Fl F Ar flood-limit
 .Op Fl k Ar path-to-ssl-key
 .Op Fl n Ar num-votes
 .Op Fl p Ar port
@@ -65,6 +66,8 @@ Require clients to use SSL encryption.
 .It Fl f
 Don't fork and service a single client only. This is useful for debugging
 purposes only.
+.It Fl F
+Limit the number of songs a user can have in his/her play list at any time.
 .It Fl h
 Show the usage help and exit.
 .It Fl k Ar file

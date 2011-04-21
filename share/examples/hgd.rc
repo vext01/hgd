@@ -53,3 +53,7 @@ playd : {
 ## Location of voteoff sound
 ## If not set no sound will be played
 #voteoff_sound = "";
+
+## Flood limit (max number of songs a user can have in the queue)
+## -1 = no limit, 0 means no once can queue!
+#flood_limit - 5L;

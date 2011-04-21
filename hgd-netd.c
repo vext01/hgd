@@ -46,6 +46,7 @@
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
+int				flood_limit = HGD_MAX_USER_QUEUE;
 long int			max_upload_size = HGD_DFL_MAX_UPLOAD;
 uint8_t				num_bad_commands = 0;
 uint8_t				lookup_client_dns = 1;
@@ -226,7 +227,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	ssize_t			write_ret;
 	char			*filename;
 
-	if (hgd_num_tracks_user(sess->user->name) > HGD_MAX_USER_QUEUE) {
+	if ( (flood_limit <= 0) && (hgd_num_tracks_user(sess->user->name) > flood_limit) ) {
 		DPRINTF(HGD_D_WARN, "User '%s' trigger flood protection", sess->user->name);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|floodprotection");
 		return (HGD_FAIL);
@@ -909,7 +910,7 @@ hgd_read_config(char **config_locations)
 	config_t		 cfg, *cf;
 	int			 tmp_dont_fork, tmp_no_rdns;
 	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
-	long long int		 tmp_hgd_debug;
+	long long int		 tmp_hgd_debug, tmp_flood_limit;
 	char			*temp_state_path, *crypto, *tmp_vote_sound;
 	char			*tmp_ssl_cert_path, *tmp_ssl_key_path;
 	struct stat		 st;
@@ -987,6 +988,13 @@ hgd_read_config(char **config_locations)
 		    "Chose to %sfork", single_client ? "not " : "");
 	}
 
+	/* -F */
+	if (config_lookup_int64(cf, "flood_limit", &tmp_flood_limit)) {
+		flood_limit = tmp_flood_limit;
+		DPRINTF(HGD_D_DEBUG, "Flood limit set to %d",
+		    flood_limit);
+	}
+
 	/* -k */
 	if (config_lookup_string(cf,
 	    "netd.ssl.privatekey", (const char**)&tmp_ssl_key_path)) {
@@ -1056,6 +1064,7 @@ hgd_usage()
 	printf("  -E		Disable SSL encryption support\n");
 	printf("  -e		Require SSL encryption from clients\n");
 	printf("  -f		Don't fork - service single client (debug)\n");
+	printf("  -F		Flood limit (-1 == not limit)\n");
 	printf("  -h		Show this message and exit\n");
 	printf("  -k		Set path to SSL private key file\n");
 	printf("  -n		Set number of votes required to vote-off\n");
@@ -1087,7 +1096,7 @@ main(int argc, char **argv)
 	ssl_cert_path = xstrdup(HGD_DFL_CERT_FILE);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:Dd:Eefhk:n:p:s:S:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Dd:EefF:hk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
 		case 'c':
 			if (num_config < 3) {
@@ -1117,7 +1126,7 @@ main(int argc, char **argv)
 	hgd_read_config(config_path + num_config);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
-	while ((ch = getopt(argc, argv, "c:Dd:Eefhk:n:p:s:S:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Dd:EefF:hk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
 		case 'c':
 			break; /* already handled */
@@ -1141,6 +1150,11 @@ main(int argc, char **argv)
 		case 'f':
 			single_client = 1;
 			DPRINTF(HGD_D_DEBUG, "Single client debug mode on");
+			break;
+		case 'F':
+			flood_limit = atoi(optarg);
+			DPRINTF(HGD_D_DEBUG, "Set flood limit to %d",
+			    flood_limit);
 			break;
 		case 'k':
 			free(ssl_key_path);
