@@ -48,6 +48,8 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c
 		${SSL_LDFLAGS} ${LDFLAGS} \
 		-o hgd-admin common.o db.o hgd-admin.c
 
+client: hgdc
+server: hgd-netd hgd-playd hgd-admin
 
 .PHONY: install
 install: install-client install-server install-doc
