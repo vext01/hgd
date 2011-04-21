@@ -14,6 +14,7 @@ mandir?=${prefix}/man/man1
 sbindir?=${prefix}/sbin
 bindir?=${prefix}/bin
 sharedir?=${prefix}/share/doc/hgd
+sampledir?=${prefix}/share/examples/hgd
 
 .PHONY: all
 all: hgd-playd hgd-netd hgd-admin hgdc
@@ -49,17 +50,29 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c
 
 
 .PHONY: install
-install: hgd-playd hgd-netd hgdc hgd-admin
-	${INSTALL} -d ${DESTDIR}${sbindir}
+install: install-client install-server install-doc
+
+.PHONY: install-client
+install-client: hgdc
 	${INSTALL} -d ${DESTDIR}${bindir}
-	${INSTALL} -d ${DESTDIR}${mandir}
-	${INSTALL} -d ${DESTDIR}${sharedir}
+	${INSTALL} hgdc ${DESTDIR}${bindir}
+
+.PHONY: install-server
+install-server: hgd-netd hgd-admin hgd-playd
+	${INSTALL} -d ${DESTDIR}${sbindir}
 	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
-	${INSTALL} hgdc ${DESTDIR}${bindir}
+
+.PHONY: install-doc
+install-doc:
+	${INSTALL} -d ${DESTDIR}${mandir}
+	${INSTALL} -d ${DESTDIR}${sharedir}
+	${INSTALL} -d ${DESTDIR}${sampledir}
 	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
 	${INSTALL} README ${DESTDIR}${sharedir}
+	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
+	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}
