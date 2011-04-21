@@ -349,7 +349,11 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
-			break; /* already handled */
+			DPRINTF(HGD_D_DEBUG, "set debug to %d", atoi(optarg));
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			break; /* already set but over-rideable */
 		case 'h':
 		default:
 			hgd_usage();

@@ -106,7 +106,8 @@ hgd_identify_client(struct sockaddr_in *cli_addr)
 	/* first try to get a valid DNS name for the client */
 	if (lookup_client_dns) {
 		found_name = getnameinfo((struct sockaddr *) cli_addr,
-		    sizeof(struct sockaddr_in), cli_host, sizeof(cli_host), cli_serv,
+		    sizeof(struct sockaddr_in),
+		    cli_host, sizeof(cli_host), cli_serv,
 		    sizeof(cli_serv), NI_NAMEREQD | NI_NOFQDN);
 
 		if (found_name == 0)
@@ -1209,7 +1210,11 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
-			break; /* already handled */
+			DPRINTF(HGD_D_DEBUG, "set debug to %d", atoi(optarg));
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			break; /* already set but over-rideable */
 		case 'y':
 			free(vote_sound);
 			vote_sound = optarg;
