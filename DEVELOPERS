@@ -72,17 +72,18 @@ Rolling a Release
  2.  Turn off debug flag.
  3.  Bump version macro.
  4.  Check README has history updated.
- 5.  Tag the version in git. It should be taggd as 'x.x.x', eg '0.2.1'
- 6.  Get a tarball of tag off github.
- 7.  Untar it and rename.
- 8.  Rename the directory hgd-x.x.x
- 9.  Tar it up as hgd-x.x.x.tar.gz
- 10.  Upload it to github.
+ 5.  Commit and push to git.
+ 7.  Tag the version in git. It should be taggd as 'x.x.x', eg '0.2.1'
+ 8.  Get a tarball of tag off github.
+ 9.  Untar it and rename.
+ 10.  Rename the directory hgd-x.x.x
+ 11.  Tar it up as hgd-x.x.x.tar.gz
+ 12.  Upload it to github.
 
  Optionally:
- 11. Send notification to reddit.com/r/software ;)
- 12. ??????
- 13. PROFIT!
+ 13. Send notification to reddit.com/r/software ;)
+ 14. ??????
+ 15. PROFIT!
 
 Want To Contribute?
 -------------------
