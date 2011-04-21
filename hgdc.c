@@ -611,6 +611,48 @@ struct hgd_req_despatch req_desps[] = {
 	{NULL,		0,	0,		NULL} /* terminate */
 };
 
+/*
+ * check protocol version is correct
+ */
+int
+hgd_check_svr_proto()
+{
+	char			*v, *resp = NULL;
+	int			 vv = -1, ret = HGD_OK;
+
+	hgd_sock_send_line(sock_fd, ssl, "proto");
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+
+	if (hgd_check_svr_response(resp, 0) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Could not check server proto version");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	v = strchr(resp, '|');
+	if ((v == 0) || (*(v + 1) == 0)) {
+		DPRINTF(HGD_D_ERROR, "Could not find protocol version");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	vv = atoi(v + 1);
+	if (vv != HGD_PROTO_VERSION) {
+		DPRINTF(HGD_D_ERROR, "Protocol mismatch: "
+		    "Server=%d, Client=%d", HGD_PROTO_VERSION, vv);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	DPRINTF(HGD_D_DEBUG, "Protocol version matches server");
+
+clean:
+	if (resp)
+		free(resp);
+
+	return (ret);
+}
+
 /* parse command line args */
 void
 hgd_exec_req(int argc, char **argv)
@@ -641,6 +683,10 @@ hgd_exec_req(int argc, char **argv)
 
 	/* once we know that the hgdc is used properly, open connection */
 	hgd_setup_socket();
+
+	/* check protocol matches the server before we continue */
+	if (hgd_check_svr_proto() != HGD_OK)
+		return;
 
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	if ((!authenticated) && (correct_desp->need_auth)) {
@@ -674,16 +720,16 @@ hgd_read_config(char **config_locations)
 		/* Try and open usr config */
 		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
 		    *config_locations);
-		
+
 		if ( stat (*config_locations, &st) < 0 ) {
 			DPRINTF(HGD_D_INFO, "Could not stat %s",
 			    *config_locations);
 			config_locations--;
 			continue;
-		} 
+		}
 
 		/* if we find a config, use it */
-		if (config_read_file(cf, *config_locations)) 
+		if (config_read_file(cf, *config_locations))
 			break;
 
 		/* otherwise look for another */
