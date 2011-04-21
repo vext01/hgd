@@ -22,7 +22,7 @@
 #define INFTIM -1
 #endif
 
-#define HGD_VERSION		"0.3"
+#define HGD_VERSION		"0.3.0"
 #define HGD_PROTO_VERSION	2
 
 /* misc */
