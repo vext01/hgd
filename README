@@ -37,7 +37,13 @@ The build system is both bmake and gmake compatible, as it stands we use
 only make.
 
  * To build everything, type 'make'.
- * To build only the client type 'make hgdc'.
+ * To build only the client type 'make client'.
+ * To build only the server components 'make server'.
+
+ * To install everything, type 'make install'.
+ * To install in a custom path, type 'make prefix=/home/gunther install'.
+ * Other useful install targets are 'install-server', 'install-client'
+   and 'install-docs'.
 
 On MacOS X, you may have to jump through hoops. Others have succeeded using
 macports for libconfig and sqlite3 dependencies. You may need to set the
