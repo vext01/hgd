@@ -1069,7 +1069,7 @@ hgd_usage()
 	printf("  -E		Disable SSL encryption support\n");
 	printf("  -e		Require SSL encryption from clients\n");
 	printf("  -f		Don't fork - service single client (debug)\n");
-	printf("  -F		Flood limit (-1 == not limit)\n");
+	printf("  -F		Flood limit (-1 for no limit)\n");
 	printf("  -h		Show this message and exit\n");
 	printf("  -k		Set path to SSL private key file\n");
 	printf("  -n		Set number of votes required to vote-off\n");
