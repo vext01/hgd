@@ -227,9 +227,14 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	ssize_t			write_ret;
 	char			*filename;
 
-	if ( (flood_limit <= 0) && (hgd_num_tracks_user(sess->user->name) > flood_limit) ) {
-		DPRINTF(HGD_D_WARN, "User '%s' trigger flood protection", sess->user->name);
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|floodprotection");
+	if ((flood_limit >= 0) &&
+	    (hgd_num_tracks_user(sess->user->name) > flood_limit)) {
+
+		DPRINTF(HGD_D_WARN,
+		    "User '%s' trigger flood protection", sess->user->name);
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|floodprotection");
+
 		return (HGD_FAIL);
 	}
 
