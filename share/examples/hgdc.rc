@@ -1,5 +1,5 @@
 ## Debug level.  Controls logging.
-## 1 = ERROR, 2=WARNING, 3=INFO, 4=DEBUG
+## 0 = ERROR, 1=WARNING, 2=INFO, 3=DEBUG
 #debug = 1L;
 
 ## Set crypto options.
