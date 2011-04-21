@@ -1,3 +1,10 @@
+# HGD Server Configuration
+# ------------------------
+# All strings must be double quoted.
+# All numbers must be proceeded by 'L'
+#   (thanks to some major linux distros shipping old libconfig).
+# All lines should be terminated with a semi-colon.
+
 ## Debug level.  Controls logging. Always put first.
 ## 0 = ERROR, 1=WARNING, 2=INFO, 3=DEBUG
 #debug = 1L;
