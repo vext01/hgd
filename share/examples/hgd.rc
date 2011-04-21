@@ -9,6 +9,21 @@
 ## 0 = ERROR, 1=WARNING, 2=INFO, 3=DEBUG
 #debug = 1L;
 
+## Location to store program state.
+#state_path = "/var/hgd";
+
+## Set crypto/SSL options.
+## Valid options are always/never/if_avaliable
+#crypto = "if_avaliable";
+
+## Location of voteoff sound
+## If not set no sound will be played
+#voteoff_sound = "";
+
+## Flood limit (max number of songs a user can have in the queue)
+## -1 = no limit, 0 means no once can queue!
+#flood_limit = 5L;
+
 ##netd specific options
 netd : {
 	
@@ -50,17 +65,3 @@ playd : {
 	#purge_db = true;
 };
 
-## Location to store program state.
-#state_path = "/var/hgd";
-
-## Set crypto/SSL options.
-## Valid options are always/never/if_avaliable
-#crypto = "if_avaliable";
-
-## Location of voteoff sound
-## If not set no sound will be played
-#voteoff_sound = "";
-
-## Flood limit (max number of songs a user can have in the queue)
-## -1 = no limit, 0 means no once can queue!
-#flood_limit = 5L;
