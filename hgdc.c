@@ -384,7 +384,7 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
-	printf("    -c\t\tSet config location\n");
+	printf("    -c\t\t\tSet config location\n");
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
