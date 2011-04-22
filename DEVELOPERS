@@ -94,5 +94,9 @@ pull request.  Make sure you have your git client configured correctly
 with respect to user.name and user.email. They should be the same as
 on github.
 
+If your changes are significant, please add your name to the copyrights
+on source files you have changed and also add yourself to version() in 
+common.c.
+
 Plain diffs can also be accepted via email (vext01 at gmail dot com).
 
