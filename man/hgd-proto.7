@@ -23,7 +23,40 @@
 .Nd HGD protocol specification
 .Sh DESCRIPTION
 .Nm
-is a comprehensive guide to the HGD protocol aimed at client developers.
+is a comprehensive guide to the Hackathon Gunther Daemon protocol. The guide is
+provided so as to encourage the implementation new client programs.
 .Sh PROTOCOL FUNDAMENTALS
+The HGD protocol is a simple mixed text/binary network protocol for use with
+.Xr hgd-netd 1
+.
+The majority of Communications are performed in a turn based fashion
+between the server and client. All non-binary communications are line based and terminated
+with a carriage return and line feed, so as to remain telnet compatible.
+.Pp
+Communications start with the server
+reporting it's version. the session then continues as follows:
+.Bl -enum
+.It
+Client sends a command and optionally arguments.
+.It
+Server sends a reply indicating success/failure and optionally some data.
+.It
+Goto 1.
+.El
+.Pp
+There are two types of reply a client can expect:
+.Bl -bullet
+.It
+Single line replies.
+.It
+Multi line replies.
+.El
+.Pp
+Clients must be aware which commands return which kind of reply.
+.Pp
+A server reply may contain multiple items of data, which are separated by the
+pipe character, '|'.
+.Pp
+Arguments are separated by the pipe character, '|'.
 .Sh PROTOCOL COMMANDS
 .Sh TYPICAL SESSION
