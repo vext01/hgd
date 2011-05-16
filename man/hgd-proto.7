@@ -197,8 +197,41 @@ Votes off the track with the playlist id <playlist-id> if and only if it is
 now playing.
 .El
 .Sh TYPICAL SESSION
+Here we will demonstrate a simple HGD session. In these examples, a line
+beggining
+.Sq >
+indicate that the line is sent my the client, whereas a line beginning
+.Sq <
+indicates that it is a reply sent by the server.
+.Bl -enum
+.It
+Opening the connection and checking protocol version
+.Bd -literal
+< ok|HGD-0.3.0
+> proto
+< ok|2
+.Ed
+.Pp
+At this stage the client should check the protocol major version against that
+expected. If there is a mismatch, then the client should not continue.
+.It
+Retrieving the playlist
+.Bd -literal
+> ls
+< ok|3
+> 1|gunther-tralala.flv|gunther
+> 2|crabs.mp4|mex
+> 3|slipknot-duality.wma|tris
+.Ed
+.It
+Disconnecting
+.Bd -literal
+> bye
+< ok|Catch you later d00d!
+.Ed
+.El
 .Sh SECURE COMMUNICATIONS WITH SSL (TLSv1)
-XXX: Mex
+XXX: Mex, you need to detail the SSL packet size etc. here.
 .Sh AUTHORS
 .An -nosplit
 .Nm
@@ -207,4 +240,4 @@ was written by
 and
 .An Martin Ellis Aq ellism88@gmail.com .
 .Sh BUGS
-Please report bugs in this quide back to use via the github issue tracker.
+Please report bugs in this guide back to use via the github issue tracker.
