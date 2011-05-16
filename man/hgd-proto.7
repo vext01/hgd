@@ -30,8 +30,11 @@ The HGD protocol is a simple mixed text/binary network protocol for use with
 .Xr hgd-netd 1
 .
 The majority of Communications are performed in a turn based fashion
-between the server and client. All non-binary communications are line based and terminated
-with a carriage return and line feed, so as to remain telnet compatible.
+between the server and client. Most communications are line
+based and terminated with a carriage return and line feed, so as to
+remain telnet compatible. The only exception to this rule is the 'q' command
+which involves sending binary data over the wire; in this case, communications
+are precisesly bounded in size (See the 'q' specification below).
 .Pp
 Communications start with the server
 reporting it's version. the session then continues as follows:
@@ -59,4 +62,28 @@ pipe character, '|'.
 .Pp
 Arguments are separated by the pipe character, '|'.
 .Sh PROTOCOL COMMANDS
+The command set is as follows:
+.Bl -tag -width Ds
+.It bye
+.It encrypt
+.It encrypt?
+.It ls
+.It np
+.It proto
+.It q|<filename>|<size>
+.It user|<username>|<password>
+.It vo
+.It vo|<playlist-id>
+.El
 .Sh TYPICAL SESSION
+.Sh SECURE COMMUNICATIONS WITH SSL (TLSv1)
+XXX: Mex
+.Sh AUTHORS
+.An -nosplit
+.Nm
+was written by
+.An Edd Barrett Aq vext01@gmail.com ,
+and
+.An Martin Ellis Aq ellism88@gmail.com .
+.Sh BUGS
+Please report bugs in this quide back to use via the github issue tracker.

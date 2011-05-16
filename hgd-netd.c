@@ -626,16 +626,16 @@ clean:
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	secure,	handler_function */
-	{"np",		0,	1,	hgd_cmd_now_playing},
-	{"vo",		1,	1,	hgd_cmd_vote_off},
-	{"vo",		0,	1,	hgd_cmd_vote_off_noarg},
-	{"ls",		0,	1,	hgd_cmd_playlist},
-	{"proto",	0,	0,	hgd_cmd_proto},
-	{"user",	2,	1,	hgd_cmd_user},
-	{"q",		2,	1,	hgd_cmd_queue},
-	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
-	{"encrypt",	0,	0,	hgd_cmd_encrypt},
 	{"bye",		0,	0,	NULL},	/* bye is special */
+	{"encrypt",	0,	0,	hgd_cmd_encrypt},
+	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
+	{"ls",		0,	1,	hgd_cmd_playlist},
+	{"np",		0,	1,	hgd_cmd_now_playing},
+	{"proto",	0,	0,	hgd_cmd_proto},
+	{"q",		2,	1,	hgd_cmd_queue},
+	{"user",	2,	1,	hgd_cmd_user},
+	{"vo",		0,	1,	hgd_cmd_vote_off_noarg},
+	{"vo",		1,	1,	hgd_cmd_vote_off},
 	{NULL,		0,	0,	NULL}	/* terminate */
 };
 
