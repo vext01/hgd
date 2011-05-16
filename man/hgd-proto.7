@@ -70,6 +70,8 @@ All command arguments are separated by the pipe character,
 .Sq |
 .
 .Pp
+Some commands require the connection to be authenticated.
+.Pp
 The command set is as follows:
 .Bl -tag -width Ds
 .It bye
@@ -80,6 +82,8 @@ Arguments: 0
 Reply type: single-line
 .It
 On success returns: ok|<exit_message>
+.It
+Needs auth: No
 .El
 .Pp
 Notifies the server that you (the client) are now disconnecting. This
@@ -92,6 +96,8 @@ Arguments: 0
 Reply type: single-line
 .It
 On success returns: ok
+.It
+Needs auth: No
 .El
 .Pp
 Notifies the server that all communications from here onward are to encrypted
@@ -106,6 +112,8 @@ Arguments: 0
 Reply type: single-line
 .It
 On success returns: ok|<crypto-method>
+.It
+Needs auth: No
 .El
 .Pp
 Asks the server if it supports encryption. A <crypto-method> of
@@ -119,6 +127,8 @@ Arguments: 0
 Reply type: multi-line
 .It
 On success returns: ok|<num-items> ...
+.It
+Needs auth: No
 .El
 .Pp
 Requests the playlist. <num_items> indicates how many further lines to expect
@@ -134,6 +144,8 @@ Arguments: 0
 Reply type: single-line
 .It
 On success returns: ok|<playing?>[|<track-id>|<filename>|<user>]
+.It
+Needs auth: No
 .El
 .Pp
 Get the currently playing item, if any. If <playing?> = 0, then nothing is
@@ -146,6 +158,8 @@ Arguments: 0
 Reply type: single-line
 .It
 On success returns: ok|<proto-major-vers>
+.It
+Needs auth: No
 .El
 .Pp
 Requests the protocol major version. Clients should check this upon connecting
@@ -156,6 +170,8 @@ against the protocol version they support.
 Arguments: 2 <filename>|<byte-sz>
 .It
 Reply type: special
+.It
+Needs auth: Yes
 .El
 .Pp
 Indicates that a file of size <byte-sz> is to be uploaded. If the
@@ -176,6 +192,8 @@ Arguments: 2 <username>|<password>
 Reply type: single-line
 .It
 On success returns: ok
+.It
+Needs auth: No
 .El
 .Pp
 Authenticates a user with the current connection.
@@ -187,6 +205,8 @@ Arguments: 0
 Reply type: single-line
 .It
 On success returns: ok
+.It
+Needs auth: Yes
 .El
 .Pp
 Votes off the currently playing track. It is recommended that clients use the
@@ -199,6 +219,8 @@ Arguments: 1 <playlist-id>
 Reply type: single-line
 .It
 On success returns: ok
+.It
+Needs auth: Yes
 .El
 .Pp
 Votes off the track with the playlist id <playlist-id> if and only if it is
