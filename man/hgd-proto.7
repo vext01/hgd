@@ -26,9 +26,10 @@
 is a comprehensive guide to the Hackathon Gunther Daemon protocol. The guide is
 provided so as to encourage the implementation new client programs.
 .Sh PROTOCOL FUNDAMENTALS
-The HGD protocol is a simple mixed text/binary network protocol for use with
+The HGD protocol is a simple mixed text/binary TCP network protocol for use with
 .Xr hgd-netd 1
-.
+\&. The default TCP port for the HGD protocol is 6633.
+.Pp
 The majority of communications are performed in a turn based fashion
 between the server and client. Most communications are line
 based and terminated with a carriage return and line feed, so as to
@@ -56,7 +57,7 @@ Clients must be aware which commands return which kind of reply.
 A server reply may contain multiple fields of data, which are
 separated by the pipe character,
 .Sq |
-.
+\&.
 .Pp
 The first field of every reply always indicates whether the command
 succeeded or failed (
@@ -65,10 +66,13 @@ and
 .Sq err
 respectively). If a command fails, then the
 second field indicates why. Failed commands always send a single-line reply.
+.Pp
+If the client sends three consecutive commands which all cause an error, the
+client connection is assumed to be malicious and is dropped.
 .Sh PROTOCOL COMMANDS
 All command arguments are separated by the pipe character,
 .Sq |
-.
+\&.
 .Pp
 Some commands require the connection to be authenticated.
 .Pp
@@ -103,7 +107,7 @@ Needs auth: No
 Notifies the server that all communications from here onward are to encrypted
 using SSL (TLSv1). Transport of encrypted traffic differs; see
 .Sx SECURE COMMUNICATIONS WITH SSL (TLSv1)
-.
+\&.
 .It encrypt?
 .Bl -dash
 .It
@@ -181,8 +185,7 @@ file size is within bounds, then the server replies
 should send exactly <byte-sz> bytes. If this goes to plan then the
 server switches back to text-mode and sends
 .Sq ok
-.
-The file is inserted into the
+\&. The file is inserted into the
 playlist under the name <flename>.
 .It user
 .Bl -dash
