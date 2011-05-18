@@ -15,7 +15,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "config.h"
+
+#ifdef HAVE_PYTHON
 #include <Python.h> /* defines _GNU_SOURCE */
+#else
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,9 +34,9 @@
 #include <fcntl.h>
 #include <libconfig.h>
 
-
 #include <sqlite3.h>
 
+#include "py.h"
 #include "hgd.h"
 #include "db.h"
 
@@ -275,6 +282,8 @@ hgd_usage()
 	printf("  -x	Set debug level (0-3)\n");
 }
 
+#if 0
+/* eventually remove, this was just us getting to grips with python */
 void
 py_test()
 {
@@ -311,6 +320,7 @@ py_test()
 	Py_DECREF(mod);
 
 }
+#endif
 
 int
 main(int argc, char **argv)
@@ -319,9 +329,12 @@ main(int argc, char **argv)
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
-	py_test();
-	printf("python done\n");
-	exit (EXIT_SUCCESS);
+#ifdef HAVE_PYTHON
+	if (hgd_init_py() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Failed to initialise Python");
+		hgd_exit_nicely();
+	}
+#endif
 
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );

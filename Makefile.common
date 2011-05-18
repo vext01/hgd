@@ -23,16 +23,19 @@ all: hgd-playd hgd-netd hgd-admin hgdc
 clean:
 	rm -f hgd-playd hgd-netd hgdc common.o db.o
 
+py.o: py.c py.h
+	${CC} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o py.c
+
 common.o: common.c hgd.h
 	${CC} ${CPPFLAGS} ${CFLAGS} -c -o common.o common.c
 
 db.o: db.c hgd.h
 	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} -c -o db.o db.c
 
-hgd-playd: common.o db.o hgd-playd.c hgd.h
+hgd-playd: common.o db.o py.o hgd-playd.c hgd.h
 	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} -o hgd-playd \
-		db.o common.o hgd-playd.c
+		db.o common.o py.o hgd-playd.c
 
 hgd-netd: common.o hgd-netd.c hgd.h db.o
 	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
