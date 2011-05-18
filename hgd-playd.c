@@ -62,6 +62,10 @@ hgd_exit_nicely()
 	if (filestore_path)
 		free(filestore_path);
 
+#ifdef HAVE_PYTHON
+	hgd_free_py();
+#endif
+
 	exit (!exit_ok);
 }
 
@@ -329,13 +333,6 @@ main(int argc, char **argv)
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
-#ifdef HAVE_PYTHON
-	if (hgd_init_py() != HGD_OK) {
-		DPRINTF(HGD_D_ERROR, "Failed to initialise Python");
-		hgd_exit_nicely();
-	}
-#endif
-
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
@@ -438,6 +435,14 @@ main(int argc, char **argv)
 		if (hgd_clear_playlist() != HGD_OK)
 			hgd_exit_nicely();
 	}
+
+	/* do the Python dance */
+#ifdef HAVE_PYTHON
+	if (hgd_init_py() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Failed to initialise Python");
+		hgd_exit_nicely();
+	}
+#endif
 
 	/* start */
 	hgd_play_loop();
