@@ -15,7 +15,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define _GNU_SOURCE	/* linux */
+#include <Python.h> /* defines _GNU_SOURCE */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -26,6 +26,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <libconfig.h>
+
 
 #include <sqlite3.h>
 
@@ -274,12 +275,53 @@ hgd_usage()
 	printf("  -x	Set debug level (0-3)\n");
 }
 
+void
+py_test()
+{
+	PyObject		*mod, *func, *ret, *args = NULL, *arg1;
+
+	Py_Initialize();
+
+	mod = PyImport_ImportModule("os");
+	if (mod == NULL) {
+		PyErr_Print();
+		DPRINTF(HGD_D_ERROR, "failed to import");
+	}
+
+	func = PyObject_GetAttrString(mod, "getenv");
+	if (func && PyCallable_Check(func)) {
+		args = PyTuple_New(1);
+		arg1 = PyString_FromString("HOME");
+		PyTuple_SetItem(args, 0, arg1);
+	} else {
+		PyErr_Print();
+		DPRINTF(HGD_D_ERROR, "failed find func");
+	}
+
+	ret = PyObject_CallObject(func, args);
+	if (ret == NULL) {
+		PyErr_Print();
+		DPRINTF(HGD_D_ERROR, "call failed");
+	}
+
+	printf("HOME = %s\n", PyString_AsString(ret));
+
+	Py_DECREF(ret);
+	Py_DECREF(func);
+	Py_DECREF(mod);
+
+}
+
 int
 main(int argc, char **argv)
 {
 	char			 ch;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
+
+	py_test();
+	printf("python done\n");
+	exit (EXIT_SUCCESS);
 
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );

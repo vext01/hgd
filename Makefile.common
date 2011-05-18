@@ -30,8 +30,8 @@ db.o: db.c hgd.h
 	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} -c -o db.o db.c
 
 hgd-playd: common.o db.o hgd-playd.c hgd.h
-	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LDFLAGS} ${LDFLAGS} -o hgd-playd \
+	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} -o hgd-playd \
 		db.o common.o hgd-playd.c
 
 hgd-netd: common.o hgd-netd.c hgd.h db.o
