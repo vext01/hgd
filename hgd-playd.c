@@ -170,6 +170,9 @@ hgd_play_loop()
 			hgd_play_track(&track);
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
+#ifdef HAVE_PYTHON
+			hgd_execute_py_hook("nothing_to_play");
+#endif
 			sleep(1);
 		}
 		hgd_free_playlist_item(&track);

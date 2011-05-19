@@ -30,11 +30,13 @@
 #define HGD_DFL_PY_DIR		HGD_DFL_SVR_CONF_DIR "/scripts"
 struct hgd_py_modules {
 	PyObject		*mods[HGD_MAX_PY_MODS];
+	char			*mod_names[HGD_MAX_PY_MODS];
 	uint8_t			 n_mods;
 };
 extern struct hgd_py_mods	 hgd_pys;
 
 int				 hgd_init_py();
 void				 hgd_free_py();
+int				 hgd_execute_py_hook(char *hook);
 
 #endif
