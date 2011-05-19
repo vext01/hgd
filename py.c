@@ -28,7 +28,7 @@
 #include "hgd.h"
 #include "py.h"
 
-struct hgd_py_mods		hgd_pys;
+struct hgd_py_modules		hgd_py_mods;
 
 /* embed the Python interpreter */
 int
@@ -48,7 +48,7 @@ hgd_init_py()
 
 	Py_Initialize();
 
-	memset(&hgd_pys, 0, sizeof(hgd_pys));
+	memset(&hgd_py_mods, 0, sizeof(hgd_py_mods));
 
 	script_dir = opendir(HGD_DFL_PY_DIR);
 	if (script_dir == NULL) {
@@ -57,11 +57,17 @@ hgd_init_py()
 		hgd_exit_nicely();
 	}
 
+	/* loop over script dir loading modules */
 	while ((ent = readdir(script_dir)) != NULL) {
 
 		if ((strcmp(ent->d_name, ".") == 0) ||
 		    (strcmp(ent->d_name, "..") == 0)) {
 			continue;
+		}
+
+		if (hgd_py_mods.n_mods == HGD_MAX_PY_MODS) {
+			DPRINTF(HGD_D_WARN, "too many python modules loaded");
+			break;
 		}
 
 		ent->d_name[strlen(ent->d_name) - 3] = 0;
@@ -70,6 +76,8 @@ hgd_init_py()
 
 		if (!mod)
 			PRINT_PY_ERROR();
+
+		hgd_py_mods.mods[hgd_py_mods.n_mods++] = mod;
 	}
 
 	(void) closedir(script_dir);

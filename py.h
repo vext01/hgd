@@ -26,10 +26,10 @@
 				} while (0);
 
 /* python extensions */
-#define HGD_MAX_PY_MODS		16
+#define HGD_MAX_PY_MODS		32
 #define HGD_DFL_PY_DIR		HGD_DFL_SVR_CONF_DIR "/scripts"
-struct hgd_py_mods {
-	PyObject		*mod;
+struct hgd_py_modules {
+	PyObject		*mods[HGD_MAX_PY_MODS];
 	uint8_t			 n_mods;
 };
 extern struct hgd_py_mods	 hgd_pys;
