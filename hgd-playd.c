@@ -108,8 +108,17 @@ hgd_play_track(struct hgd_playlist_item *t)
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
+#ifdef HAVE_PYTHON
+			hgd_execute_py_hook("pre_play");
+#endif
+
 		execlp("mplayer", "mplayer", "-really-quiet",
 		    t->filename, (char *) NULL);
+
+#ifdef HAVE_PYTHON
+			hgd_execute_py_hook("post_play");
+#endif
+
 
 		/* if we get here, the shit hit the fan with execlp */
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
