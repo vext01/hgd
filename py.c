@@ -31,12 +31,67 @@
 struct hgd_py_modules		hgd_py_mods;
 
 /*
+ * Python extension glue
+ *
  * XXX - reference counts, all over the place!
+ */
+
+static PyTypeObject HgdType = {
+	PyObject_HEAD_INIT(NULL)
+	0,				/*ob_size*/
+	"hgd.Hgd",			/*tp_name*/
+	sizeof(Hgd),			/*tp_basicsize*/
+	0,				/*tp_itemsize*/
+	0,				/*tp_dealloc*/
+	0,				/*tp_print*/
+	0,				/*tp_getattr*/
+	0,				/*tp_setattr*/
+	0,				/*tp_compare*/
+	0,				/*tp_repr*/
+	0,				/*tp_as_number*/
+	0,				/*tp_as_sequence*/
+	0,				/*tp_as_mapping*/
+	0,				/*tp_hash*/
+	0,				/*tp_call*/
+	0,				/*tp_str*/
+	0,				/*tp_getattro*/
+	0,				/*tp_setattro*/
+	0,				/*tp_as_buffer*/
+	Py_TPFLAGS_DEFAULT,		/*tp_flags*/
+	"Hackathon Gunther Daemon",	/*tp_doc*/
+};
+
+static PyMethodDef hgd_methods[] = {
+    {NULL}
+};
+
+#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
+#define PyMODINIT_FUNC void
+#endif
+
+PyMODINIT_FUNC
+inithgd(void)
+{
+    PyObject* m;
+
+    HgdType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&HgdType) < 0)
+        return;
+
+    m = Py_InitModule3("hgd", hgd_methods,
+                       "Hackathon Gunther Daemon Extensions");
+
+    Py_INCREF(&HgdType);
+    PyModule_AddObject(m, "Hgd", (PyObject *) &HgdType);
+}
+
+/*
+ * Back to HGD land
  */
 
 /* embed the Python interpreter */
 int
-hgd_init_py()
+hgd_embed_py()
 {
 	DIR			*script_dir;
 	struct dirent		*ent;
@@ -91,6 +146,9 @@ hgd_init_py()
 
 	(void) closedir(script_dir);
 
+	inithgd();
+	hgd_py_mods.hgd_o = _PyObject_New(&HgdType);
+
 	return (HGD_OK);
 }
 
@@ -108,7 +166,7 @@ hgd_free_py()
 int
 hgd_execute_py_hook(char *hook)
 {
-	PyObject		*func, *ret;
+	PyObject		*func, *ret, *args;
 	int			 i, c_ret, any_errors = HGD_OK;
 	char			*func_name = NULL;
 
@@ -134,10 +192,13 @@ hgd_execute_py_hook(char *hook)
 			continue;
 		}
 
+		args = PyTuple_New(1);
+		PyTuple_SetItem(args, 0, hgd_py_mods.hgd_o);
+
 		DPRINTF(HGD_D_INFO, "Calling Python hook '%s.%s'",
 		    hgd_py_mods.mod_names[i], func_name);
 
-		ret = PyObject_CallObject(func, NULL);
+		ret = PyObject_CallObject(func, args);
 		if (ret == NULL) {
 			PRINT_PY_ERROR();
 			DPRINTF(HGD_D_WARN,

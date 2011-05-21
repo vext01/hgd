@@ -28,14 +28,22 @@
 /* python extensions */
 #define HGD_MAX_PY_MODS		32
 #define HGD_DFL_PY_DIR		HGD_DFL_SVR_CONF_DIR "/scripts"
+
+/* this describes the hgd object in python */
+typedef struct {
+    PyObject_HEAD
+} Hgd;
+
+/* module table - these are user moduels which we load and call hooks on */
 struct hgd_py_modules {
+	PyObject		*hgd_o;			/* ptr to hgd object */
 	PyObject		*mods[HGD_MAX_PY_MODS];
 	char			*mod_names[HGD_MAX_PY_MODS];
 	uint8_t			 n_mods;
 };
 extern struct hgd_py_mods	 hgd_pys;
 
-int				 hgd_init_py();
+int				 hgd_embed_py();
 void				 hgd_free_py();
 int				 hgd_execute_py_hook(char *hook);
 

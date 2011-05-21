@@ -441,7 +441,7 @@ main(int argc, char **argv)
 
 	/* do the Python dance */
 #ifdef HAVE_PYTHON
-	if (hgd_init_py() != HGD_OK) {
+	if (hgd_embed_py() != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Failed to initialise Python");
 		hgd_exit_nicely();
 	}
