@@ -27,6 +27,7 @@
 
 #include "hgd.h"
 #include "py.h"
+#include "db.h"
 
 struct hgd_py_modules		hgd_py_mods;
 
@@ -51,10 +52,53 @@ hgd_py_meth_test(Hgd *self)
 	Py_RETURN_NONE;
 }
 
+/*
+ * XXX make dictionary
+ * XXX more error checks
+ */
+static PyObject *
+hgd_py_meth_get_playlist(Hgd *self)
+{
+	struct hgd_playlist	  list;
+	struct hgd_playlist_item *it;
+	unsigned int			  i;
+	PyObject		 *rec, *ret, *d_file, *d_id, *d_user;
+
+	self = self;
+
+	if (hgd_get_playlist(&list) == HGD_FAIL)
+		Py_RETURN_NONE; /* XXX throw exception */
+
+
+	ret = PyTuple_New(list.n_items);
+	//Py_INCREF(ret);
+	for (i = 0; i < list.n_items; i++) {
+		it = list.items[i];
+
+		d_id = PyInt_FromLong(it->id);
+		d_file = PyString_FromString(it->filename);
+		d_user = PyString_FromString(it->user);
+		//Py_INCREF(d_id);
+		//Py_INCREF(d_file);
+		//Py_INCREF(d_user);
+
+		rec = PyTuple_New(3); /* id, filename, who */
+		PyTuple_SetItem(rec, 0, d_id);
+		PyTuple_SetItem(rec, 1, d_file);
+		PyTuple_SetItem(rec, 2, d_user);
+
+		PyTuple_SetItem(ret, i, rec);
+	}
+
+	return (ret);
+}
+
 /* method table */
 static PyMethodDef hgd_methods[] = {
 	{"test",
 	    (PyCFunction) hgd_py_meth_test, METH_NOARGS, "test the damned thing"},
+	{"get_playlist",
+	    (PyCFunction) hgd_py_meth_get_playlist, METH_NOARGS, "get the current hgd playlist"},
 	{ 0, 0, 0, 0 }
 };
 
