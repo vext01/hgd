@@ -199,15 +199,14 @@ hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 	return (0);
 }
 
-#if 0
 static void
-Noddy_dealloc(Noddy* self)
+hgd_py_meth_dealloc(Hgd *self)
 {
-	Py_XDECREF(self->first);
-	Py_XDECREF(self->last);
+	Py_XDECREF(self->hgd_version);
+	Py_XDECREF(self->mod_data);
+	Py_XDECREF(self->component);
 	self->ob_type->tp_free((PyObject*)self);
 }
-#endif
 
 
 /*
@@ -220,7 +219,7 @@ static PyTypeObject HgdType = {
 	"hgd.Hgd",			/* tp_name */
 	sizeof(Hgd),			/* tp_basicsize */
 	0,				/* tp_itemsize */
-	0,				/* tp_dealloc */
+	(destructor) hgd_py_meth_dealloc,	/* tp_dealloc */
 	0,				/* tp_print */
 	0,				/* tp_getattr */
 	0,				/* tp_setattr */
