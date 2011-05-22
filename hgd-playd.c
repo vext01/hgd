@@ -160,7 +160,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 }
 
 void
-hgd_play_loop()
+hgd_play_loop(void)
 {
 	struct hgd_playlist_item	 track;
 
@@ -286,7 +286,7 @@ hgd_read_config(char **config_locations)
 }
 
 void
-hgd_usage()
+hgd_usage(void)
 {
 	printf("usage: hgd-netd <options>\n");
 	printf("  -c	Path to a config file to use\n");

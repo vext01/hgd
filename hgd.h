@@ -220,11 +220,11 @@ int				 hgd_setup_ssl_ctx(SSL_METHOD **method,
 
 /* misc */
 uint8_t				 hgd_is_ip_addr(char *str);
-void				 hgd_mk_state_dir();
-void				 hgd_print_version();
-void				 hgd_exit_nicely();
+void				 hgd_mk_state_dir(void);
+void				 hgd_print_version(void);
+void				 hgd_exit_nicely(void);
 void				 hgd_kill_sighandler(int sig);
-void				 hgd_register_sig_handlers();
+void				 hgd_register_sig_handlers(void);
 char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
 int				 hgd_readpassphrase_confirmed(

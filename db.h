@@ -39,7 +39,7 @@ int				 hgd_get_playing_item(
 				     struct hgd_playlist_item *playing);
 int				 hgd_get_num_votes_cb(void *arg,
 				     int argc, char **data, char **names);
-int				 hgd_get_num_votes();
+int				 hgd_get_num_votes(void);
 int				 hgd_insert_track(char *filename, char *user);
 int				 hgd_insert_vote(char *user);
 int				 hgd_get_playlist(struct hgd_playlist *list);
@@ -47,13 +47,13 @@ int				 hgd_get_next_track(
 				     struct hgd_playlist_item *track);
 int				 hgd_mark_playing(int id);
 int				 hgd_mark_finished(int id, uint8_t purge);
-int				 hgd_clear_votes();
-int				 hgd_clear_playlist();
-int				 hgd_init_playstate();
+int				 hgd_clear_votes(void);
+int				 hgd_clear_playlist(void);
+int				 hgd_init_playstate(void);
 int				 hgd_add_user(char *usr, char *slt, char *hash);
 struct hgd_user			*hgd_authenticate_user(char *user, char *pass);
 int				 hgd_delete_user(char *user);
-struct hgd_user_list		*hgd_get_all_users();
+struct hgd_user_list		*hgd_get_all_users(void);
 int				 hgd_num_tracks_user(char *username);
 
 #endif

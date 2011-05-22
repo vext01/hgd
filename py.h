@@ -48,8 +48,8 @@ struct hgd_py_modules {
 };
 extern struct hgd_py_mods	 hgd_pys;
 
-int				 hgd_embed_py();
-void				 hgd_free_py();
+int				 hgd_embed_py(void);
+void				 hgd_free_py(void);
 int				 hgd_execute_py_hook(char *hook);
 
 #endif
