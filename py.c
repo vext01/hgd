@@ -125,7 +125,7 @@ hgd_py_meth_get_playlist(Hgd *self)
 	}
 
 clean:
-	/* XXX free up list */
+	hgd_free_playlist(&list);
 	return (ret);
 }
 
