@@ -53,7 +53,11 @@ hgd_py_meth_test(Hgd *self)
 }
 
 /*
- * XXX make dictionary
+ * get the contents of the playlist
+ *
+ * args:
+ * ret: tuple of dicts
+ *
  * XXX more error checks
  */
 static PyObject *
@@ -62,7 +66,8 @@ hgd_py_meth_get_playlist(Hgd *self)
 	struct hgd_playlist	  list;
 	struct hgd_playlist_item *it;
 	unsigned int			  i;
-	PyObject		 *rec, *ret, *d_file, *d_id, *d_user;
+	PyObject		 *rec, *ret, *v_filename, *v_id, *v_user;
+	PyObject		 *k_filename, *k_id, *k_user;
 
 	self = self;
 
@@ -71,25 +76,56 @@ hgd_py_meth_get_playlist(Hgd *self)
 
 
 	ret = PyTuple_New(list.n_items);
+	if (!ret) /* XXX exception? */
+		DPRINTF(HGD_D_ERROR, "could not allocate python dict");
 	//Py_INCREF(ret);
+
+	if (list.n_items == 0)
+		goto clean;
+
 	for (i = 0; i < list.n_items; i++) {
 		it = list.items[i];
 
-		d_id = PyInt_FromLong(it->id);
-		d_file = PyString_FromString(it->filename);
-		d_user = PyString_FromString(it->user);
-		//Py_INCREF(d_id);
-		//Py_INCREF(d_file);
-		//Py_INCREF(d_user);
+		rec = PyDict_New();
+		if (!rec)
+			DPRINTF(HGD_D_ERROR, "could not allocate python dict");
+		Py_INCREF(rec);
 
-		rec = PyTuple_New(3); /* id, filename, who */
-		PyTuple_SetItem(rec, 0, d_id);
-		PyTuple_SetItem(rec, 1, d_file);
-		PyTuple_SetItem(rec, 2, d_user);
+		k_id = PyString_FromString("id");
+		k_filename = PyString_FromString("filename");
+		k_user = PyString_FromString("user");
 
-		PyTuple_SetItem(ret, i, rec);
+		//Py_INCREF(k_id);
+		//Py_INCREF(k_filename);
+		//Py_INCREF(k_user);
+
+		v_id = PyInt_FromLong(it->id);
+		v_filename = PyString_FromString(it->filename);
+		v_user = PyString_FromString(it->user);
+
+		//Py_INCREF(v_id);
+		//Py_INCREF(v_filename);
+		//Py_INCREF(v_user);
+
+		if ((!k_id) || (!k_filename) || (!k_user))
+			DPRINTF(HGD_D_ERROR, "could not allocate python dict keys");
+
+		if (PyDict_SetItem(rec, k_id, v_id) < 0)
+			DPRINTF(HGD_D_ERROR, "can't assign dict item");
+		if (PyDict_SetItem(rec, k_filename, v_filename) < 0)
+			DPRINTF(HGD_D_ERROR, "can't assign dict item");
+		if (PyDict_SetItem(rec, k_user, v_user) < 0)
+			DPRINTF(HGD_D_ERROR, "can't assign dict item");
+
+		if (PyTuple_SetItem(ret, i, rec) != 0) {
+			PRINT_PY_ERROR();
+			DPRINTF(HGD_D_ERROR, "can't add to tuple");
+		}
+
 	}
 
+clean:
+	/* XXX free up list */
 	return (ret);
 }
 
