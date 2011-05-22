@@ -144,8 +144,12 @@ static PyMethodDef hgd_py_methods[] = {
 static PyMemberDef hgd_py_members[] = {
 	{"proto_version",
 	    T_INT, offsetof(Hgd, proto_version), 0, "protocol version"},
+	{"hgd_version",
+	    T_OBJECT_EX, offsetof(Hgd, hgd_version), 0, "HGD version"},
 	{"debug_level",
 	    T_INT, offsetof(Hgd, debug_level), 0, "debug level"},
+	{"mod_data",
+	    T_OBJECT_EX, offsetof(Hgd, mod_data), 0, "stash space for modules"},
 	{0, 0, 0, 0, 0}
 };
 
@@ -155,26 +159,32 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
 	Hgd			*self;
 
+	DPRINTF(HGD_D_INFO, "__new__ hgd object");
+
 	/* quiet */
 	args = args;
 	kwds = kwds;
 
 	self = (Hgd *)type->tp_alloc(type, 0);
 
-#if 0
 	if (self != NULL) {
-		self->proto_version = PyInt_FromLong(HGD_PROTO_VERSION);
-		if (self->proto_version == NULL) {
-			DPRINTF(HGD_D_ERROR, "couldn't init self.proto_version");
+		self->hgd_version = PyString_FromString(HGD_VERSION);
+		if (self->hgd_version == NULL) {
+			DPRINTF(HGD_D_ERROR, "couldn't init self.hgd_version");
+			Py_DECREF(self);
+			return NULL;
+		}
+
+		self->mod_data = PyDict_New();
+		if (self->mod_data == NULL) {
+			DPRINTF(HGD_D_ERROR, "couldn't init self.mod_data");
 			Py_DECREF(self);
 			return NULL;
 		}
 	}
-#endif
 
-	self->proto_version = 0;
-	//self->hgd_version = 0;
-	self->debug_level = 0;
+	self->proto_version = HGD_PROTO_VERSION;
+	self->debug_level = hgd_debug;
 
 	return (PyObject *)self;
 }
@@ -183,13 +193,14 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 {
+	DPRINTF(HGD_D_INFO, "__init__ hgd object");
+
 	/* quiet */
+	self = self;
 	args = args;
 	kwds = kwds;
 
-	self->proto_version = HGD_PROTO_VERSION;
-	//self->hgd_version = xst
-	self->debug_level = hgd_debug;
+	/* does nothing for now, but may need it later? */
 
 	return (0);
 }
@@ -230,7 +241,7 @@ static PyTypeObject HgdType = {
 	0,				/* tp_getattro */
 	0,				/* tp_setattro */
 	0,				/* tp_as_buffer */
-	Py_TPFLAGS_DEFAULT,		/* tp_flags */
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
 	"Hackathon Gunther Daemon",	/* tp_doc */
 	0,				/* tp_traverse */
 	0,				/* tp_clear */
@@ -351,8 +362,8 @@ hgd_embed_py()
 	(void) closedir(script_dir);
 
 	hgd_init_hgd_mod(); /* init hgd module */
-	hgd_py_mods.hgd_o = _PyObject_New(&HgdType); /* stash an instance */
-	hgd_py_meth_init((Hgd *) hgd_py_mods.hgd_o, NULL, NULL);
+	hgd_py_mods.hgd_o = hgd_py_meth_new(&HgdType, NULL, NULL); /* stash an instance */
+	//hgd_py_meth_init((Hgd *) hgd_py_mods.hgd_o, NULL, NULL);
 
 	hgd_execute_py_hook("init");
 
@@ -386,7 +397,7 @@ hgd_execute_py_hook(char *hook)
 
 		/* if a hook func is not defined, that is fine, skip */
 		if (!func) {
-			DPRINTF(HGD_D_INFO, "Python hook '%s.%s' undefined",
+			DPRINTF(HGD_D_DEBUG, "Python hook '%s.%s' undefined",
 			    hgd_py_mods.mod_names[i], func_name);
 			continue;
 		}
