@@ -144,6 +144,8 @@ static PyMethodDef hgd_py_methods[] = {
 static PyMemberDef hgd_py_members[] = {
 	{"proto_version",
 	    T_INT, offsetof(Hgd, proto_version), 0, "protocol version"},
+	{"debug_level",
+	    T_INT, offsetof(Hgd, debug_level), 0, "debug level"},
 	{0, 0, 0, 0, 0}
 };
 
@@ -171,6 +173,8 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 #endif
 
 	self->proto_version = 0;
+	//self->hgd_version = 0;
+	self->debug_level = 0;
 
 	return (PyObject *)self;
 }
@@ -179,24 +183,13 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 {
-	printf("I AM INITIALISING");
-
 	/* quiet */
 	args = args;
 	kwds = kwds;
 
-#if 0
-	if (self != NULL) {
-		self->proto_version = PyInt_FromLong(HGD_PROTO_VERSION);
-		if (self->proto_version == NULL) {
-			DPRINTF(HGD_D_ERROR, "couldn't init self.proto_version");
-			Py_DECREF(self);
-			return NULL;
-		}
-	}
-#endif
-
 	self->proto_version = HGD_PROTO_VERSION;
+	//self->hgd_version = xst
+	self->debug_level = hgd_debug;
 
 	return (0);
 }

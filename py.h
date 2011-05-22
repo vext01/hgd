@@ -33,9 +33,8 @@
 typedef struct {
 	PyObject_HEAD
 	int			 proto_version;
-	PyObject		*flood_limit;
 	PyObject		*hgd_version;
-	PyObject		*debug;
+	int			 debug_level;
 	PyObject		*mod_data;	/* stash space for users */
 } Hgd;
 
