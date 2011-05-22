@@ -41,7 +41,7 @@
 
 #include "hgd.h"
 
-int8_t				 hgd_debug = 1; /* default to warn */
+int8_t				 hgd_debug = HGD_D_WARN;
 uint8_t				 dying = 0;
 uint8_t				 exit_ok = 0;
 pid_t				 pid = 0;
