@@ -1,3 +1,5 @@
+PY_LDFLAGS+=-L/usr/local/lib
+
 SQL_CPPFLAGS=`pkg-config --cflags sqlite3`
 
 SQL_LDFLAGS=`pkg-config --libs sqlite3`
