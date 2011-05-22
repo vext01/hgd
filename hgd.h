@@ -86,6 +86,7 @@ extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
 extern char			*debug_names[];
 extern pid_t			 pid;
+extern char			*hgd_component;
 
 extern char			*state_path;
 extern char			*filestore_path;

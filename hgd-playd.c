@@ -43,6 +43,7 @@
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
 uint8_t				 clear_playlist_on_start = 0;
+char				*hgd_component = "playd";
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)

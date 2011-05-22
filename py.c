@@ -135,6 +135,8 @@ static PyMemberDef hgd_py_members[] = {
 	    T_INT, offsetof(Hgd, debug_level), 0, "debug level"},
 	{"mod_data",
 	    T_OBJECT_EX, offsetof(Hgd, mod_data), 0, "stash space for modules"},
+	{"component",
+	    T_OBJECT_EX, offsetof(Hgd, component), 0, "which hgd process?"},
 	{0, 0, 0, 0, 0}
 };
 
@@ -156,6 +158,13 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 		self->hgd_version = PyString_FromString(HGD_VERSION);
 		if (self->hgd_version == NULL) {
 			DPRINTF(HGD_D_ERROR, "couldn't init self.hgd_version");
+			Py_DECREF(self);
+			return NULL;
+		}
+
+		self->component = PyString_FromString(hgd_component);
+		if (self->component == NULL) {
+			DPRINTF(HGD_D_ERROR, "couldn't init self.componentn");
 			Py_DECREF(self);
 			return NULL;
 		}
