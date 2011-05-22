@@ -41,19 +41,6 @@ struct hgd_py_modules		hgd_py_mods;
  */
 
 /*
- * Testing a method call
- * args :
- * returns : None
- */
-static PyObject *
-hgd_py_meth_test(Hgd *self)
-{
-	self = self; /* sssh */
-	printf("Ya, hi, i work\n");
-	Py_RETURN_NONE;
-}
-
-/*
  * get the contents of the playlist
  *
  * args:
@@ -133,8 +120,6 @@ clean:
 
 /* method table */
 static PyMethodDef hgd_py_methods[] = {
-	{"test",
-	    (PyCFunction) hgd_py_meth_test, METH_NOARGS, "test the damned thing"},
 	{"get_playlist",
 	    (PyCFunction) hgd_py_meth_get_playlist, METH_NOARGS, "get the current hgd playlist"},
 	{ 0, 0, 0, 0 }
