@@ -20,6 +20,7 @@
 #ifdef HAVE_PYTHON
 
 #include <Python.h> /* defines _GNU_SOURCE */
+#include <structmember.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -108,7 +109,8 @@ hgd_py_meth_get_playlist(Hgd *self)
 		//Py_INCREF(v_user);
 
 		if ((!k_id) || (!k_filename) || (!k_user))
-			DPRINTF(HGD_D_ERROR, "could not allocate python dict keys");
+			DPRINTF(HGD_D_ERROR,
+			    "could not allocate python dict keys");
 
 		if (PyDict_SetItem(rec, k_id, v_id) < 0)
 			DPRINTF(HGD_D_ERROR, "can't assign dict item");
@@ -130,13 +132,85 @@ clean:
 }
 
 /* method table */
-static PyMethodDef hgd_methods[] = {
+static PyMethodDef hgd_py_methods[] = {
 	{"test",
 	    (PyCFunction) hgd_py_meth_test, METH_NOARGS, "test the damned thing"},
 	{"get_playlist",
 	    (PyCFunction) hgd_py_meth_get_playlist, METH_NOARGS, "get the current hgd playlist"},
 	{ 0, 0, 0, 0 }
 };
+
+/* member table */
+static PyMemberDef hgd_py_members[] = {
+	{"proto_version",
+	    T_INT, offsetof(Hgd, proto_version), 0, "protocol version"},
+	{0, 0, 0, 0, 0}
+};
+
+/* __new__ */
+static PyObject *
+hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+	Hgd			*self;
+
+	/* quiet */
+	args = args;
+	kwds = kwds;
+
+	self = (Hgd *)type->tp_alloc(type, 0);
+
+#if 0
+	if (self != NULL) {
+		self->proto_version = PyInt_FromLong(HGD_PROTO_VERSION);
+		if (self->proto_version == NULL) {
+			DPRINTF(HGD_D_ERROR, "couldn't init self.proto_version");
+			Py_DECREF(self);
+			return NULL;
+		}
+	}
+#endif
+
+	self->proto_version = 0;
+
+	return (PyObject *)self;
+}
+
+/* __init__ */
+static int
+hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
+{
+	printf("I AM INITIALISING");
+
+	/* quiet */
+	args = args;
+	kwds = kwds;
+
+#if 0
+	if (self != NULL) {
+		self->proto_version = PyInt_FromLong(HGD_PROTO_VERSION);
+		if (self->proto_version == NULL) {
+			DPRINTF(HGD_D_ERROR, "couldn't init self.proto_version");
+			Py_DECREF(self);
+			return NULL;
+		}
+	}
+#endif
+
+	self->proto_version = HGD_PROTO_VERSION;
+
+	return (0);
+}
+
+#if 0
+static void
+Noddy_dealloc(Noddy* self)
+{
+	Py_XDECREF(self->first);
+	Py_XDECREF(self->last);
+	self->ob_type->tp_free((PyObject*)self);
+}
+#endif
+
 
 /*
  * Describe the hgd object type
@@ -171,17 +245,17 @@ static PyTypeObject HgdType = {
 	0,				/* tp_weaklistoffset */
 	0,				/* tp_iter */
 	0,				/* tp_iternext */
-	hgd_methods,			/* tp_methods */
-	0,				/* tp_members */
+	hgd_py_methods,			/* tp_methods */
+	hgd_py_members,			/* tp_members */
 	0,				/* tp_getset */
 	0,				/* tp_base */
 	0,				/* tp_dict */
 	0,				/* tp_descr_get */
 	0,				/* tp_descr_set */
 	0,				/* tp_dictoffset */
-	0,				/* tp_init */
+	(initproc) hgd_py_meth_init,	/* tp_init */
 	0,				/* tp_alloc */
-	0,				/* tp_new */
+	hgd_py_meth_new,		/* tp_new */
 	0,				/* tp_free */
 	0,				/* tp_is_gc */
 	0,				/* tp_bases */
@@ -207,7 +281,7 @@ static PyTypeObject HgdType = {
 #define PyMODINIT_FUNC void
 #endif
 PyMODINIT_FUNC
-inithgd(void)
+hgd_init_hgd_mod(void)
 {
     PyObject* m;
 
@@ -215,7 +289,7 @@ inithgd(void)
     if (PyType_Ready(&HgdType) < 0)
         return;
 
-    m = Py_InitModule3("hgd", hgd_methods,
+    m = Py_InitModule3("hgd", hgd_py_methods,
                        "Hackathon Gunther Daemon Extensions");
 
     Py_INCREF(&HgdType);
@@ -283,8 +357,11 @@ hgd_embed_py()
 
 	(void) closedir(script_dir);
 
-	inithgd();
-	hgd_py_mods.hgd_o = _PyObject_New(&HgdType);
+	hgd_init_hgd_mod(); /* init hgd module */
+	hgd_py_mods.hgd_o = _PyObject_New(&HgdType); /* stash an instance */
+	hgd_py_meth_init((Hgd *) hgd_py_mods.hgd_o, NULL, NULL);
+
+	hgd_execute_py_hook("init");
 
 	return (HGD_OK);
 }

@@ -31,7 +31,12 @@
 
 /* this describes the hgd object in python */
 typedef struct {
-    PyObject_HEAD
+	PyObject_HEAD
+	int			 proto_version;
+	PyObject		*flood_limit;
+	PyObject		*hgd_version;
+	PyObject		*debug;
+	PyObject		*mod_data;	/* stash space for users */
 } Hgd;
 
 /* module table - these are user moduels which we load and call hooks on */
