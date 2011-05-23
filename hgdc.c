@@ -785,6 +785,14 @@ hgd_read_config(char **config_locations)
 
 	/* password */
 	if (config_lookup_string(cf, "password", (const char**) &tmp_password)) {
+		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
+			DPRINTF(HGD_D_ERROR, 
+				"Config file with your password in is readable by"
+				" other people.  Please chmod it.");
+			hgd_exit_nicely();	
+
+		}
+
 		password = xstrdup(tmp_password);
 		DPRINTF(HGD_D_DEBUG, "Set password from config");
 	}
