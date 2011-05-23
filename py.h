@@ -29,6 +29,8 @@
 #define HGD_MAX_PY_MODS		32
 #define HGD_DFL_PY_DIR		HGD_DFL_SVR_CONF_DIR "/scripts"
 
+extern char			*hgd_py_dir;
+
 /* this describes the hgd object in python */
 typedef struct {
 	PyObject_HEAD

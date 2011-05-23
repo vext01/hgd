@@ -30,7 +30,8 @@
 #include "py.h"
 #include "db.h"
 
-struct hgd_py_modules		hgd_py_mods;
+struct hgd_py_modules		 hgd_py_mods;
+char				*hgd_py_dir;
 
 /*
  * XXX - reference counts, all over the place!
@@ -307,8 +308,12 @@ hgd_embed_py()
 
 	DPRINTF(HGD_D_INFO, "Initialising Python");
 
+	if (hgd_py_dir == NULL) {
+		hgd_py_dir = xstrdup(HGD_DFL_PY_DIR);
+	}
+
 	/* ensure we find our modules */
-	if (setenv("PYTHONPATH", HGD_DFL_PY_DIR, 0) == -1) {
+	if (setenv("PYTHONPATH", hgd_py_dir, 0) == -1) {
 		DPRINTF(HGD_D_ERROR, "Can't set python search path: %s", SERROR);
 		hgd_exit_nicely();
 	}
@@ -368,6 +373,7 @@ hgd_free_py()
 {
 	DPRINTF(HGD_D_INFO, "Clearing up python stuff");
 	//hgd_py_meth_dealloc(hgd_py_mods.hgd_o, NULL, NULL);
+	if (hgd_py_dir != NULL) free (hgd_py_dir);
 	Py_Finalize();
 	while (hgd_py_mods.n_mods)
 		free(hgd_py_mods.mod_names[--hgd_py_mods.n_mods]);

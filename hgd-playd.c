@@ -207,6 +207,9 @@ hgd_read_config(char **config_locations)
 	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
 	char			*tmp_state_path;
+#ifdef HAVE_PYTHON
+	char			*tmp_py_dir;
+#endif
 	struct stat		 st;
 
 	cf = &cfg;
@@ -270,6 +273,18 @@ hgd_read_config(char **config_locations)
 		DPRINTF(HGD_D_DEBUG,
 		    "fs purging is %s", (purge_finished_fs ? "on" : "off"));
 	}
+
+#ifdef HAVE_PYTHON
+	/* -P */
+	if (config_lookup_string(cf, "plugins.dir",
+	    (const char **) &tmp_py_dir)) {
+		if (hgd_py_dir != NULL) free(hgd_py_dir);
+		hgd_py_dir = strdup(tmp_py_dir);
+		DPRINTF(HGD_D_DEBUG,"Setting python path to %s",
+		    hgd_py_dir);
+	}
+#endif
+
 
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
@@ -358,7 +373,7 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpP:qvx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			if (num_config < 3) {
@@ -389,7 +404,7 @@ main(int argc, char **argv)
 	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpP:qvx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			break; /* already handled */
@@ -407,6 +422,13 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "No purging from fs");
 			purge_finished_fs = 0;
 			break;
+#ifdef HAVE_PYTHON
+		case 'P':
+			DPRINTF(HGD_D_DEBUG, "Setting plugin folder");
+			if (hgd_py_dir != NULL) free (hgd_py_dir); 
+			hgd_py_dir = xstrdup(optarg);
+			break;
+#endif
 		case 'q':
 			DPRINTF(HGD_D_DEBUG, "No purging from db");
 			purge_finished_db = 0;
