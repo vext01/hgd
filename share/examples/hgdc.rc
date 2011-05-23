@@ -21,3 +21,8 @@
 
 ## User name to use.  If not set defaults to `whoami`.
 #username = "sunshinegirls";
+
+
+## Be very careful with file permissions when setting this option.
+## Make sure your chmod is at least 700
+#password = "";
