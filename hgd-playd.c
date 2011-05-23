@@ -36,14 +36,17 @@
 
 #include <sqlite3.h>
 
+#ifdef HAVE_PYTHON
 #include "py.h"
+#endif
+
 #include "hgd.h"
 #include "db.h"
 
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
 uint8_t				 clear_playlist_on_start = 0;
-char				*hgd_component = "playd";
+const char			*hgd_component = "playd";
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -110,14 +113,14 @@ hgd_play_track(struct hgd_playlist_item *t)
 	if (!pid) {
 		/* child - your the d00d who will play this track */
 #ifdef HAVE_PYTHON
-			hgd_execute_py_hook("pre_play");
+		hgd_execute_py_hook("pre_play");
 #endif
 
 		execlp("mplayer", "mplayer", "-really-quiet",
 		    t->filename, (char *) NULL);
 
 #ifdef HAVE_PYTHON
-			hgd_execute_py_hook("post_play");
+		hgd_execute_py_hook("post_play");
 #endif
 
 
@@ -232,7 +235,7 @@ hgd_read_config(char **config_locations)
 #else
 			/*
 			 * XXX: we can use this verion when debian
-			 * get new linconfig
+			 * get new libconfig
 			 */
                         if (config_error_type (cf) == CONFIG_ERR_FILE_IO) {
 				DPRINTF(HGD_D_INFO, "%s (line: %d)",

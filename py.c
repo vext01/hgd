@@ -367,7 +367,7 @@ void
 hgd_free_py()
 {
 	DPRINTF(HGD_D_INFO, "Clearing up python stuff");
-
+	//hgd_py_meth_dealloc(hgd_py_mods.hgd_o, NULL, NULL);
 	Py_Finalize();
 	while (hgd_py_mods.n_mods)
 		free(hgd_py_mods.mod_names[--hgd_py_mods.n_mods]);
