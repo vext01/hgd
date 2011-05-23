@@ -23,7 +23,7 @@ all: hgd-playd hgd-netd hgd-admin hgdc
 
 .PHONY: clean
 clean:
-	rm -f hgd-playd hgd-netd hgdc common.o db.o
+	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o
 
 py.o: py.c py.h
 	${CC} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o py.c
