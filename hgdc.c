@@ -586,11 +586,16 @@ hgd_req_playlist(char **args)
 int
 hgd_req_hud(char **args)
 {
+	int			status;
+
 	args = args; /* silence */
 
 	/* pretty clunky ;) */
 	while (1) {
-		system("clear");
+		status = system("clear");
+		if (status != 0)
+			DPRINTF(HGD_D_WARN, "clear screen failed");
+
 		printf("HGD Server @ %s -- Playlist:\n\n", host);
 
 		if (hgd_req_playlist(NULL) != HGD_OK)
