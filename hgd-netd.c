@@ -38,6 +38,7 @@
 #include <netdb.h>
 #include <poll.h>
 
+#include "config.h"
 #include "hgd.h"
 #include "db.h"
 

@@ -1,5 +1,6 @@
 common.o
 db.o
+py.o
 hgd-admin
 hgd-netd
 hgd-playd

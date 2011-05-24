@@ -30,6 +30,7 @@
 #include <sqlite3.h>
 #include <openssl/rand.h>
 
+#include "config.h"
 #include "hgd.h"
 #include "db.h"
 

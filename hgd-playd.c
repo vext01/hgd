@@ -40,6 +40,7 @@
 #include "py.h"
 #endif
 
+#include "config.h"
 #include "hgd.h"
 #include "db.h"
 

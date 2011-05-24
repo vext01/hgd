@@ -39,6 +39,7 @@
 #include <openssl/ssl.h>
 #include <openssl/evp.h>
 
+#include "config.h"
 #include "hgd.h"
 
 int8_t				 hgd_debug = HGD_D_WARN;

@@ -1,23 +1,54 @@
-AC_INIT(hgd)
+AC_INIT([hgd], [0.4.0], [vext01@gmail.com, me92@kent.ac.uk])
+AC_CONFIG_HEADERS([config.h])
             
-dnl find and test the C compiler
-AC_PROG_CC
 AC_LANG_C
         
 AC_PROG_MAKE_SET
                
 AC_HEADER_STDC
 
-
 PKG_CHECK_MODULES([LIBCONFIG],[libconfig >= 1.3.2])
-PKG_CHECK_MODULES([PYTHON],[python >= 2.6])
-PKG_CHECK_MODULES([BSD],[libbsd >= 0.2.0])
 PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.4])
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 
+# XXX explicitely specify a python-config or disable
 
-VERSION="0.0.1"
+AC_MSG_CHECKING([if you are on a bsd boxen])
+# XXX there is a proper way of doing this
+target_os=`uname -s`
+case "${target_os}" in
+*BSD)
+	AC_MSG_RESULT([yes])
+	;;
+*)
+	AC_MSG_RESULT([no])
+	PKG_CHECK_MODULES([BSD],[libbsd >= 0.2.0])
+esac
+
+# check for python manually, as we can't find a portable way
+# we accept 2.6 and 2.7 for now
+PYTHON_VERSION=
+for i in python2.7-config python2.6-config python-config; do
+	AC_MSG_CHECKING([$i])
+	if test -n "`which $i 2> /dev/null`"; then
+		AC_MSG_RESULT([yes])
+		PYTHON_CONFIG=$i
+		CPPFLAGS="${CPPFLAGS}-DHAVE_PYTHON"
+		break;
+	fi
+	AC_MSG_RESULT([no])
+done
+
+if test -n "${PYTHON_CONFIG}"; then
+	PYTHON_LDFLAGS=`$PYTHON_CONFIG --ldflags`
+	PYTHON_CFLAGS=`$PYTHON_CONFIG --cflags`
+fi
+
+
+#VERSION="0.4.0"
 AC_SUBST(VERSION)
+AC_SUBST(PYTHON_CFLAGS)
+AC_SUBST(PYTHON_LDFLAGS)
 
 dnl read Makefile.in and write Makefile
-AC_OUTPUT(Makefile config.h)
+AC_OUTPUT(Makefile)
