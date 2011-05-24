@@ -1,13 +1,22 @@
-PY_LDFLAGS+=-L/usr/local/lib
+CC=@CC@
+#PY_LDFLAGS+=-L/usr/local/lib
+PY_LDFLAGS+=@PYTHON_LIBS@
+PY_CFLAGS+=@PYTHON_CFLAGS@
 
-SQL_CPPFLAGS=`pkg-config --cflags sqlite3`
+SQL_CFLAGS=@SQLITE_CFLAGS@
+SQL_LDFLAGS=@SQLITE_LIBS@
 
-SQL_LDFLAGS=`pkg-config --libs sqlite3`
-SSL_LDFLAGS=-lssl -lcrypto
+SSL_CFLAGS=@SSL_CFLAGS@
+SSL_LDFLAGS=@SSL_LIBS@
 
-CFLAGS+=-Wall -Wextra -g
-CPPFLAGS+=-I/usr/local/include
-LDFLAGS+=-L/usr/local/lib -lconfig
+CONFIG_CFLAGS=@LIBCONFIG_CFLAGS@
+CONFIG_LDFLAGS=@LIBCONFIG_LIBS@
+
+BSD_CFLAGS=@BSD_CFLAGS@
+BSD_LDFLAGS=@BSD_LIBS@
+
+CFLAGS+=@CFLAGS@
+LDFLAGS+=@LIBS@
 
 INSTALL?=install
 
@@ -29,28 +38,28 @@ py.o: py.c py.h
 	${CC} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o py.c
 
 common.o: common.c hgd.h
-	${CC} ${CPPFLAGS} ${CFLAGS} -c -o common.o common.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} -c -o common.o common.c
 
 db.o: db.c hgd.h
-	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} -c -o db.o db.c
+	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h
-	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} -o hgd-playd \
+	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS} -o hgd-playd \
 		db.o common.o py.o hgd-playd.c
 
 hgd-netd: common.o hgd-netd.c hgd.h db.o
-	${CC} ${CPPFLAGS} ${SQL_CPPFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LDFLAGS} ${LDFLAGS} -o hgd-netd \
+	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS} -o hgd-netd \
 		common.o db.o hgd-netd.c
 
 hgdc: common.o hgdc.c hgd.h
-	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${SSL_LDFLAGS} \
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
 		-o hgdc common.o hgdc.c
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c
 	${CC} ${CPPFLAGS} ${CFLAGS} ${SQL_CPPFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LDFLAGS} ${LDFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
 		-o hgd-admin common.o db.o hgd-admin.c
 
 client: hgdc
