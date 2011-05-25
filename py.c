@@ -43,6 +43,7 @@ char				*hgd_py_dir;
 
 /*
  * get the contents of the playlist
+ * XXX needs to lock database
  *
  * args:
  * ret: tuple of dicts
@@ -63,55 +64,24 @@ hgd_py_meth_get_playlist(Hgd *self)
 	if (hgd_get_playlist(&list) == HGD_FAIL)
 		Py_RETURN_NONE; /* XXX throw exception */
 
-
-	ret = PyTuple_New(list.n_items);
+	ret = PyList_New(list.n_items);
 	if (!ret) /* XXX exception? */
-		DPRINTF(HGD_D_ERROR, "could not allocate python dict");
-	//Py_INCREF(ret);
-
-	if (list.n_items == 0)
-		goto clean;
+		DPRINTF(HGD_D_ERROR, "could not allocate python list");
 
 	for (i = 0; i < list.n_items; i++) {
 		it = list.items[i];
 
-		rec = PyDict_New();
-		if (!rec)
+		rec = Py_BuildValue("{sissss}",
+		    "id", it->id,
+		    "filename", it->filename,
+		    "user", it->user);
+		if (rec == NULL)
 			DPRINTF(HGD_D_ERROR, "could not allocate python dict");
-		Py_INCREF(rec);
 
-		k_id = PyString_FromString("id");
-		k_filename = PyString_FromString("filename");
-		k_user = PyString_FromString("user");
-
-		//Py_INCREF(k_id);
-		//Py_INCREF(k_filename);
-		//Py_INCREF(k_user);
-
-		v_id = PyInt_FromLong(it->id);
-		v_filename = PyString_FromString(it->filename);
-		v_user = PyString_FromString(it->user);
-
-		//Py_INCREF(v_id);
-		//Py_INCREF(v_filename);
-		//Py_INCREF(v_user);
-
-		if ((!k_id) || (!k_filename) || (!k_user))
-			DPRINTF(HGD_D_ERROR,
-			    "could not allocate python dict keys");
-
-		if (PyDict_SetItem(rec, k_id, v_id) < 0)
-			DPRINTF(HGD_D_ERROR, "can't assign dict item");
-		if (PyDict_SetItem(rec, k_filename, v_filename) < 0)
-			DPRINTF(HGD_D_ERROR, "can't assign dict item");
-		if (PyDict_SetItem(rec, k_user, v_user) < 0)
-			DPRINTF(HGD_D_ERROR, "can't assign dict item");
-
-		if (PyTuple_SetItem(ret, i, rec) != 0) {
+		if (PyList_SetItem(ret, i, rec) != 0) {
 			PRINT_PY_ERROR();
-			DPRINTF(HGD_D_ERROR, "can't add to tuple");
+			DPRINTF(HGD_D_ERROR, "can't add to list");
 		}
-
 	}
 
 clean:
@@ -122,7 +92,8 @@ clean:
 /* method table */
 static PyMethodDef hgd_py_methods[] = {
 	{"get_playlist",
-	    (PyCFunction) hgd_py_meth_get_playlist, METH_NOARGS, "get the current hgd playlist"},
+	    (PyCFunction) hgd_py_meth_get_playlist,
+	    METH_NOARGS, "get the current hgd playlist"},
 	{ 0, 0, 0, 0 }
 };
 
