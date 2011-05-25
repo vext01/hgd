@@ -20,7 +20,7 @@ AS_IF([test "x$with_libconfig" != "xno"],
 
 AS_IF([test "x$have_libconfig" = "xyes"],
       [AC_DEFINE(HAVE_LIBCONFIG)],
-      [AS_IF([test "x$with_foo" = "xyes"],
+      [AS_IF([test "x$with_libconfig" = "xyes"],
              [AC_MSG_ERROR([libconfig requested but not found])
       ])
 ])
