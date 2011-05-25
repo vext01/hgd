@@ -34,7 +34,10 @@
 sqlite3				*db = NULL;
 char				*db_path = NULL;
 
-/* Open, create and initialise database */
+/*
+ * Open, create and initialise database
+ * XXX we can replace VARCHAR with TEXT?
+ */
 sqlite3 *
 hgd_open_db(char *db_path)
 {
@@ -77,7 +80,9 @@ hgd_open_db(char *db_path)
 	    "filename VARCHAR(" HGD_DBS_FILENAME_LEN " ),"
 	    "user VARCHAR(" HGD_DBS_USERNAME_LEN "),"
 	    "playing INTEGER,"
-	    "finished INTEGER)",
+	    "finished INTEGER,"
+	    "tag_artist TEXT,"
+	    "tag_title TEXT)",
 	    NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
