@@ -13,18 +13,7 @@ PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 
 # XXX explicitely specify a python-config or disable
 
-#AC_MSG_CHECKING([if you are on a bsd boxen])
-# XXX there is a proper way of doing this
-#target_os=`uname -s`
-#case "${target_os}" in
-#*BSD)
-#	AC_MSG_RESULT([yes])
-#	;;
-#*)
-#	AC_MSG_RESULT([no])
-#	PKG_CHECK_MODULES([BSD],[libbsd >= 0.2.0], ,)
-#esac
-
+# If readpassphrase() is not in libc, it is in libbsd (linux)
 AC_CHECK_FUNC([readpassphrase],,
 	      [PKG_CHECK_MODULES([BSD], [libbsd >= 0.2.0])]
 	      )
@@ -49,10 +38,8 @@ if test -n "${PYTHON_CONFIG}"; then
 fi
 
 
-#VERSION="0.4.0"
 AC_SUBST(VERSION)
 AC_SUBST(PYTHON_CFLAGS)
 AC_SUBST(PYTHON_LDFLAGS)
 
-dnl read Makefile.in and write Makefile
 AC_OUTPUT(Makefile)
