@@ -1,13 +1,31 @@
 AC_INIT([hgd], [0.4.0], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
-            
+           
+AC_ARG_WITH([python], AS_HELP_STRING([--without-python], [Ignore presence of python and disable it]))
+
+AC_ARG_WITH([libconfig],AS_HELP_STRING([--without-libconfig], [Ignore presence of libconfig and disable it]))
+
+ 
 AC_LANG_C
         
 AC_PROG_MAKE_SET
                
 AC_HEADER_STDC
 
-PKG_CHECK_MODULES([LIBCONFIG],[libconfig >= 1.3.2])
+AH_TEMPLATE(HAVE_LIBCONFIG, "defined if we are building with libconfig support")
+
+AS_IF([test "x$with_libconfig" != "xno"], 
+	[PKG_CHECK_MODULES([LIBCONFIG],[libconfig >= 1.3.2],
+		[have_libconfig=yes], [have_libconfig=no])], [have_libconfig=no])
+
+AS_IF([test "x$have_libconfig" = "xyes"],
+      [AC_DEFINE(HAVE_LIBCONFIG)],
+      [AS_IF([test "x$with_foo" = "xyes"],
+             [AC_MSG_ERROR([libconfig requested but not found])
+      ])
+])
+
+#PKG_CHECK_MODULES([LIBCONFIG],[libconfig >= 1.3.2])
 PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.4])
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 

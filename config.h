@@ -1,6 +1,9 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+/* "defined if we are building with libconfig support" */
+#define HAVE_LIBCONFIG 1
+
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "vext01@gmail.com, me92@kent.ac.uk"
 
