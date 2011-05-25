@@ -13,17 +13,21 @@ PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 
 # XXX explicitely specify a python-config or disable
 
-AC_MSG_CHECKING([if you are on a bsd boxen])
+#AC_MSG_CHECKING([if you are on a bsd boxen])
 # XXX there is a proper way of doing this
-target_os=`uname -s`
-case "${target_os}" in
-*BSD)
-	AC_MSG_RESULT([yes])
-	;;
-*)
-	AC_MSG_RESULT([no])
-	PKG_CHECK_MODULES([BSD],[libbsd >= 0.2.0])
-esac
+#target_os=`uname -s`
+#case "${target_os}" in
+#*BSD)
+#	AC_MSG_RESULT([yes])
+#	;;
+#*)
+#	AC_MSG_RESULT([no])
+#	PKG_CHECK_MODULES([BSD],[libbsd >= 0.2.0], ,)
+#esac
+
+AC_CHECK_FUNC([readpassphrase],,
+	      [PKG_CHECK_MODULES([BSD], [libbsd >= 0.2.0])]
+	      )
 
 # check for python manually, as we can't find a portable way
 # we accept 2.6 and 2.7 for now
