@@ -50,7 +50,7 @@ AS_IF([test "x$have_taglib" = "xyes"],
 ])
 
 # we just cant work without sqlite
-PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.4])
+PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.0])
 
 # XXX optional ?
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])

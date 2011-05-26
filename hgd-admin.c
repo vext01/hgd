@@ -17,6 +17,7 @@
 
 #define _GNU_SOURCE	/* linux */
 
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -26,11 +27,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
+#endif
 #include <sqlite3.h>
 #include <openssl/rand.h>
 
-#include "config.h"
 #include "hgd.h"
 #include "db.h"
 
@@ -73,6 +75,7 @@ hgd_usage()
         printf("    user-enable username\t\t\Re-enable a user\n\n");
 	*/
         printf("\n  Options include:\n");
+	printf("    -c\t\t\tLocation of config files\n");
         printf("    -d\t\t\tLocation of state directory\n");
         printf("    -h\t\t\tShow this message and exit\n");
         printf("    -x level\t\tSet debug level (0-3)\n");
@@ -194,6 +197,7 @@ hgd_parse_command(int argc, char **argv)
 int
 hgd_read_config(char **config_locations)
 {
+#ifdef HAVE_LIBCONFIG
 	/*
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
@@ -254,6 +258,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	config_destroy(cf);
+#endif
 	return (HGD_OK);
 }
 

@@ -15,6 +15,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "config.h"
+
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +30,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -38,7 +42,6 @@
 #include <netdb.h>
 #include <poll.h>
 
-#include "config.h"
 #include "hgd.h"
 #include "db.h"
 
@@ -953,6 +956,7 @@ start:
 int
 hgd_read_config(char **config_locations)
 {
+#ifdef HAVE_LIBCONFIG
 	/*
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
@@ -1102,7 +1106,8 @@ hgd_read_config(char **config_locations)
 
 	/* we can destory config here because we copy all heap alloc'd stuff */
 	config_destroy(cf);
-	
+#endif
+
 	return (HGD_OK);
 }
 
@@ -1110,7 +1115,9 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
+#ifdef HAVE_LIBCONFIG
 	printf("  -c		Path to a config file to use\n");
+#endif
 	printf("  -D		Disable reverse DNS lookups for clients\n");
 	printf("  -d		Set hgd state directory\n");
 	printf("  -E		Disable SSL encryption support\n");

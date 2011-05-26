@@ -15,6 +15,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* Needed first so we can optionaly include libs */
+#include "config.h"
+
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +28,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
+#endif
 
 
 #ifdef __linux__
@@ -40,7 +45,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "config.h"
 #include "hgd.h"
 
 
@@ -374,7 +378,6 @@ hgd_setup_socket()
 		DPRINTF(HGD_D_WARN, "Connection is not encrypted");
 }
 
-/* NOTE! -c is reserved for 'config file path' */
 void
 hgd_usage()
 {
@@ -385,7 +388,9 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
+#ifdef HAVE_LIBCONFIG
 	printf("    -c\t\t\tSet config location\n");
+#endif
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
@@ -705,6 +710,7 @@ hgd_exec_req(int argc, char **argv)
 int
 hgd_read_config(char **config_locations)
 {
+#ifdef HAVE_LIBCONFIG
 	/*
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
@@ -797,6 +803,9 @@ hgd_read_config(char **config_locations)
 
 	config_destroy(cf);
 	return (ret);
+#else
+	return(HGD_OK);
+#endif
 }
 
 int

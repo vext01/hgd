@@ -32,7 +32,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
+#endif
 
 #include <sqlite3.h>
 
@@ -40,7 +42,6 @@
 #include "py.h"
 #endif
 
-#include "config.h"
 #include "hgd.h"
 #include "db.h"
 
@@ -199,6 +200,7 @@ hgd_play_loop(void)
 int
 hgd_read_config(char **config_locations)
 {
+#ifdef HAVE_LIBCONFIG
 	/*
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
@@ -301,6 +303,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	config_destroy(cf);
+#endif
 	return (HGD_OK);
 }
 
@@ -308,11 +311,16 @@ void
 hgd_usage(void)
 {
 	printf("usage: hgd-netd <options>\n");
+#ifdef HAVE_LIBCONFIG
 	printf("  -c	Path to a config file to use\n");
+#endif
 	printf("  -C	Clear playlist on startup\n");
 	printf("  -d	Set hgd state directory\n");
 	printf("  -h	Show this message and exit\n");
 	printf("  -p	Don't purge finished tracks from filesystem\n");
+#ifdef HAVE_PYTHON
+	printf("  -P	Location of plugins\n");
+#endif
 	printf("  -q	Don't purge finished tracks in database\n");
 	printf("  -v	Show version and exit\n");
 	printf("  -x	Set debug level (0-3)\n");
