@@ -1,3 +1,5 @@
+# HGD Autogunk
+
 AC_INIT([hgd], [0.4.0], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
            
@@ -9,6 +11,9 @@ AC_ARG_WITH([libconfig], AS_HELP_STRING([--without-libconfig],
 
 AC_ARG_WITH([taglib], AS_HELP_STRING([--without-taglib],
 	    [Ignore presence of taglib and disable it]))
+
+AC_ARG_WITH([python], AS_HELP_STRING([--without-python],
+	    [Ignore presence of python and disable it]))
  
 AC_LANG_C
         
@@ -18,6 +23,7 @@ AC_HEADER_STDC
 
 AH_TEMPLATE(HAVE_LIBCONFIG, "defined if we are building with libconfig support")
 AH_TEMPLATE(HAVE_TAGLIB, "defined if we are building with taglib support")
+AH_TEMPLATE(HAVE_PYTHON, "defined if we are building with python support")
 
 # libconfig
 AS_IF([test "x$with_libconfig" != "xno"], 
@@ -58,26 +64,33 @@ AC_CHECK_FUNC([readpassphrase],,
 
 # check for python manually, as we can't find a portable way
 # we accept 2.6 and 2.7 for now
-# XXX explicitely specify a python-config or disable
-PYTHON_VERSION=
+AS_IF([test "x$with_python" != "xno"], [
 for i in python2.7-config python2.6-config python-config; do
 	AC_MSG_CHECKING([$i])
 	if test -n "`which $i 2> /dev/null`"; then
 		AC_MSG_RESULT([yes])
 		PYTHON_CONFIG=$i
-		CPPFLAGS="${CPPFLAGS}-DHAVE_PYTHON"
 		break;
 	fi
 	AC_MSG_RESULT([no])
+	have_python=no
 done
 
 if test -n "${PYTHON_CONFIG}"; then
 	PYTHON_LDFLAGS=`$PYTHON_CONFIG --ldflags`
 	PYTHON_CFLAGS=`$PYTHON_CONFIG --cflags`
+	have_python=yes
 fi
+], [have_python=no])
 
+AS_IF([test "x$have_python" = "xyes"],
+      [AC_DEFINE(HAVE_PYTHON)],
+      [AS_IF([test "x$with_python" = "xyes"],
+             [AC_MSG_ERROR([python requested but not found])
+      ])
+])
 
-AC_SUBST(VERSION)
+# as we did this manually, we have to substitute manually
 AC_SUBST(PYTHON_CFLAGS)
 AC_SUBST(PYTHON_LDFLAGS)
 

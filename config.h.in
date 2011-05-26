@@ -3,6 +3,9 @@
 /* "defined if we are building with libconfig support" */
 #undef HAVE_LIBCONFIG
 
+/* "defined if we are building with python support" */
+#undef HAVE_PYTHON
+
 /* "defined if we are building with taglib support" */
 #undef HAVE_TAGLIB
 
