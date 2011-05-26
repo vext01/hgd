@@ -1,10 +1,14 @@
 AC_INIT([hgd], [0.4.0], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
            
-AC_ARG_WITH([python], AS_HELP_STRING([--without-python], [Ignore presence of python and disable it]))
+AC_ARG_WITH([python], AS_HELP_STRING([--without-python], 
+	    [Ignore presence of python and disable it]))
 
-AC_ARG_WITH([libconfig],AS_HELP_STRING([--without-libconfig], [Ignore presence of libconfig and disable it]))
+AC_ARG_WITH([libconfig], AS_HELP_STRING([--without-libconfig],
+	    [Ignore presence of libconfig and disable it]))
 
+AC_ARG_WITH([taglib], AS_HELP_STRING([--without-taglib],
+	    [Ignore presence of taglib and disable it]))
  
 AC_LANG_C
         
@@ -13,7 +17,9 @@ AC_PROG_MAKE_SET
 AC_HEADER_STDC
 
 AH_TEMPLATE(HAVE_LIBCONFIG, "defined if we are building with libconfig support")
+AH_TEMPLATE(HAVE_TAGLIB, "defined if we are building with taglib support")
 
+# libconfig
 AS_IF([test "x$with_libconfig" != "xno"], 
 	[PKG_CHECK_MODULES([LIBCONFIG],[libconfig >= 1.3.2],
 		[have_libconfig=yes], [have_libconfig=no])], [have_libconfig=no])
@@ -25,12 +31,26 @@ AS_IF([test "x$have_libconfig" = "xyes"],
       ])
 ])
 
-#PKG_CHECK_MODULES([LIBCONFIG],[libconfig >= 1.3.2])
+# taglib
+AS_IF([test "x$with_taglib" != "xno"], 
+	[PKG_CHECK_MODULES([TAGLIB], [taglib_c >= 1.6],
+		[have_taglib=yes], [have_taglib=no])], [have_taglib=no])
+
+AS_IF([test "x$have_taglib" = "xyes"],
+      [AC_DEFINE(HAVE_TAGLIB)],
+      [AS_IF([test "x$with_taglib" = "xyes"],
+             [AC_MSG_ERROR([taglib requested but not found])
+      ])
+])
+
+# we just cant work without sqlite
 PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.4])
+
+# XXX optional ?
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 
-# XXX explicitely specify a python-config or disable
 
+# XXX search libs macro
 # If readpassphrase() is not in libc, it is in libbsd (linux)
 AC_CHECK_FUNC([readpassphrase],,
 	      [PKG_CHECK_MODULES([BSD], [libbsd >= 0.2.0])]
@@ -38,6 +58,7 @@ AC_CHECK_FUNC([readpassphrase],,
 
 # check for python manually, as we can't find a portable way
 # we accept 2.6 and 2.7 for now
+# XXX explicitely specify a python-config or disable
 PYTHON_VERSION=
 for i in python2.7-config python2.6-config python-config; do
 	AC_MSG_CHECKING([$i])

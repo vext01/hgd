@@ -40,7 +40,8 @@ int				 hgd_get_playing_item(
 int				 hgd_get_num_votes_cb(void *arg,
 				     int argc, char **data, char **names);
 int				 hgd_get_num_votes(void);
-int				 hgd_insert_track(char *filename, char *user);
+int				 hgd_insert_track(char *filename,
+				     char *tag_artist, char *tag_title, char *user);
 int				 hgd_insert_vote(char *user);
 int				 hgd_get_playlist(struct hgd_playlist *list);
 int				 hgd_get_next_track(

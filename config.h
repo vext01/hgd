@@ -4,6 +4,9 @@
 /* "defined if we are building with libconfig support" */
 #define HAVE_LIBCONFIG 1
 
+/* "defined if we are building with taglib support" */
+#define HAVE_TAGLIB 1
+
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "vext01@gmail.com, me92@kent.ac.uk"
 

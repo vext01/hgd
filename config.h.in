@@ -3,6 +3,9 @@
 /* "defined if we are building with libconfig support" */
 #undef HAVE_LIBCONFIG
 
+/* "defined if we are building with taglib support" */
+#undef HAVE_TAGLIB
+
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 

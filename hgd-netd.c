@@ -43,6 +43,9 @@
 #include "db.h"
 
 #include <openssl/ssl.h>
+#ifdef HAVE_TAGLIB
+#include <tag_c.h>
+#endif
 
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
@@ -227,7 +230,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	int			f = -1, ret = HGD_OK;
 	size_t			bytes_recvd = 0, to_write;
 	ssize_t			write_ret;
-	char			*filename;
+	char			*filename, *tag_artist, *tag_title;
 
 	if ((flood_limit >= 0) &&
 	    (hgd_num_tracks_user(sess->user->name) > flood_limit)) {
@@ -257,6 +260,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		goto clean;
 	}
 
+#if 0
 	/* prepare to recieve the media file and stash away */
 	xasprintf(&unique_fn, "%s/%s.XXXXXXXX", filestore_path, filename);
 	DPRINTF(HGD_D_DEBUG, "Template for filestore is '%s'", unique_fn);
@@ -269,6 +273,21 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		ret = HGD_FAIL;
 		goto clean;
 	}
+#endif
+
+	/* prepare to recieve the media file and stash away */
+	xasprintf(&unique_fn, "%s/XXXXXXXX-%s", filestore_path, filename);
+	DPRINTF(HGD_D_DEBUG, "Template for filestore is '%s'", unique_fn);
+
+	f = mkstemps(unique_fn, strlen(filename) + 1); /* +1 for hyphen */
+	if (f < 0) {
+		DPRINTF(HGD_D_ERROR, "mkstemp: %s: %s",
+		    filestore_path, SERROR);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
 
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok...");
 
@@ -323,7 +342,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 			    (int) to_write, SERROR);
 			hgd_sock_send_line(sess->sock_fd,
 			    sess->ssl, "err|internal");
-			unlink(filename); /* don't much care if this fails */
+			unlink(unique_fn); /* don't much care if this fails */
 			ret = HGD_FAIL;
 			goto clean;
 		}
@@ -338,11 +357,22 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	}
 	payload = NULL;
 
+	/*
+	 * get tag metadata
+	 * no error that there is no #ifdef HAVE_TAGLIB
+	 */
+	hgd_get_tag_metadata(unique_fn, &tag_artist, &tag_title);
+
 	/* insert track into db */
-	if (hgd_insert_track(basename(unique_fn), sess->user->name) != HGD_OK) {
+	if (hgd_insert_track(basename(unique_fn),
+		    tag_artist, tag_title, sess->user->name) != HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
+
+	/* always free, as we allocate "unknown" if it goes brown trousers */
+	free(tag_artist);
+	free(tag_title);
 
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	DPRINTF(HGD_D_INFO, "Transfer of '%s' complete", filename);
@@ -1275,3 +1305,57 @@ main(int argc, char **argv)
 	hgd_exit_nicely();
 	return (EXIT_SUCCESS); /* NOREACH */
 }
+
+#ifdef HAVE_TAGLIB
+int
+hgd_get_tag_metadata(char *filename, char **artist, char **title)
+{
+	TagLib_File		*file;
+	TagLib_Tag		*tag;
+
+	DPRINTF(HGD_D_DEBUG, "Attempting to read tags for '%s'", filename);
+
+	*artist = xstrdup("unknown");
+	*title = xstrdup("unknown");
+
+	file = taglib_file_new(filename);
+	if (file == NULL) {
+		DPRINTF(HGD_D_DEBUG, "taglib could not open '%s'", filename);
+		return (HGD_FAIL);
+	}
+
+	if (!taglib_file_is_valid(file)) {
+		DPRINTF(HGD_D_WARN, "invalid tag in '%s'", filename);
+		return (HGD_FAIL);
+	}
+
+	tag = taglib_file_tag(file);
+	if (tag == NULL) {
+		DPRINTF(HGD_D_WARN, "failed to get tag of '%s'", filename);
+		return (HGD_FAIL);
+	}
+
+	/* all went well */
+	free(*artist);
+	free(*title);
+
+	*artist = xstrdup(taglib_tag_artist(tag));
+	*title = xstrdup(taglib_tag_title(tag));
+
+	DPRINTF(HGD_D_DEBUG, "Got tag from '%s': '%s' by '%s'\n",
+	    filename, *title, *artist);
+
+	taglib_tag_free_strings();
+
+	return (HGD_OK);
+}
+#else
+int
+hgd_get_tag_metadata(char *filename, char **artist, char **title)
+{
+	*artist = xstrdup("unknown");
+	*title = xstrdup("unknown");
+
+	return (HGD_FAIL);
+}
+#endif

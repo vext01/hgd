@@ -15,6 +15,9 @@ CONFIG_LDFLAGS=@LIBCONFIG_LIBS@
 BSD_CFLAGS=@BSD_CFLAGS@
 BSD_LDFLAGS=@BSD_LIBS@
 
+TAG_CFLAGS=@TAGLIB_CFLAGS@
+TAG_LDFLAGS=@TAGLIB_LIBS@
+
 CFLAGS+=@CFLAGS@
 LDFLAGS+=@LIBS@
 CPPFLAGS+=@CPPFLAGS@
@@ -48,11 +51,13 @@ db.o: db.c hgd.h
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} -o hgd-playd db.o common.o py.o hgd-playd.c
+		${CONFIG_LDFLAGS} \
+		-o hgd-playd db.o common.o py.o hgd-playd.c
 
 hgd-netd: common.o hgd-netd.c hgd.h db.o
-	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
+	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
+		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
+		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
 		-o hgd-netd common.o db.o hgd-netd.c
 
 hgdc: common.o hgdc.c hgd.h
