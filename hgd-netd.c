@@ -394,7 +394,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	char				*scmd, id_str[HGD_PID_STR_SZ];
 	pid_t				pid;
 	FILE				*pid_file;
-	size_t				read;
+	char				*read;
 	int				tid = -1, scmd_ret;
 	struct flock			fl;
 
@@ -500,8 +500,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	free(pid_path);
-	read = fgets(&pid_str[0], HGD_PID_STR_SZ, pid_file);
-	if (read == 0) {
+	read = fgets(pid_str, HGD_PID_STR_SZ, pid_file);
+	if (read == NULL) {
 		if (!feof(pid_file)) {
 			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
 			fclose(pid_file);
@@ -510,7 +510,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 	
 	read = fgets(id_str, HGD_PID_STR_SZ, pid_file);
-	if (read == 0) {
+	if (read == NULL) {
 		if (!feof(pid_file)) {
 			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
 			fclose(pid_file);
