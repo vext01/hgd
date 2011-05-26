@@ -60,7 +60,7 @@ hgd_exit_nicely()
 void
 hgd_play_track(struct hgd_playlist_item *t)
 {
-	int			status = 0, pid;
+	int			status = 0, pid, song_id;
 	char			*pid_path;
 	FILE			*pid_file;
 	struct flock		fl;
@@ -103,7 +103,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
 		hgd_exit_nicely();
 	} else {
-		fprintf(pid_file, "%d", pid);
+		fprintf(pid_file, "%d\n%d", pid, t->id);
 
 		fl.l_type = F_UNLCK;  /* set to unlock same region */
 
