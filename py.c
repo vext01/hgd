@@ -89,6 +89,21 @@ clean:
 	return (ret);
 }
 
+/* make some stuff read only */
+static int
+hgd_py_meth_read_only_raise(Hgd *self, PyObject *value, void *closure)
+{
+	(void) PyErr_Format(PyExc_TypeError, "Read-only attribute");
+	return (-1);
+}
+
+static PyObject *
+hgd_py_meth_get_hgd_version(Hgd *self, void *closure)
+{
+	Py_INCREF(self->hgd_version);
+	return (self->hgd_version);
+}
+
 /* method table */
 static PyMethodDef hgd_py_methods[] = {
 	{"get_playlist",
@@ -101,8 +116,6 @@ static PyMethodDef hgd_py_methods[] = {
 static PyMemberDef hgd_py_members[] = {
 	{"proto_version",
 	    T_INT, offsetof(Hgd, proto_version), 0, "protocol version"},
-	{"hgd_version",
-	    T_OBJECT_EX, offsetof(Hgd, hgd_version), 0, "HGD version"},
 	{"debug_level",
 	    T_INT, offsetof(Hgd, debug_level), 0, "debug level"},
 	{"mod_data",
@@ -110,6 +123,14 @@ static PyMemberDef hgd_py_members[] = {
 	{"component",
 	    T_OBJECT_EX, offsetof(Hgd, component), 0, "which hgd process?"},
 	{0, 0, 0, 0, 0}
+};
+
+/* member get/set table */
+static PyGetSetDef hgd_py_get_setters[] = {
+	{"hgd_version", (getter) hgd_py_meth_get_hgd_version,
+		(setter) hgd_py_meth_read_only_raise,
+		"hgd version", NULL},
+	{NULL, NULL, NULL, NULL, NULL}  /* Sentinel */
 };
 
 /* __new__ */
@@ -216,7 +237,7 @@ static PyTypeObject HgdType = {
 	0,				/* tp_iternext */
 	hgd_py_methods,			/* tp_methods */
 	hgd_py_members,			/* tp_members */
-	0,				/* tp_getset */
+	hgd_py_get_setters,		/* tp_getset */
 	0,				/* tp_base */
 	0,				/* tp_dict */
 	0,				/* tp_descr_get */
