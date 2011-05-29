@@ -12,9 +12,6 @@ AC_ARG_WITH([libconfig], AS_HELP_STRING([--without-libconfig],
 AC_ARG_WITH([taglib], AS_HELP_STRING([--without-taglib],
 	    [Ignore presence of taglib and disable it]))
 
-AC_ARG_WITH([python], AS_HELP_STRING([--without-python],
-	    [Ignore presence of python and disable it]))
- 
 AC_LANG_C
         
 AC_PROG_MAKE_SET
@@ -50,7 +47,7 @@ AS_IF([test "x$have_taglib" = "xyes"],
 ])
 
 # we just cant work without sqlite
-PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.7.0])
+PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.6.22])
 
 # XXX optional ?
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
@@ -95,3 +92,46 @@ AC_SUBST(PYTHON_CFLAGS)
 AC_SUBST(PYTHON_LDFLAGS)
 
 AC_OUTPUT(Makefile)
+
+AC_MSG_NOTICE([
+                   j#000000000000000000000000#00000000000000                    
+                   j#00000000000000000Y*99- "~!?HN#000000000                    
+                   j#00000000000009^-. --  .:.... u@#0000000                    
+                   j#00000000000P`. ... .:x,;.=:_..:40000000                    
+                   j#0000000000P..... .=,jXd44XGdXa;:4000000                    
+                   j#000000000F .. . .:uxOOXXXXXXXOG;4000000                    
+                   j#00000000# -. ...=x+!)_=x==xx=?*@:>@:000000                    
+                   j#00000000 ;.. .:=!-====xv==jx=xx=+P00000                    
+                   j#0000000I.: . ._jn=n=xxxxcx%3g%@:>@=>&00000                    
+                   j#0000000:..o;::=xxnxXnxxu2x!3On3qW&00000                    
+                   j#0000000;.:3(::=+@:>@%%333O33=+3+33OW000000                    
+                   j#00000001..?na;:==%333O!x=%%%@:>@x=44000000                    
+                   j#0000000L.. -~`::=%%%3333uuu333uuW000000                    
+                   j#00000000{... ...:==%%%3333XOO3O34000000                    
+                   j#0000000F . . ..-.::+=+++@:>@%%3%3%~=#00000                    
+                   j#000000#(.. ... ;:::::;:=====;/...?Q0000                    
+                   j#000000A . . . .=+=:+x=xx=xxxO(...:+N000                    
+                   j#00000#I.:......:+===%33%333OO;.....:W00                    
+                   j#000000i. _,-... ++=+xx%33OO"~......j000                    
+                   j#000000AW??... . :+x@:>@x%3"'....:.-.:.:4#0                    
+                   j#0000#0P~.    . ..=%@:>@@:>@~.... ....-.---.?9                    
+                   j#000P'.  . ... ,..=X`........ ...:.:.:.:                    
+                   j#P^. .. . ....:%x,?r--......... ..-.:.:: 
+])
+
+
+
+AS_IF([test "x$have_python" != "xyes"],
+	disabled="$disabled python"
+    )
+AS_IF([test "x$have_libconfig" != "xyes"],
+	disabled="$disabled libconfig"
+    )
+AS_IF([test "x$have_taglib" != "xyes"],
+	disabled="$disabled taglib"
+    )
+
+AC_MSG_NOTICE([
+=============================
+Modules Disabled:${disabled}
+=============================])
