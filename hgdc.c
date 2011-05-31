@@ -498,15 +498,17 @@ hgd_print_track(char *resp)
 
 	do {
 		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
-	} while ((n_toks++ < 3) && (resp != NULL));
+	} while ((n_toks++ < 5) && (resp != NULL));
 
-	if (n_toks == 3)
-		printf(" [ #%04d ] '%s' from '%s'\n",
-		    atoi(tokens[0]), tokens[1], tokens[2]);
-	else
+	if (n_toks == 5) {
+		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
+		printf("  '%s' by '%s'  from '%s'\n",
+		    tokens[3], tokens[2], tokens[4]);
+	} else {
 		fprintf(stderr,
 		    "%s: wrong number of tokens from server\n",
 		    __func__);
+	}
 
 	for (i = 0; i < n_toks; i ++)
 		free(tokens[i]);
