@@ -1322,8 +1322,8 @@ hgd_get_tag_metadata(char *filename, char **artist, char **title)
 
 	DPRINTF(HGD_D_DEBUG, "Attempting to read tags for '%s'", filename);
 
-	*artist = xstrdup("unknown");
-	*title = xstrdup("unknown");
+	*artist = xstrdup("");
+	*title = xstrdup("");
 
 	file = taglib_file_new(filename);
 	if (file == NULL) {
@@ -1360,8 +1360,8 @@ hgd_get_tag_metadata(char *filename, char **artist, char **title)
 int
 hgd_get_tag_metadata(char *filename, char **artist, char **title)
 {
-	*artist = xstrdup("unknown");
-	*title = xstrdup("unknown");
+	*artist = xstrdup("");
+	*title = xstrdup("");
 
 	return (HGD_FAIL);
 }
