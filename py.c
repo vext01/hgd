@@ -297,6 +297,7 @@ hgd_embed_py()
 	DIR			*script_dir;
 	struct dirent		*ent;
 	PyObject		*mod;
+	char			*search_path;
 
 	DPRINTF(HGD_D_INFO, "Initialising Python");
 
@@ -305,12 +306,25 @@ hgd_embed_py()
 	}
 
 	/* ensure we find our modules */
-	if (setenv("PYTHONPATH", hgd_py_dir, 0) == -1) {
+	xasprintf(&search_path, "%s:%s:%s",
+	    PREFIX "/share/hgd/pylib", BUILD_DIR "/share/pylib", hgd_py_dir);
+	DPRINTF(HGD_D_DEBUG, "Python search path is '%s'", search_path);
+
+	if (setenv("PYTHONPATH", search_path, 0) == -1) {
 		DPRINTF(HGD_D_ERROR, "Can't set python search path: %s", SERROR);
+		free(search_path);
 		hgd_exit_nicely();
 	}
+	free(search_path);
 
 	Py_Initialize();
+
+	/* always import the hgd namespace */
+	mod = PyImport_ImportModule("hgd");
+	if (!mod) {
+		PRINT_PY_ERROR();
+		hgd_exit_nicely();
+	}
 
 	memset(&hgd_py_mods, 0, sizeof(hgd_py_mods));
 
@@ -325,7 +339,8 @@ hgd_embed_py()
 	while ((ent = readdir(script_dir)) != NULL) {
 
 		if ((strcmp(ent->d_name, ".") == 0) ||
-		    (strcmp(ent->d_name, "..") == 0)) {
+		    (strcmp(ent->d_name, "..") == 0) ||
+		    (strcmp(ent->d_name, "hgd.py") == 0)) {
 			continue;
 		}
 
@@ -333,6 +348,9 @@ hgd_embed_py()
 			DPRINTF(HGD_D_WARN, "too many python modules loaded");
 			break;
 		}
+
+		if (strlen(ent->d_name) < 4)
+			continue;
 
 		ent->d_name[strlen(ent->d_name) - 3] = 0;
 		DPRINTF(HGD_D_DEBUG, "Loading '%s'", ent->d_name);
