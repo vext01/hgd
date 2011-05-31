@@ -491,7 +491,7 @@ hgd_req_queue(char **args)
 }
 
 void
-hgd_print_track(char *resp)
+hgd_print_track(char *resp, uint8_t hilight)
 {
 	int			n_toks = 0, i;
 	char			*tokens[3] = {NULL, NULL, NULL};
@@ -501,16 +501,25 @@ hgd_print_track(char *resp)
 	} while ((n_toks++ < 5) && (resp != NULL));
 
 	if (n_toks == 5) {
+
+		/* XXX disable colors optionally */
+		if (hilight) /* green on */
+			printf("\033[32m");
+		else /* red on */
+			printf("\033[31m");
+
 		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
 		printf("  '%s' by '%s'  from '%s'\n",
 		    tokens[3], tokens[2], tokens[4]);
+
+		printf("\033[0m");
 	} else {
 		fprintf(stderr,
 		    "%s: wrong number of tokens from server\n",
 		    __func__);
 	}
 
-	for (i = 0; i < n_toks; i ++)
+	for (i = 0; i < n_toks - 1; i ++)
 		free(tokens[i]);
 }
 
@@ -572,16 +581,17 @@ hgd_req_playlist(char **args)
 	DPRINTF(HGD_D_DEBUG, "expecting %d items in playlist", n_items);
 	for (i = 0; i < n_items; i++) {
 		track_resp = hgd_sock_recv_line(sock_fd, ssl);
-		if (i == 0) {
-			hgd_hline();
-			hgd_print_track(track_resp);
-			/* printf("           0 votes-offs.\n"); */
-			hgd_hline();
-		} else
-			hgd_print_track(track_resp);
+
+		hgd_hline();
+		hgd_print_track(track_resp, i == 0);
 
 		free(track_resp);
 	}
+
+	if (n_items)
+		hgd_hline();
+	else
+		printf("Nothing to play!\n");
 
 	return (HGD_OK);
 }
