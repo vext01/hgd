@@ -494,7 +494,7 @@ void
 hgd_print_track(char *resp, uint8_t hilight)
 {
 	int			n_toks = 0, i;
-	char			*tokens[3] = {NULL, NULL, NULL};
+	char			*tokens[5] = {NULL, NULL, NULL};
 
 	do {
 		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
@@ -519,7 +519,7 @@ hgd_print_track(char *resp, uint8_t hilight)
 		    __func__);
 	}
 
-	for (i = 0; i < n_toks - 1; i ++)
+	for (i = 0; i < n_toks; i ++)
 		free(tokens[i]);
 }
 
