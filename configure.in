@@ -2,6 +2,12 @@
 
 AC_INIT([hgd], [0.4.0], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
+
+# we need the install prefix at compile time
+if test "${prefix}" = "NONE"; then
+	prefix=/usr/local
+fi
+CFLAGS="${CFLAGS} -DPREFIX='\"${prefix}\"'"
            
 AC_ARG_WITH([python], AS_HELP_STRING([--without-python], 
 	    [Ignore presence of python and disable it]))
@@ -87,12 +93,16 @@ AS_IF([test "x$have_python" = "xyes"],
       ])
 ])
 
+# where we are building will go into the python class path
+CFLAGS="${CFLAGS} -DBUILD_DIR='\"`pwd`\"'"
+
 # as we did this manually, we have to substitute manually
-AC_SUBST(PYTHON_CFLAGS)
-AC_SUBST(PYTHON_LDFLAGS)
+AC_SUBST([PYTHON_CFLAGS])
+AC_SUBST([PYTHON_LDFLAGS])
+AC_SUBST([prefix])
 
-AC_OUTPUT(Makefile)
-
+AC_OUTPUT([Makefile])
+ 
 AC_MSG_NOTICE([
                    j#000000000000000000000000#00000000000000
                    j#00000000000000000Y*99- "~!?HN#000000000
