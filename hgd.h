@@ -23,7 +23,7 @@
 #endif
 
 #define HGD_VERSION		PACKAGE_VERSION
-#define HGD_PROTO_VERSION	2
+#define HGD_PROTO_VERSION	3
 
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
@@ -104,6 +104,8 @@ struct hgd_user_list {
 struct hgd_playlist_item {
 	int			 id;
 	char			*filename;
+	char			*tag_artist;
+	char			*tag_title;
 	char			*user;
 	uint8_t			 playing;
 	uint8_t			 finished;

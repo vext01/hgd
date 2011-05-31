@@ -169,8 +169,9 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	if (playing.filename == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|0");
 	} else {
-		xasprintf(&reply, "ok|1|%d|%s|%s",
-		    playing.id, playing.filename, playing.user);
+		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s",
+		    playing.id, playing.filename, playing.tag_artist,
+		    playing.tag_title, playing.user);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
 
 		free(reply);
@@ -263,21 +264,6 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		goto clean;
 	}
 
-#if 0
-	/* prepare to recieve the media file and stash away */
-	xasprintf(&unique_fn, "%s/%s.XXXXXXXX", filestore_path, filename);
-	DPRINTF(HGD_D_DEBUG, "Template for filestore is '%s'", unique_fn);
-
-	f = mkstemp(unique_fn);
-	if (f < 0) {
-		DPRINTF(HGD_D_ERROR, "mkstemp: %s: %s",
-		    filestore_path, SERROR);
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|internal");
-		ret = HGD_FAIL;
-		goto clean;
-	}
-#endif
-
 	/* prepare to recieve the media file and stash away */
 	xasprintf(&unique_fn, "%s/XXXXXXXX-%s", filestore_path, filename);
 	DPRINTF(HGD_D_DEBUG, "Template for filestore is '%s'", unique_fn);
@@ -291,8 +277,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		goto clean;
 	}
 
-
-	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok...");
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|...");
 
 	DPRINTF(HGD_D_INFO, "Recving %d byte payload '%s' from %s into %s",
 	    (int) bytes, filename, sess->user->name, unique_fn);
@@ -417,9 +402,11 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	free(resp);
 
 	for (i = 0; i < list.n_items; i++) {
-		xasprintf(&resp, "%d|%s|%s", list.items[i]->id,
-		    list.items[i]->filename, list.items[i]->user);
+		xasprintf(&resp, "%d|%s|%s|%s|%s", list.items[i]->id,
+		    list.items[i]->filename, list.items[i]->tag_artist,
+		    list.items[i]->tag_title, list.items[i]->user);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
+		DPRINTF(HGD_D_DEBUG, "%s\n", resp);
 		free(resp);
 	}
 

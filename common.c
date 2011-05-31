@@ -159,6 +159,10 @@ hgd_free_playlist_item(struct hgd_playlist_item *i)
 		free(i->filename);
 	if (i->user != NULL)
 		free(i->user);
+	if (i->tag_artist != NULL)
+		free(i->tag_artist);
+	if (i->tag_title != NULL)
+		free(i->tag_title);
 }
 
 /*
