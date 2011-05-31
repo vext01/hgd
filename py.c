@@ -55,38 +55,67 @@ hgd_py_meth_get_playlist(Hgd *self)
 {
 	struct hgd_playlist	  list;
 	struct hgd_playlist_item *it;
-	unsigned int			  i;
-	PyObject		 *rec, *ret, *v_filename, *v_id, *v_user;
-	PyObject		 *k_filename, *k_id, *k_user;
+	unsigned int		  i;
+	PyObject		 *rec, *ret_list, *v_filename, *v_id, *v_user;
+	PyObject		 *k_filename, *k_id, *k_user, *plist_item = NULL;
+	PyObject		 *playlist_item_t, *ctor = NULL, *args = NULL;
 
 	self = self;
 
 	if (hgd_get_playlist(&list) == HGD_FAIL)
 		Py_RETURN_NONE; /* XXX throw exception */
 
-	ret = PyList_New(list.n_items);
-	if (!ret) /* XXX exception? */
+	ret_list = PyList_New(list.n_items);
+	if (!ret_list) /* XXX exception? */
 		DPRINTF(HGD_D_ERROR, "could not allocate python list");
+
+	/* get ready to construct some stuff */
+	ctor = PyObject_GetAttrString(hgd_py_mods.hgd_support, "PlaylistItem");
+	if (!ctor) {
+		DPRINTF(HGD_D_ERROR, "Couldn't find PlaylistItem constructor");
+		hgd_exit_nicely();
+	}
+
+	if (!PyCallable_Check(ctor)) {
+		PRINT_PY_ERROR();
+		DPRINTF(HGD_D_WARN, "PlaylistItem constructor is not callable");
+		hgd_exit_nicely();
+	}
 
 	for (i = 0; i < list.n_items; i++) {
 		it = list.items[i];
 
-		rec = Py_BuildValue("{sissss}",
-		    "id", it->id,
+		rec = Py_BuildValue("{sissssssss}",
+		    "tid", it->id,
 		    "filename", it->filename,
+		    "tag_artist", it->tag_artist,
+		    "tag_title", it->tag_title,
 		    "user", it->user);
 		if (rec == NULL)
 			DPRINTF(HGD_D_ERROR, "could not allocate python dict");
 
-		if (PyList_SetItem(ret, i, rec) != 0) {
+		args = PyTuple_New(1);
+		PyTuple_SetItem(args, 0, rec);
+
+		plist_item = PyObject_CallObject(ctor, args);
+		Py_XDECREF(rec); /* don't decrement tuple refct! */
+		if (plist_item == NULL) {
+			PRINT_PY_ERROR();
+			DPRINTF(HGD_D_WARN, "failed to construct PlaylistItem");
+			continue;
+		}
+
+		/* steals ref */
+		if (PyList_SetItem(ret_list, i, plist_item) != 0) {
 			PRINT_PY_ERROR();
 			DPRINTF(HGD_D_ERROR, "can't add to list");
 		}
 	}
 
 clean:
+	Py_XDECREF(ctor);
 	hgd_free_playlist(&list);
-	return (ret);
+	return (ret_list);
 }
 
 /* make some stuff read only */
@@ -318,15 +347,15 @@ hgd_embed_py()
 	free(search_path);
 
 	Py_Initialize();
+	memset(&hgd_py_mods, 0, sizeof(hgd_py_mods));
 
-	/* always import the hgd namespace */
+	/* always import the hgd support stuff from hgd.py */
 	mod = PyImport_ImportModule("hgd");
 	if (!mod) {
 		PRINT_PY_ERROR();
 		hgd_exit_nicely();
 	}
-
-	memset(&hgd_py_mods, 0, sizeof(hgd_py_mods));
+	hgd_py_mods.hgd_support = mod;
 
 	script_dir = opendir(HGD_DFL_PY_DIR);
 	if (script_dir == NULL) {

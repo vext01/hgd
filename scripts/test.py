@@ -13,7 +13,9 @@ def hgd_hook_init(hgd):
         print("HGD component is: %s" % hgd.component)
         print("protocol version is: %d" % hgd.proto_version)
         print("debug level is: %d" % hgd.debug_level)
-        print("playlist: %s" % str(hgd.get_playlist()))
+        print("playlist:")
+        for i in hgd.get_playlist():
+            print("  " + str(i))
 
         hgd.mod_data["test"] = "this is where modules can store things";
         print("mod_data: %s" % hgd.mod_data);

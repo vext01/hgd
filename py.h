@@ -44,6 +44,7 @@ typedef struct {
 /* module table - these are user moduels which we load and call hooks on */
 struct hgd_py_modules {
 	PyObject		*hgd_o;			/* ptr to hgd object */
+	PyObject		*hgd_support;		/* hgd.py */
 	PyObject		*mods[HGD_MAX_PY_MODS];
 	char			*mod_names[HGD_MAX_PY_MODS];
 	uint8_t			 n_mods;
