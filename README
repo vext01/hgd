@@ -29,6 +29,7 @@ To build, you will need:
  * OpenSSL libs and headers.
  * LibBSD (linux only) libs and headers.
  * Mplayer (for the server)
+ * autoconf (git checkouts only)
 
 And optionally:
 
@@ -41,23 +42,40 @@ Building
 
 The build system is both bmake and gmake compatible, as it stands we use
 only make.
+ 
+ 1) If you checked out from git, first run:
+    ./autogen.sh
 
- * To build everything, type 'make'.
- * To build only the client type 'make client'.
- * To build only the server components 'make server'.
+ 2) Configure the build:
+    ./configure
 
- * To install everything, type 'make install'.
- * To install in a custom path, type 'make prefix=/home/gunther install'.
- * Other useful install targets are 'install-server', 'install-client'
-   and 'install-docs'.
+    If you don't want to pollute /usr/local, pass a --prefix=XXX argument.
+
+    Examine the output and install anything missing. Don't forget linux
+    packages headers and libraries separately.
+
+ 3) Build the components you need:
+
+    * To build everything, type 'make'.
+    * To build only the client type 'make client'.
+    * To build only the server components 'make server'.
+
+ 4) Install:
+
+    * To install everything, type 'make install'.
+    * To install in a custom path, type 'make prefix=/home/gunther install'.
+    * Other useful install targets are 'install-server', 'install-client'
+      and 'install-docs'.
+
+NOTES:
 
 On MacOS X, you may have to jump through hoops. Others have succeeded using
 macports for libconfig and sqlite3 dependencies. You may need to set the
 include path and library path to /opt/include and /opt/lib respectively (good
 luck).
 
-Running
--------
+Quickstart for the Lazy
+-----------------------
 
 First you should make user accounts:
 
@@ -93,6 +111,7 @@ History
  * 0.1 - basic functionality.
  * 0.2 - SSL crypto support and user authentication.
  * 0.3 - Config file support.
+ * 0.4 - Autoconf, taglib, python scripting
 
 Roadmap
 -------
