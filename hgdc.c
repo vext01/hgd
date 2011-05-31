@@ -613,7 +613,9 @@ hgd_req_hud(char **args)
 		if (status != 0)
 			DPRINTF(HGD_D_WARN, "clear screen failed");
 
-		printf("HGD Server @ %s -- Playlist:\n\n", host);
+
+		/* XXX ansii off option */
+		printf("\033[33mHGD Server @ %s -- Playlist:\033[0m\n\n", host);
 
 		if (hgd_req_playlist(NULL) != HGD_OK)
 			return (HGD_FAIL);
