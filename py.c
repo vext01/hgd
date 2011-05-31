@@ -147,8 +147,6 @@ static PyMemberDef hgd_py_members[] = {
 	    T_INT, offsetof(Hgd, proto_version), 0, "protocol version"},
 	{"debug_level",
 	    T_INT, offsetof(Hgd, debug_level), 0, "debug level"},
-	{"mod_data",
-	    T_OBJECT_EX, offsetof(Hgd, mod_data), 0, "stash space for modules"},
 	{"component",
 	    T_OBJECT_EX, offsetof(Hgd, component), 0, "which hgd process?"},
 	{0, 0, 0, 0, 0}
@@ -190,13 +188,6 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 			Py_DECREF(self);
 			return NULL;
 		}
-
-		self->mod_data = PyDict_New();
-		if (self->mod_data == NULL) {
-			DPRINTF(HGD_D_ERROR, "couldn't init self.mod_data");
-			Py_DECREF(self);
-			return NULL;
-		}
 	}
 
 	self->proto_version = HGD_PROTO_VERSION;
@@ -225,7 +216,6 @@ static void
 hgd_py_meth_dealloc(Hgd *self)
 {
 	Py_XDECREF(self->hgd_version);
-	Py_XDECREF(self->mod_data);
 	Py_XDECREF(self->component);
 	self->ob_type->tp_free((PyObject*)self);
 }
@@ -400,7 +390,6 @@ hgd_embed_py()
 
 	hgd_init_hgd_mod(); /* init hgd module */
 	hgd_py_mods.hgd_o = hgd_py_meth_new(&HgdType, NULL, NULL); /* stash an instance */
-	//hgd_py_meth_init((Hgd *) hgd_py_mods.hgd_o, NULL, NULL);
 
 	hgd_execute_py_hook("init");
 
@@ -411,7 +400,7 @@ void
 hgd_free_py()
 {
 	DPRINTF(HGD_D_INFO, "Clearing up python stuff");
-	//hgd_py_meth_dealloc(hgd_py_mods.hgd_o, NULL, NULL);
+	hgd_py_meth_dealloc((Hgd *) hgd_py_mods.hgd_o);
 	if (hgd_py_dir != NULL) free (hgd_py_dir);
 	Py_Finalize();
 	while (hgd_py_mods.n_mods)

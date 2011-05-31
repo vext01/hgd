@@ -17,9 +17,6 @@ def hgd_hook_init(hgd):
         for i in hgd.get_playlist():
             print("  " + str(i))
 
-        hgd.mod_data["test"] = "this is where modules can store things";
-        print("mod_data: %s" % hgd.mod_data);
-
         print(80 * "-")
         print("")
 
