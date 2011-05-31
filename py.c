@@ -122,7 +122,7 @@ clean:
 static int
 hgd_py_meth_read_only_raise(Hgd *self, PyObject *value, void *closure)
 {
-	(void) PyErr_Format(PyExc_TypeError, "Read-only attribute");
+	(void) PyErr_Format(PyExc_AttributeError, "attribute is read-only");
 	return (-1);
 }
 
