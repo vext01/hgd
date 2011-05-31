@@ -326,7 +326,7 @@ hgd_embed_py()
 
 	/* ensure we find our modules */
 	xasprintf(&search_path, "%s:%s:%s",
-	    PREFIX "/share/hgd/pylib", BUILD_DIR "/share/pylib", hgd_py_dir);
+	    PREFIX "/share/hgd/pylib", BUILD_DIR "/pylib", hgd_py_dir);
 	DPRINTF(HGD_D_DEBUG, "Python search path is '%s'", search_path);
 
 	if (setenv("PYTHONPATH", search_path, 0) == -1) {
