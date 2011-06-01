@@ -43,7 +43,7 @@
 #include "hgd.h"
 
 
-char			*user = NULL, *host = NULL;
+char			*user = NULL, *host = NULL, *password = NULL;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
@@ -265,15 +265,21 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 	int			 login_ok = -1;
 	char			*prompt;
 
-	xasprintf(&prompt, "Password for %s@%s: ", user, host);
-	if (readpassphrase(prompt, pass, HGD_MAX_PASS_SZ,
-	    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
-		DPRINTF(HGD_D_ERROR, "Problem reading password from user");
-		memset(pass, 0, HGD_MAX_PASS_SZ);
+	if (password == NULL) {
+		xasprintf(&prompt, "Password for %s@%s: ", user, host);
+		if (readpassphrase(prompt, pass, HGD_MAX_PASS_SZ,
+		    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Problem reading password from user");
+			memset(pass, 0, HGD_MAX_PASS_SZ);
+			free(prompt);
+			return (HGD_FAIL);
+		}
 		free(prompt);
-		return (HGD_FAIL);
+	} else {
+		strncpy(pass, password, HGD_MAX_PASS_SZ);
+		if (HGD_MAX_PASS_SZ > 0)
+			pass[HGD_MAX_PASS_SZ-1] = '\0';
 	}
-	free(prompt);
 
 	/* send password */
 	xasprintf(&user_cmd, "user|%s|%s", username, pass);
@@ -707,6 +713,7 @@ hgd_read_config(char **config_locations)
 	 */
 	config_t		 cfg, *cf;
 	char			*cypto_pref, *tmp_host, *tmp_user;
+	char			*tmp_password;
 	int			 ret = HGD_OK;
 	struct stat		 st;
 
@@ -774,6 +781,20 @@ hgd_read_config(char **config_locations)
 	if (config_lookup_int64(cf, "port", &tmp_port)) {
 		port = tmp_port;
 		DPRINTF(HGD_D_DEBUG, "port=%d", port);
+	}
+
+	/* password */
+	if (config_lookup_string(cf, "password", (const char**) &tmp_password)) {
+		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
+			DPRINTF(HGD_D_ERROR, 
+				"Config file with your password in is readable by"
+				" other people.  Please chmod it.");
+			hgd_exit_nicely();	
+
+		}
+
+		password = xstrdup(tmp_password);
+		DPRINTF(HGD_D_DEBUG, "Set password from config");
 	}
 
 	/* -u */
