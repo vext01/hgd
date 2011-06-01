@@ -80,7 +80,7 @@ for i in python2.7-config python2.6-config python-config; do
 done
 
 if test -n "${PYTHON_CONFIG}"; then
-	PYTHON_LDFLAGS=`$PYTHON_CONFIG --ldflags`
+	PYTHON_LDFLAGS="`$PYTHON_CONFIG --ldflags` -L`$PYTHON_CONFIG --prefix`/lib"
 	PYTHON_CFLAGS=`$PYTHON_CONFIG --cflags`
 	have_python=yes
 fi

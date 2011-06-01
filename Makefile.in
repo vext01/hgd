@@ -34,7 +34,7 @@ sampledir?=${sharedir}/examples/hgd
 pysupportdir=${sharedir}/hgd/pylib
 
 .PHONY: all
-all: hgd-playd hgd-netd hgd-admin hgdc
+all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
 
 .PHONY: clean
 clean:
@@ -71,6 +71,12 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} -o hgd-admin common.o db.o hgd-admin.c
+
+# SSL pulled in my common.o XXX
+hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o
+	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
+		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQLITE_CFLAGS} \
+		${SQL_LDFLAGS} common.o py.o db.o hgd-mk-pydoc.c -o hgd-mk-pydoc
 
 client: hgdc
 server: hgd-netd hgd-playd hgd-admin

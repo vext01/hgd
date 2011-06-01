@@ -340,7 +340,7 @@ hgd_embed_py()
 	memset(&hgd_py_mods, 0, sizeof(hgd_py_mods));
 
 	/* always import the hgd support stuff from hgd.py */
-	mod = PyImport_ImportModule("hgd");
+	mod = PyImport_ImportModule("hgd.playlist");
 	if (!mod) {
 		PRINT_PY_ERROR();
 		hgd_exit_nicely();
