@@ -399,10 +399,10 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
 	struct hgd_playlist_item	 playing;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
-	char				*scmd;
+	char				*scmd, id_str[HGD_ID_STR_SZ];
 	pid_t				pid;
 	FILE				*pid_file;
-	size_t				read;
+	char				*read;
 	int				tid = -1, scmd_ret;
 	struct flock			fl;
 
@@ -508,8 +508,20 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	free(pid_path);
-	read = fread(pid_str, HGD_PID_STR_SZ, 1, pid_file);
-	if (read == 0) {
+	
+	/* Read the pid from the pidfile */
+	read = fgets(pid_str, HGD_PID_STR_SZ, pid_file);
+	if (read == NULL) {
+		if (!feof(pid_file)) {
+			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
+			fclose(pid_file);
+			return (HGD_FAIL);
+		}
+	}
+	
+	/* Read the track id from the pid file */
+	read = fgets(id_str, HGD_ID_STR_SZ, pid_file);
+	if (read == NULL) {
 		if (!feof(pid_file)) {
 			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
 			fclose(pid_file);
@@ -522,15 +534,21 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	fclose(pid_file);
 
-	pid = atoi(pid_str);
-	DPRINTF(HGD_D_DEBUG, "Killing mplayer");
-	if (kill(pid, SIGINT) < 0)
-		DPRINTF(HGD_D_WARN, "Can't kill mplayer: %s", SERROR);
+	if (atoi(id_str) == playing.id) {
+		pid = atoi(pid_str);
+		DPRINTF(HGD_D_DEBUG, "Killing mplayer");
+		if (kill(pid, SIGINT) < 0)
+			DPRINTF(HGD_D_WARN, "Can't kill mplayer: %s", SERROR);
 
-	/* Note: player daemon will empty the votes table */
-	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-
-	return (HGD_OK);
+		/* Note: player daemon will empty the votes table */
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+		return (HGD_OK);
+	} else {
+		DPRINTF(HGD_D_WARN, 
+		    "Hmm that was racey! wanted to kill %d but %s was playing",
+		    playing.id, id_str);
+		return(HGD_FAIL);
+	}
 }
 
 int
