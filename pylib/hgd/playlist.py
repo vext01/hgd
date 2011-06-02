@@ -56,6 +56,7 @@ class PlaylistItem(object):
                 "tag_title='%s', user='%s'" % (self.tid, self.filename, \
                 self.tag_artist, self.tag_title, self.user))
 
+# quick test
 if (__name__ == "__main__"):
     info = { "tid" : 4,
             "filename" : "test.ogg",
@@ -64,5 +65,3 @@ if (__name__ == "__main__"):
             "user" : "edd"}
     track = PlaylistItem(info)
     print(track)
-
-print("hgd.py loaded")

@@ -54,8 +54,8 @@ int
 main(int argc, char **argv)
 {
 	hgd_register_sig_handlers();
-	/* do the Python dance */
-	if (hgd_embed_py() != HGD_OK) {
+	/* embed python, but dont load user scripts */
+	if (hgd_embed_py(0) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Failed to initialise Python");
 		hgd_exit_nicely();
 	}

@@ -53,7 +53,7 @@ struct hgd_py_modules {
 };
 extern struct hgd_py_mods	 hgd_pys;
 
-int				 hgd_embed_py(void);
+int				 hgd_embed_py(uint8_t enable_user_scripts);
 void				 hgd_free_py(void);
 int				 hgd_execute_py_hook(char *hook);
 
