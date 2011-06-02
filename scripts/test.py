@@ -1,20 +1,20 @@
 """
 Test the scripting backend
 """
-def hgd_hook_init(hgd):
+def hgd_hook_init(ctx):
 
-    if (hgd.debug_level >= 2):
+    if (ctx.debug_level >= 2):
         print("")
         print(80 * "-")
         print("HGD Scripting backend test!")
         print(80 * "-")
 
-        print("HGD version is: %s" % hgd.hgd_version)
-        print("HGD component is: %s" % hgd.component)
-        print("protocol version is: %d" % hgd.proto_version)
-        print("debug level is: %d" % hgd.debug_level)
+        print("HGD version is: %s" % ctx.hgd_version)
+        print("HGD component is: %s" % ctx.component)
+        print("protocol version is: %d" % ctx.proto_version)
+        print("debug level is: %d" % ctx.debug_level)
         print("playlist:")
-        for i in hgd.get_playlist():
+        for i in ctx.get_playlist():
             print("  " + str(i))
 
         print(80 * "-")
