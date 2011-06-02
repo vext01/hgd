@@ -391,7 +391,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
 	struct hgd_playlist_item	 playing;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
-	char				*scmd, id_str[HGD_PID_STR_SZ];
+	char				*scmd, id_str[HGD_ID_STR_SZ];
 	pid_t				pid;
 	FILE				*pid_file;
 	char				*read;
@@ -500,6 +500,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	free(pid_path);
+	
+	/* Read the pid from the pidfile */
 	read = fgets(pid_str, HGD_PID_STR_SZ, pid_file);
 	if (read == NULL) {
 		if (!feof(pid_file)) {
@@ -509,7 +511,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		}
 	}
 	
-	read = fgets(id_str, HGD_PID_STR_SZ, pid_file);
+	/* Read the track id from the pid file */
+	read = fgets(id_str, HGD_ID_STR_SZ, pid_file);
 	if (read == NULL) {
 		if (!feof(pid_file)) {
 			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
