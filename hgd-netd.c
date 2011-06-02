@@ -421,11 +421,10 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	struct hgd_playlist_item	 playing;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
 	char				*scmd, id_str[HGD_ID_STR_SZ];
-	pid_t				pid;
+	pid_t				 pid, *read;
 	FILE				*pid_file;
-	char				*read;
-	int				tid = -1, scmd_ret;
-	struct flock			fl;
+	int				 tid = -1, scmd_ret;
+	struct flock			 fl;
 
 	fl.l_type   = F_RDLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
 	fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
@@ -529,7 +528,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	free(pid_path);
-	
+
 	/* Read the pid from the pidfile */
 	read = fgets(pid_str, HGD_PID_STR_SZ, pid_file);
 	if (read == NULL) {
@@ -539,7 +538,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 			return (HGD_FAIL);
 		}
 	}
-	
+
 	/* Read the track id from the pid file */
 	read = fgets(id_str, HGD_ID_STR_SZ, pid_file);
 	if (read == NULL) {
