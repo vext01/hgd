@@ -1,0 +1,115 @@
+CC?=@CC@
+
+PY_LDFLAGS+=@PYTHON_LDFLAGS@
+PY_CFLAGS+=@PYTHON_CFLAGS@
+
+SQL_CFLAGS=@SQLITE_CFLAGS@
+SQL_LDFLAGS=@SQLITE_LIBS@
+
+SSL_CFLAGS=@SSL_CFLAGS@
+SSL_LDFLAGS=@SSL_LIBS@
+
+CONFIG_CFLAGS=@LIBCONFIG_CFLAGS@
+CONFIG_LDFLAGS=@LIBCONFIG_LIBS@
+
+BSD_CFLAGS=@BSD_CFLAGS@
+BSD_LDFLAGS=@BSD_LIBS@
+
+TAG_CFLAGS=@TAGLIB_CFLAGS@
+TAG_LDFLAGS=@TAGLIB_LIBS@
+
+CFLAGS+=@CFLAGS@
+LDFLAGS+=@LIBS@
+CPPFLAGS+=@CPPFLAGS@
+
+INSTALL?=install
+
+prefix?=@prefix@
+mandir?=${prefix}/man/man1
+sbindir?=${prefix}/sbin
+bindir?=${prefix}/bin
+sharedir?=${prefix}/share
+docdir?=${sharedir}/doc/hgd
+sampledir?=${sharedir}/examples/hgd
+pysupportdir=${sharedir}/hgd/pylib
+
+.PHONY: all
+all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
+
+.PHONY: clean
+clean:
+	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o
+
+py.o: py.c py.h config.h
+	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o py.c
+
+common.o: common.c hgd.h config.h
+	${CC} ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} -c -o common.o common.c
+
+db.o: db.c hgd.h config.h
+	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
+
+# playd should not need ssl flags XXX
+hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h
+	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
+		${CONFIG_LDFLAGS} \
+		-o hgd-playd db.o common.o py.o hgd-playd.c
+
+hgd-netd: common.o hgd-netd.c hgd.h db.o config.h
+	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
+		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
+		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
+		-o hgd-netd common.o db.o hgd-netd.c
+
+hgdc: common.o hgdc.c hgd.h config.h
+	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
+		${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
+		-o hgdc common.o hgdc.c
+
+hgd-admin: common.o db.o hgd.h hgd-admin.c config.h
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
+		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
+		${CONFIG_LDFLAGS} -o hgd-admin common.o db.o hgd-admin.c
+
+# SSL pulled in my common.o XXX
+hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o
+	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
+		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQLITE_CFLAGS} \
+		${SQL_LDFLAGS} common.o py.o db.o hgd-mk-pydoc.c -o hgd-mk-pydoc
+
+client: hgdc
+server: hgd-netd hgd-playd hgd-admin
+
+.PHONY: install
+install: install-client install-server install-doc
+
+.PHONY: install-client
+install-client: hgdc
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} hgdc ${DESTDIR}${bindir}
+
+.PHONY: install-server
+install-server: hgd-netd hgd-admin hgd-playd
+	# binaries
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
+	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
+	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
+
+	# scripting stuff
+	${INSTALL} -d ${DESTDIR}${pysupportdir}
+	${INSTALL} share/pylib/hgd.py ${DESTDIR}${pysupportdir}
+
+.PHONY: install-doc
+install-doc:
+	${INSTALL} -d ${DESTDIR}${mandir}
+	${INSTALL} -d ${DESTDIR}${docdir}
+	${INSTALL} -d ${DESTDIR}${sampledir}
+	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}
+	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}
+	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}
+	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
+	${INSTALL} README ${DESTDIR}${docdir}
+	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
+	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}

@@ -15,6 +15,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* Needed first so we can optionaly include libs */
+#include "config.h"
+
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +28,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
+#endif
 
 
 #ifdef __linux__
@@ -379,7 +384,6 @@ hgd_setup_socket()
 		DPRINTF(HGD_D_WARN, "Connection is not encrypted");
 }
 
-/* NOTE! -c is reserved for 'config file path' */
 void
 hgd_usage()
 {
@@ -390,7 +394,9 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
+#ifdef HAVE_LIBCONFIG
 	printf("    -c\t\t\tSet config location\n");
+#endif
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
@@ -491,22 +497,33 @@ hgd_req_queue(char **args)
 }
 
 void
-hgd_print_track(char *resp)
+hgd_print_track(char *resp, uint8_t hilight)
 {
 	int			n_toks = 0, i;
-	char			*tokens[3] = {NULL, NULL, NULL};
+	char			*tokens[5] = {NULL, NULL, NULL};
 
 	do {
 		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
-	} while ((n_toks++ < 3) && (resp != NULL));
+	} while ((n_toks++ < 5) && (resp != NULL));
 
-	if (n_toks == 3)
-		printf(" [ #%04d ] '%s' from '%s'\n",
-		    atoi(tokens[0]), tokens[1], tokens[2]);
-	else
+	if (n_toks == 5) {
+
+		/* XXX disable colors optionally */
+		if (hilight) /* green on */
+			printf("\033[32m");
+		else /* red on */
+			printf("\033[31m");
+
+		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
+		printf("  '%s' by '%s'  from '%s'\n",
+		    tokens[3], tokens[2], tokens[4]);
+
+		printf("\033[0m");
+	} else {
 		fprintf(stderr,
 		    "%s: wrong number of tokens from server\n",
 		    __func__);
+	}
 
 	for (i = 0; i < n_toks; i ++)
 		free(tokens[i]);
@@ -570,16 +587,17 @@ hgd_req_playlist(char **args)
 	DPRINTF(HGD_D_DEBUG, "expecting %d items in playlist", n_items);
 	for (i = 0; i < n_items; i++) {
 		track_resp = hgd_sock_recv_line(sock_fd, ssl);
-		if (i == 0) {
-			hgd_hline();
-			hgd_print_track(track_resp);
-			/* printf("           0 votes-offs.\n"); */
-			hgd_hline();
-		} else
-			hgd_print_track(track_resp);
+
+		hgd_hline();
+		hgd_print_track(track_resp, i == 0);
 
 		free(track_resp);
 	}
+
+	if (n_items)
+		hgd_hline();
+	else
+		printf("Nothing to play!\n");
 
 	return (HGD_OK);
 }
@@ -591,12 +609,19 @@ hgd_req_playlist(char **args)
 int
 hgd_req_hud(char **args)
 {
+	int			status;
+
 	args = args; /* silence */
 
 	/* pretty clunky ;) */
 	while (1) {
-		system("clear");
-		printf("HGD Server @ %s -- Playlist:\n\n", host);
+		status = system("clear");
+		if (status != 0)
+			DPRINTF(HGD_D_WARN, "clear screen failed");
+
+
+		/* XXX ansii off option */
+		printf("\033[33mHGD Server @ %s -- Playlist:\033[0m\n\n", host);
 
 		if (hgd_req_playlist(NULL) != HGD_OK)
 			return (HGD_FAIL);
@@ -705,6 +730,7 @@ hgd_exec_req(int argc, char **argv)
 int
 hgd_read_config(char **config_locations)
 {
+#ifdef HAVE_LIBCONFIG
 	/*
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
@@ -812,6 +838,9 @@ hgd_read_config(char **config_locations)
 
 	config_destroy(cf);
 	return (ret);
+#else
+	return(HGD_OK);
+#endif
 }
 
 int
