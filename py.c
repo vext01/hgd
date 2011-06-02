@@ -62,24 +62,29 @@ hgd_py_meth_get_playlist(Hgd *self)
 
 	self = self;
 
-	if (hgd_get_playlist(&list) == HGD_FAIL)
-		Py_RETURN_NONE; /* XXX throw exception */
+	if (hgd_get_playlist(&list) == HGD_FAIL) {
+		(void) PyErr_Format(PyExc_RuntimeError,
+		    "Failed to get playlist from HGD");
+	}
 
 	ret_list = PyList_New(list.n_items);
-	if (!ret_list) /* XXX exception? */
-		DPRINTF(HGD_D_ERROR, "could not allocate python list");
+	if (!ret_list) {
+		PRINT_PY_ERROR();
+		(void) PyErr_Format(PyExc_RuntimeError, "Failed to allocate");
+	}
 
 	/* get ready to construct some stuff */
 	ctor = PyObject_GetAttrString(hgd_py_mods.playlist_mod, "PlaylistItem");
 	if (!ctor) {
-		DPRINTF(HGD_D_ERROR, "Couldn't find PlaylistItem constructor");
-		hgd_exit_nicely();
+		PRINT_PY_ERROR();
+		(void) PyErr_Format(PyExc_RuntimeError,
+		    "Failed to get PlaylistItem");
 	}
 
 	if (!PyCallable_Check(ctor)) {
 		PRINT_PY_ERROR();
-		DPRINTF(HGD_D_WARN, "PlaylistItem constructor is not callable");
-		hgd_exit_nicely();
+		(void) PyErr_Format(PyExc_RuntimeError,
+		    "Constructor not callable");
 	}
 
 	for (i = 0; i < list.n_items; i++) {
@@ -91,24 +96,39 @@ hgd_py_meth_get_playlist(Hgd *self)
 		    "tag_artist", it->tag_artist,
 		    "tag_title", it->tag_title,
 		    "user", it->user);
-		if (rec == NULL)
-			DPRINTF(HGD_D_ERROR, "could not allocate python dict");
+
+		if (rec == NULL) {
+			PRINT_PY_ERROR();
+			(void) PyErr_Format(PyExc_RuntimeError,
+			    "Failed to allocate");
+		}
 
 		args = PyTuple_New(1);
-		PyTuple_SetItem(args, 0, rec);
+		if (args == NULL) {
+			PRINT_PY_ERROR();
+			(void) PyErr_Format(PyExc_RuntimeError,
+			    "Failed to allocate");
+		}
+
+		if (PyTuple_SetItem(args, 0, rec) != 0) {
+			PRINT_PY_ERROR();
+			(void) PyErr_Format(PyExc_RuntimeError,
+			    "Failed to set in tuple");
+		}
 
 		plist_item = PyObject_CallObject(ctor, args);
 		Py_XDECREF(rec); /* don't decrement tuple refct! */
 		if (plist_item == NULL) {
 			PRINT_PY_ERROR();
-			DPRINTF(HGD_D_WARN, "failed to construct PlaylistItem");
-			continue;
+			(void) PyErr_Format(PyExc_RuntimeError,
+			    "Failed to call constructor");
 		}
 
 		/* steals ref */
 		if (PyList_SetItem(ret_list, i, plist_item) != 0) {
 			PRINT_PY_ERROR();
-			DPRINTF(HGD_D_ERROR, "can't add to list");
+			(void) PyErr_Format(PyExc_RuntimeError,
+			    "Failed to set in list");
 		}
 	}
 
