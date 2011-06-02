@@ -56,9 +56,9 @@ hgd_py_meth_get_playlist(Hgd *self)
 	struct hgd_playlist	  list;
 	struct hgd_playlist_item *it;
 	unsigned int		  i;
-	PyObject		 *rec, *ret_list, *v_filename, *v_id, *v_user;
-	PyObject		 *k_filename, *k_id, *k_user, *plist_item = NULL;
-	PyObject		 *playlist_item_t, *ctor = NULL, *args = NULL;
+	PyObject		 *rec, *ret_list;
+	PyObject		 *plist_item = NULL;
+	PyObject		 *ctor = NULL, *args = NULL;
 
 	self = self;
 
@@ -132,7 +132,6 @@ hgd_py_meth_get_playlist(Hgd *self)
 		}
 	}
 
-clean:
 	Py_XDECREF(ctor);
 	hgd_free_playlist(&list);
 	return (ret_list);
