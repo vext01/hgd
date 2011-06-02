@@ -420,8 +420,8 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
 	struct hgd_playlist_item	 playing;
 	char				*pid_path, pid_str[HGD_PID_STR_SZ];
-	char				*scmd, id_str[HGD_ID_STR_SZ];
-	pid_t				 pid, *read;
+	char				*scmd, id_str[HGD_ID_STR_SZ], *read;
+	pid_t				 pid;
 	FILE				*pid_file;
 	int				 tid = -1, scmd_ret;
 	struct flock			 fl;
