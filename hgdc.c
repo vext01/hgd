@@ -33,7 +33,7 @@
 #else
 #include <readpassphrase.h>
 #endif
- #include <libconfig.h>
+#include <libconfig.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -42,7 +42,8 @@
 
 #include "hgd.h"
 
-char			*user = NULL, *host = "127.0.0.1";
+
+char			*user = NULL, *host = NULL, *password = NULL;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
 
@@ -59,18 +60,24 @@ int			 hgd_check_svr_response(char *resp, uint8_t x);
 void
 hgd_exit_nicely()
 {
+	uint8_t			ssl_dead = 0;
+
 	if (!exit_ok)
 		DPRINTF(HGD_D_INFO,
 		    "hgdc was interrupted or crashed - cleaning up");
 
 	if (ssl) {
 		/* clean up ssl structures */
+		while (!ssl_dead)
+			ssl_dead = SSL_shutdown(ssl);
 		SSL_free(ssl);
 	}
 
-	if (ctx) {
+	if (ctx)
 		SSL_CTX_free(ctx);
-	}
+
+	if (host)
+		free(host);
 
 	if (sock_fd > 0) {
 		/* try to close connection */
@@ -175,7 +182,6 @@ hgd_encrypt(int fd)
 		return (HGD_FAIL);
 	}
 
-
 	cert = SSL_get_peer_certificate(ssl);
 	if (!cert) {
 		DPRINTF(HGD_D_ERROR, "could not get remote cert");
@@ -259,17 +265,23 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 	int			 login_ok = -1;
 	char			*prompt;
 
-	xasprintf(&prompt, "Password for %s@%s: ", user, host);
-	if (readpassphrase(prompt, pass, HGD_MAX_PASS_SZ,
-	    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
-		DPRINTF(HGD_D_ERROR, "Problem reading password from user");
-		memset(pass, 0, HGD_MAX_PASS_SZ);
+	if (password == NULL) {
+		xasprintf(&prompt, "Password for %s@%s: ", user, host);
+		if (readpassphrase(prompt, pass, HGD_MAX_PASS_SZ,
+		    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Problem reading password from user");
+			memset(pass, 0, HGD_MAX_PASS_SZ);
+			free(prompt);
+			return (HGD_FAIL);
+		}
 		free(prompt);
-		return (HGD_FAIL);
+	} else {
+		strncpy(pass, password, HGD_MAX_PASS_SZ);
+		if (HGD_MAX_PASS_SZ > 0)
+			pass[HGD_MAX_PASS_SZ-1] = '\0';
 	}
-	free(prompt);
 
-	/* XXX send password */
+	/* send password */
 	xasprintf(&user_cmd, "user|%s|%s", username, pass);
 	hgd_sock_send_line(fd, ssl, user_cmd);
 	memset(pass, 0, HGD_MAX_PASS_SZ);
@@ -308,7 +320,9 @@ hgd_setup_socket()
 			hgd_exit_nicely();
 		}
 
-		host = inet_ntoa( *(struct in_addr*)(he->h_addr_list[0]));
+		free(host);
+		host = xstrdup(
+		    inet_ntoa( *(struct in_addr*)(he->h_addr_list[0])));
 		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
 	}
 
@@ -376,7 +390,7 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
-	printf("    -c\t\tSet config location\n");
+	printf("    -c\t\t\tSet config location\n");
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
@@ -385,7 +399,7 @@ hgd_usage()
 	printf("    -u username\t\tSet username\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
-	printf("    -e\t\t\tEnable Encryption\n");
+	printf("    -e\t\t\tEnable encryption\n");
 }
 
 /* upload and queue a file to the playlist */
@@ -579,13 +593,15 @@ hgd_req_hud(char **args)
 {
 	args = args; /* silence */
 
-	system("clear");
+	/* pretty clunky ;) */
 	while (1) {
-		printf("HGD Server @ %s -- Playlist:\n\n", host);
-		/* XXX Check return value of this? */
-		hgd_req_playlist(NULL);
-		sleep(1);
 		system("clear");
+		printf("HGD Server @ %s -- Playlist:\n\n", host);
+
+		if (hgd_req_playlist(NULL) != HGD_OK)
+			return (HGD_FAIL);
+
+		sleep(1);
 	}
 
 	return (HGD_OK);
@@ -600,6 +616,48 @@ struct hgd_req_despatch req_desps[] = {
 	{"q",		1,	1,		hgd_req_queue},
 	{NULL,		0,	0,		NULL} /* terminate */
 };
+
+/*
+ * check protocol version is correct
+ */
+int
+hgd_check_svr_proto()
+{
+	char			*v, *resp = NULL;
+	int			 vv = -1, ret = HGD_OK;
+
+	hgd_sock_send_line(sock_fd, ssl, "proto");
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+
+	if (hgd_check_svr_response(resp, 0) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Could not check server proto version");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	v = strchr(resp, '|');
+	if ((v == 0) || (*(v + 1) == 0)) {
+		DPRINTF(HGD_D_ERROR, "Could not find protocol version");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	vv = atoi(v + 1);
+	if (vv != HGD_PROTO_VERSION) {
+		DPRINTF(HGD_D_ERROR, "Protocol mismatch: "
+		    "Server=%d, Client=%d", HGD_PROTO_VERSION, vv);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	DPRINTF(HGD_D_DEBUG, "Protocol version matches server");
+
+clean:
+	if (resp)
+		free(resp);
+
+	return (ret);
+}
 
 /* parse command line args */
 void
@@ -632,6 +690,10 @@ hgd_exec_req(int argc, char **argv)
 	/* once we know that the hgdc is used properly, open connection */
 	hgd_setup_socket();
 
+	/* check protocol matches the server before we continue */
+	if (hgd_check_svr_proto() != HGD_OK)
+		return;
+
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	if ((!authenticated) && (correct_desp->need_auth)) {
 		if (hgd_client_login(sock_fd, ssl, user) != HGD_OK)
@@ -640,17 +702,20 @@ hgd_exec_req(int argc, char **argv)
 	correct_desp->handler(&argv[1]);
 }
 
-
 int
-read_config(char **config_locations)
+hgd_read_config(char **config_locations)
 {
 	/*
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
+	 * see hgd-playd.c for how to remove need for stat.
 	 */
-	config_t 		 cfg, *cf;
-	char			*cypto_pref;
+	config_t		 cfg, *cf;
+	char			*cypto_pref, *tmp_host, *tmp_user;
+	char			*tmp_password;
+	int			 ret = HGD_OK;
+	struct stat		 st;
 
 	/* temp variables */
 	long long int		tmp_dbglevel, tmp_port;
@@ -660,28 +725,35 @@ read_config(char **config_locations)
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
 		    *config_locations);
-		if (config_read_file(cf, *config_locations)) {
-			break;
-		} else {
-			DPRINTF(HGD_D_ERROR, "%d - %s\n",
-			    config_error_line(cf),
-			    config_error_text(cf));
 
-			config_destroy(cf);
+		if ( stat (*config_locations, &st) < 0 ) {
+			DPRINTF(HGD_D_INFO, "Could not stat %s",
+			    *config_locations);
 			config_locations--;
+			continue;
 		}
+
+		/* if we find a config, use it */
+		if (config_read_file(cf, *config_locations))
+			break;
+
+		/* otherwise look for another */
+		DPRINTF(HGD_D_ERROR, "%s (line: %d)",
+		    config_error_text(cf), config_error_line(cf));
+		config_locations--;
 	}
 
-	DPRINTF(HGD_D_DEBUG, "DONE");
-
+	/* if no configs found */
 	if (*config_locations == NULL) {
+		config_destroy(cf);
 		return (HGD_OK);
 	}
 
 	/* -e -E */
-	if (config_lookup_string(cf, "crypto", (const char**)&cypto_pref)) {
+	if (config_lookup_string(cf, "crypto", (const char **) &cypto_pref)) {
+
 		if (strcmp(cypto_pref, "always") == 0) {
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -696,44 +768,60 @@ read_config(char **config_locations)
 			DPRINTF(HGD_D_WARN,
 			    "Invalid crypto option, using default");
 		}
-
-		DPRINTF(HGD_D_DEBUG, "cfg: host=%s", host);
 	}
 
 	/* -s */
-	if (config_lookup_string(cf, "hostname", (const char**)&host)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: host=%s", host);
+	if (config_lookup_string(cf, "hostname", (const char **) &tmp_host)) {
+		free(host);
+		host = xstrdup(tmp_host);
+		DPRINTF(HGD_D_DEBUG, "host=%s", host);
 	}
 
 	/* -p */
 	if (config_lookup_int64(cf, "port", &tmp_port)) {
 		port = tmp_port;
-		DPRINTF(HGD_D_DEBUG, "cfg: port=%d", port);
+		DPRINTF(HGD_D_DEBUG, "port=%d", port);
 	}
 
+	/* password */
+	if (config_lookup_string(cf, "password", (const char**) &tmp_password)) {
+		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
+			DPRINTF(HGD_D_ERROR, 
+				"Config file with your password in is readable by"
+				" other people.  Please chmod it.");
+			hgd_exit_nicely();	
+
+		}
+
+		password = xstrdup(tmp_password);
+		DPRINTF(HGD_D_DEBUG, "Set password from config");
+	}
 
 	/* -u */
-	if (config_lookup_string(cf, "username", (const char**)&user)) {
-		DPRINTF(HGD_D_DEBUG, "cfg: user=%s", user);
+	if (config_lookup_string(cf, "username", (const char**) &tmp_user)) {
+		free(user);
+		user = strdup(tmp_user);
+		DPRINTF(HGD_D_DEBUG, "user='%s'", user);
 	}
 
-	/* XXX -x */
+	/* -x */
 	if (config_lookup_int64(cf, "debug", &tmp_dbglevel)) {
-		hgd_debug = (int8_t)tmp_dbglevel;
-		DPRINTF(HGD_D_DEBUG, "cfg: debug level=%d", hgd_debug);
+		hgd_debug = tmp_dbglevel;
+		DPRINTF(HGD_D_DEBUG, "debug level=%d", hgd_debug);
 	}
 
-	/* XXX add "config_destroy(cf);" to cleanup */
-	return (HGD_OK);
+	config_destroy(cf);
+	return (ret);
 }
 
 int
 main(int argc, char **argv)
 {
 	char			*resp, ch;
-	char			*config_path[4] = {NULL,NULL,NULL,NULL};
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			num_config = 2;
 
+	host = xstrdup(HGD_DFL_HOST);
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
@@ -743,7 +831,7 @@ main(int argc, char **argv)
 	 * Need to do getopt twice because x and c need to be done before
 	 * reading the config
 	 */
-	while ((ch = getopt(argc, argv, "x:c:" "Eehp:s:vu:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Eehp:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -752,22 +840,30 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
 			break;
 		case 'c':
-			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
-			    optarg);
-			config_path[num_config] = optarg;
+			if (num_config < 3) {
+				num_config++;
+				DPRINTF(HGD_D_DEBUG, "added config %d %s",
+				    num_config, optarg);
+				config_path[num_config] = optarg;
+			} else {
+				DPRINTF(HGD_D_WARN,
+				    "Too many config files specified");
+				hgd_exit_nicely();
+			}
 			break;
 		default:
-			break;
+			break; /* catch badness on next getopt */
 		}
 	}
 
-	read_config(config_path + num_config);
+	hgd_read_config(config_path + num_config);
 
 	RESET_GETOPT();
 
-	while ((ch = getopt(argc, argv, "Eehp:s:vu:" "x:c:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Eehp:s:u:vx:")) != -1) {
 		switch (ch) {
+		case 'c':
+			break; /* already handled */
 		case 'e':
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
 			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
@@ -779,14 +875,16 @@ main(int argc, char **argv)
 			break;
 		case 's':
 			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
-			host = optarg;
+			free(host);
+			host = xstrdup(optarg);
 			break;
 		case 'p':
 			port = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
 			break;
 		case 'u':
-			user = optarg;
+			free(user);
+			user = strdup(optarg);
 			DPRINTF(HGD_D_DEBUG, "set username to %s", user);
 			break;
 		case 'v':
@@ -795,11 +893,11 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
+			DPRINTF(HGD_D_DEBUG, "set debug to %d", atoi(optarg));
 			hgd_debug = atoi(optarg);
 			if (hgd_debug > 3)
 				hgd_debug = 3;
-			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
-			break;
+			break; /* already set but over-rideable */
 		case 'h':
 		default:
 			hgd_usage();
@@ -808,7 +906,6 @@ main(int argc, char **argv)
 			break;
 		};
 	}
-
 
 	argc -= optind;
 	argv += optind;

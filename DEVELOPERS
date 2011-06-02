@@ -1,0 +1,102 @@
+Developer Guidelines for HGD
+============================
+
+Code Style
+----------
+
+Code style is as described in the style(9) OpenBSD manual page.
+http://www.openbsd.org/cgi-bin/man.cgi?query=style&sektion=9
+
+All of our functions (other than helpers funcs) are prefixed 'hgd_'
+
+Code Partitioning
+-----------------
+
+Each program has it's own source file.
+
+All database code should go in db.c. Be sure to protect these macros against SQL
+injection. This means doing sql queries the long way if the query is dynamic.
+
+All of our macros are defined in .h files and are prefixed HGD_ other
+than in certain (generic) cases (SERROR for example).
+
+Any other common functionality should go in common.c.
+
+Debugging
+---------
+
+Debugging is done via DPRINTF at the appropriate debug level. Generally
+speaking:
+#define HGD_D_ERROR	- Failures which we can not recover from.
+#define HGD_D_WARN	- Warnings which we can be recovered from.
+#define HGD_D_INFO	- Info that might tbe useful at runtime.
+#define HGD_D_DEBUG	- Very verbose info for debugging.
+
+When debugging netd, there is the -f flag which causes netd to not fork; this
+can be useful for valgrinding a single run.
+
+Cleaning Up On Exit
+-------------------
+
+Exit is done via hgd_exit_nicely() -- each program has it's own
+implementation. You should try to call this as far up the call stack
+as possible, so that as much stuff is free()d/closed as possible
+before exit.
+
+Always valgrind your work. For this you need a linux machine. Make sure that
+none of your code "loses" bytes, as this is a memory leak. Sometimes it is hard
+as libraries tend to leak. Do your best.
+
+If you are developing on OpenBSD, turn on the 'S' malloc flag (see malloc(3)).
+This will detect use after frees.
+
+Documentation
+-------------
+
+If you pull in a new library, add it to the list of prerequisites in README.
+
+When you add a command line switch, update the manual and don't forget to bump
+the .Dd line too. The format of .Dd is 'Month DD, YYYY'. If you are on OpenBSD,
+lint the manual using 'mandoc -Tlint'.
+
+Misc
+----
+
+If you break backward compatibility in the network protocol, then you must bump
+HGD_PROTO_VERSION in hgd.h.
+
+Rolling a Release
+-----------------
+
+ 1.  You have already valgrinded and tested ;)
+ 2.  Turn off debug flag (-g in CFLAGS).
+ 3.  Bump version macro.
+ 4.  Check README has history updated.
+ 5.  Commit and push to git.
+ 7.  Tag the version in git. It should be taggd as 'x.x.x', eg '0.2.1'
+ 8.  Turn debug flag back on.
+ 9.  Get a tarball of tag off github.
+ 10.  Untar it and rename.
+ 11.  Rename the directory hgd-x.x.x
+ 12.  Tar it up as hgd-x.x.x.tar.gz (not .tgz)
+ 13.  Upload it to github.
+
+ Optionally:
+ 14. Send notification to reddit.com/r/software ;)
+ 15. ??????
+ 16. PROFIT!
+
+Want To Contribute?
+-------------------
+
+If you want to contribute, make a github fork and send a vext01/hgd a
+pull request.  Make sure you have your git client configured correctly
+with respect to user.name and user.email. They should be the same as
+on github.
+
+If your changes are significant, please add your name to the copyrights
+on source files you have changed and also add yourself to version() in 
+common.c.
+
+Plain diffs can also be accepted via email (vext01 at gmail dot com).
+

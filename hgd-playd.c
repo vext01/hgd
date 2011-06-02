@@ -147,14 +147,13 @@ hgd_play_loop()
 	while (!dying) {
 		memset(&track, 0, sizeof(track));
 
-		if (hgd_get_next_track(&track) == HGD_FAIL) {
+		if (hgd_get_next_track(&track) == HGD_FAIL)
 			hgd_exit_nicely();
-		}
 
 		if (track.filename != NULL) {
 			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
 			    track.filename);
-			/* XXX: Should we check the return val of this? */
+
 			hgd_clear_votes();
 			hgd_play_track(&track);
 		} else {
@@ -176,65 +175,88 @@ hgd_read_config(char **config_locations)
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
 	 */
-	config_t 		 cfg, *cf;
-	long int		 dont_fork = dont_fork;
+	config_t		 cfg, *cf;
 	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
+	char			*tmp_state_path;
+	struct stat		 st;
 
 	cf = &cfg;
 	config_init(cf);
 
 	while (*config_locations != NULL) {
+
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
 		    *config_locations);
+
+		/* XXX: can be removed when deb get new libconfig */
+		if ( stat (*config_locations, &st) < 0 ) {
+			DPRINTF(HGD_D_INFO, "Could not stat %s",
+			    *config_locations);
+			config_locations--;
+			continue;
+		}
+
 		if (config_read_file(cf, *config_locations)) {
 			break;
 		} else {
-			DPRINTF(HGD_D_ERROR, "%d - %s\n",
-			    config_error_line(cf),
-			    config_error_text(cf));
-
-			config_destroy(cf);
+#if 1
+			DPRINTF(HGD_D_ERROR, "%s (line: %d)",
+			    config_error_text(cf), config_error_line(cf));
+#else
+			/*
+			 * XXX: we can use this verion when debian
+			 * get new linconfig
+			 */
+                        if (config_error_type (cf) == CONFIG_ERR_FILE_IO) {
+				DPRINTF(HGD_D_INFO, "%s (line: %d)",
+				    config_error_text(cf),
+				    config_error_line(cf));
+			} else {
+				DPRINTF(HGD_D_ERROR, "%s (line: %d)",
+				    config_error_text(cf),
+				    config_error_line(cf));
+			}
+#endif
 			config_locations--;
 		}
 	}
 
-	DPRINTF(HGD_D_DEBUG, "DONE");
-
 	if (*config_locations == NULL) {
+		config_destroy(cf);
 		return (HGD_OK);
 	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
-		/* XXX: not sure if this strdup is needed */
-		state_path = xstrdup(state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
+	if (config_lookup_string(cf, "state_path",
+	    (const char **) &tmp_state_path)) {
+		free(state_path);
+		state_path = xstrdup(tmp_state_path);
+		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
-
 
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge_fs", &tmp_purge_fin_fs)) {
 		purge_finished_fs = tmp_purge_fin_fs;
 		DPRINTF(HGD_D_DEBUG,
-		    "purgin is %s", (purge_finished_fs ? "on" : "off"));
+		    "fs purging is %s", (purge_finished_fs ? "on" : "off"));
 	}
 
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
 		purge_finished_db = tmp_purge_fin_db;
 		DPRINTF(HGD_D_DEBUG,
-		    "purgin is %s", (purge_finished_db ? "on" : "off"));
+		    "db purging is %s", (purge_finished_db ? "on" : "off"));
 	}
 
-	/* XXX -x */
+	/* -x */
 	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
 		hgd_debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
 
-	/* XXX add "config_destroy(cf);" to cleanup */
+	config_destroy(cf);
 	return (HGD_OK);
 }
 
@@ -242,6 +264,7 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
+	printf("  -c	Path to a config file to use\n");
 	printf("  -C	Clear playlist on startup\n");
 	printf("  -d	Set hgd state directory\n");
 	printf("  -h	Show this message and exit\n");
@@ -255,7 +278,7 @@ int
 main(int argc, char **argv)
 {
 	char			 ch;
-	char			*config_path[4] = {NULL,NULL,NULL,NULL};
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
 	config_path[0] = NULL;
@@ -267,13 +290,19 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
 		switch (ch) {
 		case 'c':
-			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
-			    optarg);
-			config_path[num_config] = optarg;
+			if (num_config < 3) {
+				num_config++;
+				DPRINTF(HGD_D_DEBUG, "added config %d %s",
+				    num_config, optarg);
+				config_path[num_config] = optarg;
+			} else {
+				DPRINTF(HGD_D_WARN,
+				    "Too many config files specified");
+				hgd_exit_nicely();
+			}
 			break;
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -283,7 +312,7 @@ main(int argc, char **argv)
 			    "set debug level to %d", hgd_debug);
 			break;
 		default:
-			break;
+			break; /* catch badness in next getopt */
 		};
 	}
 
@@ -292,8 +321,10 @@ main(int argc, char **argv)
 	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
 		switch (ch) {
+		case 'c':
+			break; /* already handled */
 		case 'C':
 			clear_playlist_on_start = 1;
 			DPRINTF(HGD_D_DEBUG, "will clear playlist '%s'",
@@ -318,12 +349,11 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
+			DPRINTF(HGD_D_DEBUG, "set debug to %d", atoi(optarg));
 			hgd_debug = atoi(optarg);
 			if (hgd_debug > 3)
 				hgd_debug = 3;
-			DPRINTF(HGD_D_DEBUG,
-			    "set debug level to %d", hgd_debug);
-			break;
+			break; /* already set but over-rideable */
 		case 'h':
 		default:
 			hgd_usage();
@@ -346,12 +376,13 @@ main(int argc, char **argv)
 	if (db == NULL)
 		hgd_exit_nicely();
 
-	/* XXX: Should we check the return state of this? */
-	hgd_init_playstate();
+	if (hgd_init_playstate() != HGD_OK)
+		hgd_exit_nicely();
 
-	if (clear_playlist_on_start)
-		/* XXX: Should we check the return state of this? */
-		hgd_clear_playlist();
+	if (clear_playlist_on_start) {
+		if (hgd_clear_playlist() != HGD_OK)
+			hgd_exit_nicely();
+	}
 
 	/* start */
 	hgd_play_loop();

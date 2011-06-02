@@ -22,7 +22,16 @@
 #define INFTIM -1
 #endif
 
-#define HGD_VERSION		"0.3-current"
+#define HGD_VERSION		"0.3.0"
+#define HGD_PROTO_VERSION	2
+
+/* misc */
+#define HGD_DFL_REQ_VOTES	3
+#define HGD_PID_STR_SZ		10
+#define HGD_SHA_SALT_SZ		20
+#define HGD_MAX_PASS_SZ		20
+#define HGD_MAX_USER_QUEUE	5
+#define HGD_MB			(1024L * 1024L)
 
 /* paths */
 #define HGD_DFL_DIR		"/var/hgd"
@@ -33,8 +42,9 @@
 
 /* networking */
 #define HGD_DFL_PORT		6633
+#define HGD_DFL_HOST		"127.0.0.1"
 #define HGD_DFL_BACKLOG		10
-#define HGD_DFL_MAX_UPLOAD	(1024 * 1024 * 100)
+#define HGD_DFL_MAX_UPLOAD	(HGD_MB * 100L)
 #define HGD_MAX_LINE		256
 #define HGD_MAX_BAD_COMMANDS	3
 #define HGD_BINARY_CHUNK	4096
@@ -51,8 +61,8 @@
 #define HGD_CRYPTO_PREF_IF_POSS	1
 #define HGD_CRYPTO_PREF_NEVER	2
 
-/* CONFIG files */
-#define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR "/config"
+/* Config files */
+#define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR
 #define HGD_USR_CFG_DIR		"/.config/hgd"
 
 #define HGD_CLI_CFG		"/hgdc.rc"

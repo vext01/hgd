@@ -3,9 +3,9 @@ SQL_CPPFLAGS=`pkg-config --cflags sqlite3`
 SQL_LDFLAGS=`pkg-config --libs sqlite3`
 SSL_LDFLAGS=-lssl -lcrypto
 
-CFLAGS+=-Wall -Wextra -g -I/usr/local/include
-LDFLAGS+=-lconfig
-
+CFLAGS+=-Wall -Wextra -g
+CPPFLAGS+=-I/usr/local/include
+LDFLAGS+=-L/usr/local/lib -lconfig
 
 INSTALL?=install
 
@@ -14,13 +14,14 @@ mandir?=${prefix}/man/man1
 sbindir?=${prefix}/sbin
 bindir?=${prefix}/bin
 sharedir?=${prefix}/share/doc/hgd
+sampledir?=${prefix}/share/examples/hgd
 
 .PHONY: all
 all: hgd-playd hgd-netd hgd-admin hgdc
 
 .PHONY: clean
 clean:
-	-rm hgd-playd hgd-netd hgdc common.o db.o
+	rm -f hgd-playd hgd-netd hgdc common.o db.o
 
 common.o: common.c hgd.h
 	${CC} ${CPPFLAGS} ${CFLAGS} -c -o common.o common.c
@@ -47,19 +48,33 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c
 		${SSL_LDFLAGS} ${LDFLAGS} \
 		-o hgd-admin common.o db.o hgd-admin.c
 
+client: hgdc
+server: hgd-netd hgd-playd hgd-admin
 
 .PHONY: install
-install: hgd-playd hgd-netd hgdc hgd-admin
-	${INSTALL} -d ${DESTDIR}${sbindir}
+install: install-client install-server install-doc
+
+.PHONY: install-client
+install-client: hgdc
 	${INSTALL} -d ${DESTDIR}${bindir}
-	${INSTALL} -d ${DESTDIR}${mandir}
-	${INSTALL} -d ${DESTDIR}${sharedir}
+	${INSTALL} hgdc ${DESTDIR}${bindir}
+
+.PHONY: install-server
+install-server: hgd-netd hgd-admin hgd-playd
+	${INSTALL} -d ${DESTDIR}${sbindir}
 	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
-	${INSTALL} hgdc ${DESTDIR}${bindir}
+
+.PHONY: install-doc
+install-doc:
+	${INSTALL} -d ${DESTDIR}${mandir}
+	${INSTALL} -d ${DESTDIR}${sharedir}
+	${INSTALL} -d ${DESTDIR}${sampledir}
 	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}
 	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
 	${INSTALL} README ${DESTDIR}${sharedir}
+	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
+	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}

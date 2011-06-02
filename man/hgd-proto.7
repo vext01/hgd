@@ -1,0 +1,276 @@
+.\" Copyright (c) 2011 Edd Barrett <vext01@gmail.com>
+.\" Copyright (c) 2011 Martin Ellis <ellism88@gmail.com>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
+.\"
+.Dd May 16, 2011
+.Dt HGD-PROTO 1
+.Os
+.Sh NAME
+.Nm hgd-admin
+.Nd HGD protocol specification
+.Sh DESCRIPTION
+.Nm
+is a comprehensive guide to the Hackathon Gunther Daemon protocol. The guide is
+provided so as to encourage the implementation new client programs.
+.Sh PROTOCOL FUNDAMENTALS
+The HGD protocol is a simple mixed text/binary TCP network protocol for use with
+.Xr hgd-netd 1
+\&. The default TCP port for the HGD protocol is 6633.
+.Pp
+The majority of communications are performed in a turn based fashion
+between the server and client. Most communications are line
+based and terminated with a carriage return and line feed, so as to
+remain telnet compatible. The only exception to this rule is the
+.Sq q
+command which involves sending binary data over the wire; in this case,
+communications are precisely bounded in size.
+.Pp
+Communications start with the server
+reporting it's version; the session mostly continues as follows:
+.Bl -enum
+.It
+Client sends a command and optionally arguments separated by pipe characters.
+.It
+Server sends either a single- or multi-line reply indicating
+success/failure and optionally some data.
+.It
+Goto 1 (unless the client sent a
+.Sq bye
+).
+.El
+.Pp
+Clients must be aware which commands return which kind of reply.
+.Pp
+A server reply may contain multiple fields of data, which are
+separated by the pipe character,
+.Sq |
+\&.
+.Pp
+The first field of every reply always indicates whether the command
+succeeded or failed (
+.Sq ok
+and
+.Sq err
+respectively). If a command fails, then the
+second field indicates why. Failed commands always send a single-line reply.
+.Pp
+If the client sends three consecutive commands which all cause an error, the
+client connection is assumed to be malicious and is dropped.
+.Sh PROTOCOL COMMANDS
+All command arguments are separated by the pipe character,
+.Sq |
+\&.
+.Pp
+Some commands require the connection to be authenticated.
+.Pp
+The command set is as follows:
+.Bl -tag -width Ds
+.It bye
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok|<exit_message>
+.It
+Needs auth: No
+.El
+.Pp
+Notifies the server that you (the client) are now disconnecting. This
+allows the server to clean up properly.
+.It encrypt
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: No
+.El
+.Pp
+Notifies the server that all communications from here onward are to encrypted
+using SSL (TLSv1). Transport of encrypted traffic differs; see
+.Sx SECURE COMMUNICATIONS WITH SSL (TLSv1)
+\&.
+.It encrypt?
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok|<crypto-method>
+.It
+Needs auth: No
+.El
+.Pp
+Asks the server if it supports encryption. A <crypto-method> of
+.Sq nocrypto
+indicates the server is incapable of supplying secure communications.
+.It ls
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: multi-line
+.It
+On success returns: ok|<num-items> ...
+.It
+Needs auth: No
+.El
+.Pp
+Requests the playlist. <num_items> indicates how many further lines to expect
+from the server. Each line returned represents one track in the playlist; the
+line is of the form:
+.Pp
+<track-id>|<filename>|<user>
+.It np
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok|<playing?>[|<track-id>|<filename>|<user>]
+.It
+Needs auth: No
+.El
+.Pp
+Get the currently playing item, if any. If <playing?> = 0, then nothing is
+playing and therefore, no further information is available.
+.It proto
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok|<proto-major-vers>
+.It
+Needs auth: No
+.El
+.Pp
+Requests the protocol major version. Clients should check this upon connecting
+against the protocol version they support.
+.It q
+.Bl -dash
+.It
+Arguments: 2 <filename>|<byte-sz>
+.It
+Reply type: special
+.It
+Needs auth: Yes
+.El
+.Pp
+Indicates that a file of size <byte-sz> is to be uploaded. If the
+file size is within bounds, then the server replies
+.Sq ok...
+, which prompts the client to send the file in binary mode. The client
+should send exactly <byte-sz> bytes. If this goes to plan then the
+server switches back to text-mode and sends
+.Sq ok
+\&. The file is inserted into the
+playlist under the name <flename>.
+.It user
+.Bl -dash
+.It
+Arguments: 2 <username>|<password>
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: No
+.El
+.Pp
+Authenticates a user with the current connection.
+.It vo
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.El
+.Pp
+Votes off the currently playing track. It is recommended that clients use the
+1-argument variant of this command to avoid race conditions in voting off.
+.It vo (safe variant)
+.Bl -dash
+.It
+Arguments: 1 <playlist-id>
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.El
+.Pp
+Votes off the track with the playlist id <playlist-id> if and only if it is
+now playing.
+.El
+.Sh TYPICAL SESSION
+Here we will demonstrate a simple HGD session. In these examples, a line
+beginning
+.Sq >
+indicate that the line is sent my the client, whereas a line beginning
+.Sq <
+indicates that it is a reply sent by the server.
+.Bl -enum
+.It
+Opening the connection and checking protocol version
+.Bd -literal
+< ok|HGD-0.3.0
+> proto
+< ok|2
+.Ed
+.Pp
+At this stage the client should check the protocol major version against that
+expected. If there is a mismatch, then the client should not continue.
+.It
+Retrieving the playlist
+.Bd -literal
+> ls
+< ok|3
+> 1|gunther-tralala.flv|gunther
+> 2|crabs.mp4|mex
+> 3|slipknot-duality.wma|tris
+.Ed
+.It
+Disconnecting
+.Bd -literal
+> bye
+< ok|Catch you later d00d!
+.Ed
+.El
+.Sh SECURE COMMUNICATIONS WITH SSL (TLSv1)
+XXX: Mex, you need to detail the SSL packet size etc. here.
+.Sh AUTHORS
+.An -nosplit
+.Nm
+was written by
+.An Edd Barrett Aq vext01@gmail.com ,
+and
+.An Martin Ellis Aq ellism88@gmail.com .
+.Sh BUGS
+Please report bugs in this guide back to use via the github issue tracker.

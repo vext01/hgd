@@ -1,0 +1,28 @@
+# HGD Client Configuration
+# ------------------------
+# All strings must be double quoted.
+# All numbers must be proceeded by 'L'
+#   (thanks to some major linux distros shipping old libconfig).
+# All lines should be terminated with a semi-colon.
+
+## Debug level.  Controls logging.
+## 0 = ERROR, 1=WARNING, 2=INFO, 3=DEBUG
+#debug = 1L;
+
+## Set crypto options.
+## Valid options are always/never/if_avaliable
+#crypto = "if_avaliable";
+
+## hostname to connect to.
+#hostname = "localhost";
+
+## port to connect to.
+#port = 6633L;
+
+## User name to use.  If not set defaults to `whoami`.
+#username = "sunshinegirls";
+
+
+## Be very careful with file permissions when setting this option.
+## Make sure your chmod is at least 700
+#password = "";

@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd February 24, 2011
+.Dd April 21, 2011
 .Dt HGD-ADMIN 1
 .Os
 .Sh NAME
@@ -59,6 +59,25 @@ Delete a user from the system.
 .It user-list
 List users in the system.
 .El
+.Sh FILES
+.Nm
+can read it's settings from a config file. The following locations
+(in the order shown) are searched:
+.Pp
+.Bl -enum -compact -width Ds
+.It
+A path specified by '-c' (if given).
+.It
+~/.config/hgd/hgd.rc
+.It
+/etc/hgd/hgd.rc
+.El
+.Pp
+The first config file found is used. If no config file is found, default
+settings are used.
+.Pp
+Sample config files are supplied in the source tarball and should be
+supplied by binary packagers.
 .Sh HISTORY
 HGD was inspired by the LPD hack -- a music system used at OpenBSD hackathons.
 .Sh AUTHORS
@@ -69,4 +88,4 @@ was written by
 and
 .An Martin Ellis Aq ellism88@gmail.com .
 .Sh BUGS
-Probably
+Probably.

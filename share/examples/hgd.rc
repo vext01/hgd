@@ -1,0 +1,67 @@
+# HGD Server Configuration
+# ------------------------
+# All strings must be double quoted.
+# All numbers must be proceeded by 'L'
+#   (thanks to some major linux distros shipping old libconfig).
+# All lines should be terminated with a semi-colon.
+
+## Debug level.  Controls logging. Always put first.
+## 0 = ERROR, 1=WARNING, 2=INFO, 3=DEBUG
+#debug = 1L;
+
+## Location to store program state.
+#state_path = "/var/hgd";
+
+## Set crypto/SSL options.
+## Valid options are always/never/if_avaliable
+#crypto = "if_avaliable";
+
+## Location of voteoff sound
+## If not set no sound will be played
+#voteoff_sound = "";
+
+## Flood limit (max number of songs a user can have in the queue)
+## -1 = no limit, 0 means no once can queue!
+#flood_limit = 5L;
+
+##netd specific options
+netd : {
+	
+	## Do reverse DNS lookup of ip addresses for logs.
+	## Disabeling this will speed up connections on some networks
+	#rdns_lookup = true;
+	
+	## Do not fork daemon on new connections.
+	## Mostly used for debugging.
+	#dont_fork = false;
+	
+	##SSL options
+	ssl : {
+		## Location of SSL private key. 
+		#privatekey = "/etc/hgd/privkey.key";
+		
+		## Location of SSL certificate
+		#cert = "/etc/hgd/certificate.crt";
+	};
+	
+	## Number of votes needed to vote of a song
+	#voteoff_count = 3L;
+	
+	## Port server should listen on
+	#port = 6633L;
+	
+	## Max file size in bytes
+	#max_file_size = 100L;
+};
+
+## playd specific options
+playd : {
+	## If true files will be removed from the file system after they are
+	## played.
+	#purge_fs = true;
+	
+	## If true details will be removed from the databse after they are
+	## played.
+	#purge_db = true;
+};
+

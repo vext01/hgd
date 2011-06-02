@@ -16,6 +16,7 @@
  */
 
 #define _GNU_SOURCE	/* linux */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -23,8 +24,9 @@
 #include <errno.h>
 #include <err.h>
 #include <sys/types.h>
-#include <libconfig.h>
+#include <sys/stat.h>
 
+#include <libconfig.h>
 #include <sqlite3.h>
 #include <openssl/rand.h>
 
@@ -98,8 +100,8 @@ hgd_acmd_user_add(char **args)
 	memset(pass, 0, strlen(pass));
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_hex);
 
-	/* XXX: Should we check the return state of this? */
-	hgd_add_user(args[0], salt_hex, hash_hex);
+	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
+		return (HGD_FAIL);
 
 	free(salt_hex);
 	free(hash_hex);
@@ -182,8 +184,8 @@ hgd_parse_command(int argc, char **argv)
 		return (HGD_FAIL);
 	}
 
-	/* XXX: Should we check the return state of this? */
-	correct_acmd->handler(++argv);
+	if (correct_acmd->handler(++argv) != HGD_OK)
+		return (HGD_FAIL);
 
 	return (HGD_OK);
 }
@@ -196,48 +198,61 @@ hgd_read_config(char **config_locations)
 	 * config_lookup_int from returning a long int, to a int, and debian
 	 * still uses the old version.
 	 */
-	config_t 		 cfg, *cf;
+	config_t		 cfg, *cf;
 	int			 dont_fork = dont_fork;
-
-	/* temp variables */
-	long long int		tmp_debuglevel;
+	long long int		 tmp_debuglevel;
+	char			*tmp_state_path;
+	struct stat		 st;
 
 	cf = &cfg;
 	config_init(cf);
 
 	while (*config_locations != NULL) {
 		/* Try and open usr config */
-		DPRINTF(HGD_D_ERROR, "TRYING TO READ CONFIG FROM - %s\n",
+		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
 		    *config_locations);
+
+		/*
+		 * XXX: can be removed when deb get new libconfig
+		 * see hgd-playd.c
+		 */
+		if (stat(*config_locations, &st) < 0) {
+			DPRINTF(HGD_D_INFO, "Could not stat %s",
+			    *config_locations);
+			config_locations--;
+			continue;
+		}
+
 		if (config_read_file(cf, *config_locations)) {
 			break;
-		} else {
-			DPRINTF(HGD_D_ERROR, "%d - %s\n",
-			    config_error_line(cf),
-			    config_error_text(cf));
-
-			config_destroy(cf);
-			config_locations--;
 		}
+
+		DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
+				config_error_text(cf),
+				config_error_line(cf));
+
+		config_destroy(cf);
+		config_locations--;
 	}
 
-	DPRINTF(HGD_D_DEBUG, "DONE");
-
-	if (*config_locations == NULL) {
+	if (*config_locations == NULL)
 		return (HGD_OK);
-	}
 
 	/* -d */
-	if (config_lookup_string(cf, "files", (const char**)&state_path)) {
-		state_path = xstrdup(state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd dir to '%s'", state_path);
+	if (config_lookup_string(cf, "state_path",
+	    (const char **) &tmp_state_path)) {
+		free(state_path);
+		state_path = xstrdup(tmp_state_path);
+		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
 	}
 
-	/* -x : Added for completeness, probably not needed */
+	/* -x */
 	if (config_lookup_int64(cf, "debug", &tmp_debuglevel)) {
 		hgd_debug = tmp_debuglevel;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
 	}
+
+	config_destroy(cf);
 	return (HGD_OK);
 }
 
@@ -246,11 +261,11 @@ int
 main(int argc, char **argv)
 {
 	char			 ch;
-	char			*config_path[4] = {NULL,NULL,NULL,NULL};
-	int			num_config = 2;
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
+	int			 num_config = 2;
 
 	config_path[0] = NULL;
-	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
+	xasprintf(&config_path[1], "%s", HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
 	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
 	    HGD_USR_CFG_DIR HGD_SERV_CFG );
 
@@ -258,13 +273,19 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:x:" "d:hvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:d:hvx:" "c:x:")) != -1) {
 		switch (ch) {
 		case 'c':
-			num_config++;
-			DPRINTF(HGD_D_DEBUG, "added config %d %s", num_config,
-			    optarg);
-			config_path[num_config] = optarg;
+			if (num_config < 3) {
+				num_config++;
+				DPRINTF(HGD_D_DEBUG, "added config %d %s",
+				    num_config, optarg);
+				config_path[num_config] = optarg;
+			} else {
+				DPRINTF(HGD_D_WARN,
+				    "Too many config files specified");
+				hgd_exit_nicely();
+			}
 			break;
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -274,7 +295,7 @@ main(int argc, char **argv)
 			    "set debug level to %d", hgd_debug);
 			break;
 		default:
-			break;
+			break; /* next getopt will catch errors */
 		};
 	}
 
@@ -283,8 +304,10 @@ main(int argc, char **argv)
 	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
-	while ((ch = getopt(argc, argv, "d:hvx:" "c:x:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:d:hvx:" "c:x:")) != -1) {
 		switch (ch) {
+		case 'c':
+			break; /* already handled */
 		case 'd':
 			free(state_path);
 			state_path = xstrdup(optarg);
@@ -296,12 +319,11 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 			break;
 		case 'x':
+			DPRINTF(HGD_D_DEBUG, "set debug to %d", atoi(optarg));
 			hgd_debug = atoi(optarg);
 			if (hgd_debug > 3)
 				hgd_debug = 3;
-			DPRINTF(HGD_D_DEBUG,
-			    "set debug level to %d", hgd_debug);
-			break;
+			break; /* already set but over-rideable */
 		case 'h':
 		default:
 			hgd_usage();

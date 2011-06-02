@@ -37,7 +37,18 @@ The build system is both bmake and gmake compatible, as it stands we use
 only make.
 
  * To build everything, type 'make'.
- * To build only the client type 'make hgdc'.
+ * To build only the client type 'make client'.
+ * To build only the server components 'make server'.
+
+ * To install everything, type 'make install'.
+ * To install in a custom path, type 'make prefix=/home/gunther install'.
+ * Other useful install targets are 'install-server', 'install-client'
+   and 'install-docs'.
+
+On MacOS X, you may have to jump through hoops. Others have succeeded using
+macports for libconfig and sqlite3 dependencies. You may need to set the
+include path and library path to /opt/include and /opt/lib respectively (good
+luck).
 
 Running
 -------
@@ -73,41 +84,20 @@ identity.
 History
 -------
 
- * 0.1 - basic functionality
+ * 0.1 - basic functionality.
  * 0.2 - SSL crypto support and user authentication.
+ * 0.3 - Config file support.
 
 Roadmap
 -------
 
- * 0.3 - Admin commands and mplayer slave mode.
-         SSL Certificate acceptance prompt.
- * 0.4 - Fair share playlist
-
-Developers
-----------
-
- * Code style is as described in the style(9) OpenBSD manual page.
-   http://www.openbsd.org/cgi-bin/man.cgi?query=style&sektion=9
- * All of our functions (other than helpers funcs) are prefixed 'hgd_'
- * All of our macros are defined in .h files and are prefixed HGD_ other
-   than in certain (generic) cases (SERROR).
- * All database code should go in db.c.
- * Any other common functionality should go in common.c.
- * Debugging is done via DPRINTF at the appropriate debug level.
- * Exit is done via hgd_exit_nicely() -- each program has it's own
-   implementation. You should try to call this as far up the call stack
-   as possible, so that as much stuff is free()d/closed as possible
-   before exit.
- * If you want to contribute, make a github fork and send a vext01/hgd
-   a pull request. Plain diffs can also be accepted.
- * Make sure you have your git client configured correctly with respect
-   to user.name and user.email. They should be the same as on github.
- * If you update a manual, bump the date at the top also.
+https://github.com/vext01/hgd/issues/milestones
 
 Bugs
 ----
 
-Inevitable. Please report bugs on github.
+Inevitable. Please report bugs on github:
+https://github.com/vext01/hgd/issues/
 
 Feedback / Questions
 --------------------
