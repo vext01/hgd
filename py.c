@@ -317,6 +317,7 @@ hgd_embed_py()
 	struct dirent		*ent;
 	PyObject		*mod;
 	char			*search_path;
+	size_t			 s_nm_len;
 
 	DPRINTF(HGD_D_INFO, "Initialising Python");
 
@@ -354,7 +355,7 @@ hgd_embed_py()
 		hgd_exit_nicely();
 	}
 
-	/* loop over script dir loading modules */
+	/* loop over user script dir loading modules for user-defd hooks */
 	while ((ent = readdir(script_dir)) != NULL) {
 
 		if ((strcmp(ent->d_name, ".") == 0) ||
@@ -368,13 +369,28 @@ hgd_embed_py()
 			break;
 		}
 
-		if (strlen(ent->d_name) < 4)
+		s_nm_len = strlen(ent->d_name);
+		if (s_nm_len < 4) {
+			DPRINTF(HGD_D_INFO,
+			    "skipping '%s', filename too short", ent->d_name);
 			continue;
+		}
 
-		ent->d_name[strlen(ent->d_name) - 3] = 0;
+		/* scripts must end '.py' */
+		if ((ent->d_name[s_nm_len - 1] != 'y') ||
+		    (ent->d_name[s_nm_len - 2] != 'p') ||
+		    (ent->d_name[s_nm_len - 3] != '.')) {
+			DPRINTF(HGD_D_INFO,
+			    "skipping '%s', not a '.py' suffix", ent->d_name);
+			continue;
+		}
+
+		/* remove .py  suffix */
+		ent->d_name[s_nm_len - 3] = 0;
+
+		/* load */
 		DPRINTF(HGD_D_DEBUG, "Loading '%s'", ent->d_name);
 		mod = PyImport_ImportModule(ent->d_name);
-
 		if (!mod) {
 			PRINT_PY_ERROR();
 			continue;
@@ -383,8 +399,8 @@ hgd_embed_py()
 		hgd_py_mods.user_mods[hgd_py_mods.n_user_mods] = mod;
 		hgd_py_mods.user_mod_names[hgd_py_mods.n_user_mods] = xstrdup(ent->d_name);
 		hgd_py_mods.n_user_mods++;
-
 	}
+	DPRINTF(HGD_D_INFO, "Loaded %d user scripts.", hgd_py_mods.n_user_mods);
 
 	(void) closedir(script_dir);
 
