@@ -37,7 +37,6 @@ typedef struct {
 	int			 proto_version;
 	PyObject		*hgd_version;
 	int			 debug_level;
-	PyObject		*mod_data;	/* stash space for users */
 	PyObject		*component;	/* "hgd-playd", "hgd-netd"... */
 } Hgd;
 
