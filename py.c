@@ -70,7 +70,7 @@ hgd_py_meth_get_playlist(Hgd *self)
 		DPRINTF(HGD_D_ERROR, "could not allocate python list");
 
 	/* get ready to construct some stuff */
-	ctor = PyObject_GetAttrString(hgd_py_mods.hgd_support, "PlaylistItem");
+	ctor = PyObject_GetAttrString(hgd_py_mods.playlist_mod, "PlaylistItem");
 	if (!ctor) {
 		DPRINTF(HGD_D_ERROR, "Couldn't find PlaylistItem constructor");
 		hgd_exit_nicely();
@@ -345,7 +345,7 @@ hgd_embed_py()
 		PRINT_PY_ERROR();
 		hgd_exit_nicely();
 	}
-	hgd_py_mods.hgd_support = mod;
+	hgd_py_mods.playlist_mod = mod;
 
 	script_dir = opendir(HGD_DFL_PY_DIR);
 	if (script_dir == NULL) {
@@ -363,7 +363,7 @@ hgd_embed_py()
 			continue;
 		}
 
-		if (hgd_py_mods.n_mods == HGD_MAX_PY_MODS) {
+		if (hgd_py_mods.n_user_mods == HGD_MAX_PY_MODS) {
 			DPRINTF(HGD_D_WARN, "too many python modules loaded");
 			break;
 		}
@@ -380,9 +380,9 @@ hgd_embed_py()
 			continue;
 		}
 
-		hgd_py_mods.mods[hgd_py_mods.n_mods] = mod;
-		hgd_py_mods.mod_names[hgd_py_mods.n_mods] = xstrdup(ent->d_name);
-		hgd_py_mods.n_mods++;
+		hgd_py_mods.user_mods[hgd_py_mods.n_user_mods] = mod;
+		hgd_py_mods.user_mod_names[hgd_py_mods.n_user_mods] = xstrdup(ent->d_name);
+		hgd_py_mods.n_user_mods++;
 
 	}
 
@@ -403,8 +403,8 @@ hgd_free_py()
 	hgd_py_meth_dealloc((Hgd *) hgd_py_mods.hgd_o);
 	if (hgd_py_dir != NULL) free (hgd_py_dir);
 	Py_Finalize();
-	while (hgd_py_mods.n_mods)
-		free(hgd_py_mods.mod_names[--hgd_py_mods.n_mods]);
+	while (hgd_py_mods.n_user_mods)
+		free(hgd_py_mods.user_mod_names[--hgd_py_mods.n_user_mods]);
 
 }
 
@@ -419,13 +419,13 @@ hgd_execute_py_hook(char *hook)
 
 	xasprintf(&func_name, "hgd_hook_%s", hook);
 
-	for (i = 0; i < hgd_py_mods.n_mods; i++) {
-		func = PyObject_GetAttrString(hgd_py_mods.mods[i], func_name);
+	for (i = 0; i < hgd_py_mods.n_user_mods; i++) {
+		func = PyObject_GetAttrString(hgd_py_mods.user_mods[i], func_name);
 
 		/* if a hook func is not defined, that is fine, skip */
 		if (!func) {
 			DPRINTF(HGD_D_DEBUG, "Python hook '%s.%s' undefined",
-			    hgd_py_mods.mod_names[i], func_name);
+			    hgd_py_mods.user_mod_names[i], func_name);
 			continue;
 		}
 
@@ -433,7 +433,7 @@ hgd_execute_py_hook(char *hook)
 			PRINT_PY_ERROR();
 			DPRINTF(HGD_D_WARN,
 			    "Python hook '%s.%s' is not callable",
-			    hgd_py_mods.mod_names[i], func_name);
+			    hgd_py_mods.user_mod_names[i], func_name);
 			continue;
 		}
 
@@ -441,14 +441,14 @@ hgd_execute_py_hook(char *hook)
 		PyTuple_SetItem(args, 0, hgd_py_mods.hgd_o);
 
 		DPRINTF(HGD_D_INFO, "Calling Python hook '%s.%s'",
-		    hgd_py_mods.mod_names[i], func_name);
+		    hgd_py_mods.user_mod_names[i], func_name);
 
 		ret = PyObject_CallObject(func, args);
 		if (ret == NULL) {
 			PRINT_PY_ERROR();
 			DPRINTF(HGD_D_WARN,
 			    "failed to call Python hook '%s.%s'",
-			    hgd_py_mods.mod_names[i], func_name);
+			    hgd_py_mods.user_mod_names[i], func_name);
 			continue;
 		}
 
@@ -457,7 +457,7 @@ hgd_execute_py_hook(char *hook)
 		/* if the user returns non HGD_OK (non-zero), indicates fail */
 		if (c_ret != HGD_OK) {
 			DPRINTF(HGD_D_WARN, "%s.%s returned non-zero",
-			    hgd_py_mods.mod_names[i], func_name);
+			    hgd_py_mods.user_mod_names[i], func_name);
 			any_errors = HGD_FAIL;
 		}
 	}

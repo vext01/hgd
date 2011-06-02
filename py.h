@@ -42,11 +42,14 @@ typedef struct {
 
 /* module table - these are user moduels which we load and call hooks on */
 struct hgd_py_modules {
+	/* native modules */
 	PyObject		*hgd_o;			/* ptr to hgd object */
-	PyObject		*hgd_support;		/* hgd.py */
-	PyObject		*mods[HGD_MAX_PY_MODS];
-	char			*mod_names[HGD_MAX_PY_MODS];
-	uint8_t			 n_mods;
+	/* our non-native modules */
+	PyObject		*playlist_mod;		/* playlist.py */
+	/* user hook modules loaded from script dir */
+	PyObject		*user_mods[HGD_MAX_PY_MODS];
+	char			*user_mod_names[HGD_MAX_PY_MODS];
+	uint8_t			 n_user_mods;
 };
 extern struct hgd_py_mods	 hgd_pys;
 
