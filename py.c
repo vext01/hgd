@@ -34,21 +34,17 @@ struct hgd_py_modules		 hgd_py_mods;
 char				*hgd_py_dir;
 
 /*
- * XXX - reference counts, all over the place!
- */
-
-/*
  * methods exposed to python
  */
 
 /*
  * get the contents of the playlist
- * XXX needs to lock database
+ *
+ * XXX needs to lock database when we make
+ * the playlist re-orderable.
  *
  * args:
- * ret: tuple of dicts
- *
- * XXX more error checks
+ * ret: list of hgd.playlist.PlaylistItem
  */
 static PyObject *
 hgd_py_meth_get_playlist(Hgd *self)
@@ -152,6 +148,25 @@ hgd_py_meth_get_hgd_version(Hgd *self, void *closure)
 	return (self->hgd_version);
 }
 
+static PyObject *
+hgd_py_meth_get_proto_version(Hgd *self, void *closure)
+{
+	return (PyInt_FromLong(self->proto_version));
+}
+
+static PyObject *
+hgd_py_meth_get_debug_level(Hgd *self, void *closure)
+{
+	return (PyInt_FromLong(self->debug_level));
+}
+
+static PyObject *
+hgd_py_meth_get_component(Hgd *self, void *closure)
+{
+	Py_INCREF(self->component);
+	return (self->component);
+}
+
 /* method table */
 static PyMethodDef hgd_py_methods[] = {
 	{"get_playlist",
@@ -162,12 +177,7 @@ static PyMethodDef hgd_py_methods[] = {
 
 /* member table */
 static PyMemberDef hgd_py_members[] = {
-	{"proto_version",
-	    T_INT, offsetof(Hgd, proto_version), 0, "protocol version"},
-	{"debug_level",
-	    T_INT, offsetof(Hgd, debug_level), 0, "debug level"},
-	{"component",
-	    T_OBJECT_EX, offsetof(Hgd, component), 0, "which hgd process?"},
+	/* empty, as all members need to be read only for now */
 	{0, 0, 0, 0, 0}
 };
 
@@ -176,6 +186,15 @@ static PyGetSetDef hgd_py_get_setters[] = {
 	{"hgd_version", (getter) hgd_py_meth_get_hgd_version,
 		(setter) hgd_py_meth_read_only_raise,
 		"hgd version", NULL},
+	{"proto_version", (getter) hgd_py_meth_get_proto_version,
+		(setter) hgd_py_meth_read_only_raise,
+		"hgd protocol version", NULL},
+	{"debug_level", (getter) hgd_py_meth_get_debug_level,
+		(setter) hgd_py_meth_read_only_raise,
+		"hgd debug level", NULL},
+	{"component", (getter) hgd_py_meth_get_component,
+		(setter) hgd_py_meth_read_only_raise,
+		"hgd component", NULL},
 	{NULL, NULL, NULL, NULL, NULL}  /* Sentinel */
 };
 
@@ -274,7 +293,7 @@ static PyTypeObject HgdType = {
 	0,				/* tp_iter */
 	0,				/* tp_iternext */
 	hgd_py_methods,			/* tp_methods */
-	hgd_py_members,			/* tp_members */
+	hgd_py_members, 		/* tp_members */
 	hgd_py_get_setters,		/* tp_getset */
 	0,				/* tp_base */
 	0,				/* tp_dict */
