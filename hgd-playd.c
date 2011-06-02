@@ -78,7 +78,7 @@ hgd_exit_nicely()
 void
 hgd_play_track(struct hgd_playlist_item *t)
 {
-	int			status = 0, pid, song_id;
+	int			status = 0, pid;
 	char			*pid_path;
 	FILE			*pid_file;
 	struct flock		fl;
