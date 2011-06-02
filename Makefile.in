@@ -76,7 +76,7 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
 		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQLITE_CFLAGS} \
-		${SQL_LDFLAGS} common.o py.o db.o hgd-mk-pydoc.c -o hgd-mk-pydoc
+		${SQL_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} common.o py.o db.o hgd-mk-pydoc.c -o hgd-mk-pydoc
 
 client: hgdc
 server: hgd-netd hgd-playd hgd-admin
