@@ -405,7 +405,7 @@ hgd_usage()
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
-	printf("    -m\t\t\tMax items (only in hud mode)\n");
+	printf("    -m\t\t\tMax playlist items to show in hud mode\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -r refresh rate (only in hud mode)\n");
 	printf("    -s host/ip\t\tSet connection address\n");
@@ -948,7 +948,7 @@ main(int argc, char **argv)
 			break;
 		case 'm':
 			hud_max_items = atoi(optarg);
-			DPRINTF(HGD_D_DEBUG, "Set max items to %d",
+			DPRINTF(HGD_D_DEBUG, "Set max hud items to %d",
 			    hud_max_items);
 			break;
 		case 's':
