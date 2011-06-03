@@ -59,6 +59,7 @@ uint8_t			 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
 uint8_t			 server_ssl_capable = 0;
 uint8_t			 authenticated = 0;
 uint8_t			 hud_refresh_speed = 1;
+uint8_t			 colours_on = 1;
 
 /* protos */
 int			 hgd_check_svr_response(char *resp, uint8_t x);
@@ -395,6 +396,8 @@ hgd_usage()
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
+	printf("    -a\t\t\tColours on (only in hud mode)\n");
+	printf("    -A\t\t\tColours off (only in hud mode)\n");
 #ifdef HAVE_LIBCONFIG
 	printf("    -c\t\t\tSet config location\n");
 #endif
@@ -512,15 +515,15 @@ hgd_print_track(char *resp, uint8_t hilight)
 
 		/* XXX disable colors optionally */
 		if (hilight) /* green on */
-			printf("\033[32m");
+			printf(ANSII_GREEN);
 		else /* red on */
-			printf("\033[31m");
+			printf(ANSII_RED);
 
 		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
 		printf("  '%s' by '%s'  from '%s'\n",
 		    tokens[3], tokens[2], tokens[4]);
 
-		printf("\033[0m");
+		printf(ANSII_WHITE);
 	} else {
 		fprintf(stderr,
 		    "%s: wrong number of tokens from server\n",
@@ -623,7 +626,9 @@ hgd_req_hud(char **args)
 
 
 		/* XXX ansii off option */
-		printf("\033[33mHGD Server @ %s -- Playlist:\033[0m\n\n", host);
+		printf("%sHGD Server @ %s -- Playlist:%s\n\n", 
+		    ANSII_YELLOW, host, ANSII_WHITE);
+		
 
 		if (hgd_req_playlist(NULL) != HGD_OK)
 			return (HGD_FAIL);
@@ -747,6 +752,7 @@ hgd_read_config(char **config_locations)
 
 	/* temp variables */
 	long long int		tmp_dbglevel, tmp_port, tmp_hud_refresh_rate;
+	int			tmp_colours_on;
 
 	cf = &cfg;
 	config_init(cf);
@@ -777,6 +783,12 @@ hgd_read_config(char **config_locations)
 	if (*config_locations == NULL) {
 		config_destroy(cf);
 		return (HGD_OK);
+	}
+
+	/* -a -A */
+	if (config_lookup_bool(cf, "colours", &tmp_colours_on)) {
+		colours_on = tmp_colours_on;
+		DPRINTF(HGD_D_DEBUG, "colours %s", colours_on ? "on" : "off");
 	}
 
 	/* -e -E */
@@ -874,7 +886,7 @@ main(int argc, char **argv)
 	 * Need to do getopt twice because x and c need to be done before
 	 * reading the config
 	 */
-	while ((ch = getopt(argc, argv, "c:Eehp:r:s:u:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "aAc:Eehp:r:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -903,8 +915,16 @@ main(int argc, char **argv)
 
 	RESET_GETOPT();
 
-	while ((ch = getopt(argc, argv, "c:Eehp:r:s:u:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "aAc:Eehp:r:s:u:vx:")) != -1) {
 		switch (ch) {
+		case 'a':
+			DPRINTF(HGD_D_DEBUG, "Colour hud on");
+			colours_on = 1;
+			break;
+		case 'A':
+			DPRINTF(HGD_D_DEBUG, "Colour hud off");
+			colours_on = 0;
+			break;
 		case 'c':
 			break; /* already handled */
 		case 'e':
@@ -929,6 +949,7 @@ main(int argc, char **argv)
 			hud_refresh_speed = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG, "Set hud refresh rate to %d",
 			    hud_refresh_speed);
+			break;
 		case 'u':
 			free(user);
 			user = strdup(optarg);

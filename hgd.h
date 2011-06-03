@@ -74,6 +74,13 @@
 #define HGD_FAIL		(-1)
 #define HGD_OK			(0)
 
+/* ANSII colours */
+#define ANSII_YELLOW		(colours_on ? "\033[33m" : "")
+#define ANSII_RED		(colours_on ? "\033[31m" : "")
+#define ANSII_GREEN		(colours_on ? "\033[32m" : "")
+#define ANSII_WHITE		(colours_on ? "\033[0m" : "")
+
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>

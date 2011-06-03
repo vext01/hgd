@@ -29,3 +29,6 @@
 
 ## hud refresh rate
 #refresh_rate = 1;
+
+## hud colours on
+#colours = true;
