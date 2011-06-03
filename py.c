@@ -395,13 +395,13 @@ hgd_embed_py(uint8_t enable_user_scripts)
 
 		script_dir = opendir(HGD_DFL_PY_DIR);
 		if (script_dir == NULL) {
-			DPRINTF(HGD_D_ERROR, "Can't read script dir '%s': %s",
+			DPRINTF(HGD_D_WARN, "Can't read script dir '%s': %s",
 			    HGD_DFL_PY_DIR, SERROR);
-			hgd_exit_nicely();
-		}
+		} 
 
 		/* loop over user script dir loading modules for hooks */
-		while ((ent = readdir(script_dir)) != NULL) {
+		while ((script_dir != NULL) 
+		    && (ent = readdir(script_dir)) != NULL) {
 
 			if ((strcmp(ent->d_name, ".") == 0) ||
 			    (strcmp(ent->d_name, "..") == 0) ||
