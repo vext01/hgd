@@ -452,7 +452,7 @@ hgd_embed_py(uint8_t enable_user_scripts)
 		DPRINTF(HGD_D_INFO,
 		    "Loaded %d user scripts.", hgd_py_mods.n_user_mods);
 
-	(void) closedir(script_dir);
+	if (script_dir != NULL)	(void) closedir(script_dir);
 
 	} /* if enable_user_scripts */
 
