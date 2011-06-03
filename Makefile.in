@@ -30,8 +30,9 @@ sbindir?=${prefix}/sbin
 bindir?=${prefix}/bin
 sharedir?=${prefix}/share
 docdir?=${sharedir}/doc/hgd
+pydocdir=${docdir}/pydoc
 sampledir?=${sharedir}/examples/hgd
-pysupportdir=${sharedir}/hgd/pylib
+pysupportdir=${sharedir}/hgd/pylib/hgd
 
 .PHONY: all
 all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
@@ -99,10 +100,12 @@ install-server: hgd-netd hgd-admin hgd-playd
 
 	# scripting stuff
 	${INSTALL} -d ${DESTDIR}${pysupportdir}
-	${INSTALL} share/pylib/hgd.py ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/__init__.py ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/playlist.py ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/doccer.py ${DESTDIR}${pysupportdir}
 
 .PHONY: install-doc
-install-doc:
+install-doc: install-pydoc
 	${INSTALL} -d ${DESTDIR}${mandir}
 	${INSTALL} -d ${DESTDIR}${docdir}
 	${INSTALL} -d ${DESTDIR}${sampledir}
@@ -117,3 +120,15 @@ install-doc:
 .PHONY: pydoc
 pydoc: hgd-mk-pydoc
 	./hgd-mk-pydoc
+
+.PHONY: install-pydoc
+install-pydoc:
+	${INSTALL} -d ${DESTDIR}${pydocdir}
+	${INSTALL} -d ${DESTDIR}${pydocdir}/txt
+	${INSTALL} -d ${DESTDIR}${pydocdir}/html
+	${INSTALL} pydoc/txt/index.txt ${pydocdir}/txt/index.txt
+	${INSTALL} pydoc/txt/hgd.playlist.txt ${pydocdir}/txt/hgd.playlist.txt
+	${INSTALL} pydoc/txt/hgd.doccer.txt ${pydocdir}/txt/hgd.doccer.txt
+	${INSTALL} pydoc/html/index.html ${pydocdir}/html/index.html
+	${INSTALL} pydoc/html/hgd.playlist.html ${pydocdir}/html/hgd.playlist.html
+	${INSTALL} pydoc/html/hgd.doccer.html ${pydocdir}/html/hgd.doccer.html
