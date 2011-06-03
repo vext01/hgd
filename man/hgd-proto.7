@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd May 16, 2011
+.Dd June 1, 2011
 .Dt HGD-PROTO 1
 .Os
 .Sh NAME
@@ -139,7 +139,12 @@ Requests the playlist. <num_items> indicates how many further lines to expect
 from the server. Each line returned represents one track in the playlist; the
 line is of the form:
 .Pp
-<track-id>|<filename>|<user>
+<track-id>|<filename>|<artist>|<title>|<user>
+.Pp
+ The <artist>
+and <title> fields are generated from metadata using taglib at time of
+upload. If no tag information was available, the <artist> and <title>
+fields remain blank.
 .It np
 .Bl -dash
 .It
@@ -147,13 +152,16 @@ Arguments: 0
 .It
 Reply type: single-line
 .It
-On success returns: ok|<playing?>[|<track-id>|<filename>|<user>]
+On success returns: ok|<playing?>[|<track-id>|<filename>|<artist>|<title>|<user>]
 .It
 Needs auth: No
 .El
 .Pp
 Get the currently playing item, if any. If <playing?> = 0, then nothing is
-playing and therefore, no further information is available.
+playing and therefore, no further information is available. The <artist>
+and <title> fields are generated from metadata using taglib at time of
+upload. If no tag information was available, the <artist> and <title>
+fields remain blank.
 .It proto
 .Bl -dash
 .It
@@ -180,7 +188,7 @@ Needs auth: Yes
 .Pp
 Indicates that a file of size <byte-sz> is to be uploaded. If the
 file size is within bounds, then the server replies
-.Sq ok...
+.Sq ok|...
 , which prompts the client to send the file in binary mode. The client
 should send exactly <byte-sz> bytes. If this goes to plan then the
 server switches back to text-mode and sends
@@ -252,9 +260,9 @@ Retrieving the playlist
 .Bd -literal
 > ls
 < ok|3
-> 1|gunther-tralala.flv|gunther
-> 2|crabs.mp4|mex
-> 3|slipknot-duality.wma|tris
+> 1|gunther-tralala.flv|Guether|Tralala|gunther
+> 2|crabs.mp4|||mex
+> 3|slipknot-duality.wma|Slipknot|Duality|tris
 .Ed
 .It
 Disconnecting

@@ -22,12 +22,13 @@
 #define INFTIM -1
 #endif
 
-#define HGD_VERSION		"0.3.0"
-#define HGD_PROTO_VERSION	2
+#define HGD_VERSION		PACKAGE_VERSION
+#define HGD_PROTO_VERSION	3
 
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
 #define HGD_PID_STR_SZ		10
+#define HGD_ID_STR_SZ		40 /* 8byte int */
 #define HGD_SHA_SALT_SZ		20
 #define HGD_MAX_PASS_SZ		20
 #define HGD_MAX_USER_QUEUE	5
@@ -87,6 +88,7 @@ extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
 extern char			*debug_names[];
 extern pid_t			 pid;
+extern const char		*hgd_component;
 
 extern char			*state_path;
 extern char			*filestore_path;
@@ -104,6 +106,8 @@ struct hgd_user_list {
 struct hgd_playlist_item {
 	int			 id;
 	char			*filename;
+	char			*tag_artist;
+	char			*tag_title;
 	char			*user;
 	uint8_t			 playing;
 	uint8_t			 finished;
@@ -220,11 +224,11 @@ int				 hgd_setup_ssl_ctx(SSL_METHOD **method,
 
 /* misc */
 uint8_t				 hgd_is_ip_addr(char *str);
-void				 hgd_mk_state_dir();
-void				 hgd_print_version();
-void				 hgd_exit_nicely();
+void				 hgd_mk_state_dir(void);
+void				 hgd_print_version(void);
+void				 hgd_exit_nicely(void);
 void				 hgd_kill_sighandler(int sig);
-void				 hgd_register_sig_handlers();
+void				 hgd_register_sig_handlers(void);
 char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
 int				 hgd_readpassphrase_confirmed(

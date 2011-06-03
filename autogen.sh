@@ -1,0 +1,2 @@
+#!/bin/sh
+AUTOMAKE_VERSION=1.9 AUTOCONF_VERSION=2.67 autoreconf -vfi

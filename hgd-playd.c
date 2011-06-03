@@ -15,7 +15,14 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define _GNU_SOURCE	/* linux */
+#include "config.h"
+
+#ifdef HAVE_PYTHON
+#include <Python.h> /* defines _GNU_SOURCE */
+#else
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,9 +32,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
+#endif
 
 #include <sqlite3.h>
+
+#ifdef HAVE_PYTHON
+#include "py.h"
+#endif
 
 #include "hgd.h"
 #include "db.h"
@@ -35,6 +48,7 @@
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
 uint8_t				 clear_playlist_on_start = 0;
+const char			*hgd_component = "playd";
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -53,6 +67,10 @@ hgd_exit_nicely()
 		free (db_path);
 	if (filestore_path)
 		free(filestore_path);
+
+#ifdef HAVE_PYTHON
+	hgd_free_py();
+#endif
 
 	exit (!exit_ok);
 }
@@ -96,14 +114,23 @@ hgd_play_track(struct hgd_playlist_item *t)
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
+#ifdef HAVE_PYTHON
+		hgd_execute_py_hook("pre_play");
+#endif
+
 		execlp("mplayer", "mplayer", "-really-quiet",
 		    t->filename, (char *) NULL);
+
+#ifdef HAVE_PYTHON
+		hgd_execute_py_hook("post_play");
+#endif
+
 
 		/* if we get here, the shit hit the fan with execlp */
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
 		hgd_exit_nicely();
 	} else {
-		fprintf(pid_file, "%d", pid);
+		fprintf(pid_file, "%d\n%d", pid, t->id);
 
 		fl.l_type = F_UNLCK;  /* set to unlock same region */
 
@@ -138,7 +165,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 }
 
 void
-hgd_play_loop()
+hgd_play_loop(void)
 {
 	struct hgd_playlist_item	 track;
 
@@ -158,6 +185,9 @@ hgd_play_loop()
 			hgd_play_track(&track);
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
+#ifdef HAVE_PYTHON
+			hgd_execute_py_hook("nothing_to_play");
+#endif
 			sleep(1);
 		}
 		hgd_free_playlist_item(&track);
@@ -170,6 +200,7 @@ hgd_play_loop()
 int
 hgd_read_config(char **config_locations)
 {
+#ifdef HAVE_LIBCONFIG
 	/*
 	 * config_lookup_int64 is used because lib_config changed
 	 * config_lookup_int from returning a long int, to a int, and debian
@@ -179,6 +210,9 @@ hgd_read_config(char **config_locations)
 	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
 	char			*tmp_state_path;
+#ifdef HAVE_PYTHON
+	char			*tmp_py_dir;
+#endif
 	struct stat		 st;
 
 	cf = &cfg;
@@ -207,7 +241,7 @@ hgd_read_config(char **config_locations)
 #else
 			/*
 			 * XXX: we can use this verion when debian
-			 * get new linconfig
+			 * get new libconfig
 			 */
                         if (config_error_type (cf) == CONFIG_ERR_FILE_IO) {
 				DPRINTF(HGD_D_INFO, "%s (line: %d)",
@@ -243,6 +277,18 @@ hgd_read_config(char **config_locations)
 		    "fs purging is %s", (purge_finished_fs ? "on" : "off"));
 	}
 
+#ifdef HAVE_PYTHON
+	/* -P */
+	if (config_lookup_string(cf, "plugins.dir",
+	    (const char **) &tmp_py_dir)) {
+		if (hgd_py_dir != NULL) free(hgd_py_dir);
+		hgd_py_dir = strdup(tmp_py_dir);
+		DPRINTF(HGD_D_DEBUG,"Setting python path to %s",
+		    hgd_py_dir);
+	}
+#endif
+
+
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
 		purge_finished_db = tmp_purge_fin_db;
@@ -257,22 +303,68 @@ hgd_read_config(char **config_locations)
 	}
 
 	config_destroy(cf);
+#endif
 	return (HGD_OK);
 }
 
 void
-hgd_usage()
+hgd_usage(void)
 {
 	printf("usage: hgd-netd <options>\n");
+#ifdef HAVE_LIBCONFIG
 	printf("  -c	Path to a config file to use\n");
+#endif
 	printf("  -C	Clear playlist on startup\n");
 	printf("  -d	Set hgd state directory\n");
 	printf("  -h	Show this message and exit\n");
 	printf("  -p	Don't purge finished tracks from filesystem\n");
+#ifdef HAVE_PYTHON
+	printf("  -P	Location of plugins\n");
+#endif
 	printf("  -q	Don't purge finished tracks in database\n");
 	printf("  -v	Show version and exit\n");
 	printf("  -x	Set debug level (0-3)\n");
 }
+
+#if 0
+/* eventually remove, this was just us getting to grips with python */
+void
+py_test()
+{
+	PyObject		*mod, *func, *ret, *args = NULL, *arg1;
+
+	Py_Initialize();
+
+	mod = PyImport_ImportModule("os");
+	if (mod == NULL) {
+		PyErr_Print();
+		DPRINTF(HGD_D_ERROR, "failed to import");
+	}
+
+	func = PyObject_GetAttrString(mod, "getenv");
+	if (func && PyCallable_Check(func)) {
+		args = PyTuple_New(1);
+		arg1 = PyString_FromString("HOME");
+		PyTuple_SetItem(args, 0, arg1);
+	} else {
+		PyErr_Print();
+		DPRINTF(HGD_D_ERROR, "failed find func");
+	}
+
+	ret = PyObject_CallObject(func, args);
+	if (ret == NULL) {
+		PyErr_Print();
+		DPRINTF(HGD_D_ERROR, "call failed");
+	}
+
+	printf("HOME = %s\n", PyString_AsString(ret));
+
+	Py_DECREF(ret);
+	Py_DECREF(func);
+	Py_DECREF(mod);
+
+}
+#endif
 
 int
 main(int argc, char **argv)
@@ -298,7 +390,7 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpP:qvx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			if (num_config < 3) {
@@ -329,7 +421,7 @@ main(int argc, char **argv)
 	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "c:Cd:hpqvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Cd:hpP:qvx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			break; /* already handled */
@@ -347,6 +439,13 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "No purging from fs");
 			purge_finished_fs = 0;
 			break;
+#ifdef HAVE_PYTHON
+		case 'P':
+			DPRINTF(HGD_D_DEBUG, "Setting plugin folder");
+			if (hgd_py_dir != NULL) free (hgd_py_dir); 
+			hgd_py_dir = xstrdup(optarg);
+			break;
+#endif
 		case 'q':
 			DPRINTF(HGD_D_DEBUG, "No purging from db");
 			purge_finished_db = 0;
@@ -391,6 +490,14 @@ main(int argc, char **argv)
 		if (hgd_clear_playlist() != HGD_OK)
 			hgd_exit_nicely();
 	}
+
+	/* do the Python dance */
+#ifdef HAVE_PYTHON
+	if (hgd_embed_py(1) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Failed to initialise Python");
+		hgd_exit_nicely();
+	}
+#endif
 
 	/* start */
 	hgd_play_loop();
