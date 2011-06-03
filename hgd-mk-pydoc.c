@@ -51,14 +51,76 @@ hgd_exit_nicely()
 }
 
 int
+hgd_mk_pydoc()
+{
+	PyObject			*mod = NULL, *func = NULL, *args = NULL;
+	PyObject			*ret = NULL;
+	int				 err = HGD_OK;
+
+	mod = PyImport_ImportModule("hgd.doccer");
+	if (!mod) {
+		PRINT_PY_ERROR();
+		err = HGD_FAIL;
+		goto clean;
+	}
+
+	func = PyObject_GetAttrString(mod, "hgd_mk_pydoc");
+	if (!func) {
+		PRINT_PY_ERROR();
+		err = HGD_FAIL;
+		goto clean;
+	}
+
+	if (!PyCallable_Check(func)) {
+		PRINT_PY_ERROR();
+		err = HGD_FAIL;
+		goto clean;
+	}
+
+#if 0
+	args = PyTuple_New(1);
+	if (PyTuple_SetItem(args, 0, NULL) != 0) {
+		PRINT_PY_ERROR();
+		err = HGD_FAIL;
+		goto clean;
+	}
+#endif
+
+	ret = PyObject_CallObject(func, NULL);
+//	Py_XDECREF(args);
+	if (ret == NULL) {
+		PRINT_PY_ERROR();
+		err = HGD_FAIL;
+		goto clean;
+	}
+
+clean:
+	if (err != HGD_OK)
+		DPRINTF(HGD_D_ERROR, "Failed to generate documentation");
+
+	if (mod)
+		Py_XDECREF(mod);
+	if (func)
+		Py_XDECREF(func);
+	if (ret)
+		Py_XDECREF(ret);
+
+	return (err);
+}
+
+int
 main(int argc, char **argv)
 {
+	hgd_debug = 3; /* XXX */
+
 	hgd_register_sig_handlers();
 	/* embed python, but dont load user scripts */
 	if (hgd_embed_py(0) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Failed to initialise Python");
 		hgd_exit_nicely();
 	}
+
+	hgd_mk_pydoc();
 
 	exit_ok = 1;
 	hgd_exit_nicely();

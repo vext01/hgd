@@ -455,6 +455,7 @@ hgd_embed_py(uint8_t enable_user_scripts)
 	hgd_init_hgd_mod(); /* init hgd module */
 	hgd_py_mods.hgd_o = hgd_py_meth_new(&HgdType, NULL, NULL); /* stash an instance */
 
+
 	hgd_execute_py_hook("init");
 
 	return (HGD_OK);
