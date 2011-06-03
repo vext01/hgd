@@ -515,10 +515,9 @@ hgd_print_track(char *resp, uint8_t hilight)
 
 	if (n_toks == 5) {
 
-		/* XXX disable colors optionally */
-		if (hilight) /* green on */
+		if (hilight)
 			printf(ANSII_GREEN);
-		else /* red on */
+		else
 			printf(ANSII_RED);
 
 		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
