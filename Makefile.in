@@ -23,17 +23,21 @@ LDFLAGS+=@LIBS@
 CPPFLAGS+=@CPPFLAGS@
 
 INSTALL?=install
+PACKAGE_TARNAME=@PACKAGE_TARNAME@
 
+# GNU standard paths
 prefix?=@prefix@
 exec_prefix=@exec_prefix@
-mandir?=@mandir@/man1
+mandir?=@mandir@
 sbindir?=@sbindir@
 bindir?=@bindir@
-sharedir?=@datarootdir@
+datarootdir?=@datarootdir@
 docdir?=@docdir@
+
+# convenience paths for us
 pydocdir=${docdir}/pydoc
-sampledir?=${sharedir}/examples/hgd
-pysupportdir=${sharedir}/hgd/pylib/hgd
+sampledir?=${datarootdir}/examples/hgd
+pysupportdir=${datarootdir}/hgd/pylib/hgd
 
 .PHONY: all
 all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
@@ -93,13 +97,11 @@ install-client: hgdc
 
 .PHONY: install-server
 install-server: hgd-netd hgd-admin hgd-playd
-	# binaries
 	${INSTALL} -d ${DESTDIR}${sbindir}
 	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
 	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
 
-	# scripting stuff
 	${INSTALL} -d ${DESTDIR}${pysupportdir}
 	${INSTALL} pylib/hgd/__init__.py ${DESTDIR}${pysupportdir}
 	${INSTALL} pylib/hgd/playlist.py ${DESTDIR}${pysupportdir}
@@ -107,13 +109,15 @@ install-server: hgd-netd hgd-admin hgd-playd
 
 .PHONY: install-doc
 install-doc: install-pydoc
-	${INSTALL} -d ${DESTDIR}${mandir}
+	${INSTALL} -d ${DESTDIR}${mandir}/man1
+	${INSTALL} -d ${DESTDIR}${mandir}/man7
 	${INSTALL} -d ${DESTDIR}${docdir}
 	${INSTALL} -d ${DESTDIR}${sampledir}
-	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}
-	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}
-	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}
-	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}
+	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}/man1/
+	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}/man1/
+	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}/man1/
+	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}/man1/
+	${INSTALL} man/hgd-proto.7 ${DESTDIR}${mandir}/man7/
 	${INSTALL} README ${DESTDIR}${docdir}
 	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
 	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}
