@@ -253,9 +253,13 @@ hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 static void
 hgd_py_meth_dealloc(Hgd *self)
 {
-	Py_XDECREF(self->hgd_version);
-	Py_XDECREF(self->component);
-	self->ob_type->tp_free((PyObject*)self);
+	if (self != NULL) {
+		if (self->hgd_version != NULL)
+			Py_XDECREF(self->hgd_version);
+		if (self->component != NULL)
+			Py_XDECREF(self->component);
+		self->ob_type->tp_free((PyObject*)self);
+	}
 }
 
 
@@ -391,13 +395,13 @@ hgd_embed_py(uint8_t enable_user_scripts)
 
 		script_dir = opendir(HGD_DFL_PY_DIR);
 		if (script_dir == NULL) {
-			DPRINTF(HGD_D_ERROR, "Can't read script dir '%s': %s",
+			DPRINTF(HGD_D_WARN, "Can't read script dir '%s': %s",
 			    HGD_DFL_PY_DIR, SERROR);
-			hgd_exit_nicely();
-		}
+		} 
 
 		/* loop over user script dir loading modules for hooks */
-		while ((ent = readdir(script_dir)) != NULL) {
+		while ((script_dir != NULL) 
+		    && (ent = readdir(script_dir)) != NULL) {
 
 			if ((strcmp(ent->d_name, ".") == 0) ||
 			    (strcmp(ent->d_name, "..") == 0) ||
@@ -448,7 +452,7 @@ hgd_embed_py(uint8_t enable_user_scripts)
 		DPRINTF(HGD_D_INFO,
 		    "Loaded %d user scripts.", hgd_py_mods.n_user_mods);
 
-	(void) closedir(script_dir);
+	if (script_dir != NULL)	(void) closedir(script_dir);
 
 	} /* if enable_user_scripts */
 
