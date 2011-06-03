@@ -77,17 +77,7 @@ hgd_mk_pydoc()
 		goto clean;
 	}
 
-#if 0
-	args = PyTuple_New(1);
-	if (PyTuple_SetItem(args, 0, NULL) != 0) {
-		PRINT_PY_ERROR();
-		err = HGD_FAIL;
-		goto clean;
-	}
-#endif
-
 	ret = PyObject_CallObject(func, NULL);
-//	Py_XDECREF(args);
 	if (ret == NULL) {
 		PRINT_PY_ERROR();
 		err = HGD_FAIL;
