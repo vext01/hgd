@@ -132,12 +132,12 @@ install-pydoc:
 	${INSTALL} -d ${DESTDIR}${pydocdir}
 	${INSTALL} -d ${DESTDIR}${pydocdir}/txt
 	${INSTALL} -d ${DESTDIR}${pydocdir}/html
-	${INSTALL} pydoc/txt/index.txt ${pydocdir}/txt/index.txt
-	${INSTALL} pydoc/txt/hgd.playlist.txt ${pydocdir}/txt/hgd.playlist.txt
-	${INSTALL} pydoc/txt/hgd.doccer.txt ${pydocdir}/txt/hgd.doccer.txt
-	${INSTALL} pydoc/html/index.html ${pydocdir}/html/index.html
-	${INSTALL} pydoc/html/hgd.playlist.html ${pydocdir}/html/hgd.playlist.html
-	${INSTALL} pydoc/html/hgd.doccer.html ${pydocdir}/html/hgd.doccer.html
+	${INSTALL} pydoc/txt/index.txt ${pydocdir}/txt/
+	${INSTALL} pydoc/txt/hgd.playlist.txt ${pydocdir}/txt/
+	${INSTALL} pydoc/txt/hgd.doccer.txt ${pydocdir}/txt/
+	${INSTALL} pydoc/html/index.html ${pydocdir}/html/
+	${INSTALL} pydoc/html/hgd.playlist.html ${pydocdir}/html/
+	${INSTALL} pydoc/html/hgd.doccer.html ${pydocdir}/html/
 
 # OpenBSD hosts only
 .PHONY: lint-mans
