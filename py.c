@@ -253,9 +253,13 @@ hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 static void
 hgd_py_meth_dealloc(Hgd *self)
 {
-	Py_XDECREF(self->hgd_version);
-	Py_XDECREF(self->component);
-	self->ob_type->tp_free((PyObject*)self);
+	if (self != NULL) {
+		if (self->hgd_version != NULL)
+			Py_XDECREF(self->hgd_version);
+		if (self->component != NULL)
+			Py_XDECREF(self->component);
+		self->ob_type->tp_free((PyObject*)self);
+	}
 }
 
 
