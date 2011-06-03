@@ -26,3 +26,6 @@
 ## Be very careful with file permissions when setting this option.
 ## Make sure your chmod is at least 700
 #password = "";
+
+## hud refresh rate
+#refresh_rate = 1;

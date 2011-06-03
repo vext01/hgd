@@ -27,6 +27,7 @@
 .Op Fl Eehv
 .Op Fl c Ar config
 .Op Fl p Ar port
+.Op FL r Ar refresh
 .Op Fl s Ar host
 .Op Fl u Ar user
 .Op Fl x Ar debug-level
@@ -52,6 +53,8 @@ Show the usage help and exit.
 Set the TCP port to connect to
 .Xr hgd-netd 1
 on. Defaults to 6633.
+.It Fl r Ar refresh
+Set the refresh rate of the hud (in seconds).
 .It Fl s Ar host
 Set the server host name or IP.
 .It Fl u Ar user

@@ -58,6 +58,7 @@ SSL_CTX			*ctx;
 uint8_t			 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
 uint8_t			 server_ssl_capable = 0;
 uint8_t			 authenticated = 0;
+uint8_t			 hud_refresh_speed = 1;
 
 /* protos */
 int			 hgd_check_svr_response(char *resp, uint8_t x);
@@ -401,6 +402,7 @@ hgd_usage()
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -p port\t\tSet connection port\n");
+	printf("    -r refresh rate (only in hud mode)\n");
 	printf("    -s host/ip\t\tSet connection address\n");
 	printf("    -u username\t\tSet username\n");
 	printf("    -x level\t\tSet debug level (0-3)\n");
@@ -626,7 +628,7 @@ hgd_req_hud(char **args)
 		if (hgd_req_playlist(NULL) != HGD_OK)
 			return (HGD_FAIL);
 
-		sleep(1);
+		sleep(hud_refresh_speed);
 	}
 
 	return (HGD_OK);
@@ -744,7 +746,7 @@ hgd_read_config(char **config_locations)
 	struct stat		 st;
 
 	/* temp variables */
-	long long int		tmp_dbglevel, tmp_port;
+	long long int		tmp_dbglevel, tmp_port, tmp_hud_refresh_rate;
 
 	cf = &cfg;
 	config_init(cf);
@@ -823,6 +825,12 @@ hgd_read_config(char **config_locations)
 		DPRINTF(HGD_D_DEBUG, "Set password from config");
 	}
 
+	/* -r */
+	if (config_lookup_int64(cf, "refresh_rate", &tmp_hud_refresh_rate)) {
+		hud_refresh_speed = tmp_hud_refresh_rate;
+		DPRINTF(HGD_D_DEBUG, "refresh rate=%d", hud_refresh_speed);
+	}
+
 	/* -u */
 	if (config_lookup_string(cf, "username", (const char**) &tmp_user)) {
 		free(user);
@@ -866,7 +874,7 @@ main(int argc, char **argv)
 	 * Need to do getopt twice because x and c need to be done before
 	 * reading the config
 	 */
-	while ((ch = getopt(argc, argv, "c:Eehp:s:u:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Eehp:r:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -895,7 +903,7 @@ main(int argc, char **argv)
 
 	RESET_GETOPT();
 
-	while ((ch = getopt(argc, argv, "c:Eehp:s:u:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "c:Eehp:r:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			break; /* already handled */
@@ -917,6 +925,10 @@ main(int argc, char **argv)
 			port = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG, "set port to %d", port);
 			break;
+		case 'r':
+			hud_refresh_speed = atoi(optarg);
+			DPRINTF(HGD_D_DEBUG, "Set hud refresh rate to %d",
+			    hud_refresh_speed);
 		case 'u':
 			free(user);
 			user = strdup(optarg);
