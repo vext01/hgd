@@ -102,7 +102,7 @@ install-server: hgd-netd hgd-admin hgd-playd
 	${INSTALL} share/pylib/hgd.py ${DESTDIR}${pysupportdir}
 
 .PHONY: install-doc
-install-doc: install-pydoc
+install-doc:
 	${INSTALL} -d ${DESTDIR}${mandir}
 	${INSTALL} -d ${DESTDIR}${docdir}
 	${INSTALL} -d ${DESTDIR}${sampledir}
@@ -114,6 +114,6 @@ install-doc: install-pydoc
 	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
 	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}
 
-.PHONY: install-pydoc
-install-pydoc:
+.PHONY: pydoc
+pydoc: hgd-mk-pydoc
 	./hgd-mk-pydoc

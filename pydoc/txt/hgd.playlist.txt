@@ -1,1 +1,64 @@
-Documentation not yet generated ot hgd was built without Python support
+NNAAMMEE
+    hgd.playlist - Module for working with playlist items in HGD
+
+FFIILLEE
+    /home/edd/source/hgd/pylib/hgd/playlist.py
+
+CCLLAASSSSEESS
+    __builtin__.object
+        PlaylistItem
+    
+    class PPllaayylliissttIItteemm(__builtin__.object)
+     |  Wrapper for a track in the playlist, whose items are read-only
+     |  
+     |  Methods defined here:
+     |  
+     |  ____iinniitt____(self, info)
+     |  
+     |  ____ssttrr____(self)
+     |  
+     |  ggeett__ffiilleennaammee(self)
+     |      Return the track's filename.
+     |  
+     |  ggeett__ttaagg__aarrttiisstt(self)
+     |      Return artist metadata extracted by taglib.
+     |  
+     |  ggeett__ttaagg__ttiittllee(self)
+     |      Return title metadata extracted by taglib.
+     |  
+     |  ggeett__ttiidd(self)
+     |      Return the track's track id as an integer.
+     |  
+     |  ggeett__uusseerr(self)
+     |      Return the name of the user who queued this track.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  ____ddiicctt____
+     |      dictionary for instance variables (if defined)
+     |  
+     |  ____wweeaakkrreeff____
+     |      list of weak references to the object (if defined)
+     |  
+     |  ffiilleennaammee
+     |      Return the track's filename.
+     |  
+     |  ttaagg__aarrttiisstt
+     |      Return artist metadata extracted by taglib.
+     |  
+     |  ttaagg__ttiittllee
+     |      Return title metadata extracted by taglib.
+     |  
+     |  ttiidd
+     |      Return the track's track id as an integer.
+     |  
+     |  uusseerr
+     |      Return the name of the user who queued this track.
+
+DDAATTAA
+    ____aauutthhoorr____ = 'Edd Barrett'
+
+AAUUTTHHOORR
+    Edd Barrett
+

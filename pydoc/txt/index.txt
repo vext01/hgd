@@ -1,1 +1,50 @@
-Documentation not yet generated ot hgd was built without Python support
+NNAAMMEE
+    hgd - Hackathon Gunther Daemon Extensions
+
+FFIILLEE
+    /home/edd/source/hgd/pylib/hgd/__init__.py
+
+PPAACCKKAAGGEE  CCOONNTTEENNTTSS
+    doccer
+    playlist
+
+CCLLAASSSSEESS
+    __builtin__.object
+        Hgd
+    
+    class HHggdd(__builtin__.object)
+     |  Hackathon Gunther Daemon
+     |  
+     |  Methods defined here:
+     |  
+     |  ____iinniitt____(...)
+     |      x.__init__(...) initializes x; see x.__class__.__doc__ for signature
+     |  
+     |  ggeett__ppllaayylliisstt(...)
+     |      get the current hgd playlist
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  ccoommppoonneenntt
+     |      hgd component
+     |  
+     |  ddeebbuugg__lleevveell
+     |      hgd debug level
+     |  
+     |  hhggdd__vveerrssiioonn
+     |      hgd version
+     |  
+     |  pprroottoo__vveerrssiioonn
+     |      hgd protocol version
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  ____nneeww____ = <built-in method __new__ of type object>
+     |      T.__new__(S, ...) -> a new object with type S, a subtype of T
+
+FFUUNNCCTTIIOONNSS
+    ggeett__ppllaayylliisstt(...)
+        get the current hgd playlist
+
