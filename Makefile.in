@@ -118,6 +118,7 @@ install-doc: install-pydoc
 	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}/man1/
 	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}/man1/
 	${INSTALL} man/hgd-proto.7 ${DESTDIR}${mandir}/man7/
+	${INSTALL} man/hgd-scripting.7 ${DESTDIR}${mandir}/man7/
 	${INSTALL} README ${DESTDIR}${docdir}
 	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
 	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}
