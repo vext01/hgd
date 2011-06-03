@@ -133,3 +133,8 @@ install-pydoc:
 	${INSTALL} pydoc/html/index.html ${pydocdir}/html/index.html
 	${INSTALL} pydoc/html/hgd.playlist.html ${pydocdir}/html/hgd.playlist.html
 	${INSTALL} pydoc/html/hgd.doccer.html ${pydocdir}/html/hgd.doccer.html
+
+# OpenBSD hosts only
+.PHONY: lint-mans
+lint-mans:
+	for i in `ls man`; do mandoc -Tlint man/$$i; done
