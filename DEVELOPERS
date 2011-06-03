@@ -77,7 +77,7 @@ Rolling a Release
  4.   Check README has history updated.
  5.   Run "make pydoc"
  6.   Commit and push to git.
- 7.   Tag the version in git. It should be taggd as 'x.x.x', eg '0.2.1'
+ 7.   Tag the version in git. It should be tagged as 'x.x.x', eg '0.2.1'
  8.   Turn debug flag back on.
  9.   Get a tarball of tag off github.
  10.  Untar it and rename.
