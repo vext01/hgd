@@ -405,7 +405,7 @@ hgd_usage()
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
-	printf("    -m\t\t\tMax items (only in hud mode)\n");
+	printf("    -m\t\t\tMax playlist items to show in hud mode\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -r refresh rate (only in hud mode)\n");
 	printf("    -s host/ip\t\tSet connection address\n");
@@ -515,10 +515,9 @@ hgd_print_track(char *resp, uint8_t hilight)
 
 	if (n_toks == 5) {
 
-		/* XXX disable colors optionally */
-		if (hilight) /* green on */
+		if (hilight)
 			printf(ANSII_GREEN);
-		else /* red on */
+		else
 			printf(ANSII_RED);
 
 		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
@@ -949,7 +948,7 @@ main(int argc, char **argv)
 			break;
 		case 'm':
 			hud_max_items = atoi(optarg);
-			DPRINTF(HGD_D_DEBUG, "Set max items to %d",
+			DPRINTF(HGD_D_DEBUG, "Set max hud items to %d",
 			    hud_max_items);
 			break;
 		case 's':
