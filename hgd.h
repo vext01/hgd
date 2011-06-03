@@ -63,6 +63,7 @@
 
 /* Config files */
 #define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR
+#define HGD_USR_CFG_ENV		"XDG_CONFIG_HOME"
 #define HGD_USR_CFG_DIR		"/.config/hgd"
 
 #define HGD_CLI_CFG		"/hgdc.rc"

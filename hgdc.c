@@ -796,15 +796,21 @@ hgd_read_config(char **config_locations)
 int
 main(int argc, char **argv)
 {
-	char			*resp, ch;
+	char			*resp, ch, *env_tmp;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			num_config = 2;
 
 	host = xstrdup(HGD_DFL_HOST);
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
-	xasprintf(&config_path[2], "%s%s", getenv("HOME"),
-	    HGD_USR_CFG_DIR HGD_CLI_CFG );
+	env_tmp =  getenv("XDG_CONFIG_HOME");
+	if (config_path == NULL) {
+		xasprintf(&config_path[2], "%s%s", getenv("HOME"),
+		    HGD_USR_CFG_DIR HGD_SERV_CFG );
+	} else {
+		xasprintf(&config_path[2], "%s%s", env_tmp , "/hgd" HGD_CLI_CFG);
+
+	}
 
 	/*
 	 * Need to do getopt twice because x and c need to be done before
