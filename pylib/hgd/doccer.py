@@ -1,35 +1,72 @@
+# Copyright (c) 2011, Edd Barrett <vext01@gmail.com>
+# 
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+""" Generate Python API Docs.
+
+This is non-trivial, as the core 'Hgd' type is only available in the embedded
+interpreter. Hence the hgd-mk-pydoc embeds Python, defines the types and then
+uses this module to make documentation.
 """
-Generate Python API Docs
-"""
+
+__author__ = "Edd Barrett"
 
 import pydoc
 import os
 import sys
 
-output_dir = "pydoc"
 
 def hgd_mk_pydoc():
+    """ Generate HGD Python documentation """
 
-    if (not os.path.exists(output_dir)):
-            os.mkdir(output_dir)
+    outdir = "pydoc"
+    if (not os.path.exists(outdir)):
+        os.mkdir(outdir)
 
-    # first make top level docs
-    f = open("%s/index.html" % (output_dir), "w")
+    for doctype in ["txt", "html"]:
 
-    d = pydoc.HTMLDoc()
-    html = d.page("HGD Python API", d.docmodule(sys.modules["hgd"]))
+        if (not os.path.exists(outdir + "/" + doctype)):
+            os.mkdir(outdir + "/" + doctype)
 
-    f.write(html)
-    f.close()
+        if (doctype == ("txt")):
+            d = pydoc.TextDoc()
+        else:
+            d = pydoc.HTMLDoc()
 
-    # now each module in the hgd package which is not builtin
-    mods = ["hgd.playlist", "hgd.doccer"]
+        # first make top level docs
+        f = open("%s/%s/index.%s" % (outdir, doctype, doctype), "w")
 
-    for mod in mods:
-        f = open("%s/%s.html" % (output_dir, mod), "w")
-        html = d.page("HGD Python API", d.docmodule(sys.modules[mod]))
-        f.write(html)
+        if (doctype == "html"):
+            content = d.page("HGD Python API", d.docmodule(sys.modules["hgd"]))
+        else:
+            content = d.docmodule(sys.modules["hgd"])
+
+        f.write(content)
         f.close()
+
+        # now each module in the hgd package which is not builtin
+        mods = ["hgd.playlist", "hgd.doccer"]
+
+        for mod in mods:
+            f = open("%s/%s/%s.%s" % (outdir, doctype, mod, doctype), "w")
+
+            if (doctype == "html"):
+                content = d.page("HGD Python API", d.docmodule(sys.modules[mod]))
+            else:
+                content = d.docmodule(sys.modules[mod])
+
+            f.write(content)
+            f.close()
 
     return 0
 

@@ -1,45 +1,47 @@
-"""
-Copyright (c) 2011, Edd Barrett <vext01@gmail.com>
-Copyright (c) 2011, Martin Ellis <ellism88@gmail.com>
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-Support libs for HGD which do not need C embedding fun.
-We actually run this over sed and embed it as a #defined string
-in hgd.py.h.
-"""
+# Copyright (c) 2011, Edd Barrett <vext01@gmail.com>
+# 
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 """
-Wrapper for a track in the playlist, whose items are read-only
+Module for working with playlist items in HGD
 """
+
+__author__ =  "Edd Barrett"
+
 class PlaylistItem(object):
+    """ Wrapper for a track in the playlist, whose items are read-only """
 
     def __init__(self, info):
         self.__info = info
     
     def get_tid(self):
+        """ Return the track's track id as an integer. """
         return self.__info["tid"]
 
     def get_filename(self):
+        """ Return the track's filename. """
         return self.__info["filename"]
 
     def get_tag_artist(self):
+        """ Return artist metadata extracted by taglib. """
         return self.__info["tag_artist"]
 
     def get_tag_title(self):
+        """ Return title metadata extracted by taglib. """
         return self.__info["tag_title"]
 
     def get_user(self):
+        """ Return the name of the user who queued this track. """
         return self.__info["user"]
 
     def __ro_set(self, val):
