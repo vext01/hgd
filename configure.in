@@ -95,6 +95,8 @@ AS_IF([test "x$have_python" = "xyes"],
 
 # where we are building will go into the python class path
 CFLAGS="${CFLAGS} -DBUILD_DIR='\"`pwd`\"'"
+# and where to pick up installed systemwide python support
+CFLAGS="${CFLAGS} -DDATAROOTDIR='\"${datarootdir}\"'"
 
 
 AC_CHECK_PROG([MPLAYER], "mplayer", "yes", "no")

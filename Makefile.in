@@ -25,11 +25,12 @@ CPPFLAGS+=@CPPFLAGS@
 INSTALL?=install
 
 prefix?=@prefix@
-mandir?=${prefix}/man/man1
-sbindir?=${prefix}/sbin
-bindir?=${prefix}/bin
-sharedir?=${prefix}/share
-docdir?=${sharedir}/doc/hgd
+exec_prefix=@exec_prefix@
+mandir?=@mandir@/man1
+sbindir?=@sbindir@
+bindir?=@bindir@
+sharedir?=@datarootdir@
+docdir?=@docdir@
 pydocdir=${docdir}/pydoc
 sampledir?=${sharedir}/examples/hgd
 pysupportdir=${sharedir}/hgd/pylib/hgd
