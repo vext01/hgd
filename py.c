@@ -171,7 +171,7 @@ hgd_py_meth_get_component(Hgd *self, void *closure)
 static PyMethodDef hgd_py_methods[] = {
 	{"get_playlist",
 	    (PyCFunction) hgd_py_meth_get_playlist,
-	    METH_NOARGS, "get the current hgd playlist"},
+	    METH_NOARGS, "Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem"},
 	{ 0, 0, 0, 0 }
 };
 
@@ -289,7 +289,8 @@ static PyTypeObject HgdType = {
 	0,				/* tp_setattro */
 	0,				/* tp_as_buffer */
 	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,	/* tp_flags */
-	"Hackathon Gunther Daemon",	/* tp_doc */
+	"Core HGD glue. An instance of this is passed to each hook.",
+					/* ^^^ tp_doc */
 	0,				/* tp_traverse */
 	0,				/* tp_clear */
 	0,				/* tp_richcompare */
@@ -297,7 +298,7 @@ static PyTypeObject HgdType = {
 	0,				/* tp_iter */
 	0,				/* tp_iternext */
 	hgd_py_methods,			/* tp_methods */
-	hgd_py_members, 		/* tp_members */
+	hgd_py_members,			/* tp_members */
 	hgd_py_get_setters,		/* tp_getset */
 	0,				/* tp_base */
 	0,				/* tp_dict */
@@ -337,8 +338,10 @@ hgd_init_hgd_mod(void)
     PyObject* m;
 
     HgdType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&HgdType) < 0)
-        return;
+    if (PyType_Ready(&HgdType) < 0) {
+	DPRINTF(HGD_D_ERROR, "Hgd type not ready");
+	return;
+    }
 
     m = Py_InitModule3("hgd", hgd_py_methods,
                        "Hackathon Gunther Daemon Extensions");
@@ -397,10 +400,10 @@ hgd_embed_py(uint8_t enable_user_scripts)
 		if (script_dir == NULL) {
 			DPRINTF(HGD_D_WARN, "Can't read script dir '%s': %s",
 			    HGD_DFL_PY_DIR, SERROR);
-		} 
+		}
 
 		/* loop over user script dir loading modules for hooks */
-		while ((script_dir != NULL) 
+		while ((script_dir != NULL)
 		    && (ent = readdir(script_dir)) != NULL) {
 
 			if ((strcmp(ent->d_name, ".") == 0) ||
@@ -458,7 +461,6 @@ hgd_embed_py(uint8_t enable_user_scripts)
 
 	hgd_init_hgd_mod(); /* init hgd module */
 	hgd_py_mods.hgd_o = hgd_py_meth_new(&HgdType, NULL, NULL); /* stash an instance */
-
 
 	hgd_execute_py_hook("init");
 
