@@ -1,0 +1,78 @@
+.\" Copyright (c) 2011 Edd Barrett <vext01@gmail.com>
+.\" Copyright (c) 2011 Martin Ellis <ellism88@gmail.com>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
+.\"
+.Dd June 3, 2011
+.Dt HGD-SCRIPTING 7
+.Os
+.Sh NAME
+.Nm hgd-admin
+.Nd HGD Python Scripting Backend Manual
+.Sh DESCRIPTION
+.Nm
+describes how to use Python to extend HGD.
+.Sh FUNDAMENTALS
+NOTE: The Python scripting backend is experimental at this time, and the API is
+subject to change. You have been warned.
+.Pp
+When HGD is built with Python support, a Python interpreter is embedded into
+.Xr hgd-playd 1
+\&. Python scripts are loaded from a script directory as
+.Xr hgd-playd 1
+initialises. Each script may define a number of "hooks", which are called at
+strategic times during runtime of
+.Xr hgd-playd 1
+\&.
+.Pp
+Hooks defined thus far:
+.Bl -tag -width Ds
+.It hgd_hook_init()
+Triggers as
+.Xr hgd-playd 1
+is initially loading the script.
+.It hgd_hook_pre_play()
+Triggers before a track is to be played.
+.It hgd_hook_post_play()
+Triggers after a track has played.
+.It hgd_hook_nothing_to_play()
+Triggers every second there is nothing to play.
+.El
+.Sh SCRIPTING API
+Each hook is passed a hgd.Hgd instance from which the user can obtain
+information about the running
+.Xr hgd-playd 1
+, including the playlist. Documentation
+on this class and other support classes should be distributed with your HGD
+distribution.
+.Pp
+In the future we plan to allow the user to re-order the playlist. We are also
+considering embedding Python into other HGD components.
+.Sh TECHNICAL DETAILS
+The main glue class hgd.Hgd is implemented using the Python C API (see py.c).
+There are some other non-native classes which are loaded at runtime from
+your system's datarootdir (configurable at configure time).
+.Pp
+Because the hgd.Hgd class is written in C, this makes it awkward to get API
+docs for. This is what hgd-mk-pydoc is for.
+.Sh AUTHORS
+.An -nosplit
+.Nm
+was written by
+.An Edd Barrett Aq vext01@gmail.com ,
+and
+.An Martin Ellis Aq ellism88@gmail.com .
+.Sh BUGS
+Please report bugs in this guide back to use via the github issue tracker.
