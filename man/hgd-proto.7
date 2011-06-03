@@ -272,7 +272,30 @@ Disconnecting
 .Ed
 .El
 .Sh SECURE COMMUNICATIONS WITH SSL (TLSv1)
-XXX: Mex, you need to detail the SSL packet size etc. here.
+.Bl -enum
+A typical SSL session should go
+.Bd -literal
+> encrypt?
+< ok|tls1
+> encrypt
+**ALL traffic should now be encrypted**
+< ok
+> ls
+< ...
+
+Notes:
+.It
+SSL messages should all be 256 chars long (if message is shorter it should be padded with nulls).
+.It
+If encrypt? does not return ok server does not support SSL.
+.It
+If the server has encryption set to "forced" most commands will not work untill an encrypted session is set up (encrypt? and encrypt will always work unencryped).
+.It
+Currently only TLSv1 is supported.
+.It
+SSL encryption is used but certificates are not currently checked so authentication of server cannot be trusted.
+.Ed
+.El
 .Sh AUTHORS
 .An -nosplit
 .Nm
