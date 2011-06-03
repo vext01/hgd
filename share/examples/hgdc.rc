@@ -25,10 +25,14 @@
 
 ## Be very careful with file permissions when setting this option.
 ## Make sure your chmod is at least 700
-#password = "";
+#password = "myTraLaLa";
 
 ## hud refresh rate
 #refresh_rate = 1;
 
 ## hud colours on
 #colours = true;
+
+## max number of items to show in hud
+## 0 = ALL
+#max_items = 0L

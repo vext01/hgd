@@ -60,6 +60,7 @@ uint8_t			 server_ssl_capable = 0;
 uint8_t			 authenticated = 0;
 uint8_t			 hud_refresh_speed = 1;
 uint8_t			 colours_on = 1;
+uint8_t			 hud_max_items = 0;
 
 /* protos */
 int			 hgd_check_svr_response(char *resp, uint8_t x);
@@ -404,6 +405,7 @@ hgd_usage()
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
+	printf("    -m\t\t\tMax items (only in hud mode)\n");
 	printf("    -p port\t\tSet connection port\n");
 	printf("    -r refresh rate (only in hud mode)\n");
 	printf("    -s host/ip\t\tSet connection address\n");
@@ -593,8 +595,10 @@ hgd_req_playlist(char **args)
 	for (i = 0; i < n_items; i++) {
 		track_resp = hgd_sock_recv_line(sock_fd, ssl);
 
-		hgd_hline();
-		hgd_print_track(track_resp, i == 0);
+		if (hud_max_items == 0 || hud_max_items > i) {
+			hgd_hline();
+			hgd_print_track(track_resp, i == 0);
+		}
 
 		free(track_resp);
 	}
@@ -752,6 +756,7 @@ hgd_read_config(char **config_locations)
 
 	/* temp variables */
 	long long int		tmp_dbglevel, tmp_port, tmp_hud_refresh_rate;
+	long long int		tmp_hud_max_items;
 	int			tmp_colours_on;
 
 	cf = &cfg;
@@ -808,6 +813,12 @@ hgd_read_config(char **config_locations)
 			DPRINTF(HGD_D_WARN,
 			    "Invalid crypto option, using default");
 		}
+	}
+
+	/* -m */
+	if (config_lookup_int64(cf, "max_items", &tmp_hud_max_items)) {
+		hud_max_items = tmp_hud_max_items;
+		DPRINTF(HGD_D_DEBUG, "max items=%d", hud_max_items);
 	}
 
 	/* -s */
@@ -886,7 +897,7 @@ main(int argc, char **argv)
 	 * Need to do getopt twice because x and c need to be done before
 	 * reading the config
 	 */
-	while ((ch = getopt(argc, argv, "aAc:Eehp:r:s:u:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "aAc:Eehm:p:r:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'x':
 			hgd_debug = atoi(optarg);
@@ -915,7 +926,7 @@ main(int argc, char **argv)
 
 	RESET_GETOPT();
 
-	while ((ch = getopt(argc, argv, "aAc:Eehp:r:s:u:vx:")) != -1) {
+	while ((ch = getopt(argc, argv, "aAc:Eehm:p:r:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'a':
 			DPRINTF(HGD_D_DEBUG, "Colour hud on");
@@ -935,6 +946,11 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "Client will insist upon "
 			   " no crypto");
 			crypto_pref = HGD_CRYPTO_PREF_NEVER;
+			break;
+		case 'm':
+			hud_max_items = atoi(optarg);
+			DPRINTF(HGD_D_DEBUG, "Set max items to %d",
+			    hud_max_items);
 			break;
 		case 's':
 			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);
