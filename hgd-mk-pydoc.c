@@ -108,10 +108,35 @@ clean:
 	return (err);
 }
 
+void
+hgd_usage()
+{
+	printf("Usage: hgd-mk-pydoc [opts]\n\n");
+	printf("    -h\t\t\tShow this message and exit\n");
+	printf("    -x level\t\tSet debug level (0-3)\n");
+}
+
 int
 main(int argc, char **argv)
 {
-	hgd_debug = 3; /* XXX */
+	int			ch;
+
+	while ((ch = getopt(argc, argv, "hx:")) != -1) {
+		switch (ch) {
+		case 'x':
+			hgd_debug = atoi(optarg);
+			if (hgd_debug > 3)
+				hgd_debug = 3;
+			DPRINTF(HGD_D_DEBUG, "set debug to %d", hgd_debug);
+			break;
+		case 'h':
+		default:
+			hgd_usage();
+			exit_ok = 1;
+			hgd_exit_nicely();
+		}
+	}
+
 
 	hgd_register_sig_handlers();
 	/* embed python, but dont load user scripts */
