@@ -3,9 +3,7 @@ Test the scripting backend
 """
 def hgd_hook_init(ctx):
 
-    print("yo")
     if (ctx.debug_level >= 2):
-	print("yo")
         print("")
         print(80 * "-")
         print("HGD Scripting backend test!")
