@@ -279,12 +279,14 @@ hgd_read_config(char **config_locations)
 
 #ifdef HAVE_PYTHON
 	/* -P */
-	if (config_lookup_string(cf, "plugins.dir",
+	if (config_lookup_string(cf, "py_plugins.script_path",
 	    (const char **) &tmp_py_dir)) {
-		if (hgd_py_dir != NULL) free(hgd_py_dir);
-		hgd_py_dir = strdup(tmp_py_dir);
+		if (hgd_py_plugin_dir != NULL)
+			free(hgd_py_plugin_dir);
+
+		hgd_py_plugin_dir = strdup(tmp_py_dir);
 		DPRINTF(HGD_D_DEBUG,"Setting python path to %s",
-		    hgd_py_dir);
+		    hgd_py_plugin_dir);
 	}
 #endif
 
@@ -319,7 +321,7 @@ hgd_usage(void)
 	printf("  -h	Show this message and exit\n");
 	printf("  -p	Don't purge finished tracks from filesystem\n");
 #ifdef HAVE_PYTHON
-	printf("  -P	Location of plugins\n");
+	printf("  -P	Location of user scripts\n");
 #endif
 	printf("  -q	Don't purge finished tracks in database\n");
 	printf("  -v	Show version and exit\n");
@@ -441,9 +443,10 @@ main(int argc, char **argv)
 			break;
 #ifdef HAVE_PYTHON
 		case 'P':
-			DPRINTF(HGD_D_DEBUG, "Setting plugin folder");
-			if (hgd_py_dir != NULL) free (hgd_py_dir); 
-			hgd_py_dir = xstrdup(optarg);
+			DPRINTF(HGD_D_DEBUG, "Setting python plugin dir");
+			if (hgd_py_plugin_dir != NULL)
+				free(hgd_py_plugin_dir);
+			hgd_py_plugin_dir = xstrdup(optarg);
 			break;
 #endif
 		case 'q':

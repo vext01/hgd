@@ -31,7 +31,7 @@
 #include "db.h"
 
 struct hgd_py_modules		 hgd_py_mods;
-char				*hgd_py_dir;
+char				*hgd_py_plugin_dir;
 
 /*
  * methods exposed to python
@@ -254,10 +254,13 @@ static void
 hgd_py_meth_dealloc(Hgd *self)
 {
 	if (self != NULL) {
-		if (self->hgd_version != NULL)
+		if (self->hgd_version != NULL) {
 			Py_XDECREF(self->hgd_version);
-		if (self->component != NULL)
+		}
+
+		if (self->component != NULL) {
 			Py_XDECREF(self->component);
+		}
 		self->ob_type->tp_free((PyObject*)self);
 	}
 }
@@ -366,17 +369,19 @@ hgd_embed_py(uint8_t enable_user_scripts)
 
 	DPRINTF(HGD_D_INFO, "Initialising Python");
 
-	if (hgd_py_dir == NULL) {
-		hgd_py_dir = xstrdup(HGD_DFL_PY_DIR);
+	if (hgd_py_plugin_dir == NULL) {
+		hgd_py_plugin_dir = xstrdup(HGD_DFL_PY_PLUGIN_DIR);
 	}
 
 	/* ensure we find our modules */
 	xasprintf(&search_path, "%s:%s:%s",
-	    DATAROOTDIR "/hgd/pylib", BUILD_DIR "/pylib", hgd_py_dir);
+	    DATAROOTDIR "/hgd/pylib", BUILD_DIR "/pylib",
+	    hgd_py_plugin_dir);
 	DPRINTF(HGD_D_DEBUG, "Python search path is '%s'", search_path);
 
 	if (setenv("PYTHONPATH", search_path, 0) == -1) {
-		DPRINTF(HGD_D_ERROR, "Can't set python search path: %s", SERROR);
+		DPRINTF(HGD_D_ERROR,
+		    "Can't set python search path: %s", SERROR);
 		free(search_path);
 		hgd_exit_nicely();
 	}
@@ -396,10 +401,10 @@ hgd_embed_py(uint8_t enable_user_scripts)
 	/* if we want to enable user scripts */
 	if (enable_user_scripts) {
 
-		script_dir = opendir(HGD_DFL_PY_DIR);
+		script_dir = opendir(hgd_py_plugin_dir);
 		if (script_dir == NULL) {
 			DPRINTF(HGD_D_WARN, "Can't read script dir '%s': %s",
-			    HGD_DFL_PY_DIR, SERROR);
+			   hgd_py_plugin_dir, SERROR);
 		}
 
 		/* loop over user script dir loading modules for hooks */
@@ -459,8 +464,9 @@ hgd_embed_py(uint8_t enable_user_scripts)
 
 	} /* if enable_user_scripts */
 
-	hgd_init_hgd_mod(); /* init hgd module */
-	hgd_py_mods.hgd_o = hgd_py_meth_new(&HgdType, NULL, NULL); /* stash an instance */
+	/* init hgd module and stash an instance */
+	hgd_init_hgd_mod();
+	hgd_py_mods.hgd_o = hgd_py_meth_new(&HgdType, NULL, NULL);
 
 	hgd_execute_py_hook("init");
 
@@ -472,7 +478,10 @@ hgd_free_py()
 {
 	DPRINTF(HGD_D_INFO, "Clearing up python stuff");
 	hgd_py_meth_dealloc((Hgd *) hgd_py_mods.hgd_o);
-	if (hgd_py_dir != NULL) free (hgd_py_dir);
+
+	if (hgd_py_plugin_dir != NULL)
+		free(hgd_py_plugin_dir);
+
 	Py_Finalize();
 	while (hgd_py_mods.n_user_mods)
 		free(hgd_py_mods.user_mod_names[--hgd_py_mods.n_user_mods]);
@@ -491,7 +500,8 @@ hgd_execute_py_hook(char *hook)
 	xasprintf(&func_name, "hgd_hook_%s", hook);
 
 	for (i = 0; i < hgd_py_mods.n_user_mods; i++) {
-		func = PyObject_GetAttrString(hgd_py_mods.user_mods[i], func_name);
+		func = PyObject_GetAttrString(
+		    hgd_py_mods.user_mods[i], func_name);
 
 		/* if a hook func is not defined, that is fine, skip */
 		if (!func) {

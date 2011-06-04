@@ -27,9 +27,9 @@
 
 /* python extensions */
 #define HGD_MAX_PY_MODS		32
-#define HGD_DFL_PY_DIR		HGD_DFL_SVR_CONF_DIR "/scripts"
+#define HGD_DFL_PY_PLUGIN_DIR	HGD_DFL_SVR_CONF_DIR "/scripts"
 
-extern char			*hgd_py_dir;
+extern char			*hgd_py_plugin_dir;
 
 /* this describes the hgd object in python */
 typedef struct {

@@ -99,6 +99,60 @@ hgd_exit_nicely()
 	_exit (!exit_ok);
 }
 
+#ifdef HAVE_TAGLIB
+int
+hgd_get_tag_metadata(char *filename, char **artist, char **title)
+{
+	TagLib_File		*file;
+	TagLib_Tag		*tag;
+
+	DPRINTF(HGD_D_DEBUG, "Attempting to read tags for '%s'", filename);
+
+	*artist = xstrdup("");
+	*title = xstrdup("");
+
+	file = taglib_file_new(filename);
+	if (file == NULL) {
+		DPRINTF(HGD_D_DEBUG, "taglib could not open '%s'", filename);
+		return (HGD_FAIL);
+	}
+
+	if (!taglib_file_is_valid(file)) {
+		DPRINTF(HGD_D_WARN, "invalid tag in '%s'", filename);
+		return (HGD_FAIL);
+	}
+
+	tag = taglib_file_tag(file);
+	if (tag == NULL) {
+		DPRINTF(HGD_D_WARN, "failed to get tag of '%s'", filename);
+		return (HGD_FAIL);
+	}
+
+	/* all went well */
+	free(*artist);
+	free(*title);
+
+	*artist = xstrdup(taglib_tag_artist(tag));
+	*title = xstrdup(taglib_tag_title(tag));
+
+	DPRINTF(HGD_D_DEBUG, "Got tag from '%s': '%s' by '%s'\n",
+	    filename, *title, *artist);
+
+	taglib_tag_free_strings();
+
+	return (HGD_OK);
+}
+#else
+int
+hgd_get_tag_metadata(char *filename, char **artist, char **title)
+{
+	*artist = xstrdup("");
+	*title = xstrdup("");
+
+	return (HGD_FAIL);
+}
+#endif
+
 /* return some kind of host identifier, free when done */
 char *
 hgd_identify_client(struct sockaddr_in *cli_addr)
@@ -1323,57 +1377,3 @@ main(int argc, char **argv)
 	hgd_exit_nicely();
 	return (EXIT_SUCCESS); /* NOREACH */
 }
-
-#ifdef HAVE_TAGLIB
-int
-hgd_get_tag_metadata(char *filename, char **artist, char **title)
-{
-	TagLib_File		*file;
-	TagLib_Tag		*tag;
-
-	DPRINTF(HGD_D_DEBUG, "Attempting to read tags for '%s'", filename);
-
-	*artist = xstrdup("");
-	*title = xstrdup("");
-
-	file = taglib_file_new(filename);
-	if (file == NULL) {
-		DPRINTF(HGD_D_DEBUG, "taglib could not open '%s'", filename);
-		return (HGD_FAIL);
-	}
-
-	if (!taglib_file_is_valid(file)) {
-		DPRINTF(HGD_D_WARN, "invalid tag in '%s'", filename);
-		return (HGD_FAIL);
-	}
-
-	tag = taglib_file_tag(file);
-	if (tag == NULL) {
-		DPRINTF(HGD_D_WARN, "failed to get tag of '%s'", filename);
-		return (HGD_FAIL);
-	}
-
-	/* all went well */
-	free(*artist);
-	free(*title);
-
-	*artist = xstrdup(taglib_tag_artist(tag));
-	*title = xstrdup(taglib_tag_title(tag));
-
-	DPRINTF(HGD_D_DEBUG, "Got tag from '%s': '%s' by '%s'\n",
-	    filename, *title, *artist);
-
-	taglib_tag_free_strings();
-
-	return (HGD_OK);
-}
-#else
-int
-hgd_get_tag_metadata(char *filename, char **artist, char **title)
-{
-	*artist = xstrdup("");
-	*title = xstrdup("");
-
-	return (HGD_FAIL);
-}
-#endif

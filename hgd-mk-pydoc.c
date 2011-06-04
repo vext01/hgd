@@ -53,7 +53,7 @@ hgd_exit_nicely()
 int
 hgd_mk_pydoc()
 {
-	PyObject			*mod = NULL, *func = NULL, *args = NULL;
+	PyObject			*mod = NULL, *func = NULL;
 	PyObject			*ret = NULL;
 	int				 err = HGD_OK;
 
@@ -88,12 +88,15 @@ clean:
 	if (err != HGD_OK)
 		DPRINTF(HGD_D_ERROR, "Failed to generate documentation");
 
-	if (mod)
+	if (mod) {
 		Py_XDECREF(mod);
-	if (func)
+	}
+	if (func) {
 		Py_XDECREF(func);
-	if (ret)
+	}
+	if (ret) {
 		Py_XDECREF(ret);
+	}
 
 	return (err);
 }
