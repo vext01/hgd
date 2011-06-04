@@ -146,6 +146,13 @@ main(int argc, char **argv)
 #include <stdio.h>
 #include <stdlib.h>
 
+/* unused, but must be defined */
+void
+hgd_exit_nicely()
+{
+	exit (EXIT_SUCCESS);
+}
+
 int
 main(int argc, char **argv)
 {
