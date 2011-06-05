@@ -77,7 +77,11 @@ luck).
 Quickstart for the Lazy
 -----------------------
 
-First you should make user accounts:
+If you upgraded from a previous version of HGD, i would reccommend
+removing your state directory and starting afresh, as the database
+structure does change from time to time.
+
+Now you should make user accounts:
 
  % hgd-admin user-add <username>
 
