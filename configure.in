@@ -54,10 +54,8 @@ AS_IF([test "x$have_taglib" = "xyes"],
       ])
 ])
 
-# we just cant work without sqlite
+# we just cant work without sqlite or ssl
 PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.6.22])
-
-# might make this optional in the future.
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 
 # If readpassphrase() is not in libc, it is in libbsd (linux)

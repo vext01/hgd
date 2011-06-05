@@ -1,9 +1,13 @@
+crypto.o
+net.o
 common.o
 db.o
 py.o
 hgd-admin
 hgd-netd
 hgd-playd
+hgd-mk-pydoc
+pylib/hgd/*.pyc
 hgdc
 tags
 *.core

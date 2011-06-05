@@ -44,7 +44,13 @@ all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
 
 .PHONY: clean
 clean:
-	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o
+	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o
+
+crypto.o: crypto.h crypto.c hgd.h config.h
+	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o crypto.c
+
+net.o: net.h net.c hgd.h config.h
+	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o net.o net.c
 
 py.o: py.c py.h config.h
 	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o py.c
@@ -55,34 +61,34 @@ common.o: common.c hgd.h config.h
 db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
-# playd should not need ssl flags XXX
-hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h
+hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} \
-		-o hgd-playd db.o common.o py.o hgd-playd.c
+		-o hgd-playd db.o common.o crypto.o py.o hgd-playd.c
 
-hgd-netd: common.o hgd-netd.c hgd.h db.o config.h
+hgd-netd: common.o net.o hgd-netd.c hgd.h db.o config.h crypto.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
 		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
-		-o hgd-netd common.o db.o hgd-netd.c
+		-o hgd-netd common.o db.o net.o crypto.o hgd-netd.c
 
-hgdc: common.o hgdc.c hgd.h config.h
+hgdc: common.o net.o hgdc.c hgd.h config.h
 	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
 		${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
-		-o hgdc common.o hgdc.c
+		-o hgdc common.o net.o hgdc.c
 
-hgd-admin: common.o db.o hgd.h hgd-admin.c config.h
+hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} -o hgd-admin common.o db.o hgd-admin.c
+		${CONFIG_LDFLAGS} -o hgd-admin common.o net.o crypto.o \
+		db.o hgd-admin.c
 
-# SSL pulled in by common.o XXX
-hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o
+hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
 		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQLITE_CFLAGS} \
-		${SQL_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} common.o py.o db.o hgd-mk-pydoc.c -o hgd-mk-pydoc
+		${SQL_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} db.o \
+		common.o py.o crypto.o hgd-mk-pydoc.c -o hgd-mk-pydoc
 
 client: hgdc
 server: hgd-netd hgd-playd hgd-admin
