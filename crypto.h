@@ -18,11 +18,6 @@
 #ifndef __CRYPTO_H
 #define __CRYPTO_H
 
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <sys/stat.h>
-
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>

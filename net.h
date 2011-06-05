@@ -39,14 +39,8 @@
 #define HGD_CRYPTO_PREF_IF_POSS	1
 #define HGD_CRYPTO_PREF_NEVER	2
 
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <sys/stat.h>
-
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#include <openssl/evp.h>
 
 #define PRINT_SSL_ERR(msg)						\
 	do {								\

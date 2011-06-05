@@ -18,22 +18,6 @@
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <err.h>
-#include <errno.h>
-#include <signal.h>
-#ifdef __linux__
-#include <bsd/readpassphrase.h>
-#else
-#include <readpassphrase.h>
-#endif
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <poll.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 #include <openssl/ssl.h>
 #include <openssl/evp.h>
