@@ -34,10 +34,7 @@
 sqlite3				*db = NULL;
 char				*db_path = NULL;
 
-/*
- * Open, create and initialise database
- * XXX we can replace VARCHAR with TEXT?
- */
+/* Open, create and initialise database */
 sqlite3 *
 hgd_open_db(char *db_path)
 {
@@ -77,8 +74,8 @@ hgd_open_db(char *db_path)
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS playlist ("
 	    "id INTEGER PRIMARY KEY,"
-	    "filename VARCHAR(" HGD_DBS_FILENAME_LEN " ),"
-	    "user VARCHAR(" HGD_DBS_USERNAME_LEN "),"
+	    "filename TEXT,"
+	    "user TEXT,"
 	    "playing INTEGER,"
 	    "finished INTEGER,"
 	    "tag_artist TEXT,"
@@ -94,7 +91,7 @@ hgd_open_db(char *db_path)
 	DPRINTF(HGD_D_DEBUG, "making votes table (if needed)");
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS votes ("
-	    "user VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY)",
+	    "user TEXT PRIMARY KEY)",
 	    NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
@@ -107,9 +104,9 @@ hgd_open_db(char *db_path)
 	DPRINTF(HGD_D_DEBUG, "making user table (if needed)");
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE IF NOT EXISTS users ("
-	    "username VARCHAR(" HGD_DBS_USERNAME_LEN ") PRIMARY KEY, "
-	    "hash VARCHAR( "HGD_DBS_HASH_LEN "), "	/* as we use sha1 */
-	    "salt VARCHAR(" HGD_DBS_SALT_LEN "), "
+	    "username TEXT PRIMARY KEY, "
+	    "hash TEXT, "	/* sha1 */
+	    "salt TEXT, "
 	    "perms INTEGER"
 	    ");",
 	    NULL, NULL, NULL);

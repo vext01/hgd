@@ -52,7 +52,7 @@ py.o: py.c py.h config.h
 common.o: common.c hgd.h config.h
 	${CC} ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} -c -o common.o common.c
 
-db.o: db.c hgd.h config.h
+db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
 # playd should not need ssl flags XXX
