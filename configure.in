@@ -9,8 +9,10 @@ if test "${prefix}" = "NONE"; then
 fi
 CFLAGS="${CFLAGS} -DPREFIX='\"${prefix}\"'"
            
-AC_ARG_WITH([python], AS_HELP_STRING([--without-python], 
+AC_ARG_WITH([python], AS_HELP_STRING([--without-python],
 	    [Ignore presence of python and disable it]))
+AC_ARG_WITH([python], AS_HELP_STRING([--with-python=<version>],
+	    [Build with specific version of Python]))
 
 AC_ARG_WITH([libconfig], AS_HELP_STRING([--without-libconfig],
 	    [Ignore presence of libconfig and disable it]))
@@ -58,7 +60,6 @@ PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.6.22])
 # XXX optional ?
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 
-
 # XXX search libs macro
 # If readpassphrase() is not in libc, it is in libbsd (linux)
 AC_CHECK_FUNC([readpassphrase],,
@@ -67,8 +68,14 @@ AC_CHECK_FUNC([readpassphrase],,
 
 # check for python manually, as we can't find a portable way
 # we accept 2.6 and 2.7 for now
+if test "x${with_python}" = "x"; then
+	py_config_search="python2.7-config python2.6-config python-config"
+else
+	py_config_search=python${with_python}-config
+fi
 AS_IF([test "x$with_python" != "xno"], [
-for i in python2.7-config python2.6-config python-config; do
+
+for i in ${py_config_search}; do
 	AC_MSG_CHECKING([$i])
 	if test -n "`which $i 2> /dev/null`"; then
 		AC_MSG_RESULT([yes])
@@ -97,7 +104,6 @@ AS_IF([test "x$have_python" = "xyes"],
 CFLAGS="${CFLAGS} -DBUILD_DIR='\"`pwd`\"'"
 # and where to pick up installed systemwide python support
 CFLAGS="${CFLAGS} -DDATAROOTDIR='\"${datarootdir}\"'"
-
 
 AC_CHECK_PROG([MPLAYER], "mplayer", "yes", "no")
 
