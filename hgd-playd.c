@@ -290,7 +290,6 @@ hgd_read_config(char **config_locations)
 	}
 #endif
 
-
 	/* -p */
 	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
 		purge_finished_db = tmp_purge_fin_db;
@@ -371,21 +370,21 @@ py_test()
 int
 main(int argc, char **argv)
 {
-	char			 ch, *env_tmp;
+	char			 ch, *xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
 	config_path[0] = NULL;
 
-	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG);
+	xasprintf(&config_path[1], "%s", HGD_GLOBAL_CFG_DIR HGD_SERV_CFG);
 
-	env_tmp =  getenv("XDG_CONFIG_HOME");
-	if (config_path == NULL) {
+	xdg_config_home =  getenv("XDG_CONFIG_HOME");
+	if (xdg_config_home == NULL) {
 		xasprintf(&config_path[2], "%s%s", getenv("HOME"),
 		    HGD_USR_CFG_DIR HGD_SERV_CFG );
 	} else {
-		xasprintf(&config_path[2], "%s%s", env_tmp , "/hgd" HGD_SERV_CFG);
-
+		xasprintf(&config_path[2],
+		    "%s%s", xdg_config_home , "/hgd" HGD_SERV_CFG);
 	}
 
 	hgd_register_sig_handlers();
