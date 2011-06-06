@@ -1,7 +1,9 @@
-"""
-Test the scripting backend
-"""
+import time
+
 def hgd_hook_init(ctx):
+    """ test members """
+
+    ctx.dprint(0, "test");
 
     if (ctx.debug_level >= 2):
         print("")
@@ -20,4 +22,18 @@ def hgd_hook_init(ctx):
         print(80 * "-")
         print("")
 
+    return 0
+
+def hgd_hook_pre_play(ctx):
+    """ load test api """
+    ctx.dprint(1,"test starting")
+
+    for i in range(9000):
+        l = ctx.get_playlist();
+
+        if (i % 1000 == 0):
+            time.sleep(1);
+            ctx.dprint(1, "1000 pause")
+
+    ctx.dprint(1, "DONE!")
     return 0

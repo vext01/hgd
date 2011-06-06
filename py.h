@@ -46,6 +46,8 @@ struct hgd_py_modules {
 	PyObject		*hgd_o;			/* ptr to hgd object */
 	/* our non-native modules */
 	PyObject		*playlist_mod;		/* playlist.py */
+	/* stock modules */
+	PyObject		*inspect_mod;		/* for hgd.dprint() */
 	/* user hook modules loaded from script dir */
 	PyObject		*user_mods[HGD_MAX_PY_MODS];
 	char			*user_mod_names[HGD_MAX_PY_MODS];

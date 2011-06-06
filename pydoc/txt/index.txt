@@ -2,7 +2,7 @@ NNAAMMEE
     hgd - Hackathon Gunther Daemon Extensions
 
 FFIILLEE
-    /home/edd/source/hgd/pylib/hgd/__init__.py
+    /usr/local/share/hgd/pylib/hgd/__init__.py
 
 PPAACCKKAAGGEE  CCOONNTTEENNTTSS
     doccer
@@ -19,6 +19,9 @@ CCLLAASSSSEESS
      |  
      |  ____iinniitt____(...)
      |      x.__init__(...) initializes x; see x.__class__.__doc__ for signature
+     |  
+     |  ddpprriinntt(...)
+     |      Print a debug message
      |  
      |  ggeett__ppllaayylliisstt(...)
      |      Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem
@@ -45,6 +48,9 @@ CCLLAASSSSEESS
      |      T.__new__(S, ...) -> a new object with type S, a subtype of T
 
 FFUUNNCCTTIIOONNSS
+    ddpprriinntt(...)
+        Print a debug message
+    
     ggeett__ppllaayylliisstt(...)
         Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem
 

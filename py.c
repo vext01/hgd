@@ -38,6 +38,89 @@ char				*hgd_py_plugin_dir;
  */
 
 /*
+ * debug message
+ *
+ * args: level, message
+ * ret:
+ *
+ * XXX Ref counts and free result of AsString() ?
+ * XXX define global attributes for debug levels
+ */
+static PyObject *
+hgd_py_meth_dprint(Hgd *self, PyObject *args)
+{
+	Py_ssize_t		 n_args = PyTuple_GET_SIZE(args);
+	PyObject		*f_currentframe = NULL, *f_getframeinfo = NULL;
+	PyObject		*currentframe = NULL, *frameinfo = NULL;
+	PyObject		*a_getframeinfo = NULL;
+	PyObject		*file = NULL, *line = NULL;
+	PyObject		*meth = NULL;
+	long			 level;
+	char			*msg;
+
+	/* check number of args */
+	if ((int) n_args != 2) {
+		(void) PyErr_Format(PyExc_TypeError,
+		    "dprint() takes 2 arguments");
+		return (NULL);
+	}
+
+	/* check the debug level before doing all this junk */
+	level = PyLong_AsLong(PyTuple_GetItem(args, 0));
+	if (level > hgd_debug)
+		Py_RETURN_NONE;
+
+	/* get current frame */
+	f_currentframe = PyObject_GetAttrString(
+	    hgd_py_mods.inspect_mod, "currentframe");
+	if (!f_currentframe) {
+		DPRINTF(HGD_D_DEBUG, "Failed to find currentframe()");
+	}
+
+	DPRINTF(HGD_D_INFO, "Calling currentframe()");
+	currentframe = PyObject_CallObject(f_currentframe, NULL);
+	if (currentframe == NULL) {
+		PRINT_PY_ERROR();
+		DPRINTF(HGD_D_WARN, "failed to call currentframe()");
+	}
+
+	/* get frame info */
+	f_getframeinfo = PyObject_GetAttrString(
+	    hgd_py_mods.inspect_mod, "getframeinfo");
+	if (!f_getframeinfo) {
+		DPRINTF(HGD_D_DEBUG, "Failed to find getframeinfo()");
+	}
+
+	a_getframeinfo = PyTuple_New(1);
+	if ((a_getframeinfo == NULL) ||
+	    (PyTuple_SetItem(a_getframeinfo, 0, currentframe) != 0)) {
+		PRINT_PY_ERROR();
+		DPRINTF(HGD_D_WARN, "Failed to assign tuple");
+	}
+
+	DPRINTF(HGD_D_INFO, "Calling getframeinfo()");
+	frameinfo = PyObject_CallObject(f_getframeinfo, a_getframeinfo);
+	if (frameinfo == NULL) {
+		PRINT_PY_ERROR();
+		DPRINTF(HGD_D_WARN, "Failed to call getframeinfo()");
+	}
+
+	file = PyTuple_GetItem(frameinfo, 0);
+	line = PyTuple_GetItem(frameinfo, 1);
+	meth = PyTuple_GetItem(frameinfo, 2);
+
+	msg = PyString_AsString(PyTuple_GetItem(args, 1));
+
+	fprintf(stderr, "[Python: %s:%s():%ld]\n\t%s\n",
+	    PyString_AsString(file),
+	    PyString_AsString(meth),
+	    PyLong_AsLong(line),
+	    msg);
+
+	Py_RETURN_NONE;
+}
+
+/*
  * get the contents of the playlist
  *
  * XXX needs to lock database when we make
@@ -172,6 +255,9 @@ static PyMethodDef hgd_py_methods[] = {
 	{"get_playlist",
 	    (PyCFunction) hgd_py_meth_get_playlist,
 	    METH_NOARGS, "Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem"},
+	{"dprint",
+	    (PyCFunction) hgd_py_meth_dprint,
+	    METH_VARARGS, "Print a debug message"},
 	{ 0, 0, 0, 0 }
 };
 
@@ -389,6 +475,14 @@ hgd_embed_py(uint8_t enable_user_scripts)
 
 	Py_Initialize();
 	memset(&hgd_py_mods, 0, sizeof(hgd_py_mods));
+
+	/* import inspect for hgd.dprint */
+	mod = PyImport_ImportModule("inspect");
+	if (!mod) {
+		PRINT_PY_ERROR();
+		hgd_exit_nicely();
+	}
+	hgd_py_mods.inspect_mod = mod;
 
 	/* always import the hgd support stuff from hgd.py */
 	mod = PyImport_ImportModule("hgd.playlist");
