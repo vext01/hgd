@@ -41,7 +41,7 @@ const char			*hgd_component = "hgd-mk-pydoc";
  * clean up, exit. if exit_ok = 0, an error (signal/error)
  */
 void
-hgd_exit_nicely()
+hgd_exit_nicely(void)
 {
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
@@ -51,7 +51,7 @@ hgd_exit_nicely()
 }
 
 int
-hgd_mk_pydoc()
+hgd_mk_pydoc(void)
 {
 	PyObject			*mod = NULL, *func = NULL;
 	PyObject			*ret = NULL;
@@ -102,7 +102,7 @@ clean:
 }
 
 void
-hgd_usage()
+hgd_usage(void)
 {
 	printf("Usage: hgd-mk-pydoc [opts]\n\n");
 	printf("    -h\t\t\tShow this message and exit\n");
