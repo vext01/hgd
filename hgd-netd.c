@@ -291,7 +291,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	char			*filename, *tag_artist, *tag_title;
 
 	if ((flood_limit >= 0) &&
-	    (hgd_num_tracks_user(sess->user->name) > flood_limit)) {
+	    (hgd_num_tracks_user(sess->user->name) >= flood_limit)) {
 
 		DPRINTF(HGD_D_WARN,
 		    "User '%s' trigger flood protection", sess->user->name);
