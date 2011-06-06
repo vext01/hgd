@@ -334,7 +334,7 @@ hgd_setup_socket()
 		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
 	}
 
-	DPRINTF(HGD_D_DEBUG, "Connecting to IP %s", host);
+	DPRINTF(HGD_D_DEBUG, "Connecting to IP %s:%d", host, port);
 
 	/* set up socket address */
 	memset(&addr, 0, sizeof(struct sockaddr_in));
@@ -783,6 +783,8 @@ hgd_read_config(char **config_locations)
 		config_locations--;
 	}
 
+	DPRINTF(HGD_D_DEBUG, "Using config: '%s'", *config_locations);
+
 	/* if no configs found */
 	if (*config_locations == NULL) {
 		config_destroy(cf);
@@ -836,10 +838,10 @@ hgd_read_config(char **config_locations)
 	/* password */
 	if (config_lookup_string(cf, "password", (const char**) &tmp_password)) {
 		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
-			DPRINTF(HGD_D_ERROR, 
+			DPRINTF(HGD_D_ERROR,
 				"Config file with your password in is readable by"
 				" other people.  Please chmod it.");
-			hgd_exit_nicely();	
+			hgd_exit_nicely();
 
 		}
 
@@ -887,7 +889,7 @@ main(int argc, char **argv)
 	xdg_config_home =  getenv("XDG_CONFIG_HOME");
 	if (xdg_config_home == NULL) {
 		xasprintf(&config_path[2], "%s%s", getenv("HOME"),
-		    HGD_USR_CFG_DIR HGD_SERV_CFG );
+		    HGD_USR_CFG_DIR HGD_CLI_CFG);
 	} else {
 		xasprintf(&config_path[2], "%s%s",
 		    xdg_config_home , "/hgd" HGD_CLI_CFG);
