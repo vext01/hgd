@@ -28,7 +28,7 @@
 #password = "myTraLaLa";
 
 ## hud refresh rate
-#refresh_rate = 1;
+#refresh_rate = 5;
 
 ## hud colours on
 #colours = true;

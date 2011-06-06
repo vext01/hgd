@@ -58,7 +58,7 @@ SSL_CTX			*ctx;
 uint8_t			 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
 uint8_t			 server_ssl_capable = 0;
 uint8_t			 authenticated = 0;
-uint8_t			 hud_refresh_speed = 1;
+uint8_t			 hud_refresh_speed = 5;
 uint8_t			 colours_on = 1;
 uint8_t			 hud_max_items = 0;
 
