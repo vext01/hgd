@@ -144,12 +144,14 @@ hgd_py_meth_get_playlist(Hgd *self)
 	if (hgd_get_playlist(&list) == HGD_FAIL) {
 		(void) PyErr_Format(PyExc_RuntimeError,
 		    "Failed to get playlist from HGD");
+		return (NULL);
 	}
 
 	ret_list = PyList_New(list.n_items);
 	if (!ret_list) {
 		PRINT_PY_ERROR();
 		(void) PyErr_Format(PyExc_RuntimeError, "Failed to allocate");
+		return (NULL);
 	}
 
 	/* get ready to construct some stuff */
@@ -158,12 +160,14 @@ hgd_py_meth_get_playlist(Hgd *self)
 		PRINT_PY_ERROR();
 		(void) PyErr_Format(PyExc_RuntimeError,
 		    "Failed to get PlaylistItem");
+		return (NULL);
 	}
 
 	if (!PyCallable_Check(ctor)) {
 		PRINT_PY_ERROR();
 		(void) PyErr_Format(PyExc_RuntimeError,
 		    "Constructor not callable");
+		return (NULL);
 	}
 
 	for (i = 0; i < list.n_items; i++) {
@@ -180,6 +184,7 @@ hgd_py_meth_get_playlist(Hgd *self)
 			PRINT_PY_ERROR();
 			(void) PyErr_Format(PyExc_RuntimeError,
 			    "Failed to allocate");
+			return (NULL);
 		}
 
 		args = PyTuple_New(1);
@@ -187,12 +192,14 @@ hgd_py_meth_get_playlist(Hgd *self)
 			PRINT_PY_ERROR();
 			(void) PyErr_Format(PyExc_RuntimeError,
 			    "Failed to allocate");
+			return (NULL);
 		}
 
 		if (PyTuple_SetItem(args, 0, rec) != 0) {
 			PRINT_PY_ERROR();
 			(void) PyErr_Format(PyExc_RuntimeError,
 			    "Failed to set in tuple");
+			return (NULL);
 		}
 
 		plist_item = PyObject_CallObject(ctor, args);
@@ -201,6 +208,7 @@ hgd_py_meth_get_playlist(Hgd *self)
 			PRINT_PY_ERROR();
 			(void) PyErr_Format(PyExc_RuntimeError,
 			    "Failed to call constructor");
+			return (NULL);
 		}
 
 		/* steals ref */
@@ -208,6 +216,7 @@ hgd_py_meth_get_playlist(Hgd *self)
 			PRINT_PY_ERROR();
 			(void) PyErr_Format(PyExc_RuntimeError,
 			    "Failed to set in list");
+			return (NULL);
 		}
 	}
 
