@@ -111,20 +111,14 @@ hgd_play_track(struct hgd_playlist_item *t)
 	if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
 		DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
 
+#ifdef HAVE_PYTHON
+	hgd_execute_py_hook("pre_play");
+#endif
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
-#ifdef HAVE_PYTHON
-		hgd_execute_py_hook("pre_play");
-#endif
-
 		execlp("mplayer", "mplayer", "-really-quiet",
 		    t->filename, (char *) NULL);
-
-#ifdef HAVE_PYTHON
-		hgd_execute_py_hook("post_play");
-#endif
-
 
 		/* if we get here, the shit hit the fan with execlp */
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
@@ -156,6 +150,9 @@ hgd_play_track(struct hgd_playlist_item *t)
 			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
 		}
 	}
+#ifdef HAVE_PYTHON
+	hgd_execute_py_hook("post_play");
+#endif
 
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
@@ -279,13 +276,13 @@ hgd_read_config(char **config_locations)
 
 #ifdef HAVE_PYTHON
 	/* -P */
-	if (config_lookup_string(cf, "py_plugins.script_path",
+	if (config_lookup_string(cf, "py_plugins.plugin_path",
 	    (const char **) &tmp_py_dir)) {
 		if (hgd_py_plugin_dir != NULL)
 			free(hgd_py_plugin_dir);
 
 		hgd_py_plugin_dir = strdup(tmp_py_dir);
-		DPRINTF(HGD_D_DEBUG,"Setting python path to %s",
+		DPRINTF(HGD_D_DEBUG,"Setting Python plugin path to %s",
 		    hgd_py_plugin_dir);
 	}
 #endif
