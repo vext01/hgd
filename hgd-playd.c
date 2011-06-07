@@ -276,13 +276,13 @@ hgd_read_config(char **config_locations)
 
 #ifdef HAVE_PYTHON
 	/* -P */
-	if (config_lookup_string(cf, "py_plugins.script_path",
+	if (config_lookup_string(cf, "py_plugins.plugin_path",
 	    (const char **) &tmp_py_dir)) {
 		if (hgd_py_plugin_dir != NULL)
 			free(hgd_py_plugin_dir);
 
 		hgd_py_plugin_dir = strdup(tmp_py_dir);
-		DPRINTF(HGD_D_DEBUG,"Setting python path to %s",
+		DPRINTF(HGD_D_DEBUG,"Setting Python plugin path to %s",
 		    hgd_py_plugin_dir);
 	}
 #endif

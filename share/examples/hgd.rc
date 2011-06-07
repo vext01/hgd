@@ -67,5 +67,5 @@ playd : {
 
 py_plugins : {
 	## Where to load Python plugin scripts from.
-	#script_path = "/etc/hgd/scripts";
+	#plugin_path = "/etc/hgd/plugins";
 };
