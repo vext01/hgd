@@ -18,6 +18,7 @@ hgd-netd
 hgd-playd
 hgdc
 net.o
+plugins/*.pyc
 py.o
 pylib/hgd/*.pyc
 tags
