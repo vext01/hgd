@@ -111,20 +111,14 @@ hgd_play_track(struct hgd_playlist_item *t)
 	if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
 		DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
 
+#ifdef HAVE_PYTHON
+	hgd_execute_py_hook("pre_play");
+#endif
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
-#ifdef HAVE_PYTHON
-		hgd_execute_py_hook("pre_play");
-#endif
-
 		execlp("mplayer", "mplayer", "-really-quiet",
 		    t->filename, (char *) NULL);
-
-#ifdef HAVE_PYTHON
-		hgd_execute_py_hook("post_play");
-#endif
-
 
 		/* if we get here, the shit hit the fan with execlp */
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
@@ -156,6 +150,9 @@ hgd_play_track(struct hgd_playlist_item *t)
 			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
 		}
 	}
+#ifdef HAVE_PYTHON
+	hgd_execute_py_hook("post_play");
+#endif
 
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
