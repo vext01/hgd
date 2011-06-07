@@ -96,6 +96,8 @@ hgd_exit_nicely()
 	if (db)
 		sqlite3_close(db);
 
+	hgd_cleanup_ssl(&ctx);	
+
 	_exit (!exit_ok);
 }
 

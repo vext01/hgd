@@ -51,6 +51,8 @@
 		DPRINTF(HGD_D_ERROR, "%s: %s", msg, error);		\
 	} while(0)
 
+
+void				 hgd_cleanup_ssl(SSL_CTX **ssl);
 void				 hgd_sock_send(int fd, char *msg);
 void				 hgd_sock_send_line(int fd, SSL* ssl,
 				     char *msg);
