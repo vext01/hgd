@@ -491,6 +491,8 @@ hgd_req_queue(char **args)
 	printf("\r     \r");
 	fflush(stdout);
 
+	fclose(f);	
+
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
 		free(resp);
@@ -925,6 +927,15 @@ main(int argc, char **argv)
 	}
 
 	hgd_read_config(config_path + num_config);
+
+	while(num_config > 0) {
+		if (config_path[num_config] != NULL) {
+			free (config_path[num_config]);
+			config_path[num_config] = NULL;
+		}
+		num_config--;
+	}
+
 
 	RESET_GETOPT();
 
