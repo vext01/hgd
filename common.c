@@ -242,6 +242,7 @@ hgd_free_user_list(struct hgd_user_list *ul)
 		hgd_free_user(ul->users[i]);
 		free(ul->users[i]);
 	}
+	free(ul->users);
 }
 
 /*
