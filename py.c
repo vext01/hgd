@@ -42,9 +42,6 @@ char				*hgd_py_plugin_dir;
  *
  * args: level, message
  * ret:
- *
- * XXX Ref counts and free result of AsString() ?
- * XXX define global attributes for debug levels
  */
 static PyObject *
 hgd_py_meth_dprint(Hgd *self, PyObject *args)
@@ -79,6 +76,7 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
 
 	DPRINTF(HGD_D_INFO, "Calling currentframe()");
 	currentframe = PyObject_CallObject(f_currentframe, NULL);
+	Py_XDECREF(f_currentframe);
 	if (currentframe == NULL) {
 		PRINT_PY_ERROR();
 		DPRINTF(HGD_D_WARN, "failed to call currentframe()");
@@ -93,6 +91,7 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
 
 	a_getframeinfo = PyTuple_New(1);
 	if ((a_getframeinfo == NULL) ||
+	    /* NB. steals ref */
 	    (PyTuple_SetItem(a_getframeinfo, 0, currentframe) != 0)) {
 		PRINT_PY_ERROR();
 		DPRINTF(HGD_D_WARN, "Failed to assign tuple");
@@ -100,14 +99,18 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
 
 	DPRINTF(HGD_D_INFO, "Calling getframeinfo()");
 	frameinfo = PyObject_CallObject(f_getframeinfo, a_getframeinfo);
+	Py_XDECREF(f_getframeinfo);
+	Py_XDECREF(a_getframeinfo);
 	if (frameinfo == NULL) {
 		PRINT_PY_ERROR();
 		DPRINTF(HGD_D_WARN, "Failed to call getframeinfo()");
 	}
 
+	/* don't decref these */
 	file = PyTuple_GetItem(frameinfo, 0);
 	line = PyTuple_GetItem(frameinfo, 1);
 	meth = PyTuple_GetItem(frameinfo, 2);
+	Py_XDECREF(frameinfo);
 
 	msg = PyString_AsString(PyTuple_GetItem(args, 1));
 
