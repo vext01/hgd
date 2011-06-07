@@ -306,7 +306,7 @@ static PyMethodDef hgd_py_methods[] = {
 	{ 0, 0, 0, 0 }
 };
 
-/* member table */
+/* member table for Hgd type */
 static PyMemberDef hgd_py_members[] = {
 	/* empty, as all members need to be read only for now */
 	{0, 0, 0, 0, 0}

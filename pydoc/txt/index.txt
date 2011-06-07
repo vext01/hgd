@@ -29,6 +29,18 @@ CCLLAASSSSEESS
      |  ----------------------------------------------------------------------
      |  Data descriptors defined here:
      |  
+     |  DD__DDEEBBUUGG
+     |      debug debug level (most verbose)
+     |  
+     |  DD__EERRRROORR
+     |      error debug level
+     |  
+     |  DD__IINNFFOO
+     |      info debug level
+     |  
+     |  DD__WWAARRNN
+     |      warn debug level
+     |  
      |  ccoommppoonneenntt
      |      hgd component
      |  
@@ -46,11 +58,4 @@ CCLLAASSSSEESS
      |  
      |  ____nneeww____ = <built-in method __new__ of type object>
      |      T.__new__(S, ...) -> a new object with type S, a subtype of T
-
-FFUUNNCCTTIIOONNSS
-    ddpprriinntt(...)
-        Print a debug message
-    
-    ggeett__ppllaayylliisstt(...)
-        Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem
 
