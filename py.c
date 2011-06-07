@@ -500,7 +500,7 @@ hgd_init_hgd_mod(void)
 	return;
     }
 
-    m = Py_InitModule3("hgd", hgd_py_methods,
+    m = Py_InitModule3("hgd", NULL,
                        "Hackathon Gunther Daemon Extensions");
 
     Py_INCREF(&HgdType);
