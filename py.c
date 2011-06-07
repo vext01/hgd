@@ -271,6 +271,30 @@ hgd_py_meth_get_component(Hgd *self, void *closure)
 	return (self->component);
 }
 
+static PyObject *
+hgd_py_meth_get_d_error(Hgd *self, void *closure)
+{
+	return (PyInt_FromLong(self->d_error));
+}
+
+static PyObject *
+hgd_py_meth_get_d_warn(Hgd *self, void *closure)
+{
+	return (PyInt_FromLong(self->d_warn));
+}
+
+static PyObject *
+hgd_py_meth_get_d_info(Hgd *self, void *closure)
+{
+	return (PyInt_FromLong(self->d_info));
+}
+
+static PyObject *
+hgd_py_meth_get_d_debug(Hgd *self, void *closure)
+{
+	return (PyInt_FromLong(self->d_debug));
+}
+
 /* method table */
 static PyMethodDef hgd_py_methods[] = {
 	{"get_playlist",
@@ -302,6 +326,18 @@ static PyGetSetDef hgd_py_get_setters[] = {
 	{"component", (getter) hgd_py_meth_get_component,
 		(setter) hgd_py_meth_read_only_raise,
 		"hgd component", NULL},
+	{"D_ERROR", (getter) hgd_py_meth_get_d_error,
+		(setter) hgd_py_meth_read_only_raise,
+		"error debug level", NULL},
+	{"D_WARN", (getter) hgd_py_meth_get_d_warn,
+		(setter) hgd_py_meth_read_only_raise,
+		"warn debug level", NULL},
+	{"D_INFO", (getter) hgd_py_meth_get_d_info,
+		(setter) hgd_py_meth_read_only_raise,
+		"info debug level", NULL},
+	{"D_DEBUG", (getter) hgd_py_meth_get_d_debug,
+		(setter) hgd_py_meth_read_only_raise,
+		"debug debug level (most verbose)", NULL},
 	{NULL, NULL, NULL, NULL, NULL}  /* Sentinel */
 };
 
@@ -337,6 +373,10 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
 	self->proto_version = HGD_PROTO_VERSION;
 	self->debug_level = hgd_debug;
+	self->d_error = HGD_D_ERROR;
+	self->d_warn = HGD_D_WARN;
+	self->d_info = HGD_D_INFO;
+	self->d_debug = HGD_D_DEBUG;
 
 	return (PyObject *)self;
 }
@@ -352,7 +392,14 @@ hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 	args = args;
 	kwds = kwds;
 
-	/* does nothing for now, but may need it later? */
+	self->proto_version = 0;
+	self->debug_level = 0;
+	self->component = Py_None;
+	self->hgd_version = Py_None;
+	self->d_error = 0;
+	self->d_warn = 0;
+	self->d_info = 0;
+	self->d_debug = 0;
 
 	return (0);
 }

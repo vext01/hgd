@@ -38,6 +38,11 @@ typedef struct {
 	PyObject		*hgd_version;
 	int			 debug_level;
 	PyObject		*component;	/* "hgd-playd", "hgd-netd"... */
+	/* debug levels */
+	int			 d_debug;
+	int			 d_info;
+	int			 d_warn;
+	int			 d_error;
 } Hgd;
 
 /* module table - these are user moduels which we load and call hooks on */
