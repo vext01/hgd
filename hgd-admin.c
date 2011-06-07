@@ -236,12 +236,13 @@ hgd_read_config(char **config_locations)
 				config_error_text(cf),
 				config_error_line(cf));
 
-		config_destroy(cf);
 		config_locations--;
 	}
 
-	if (*config_locations == NULL)
+	if (*config_locations == NULL) {
+		config_destroy(cf);
 		return (HGD_OK);
+	}
 
 	/* -d */
 	if (config_lookup_string(cf, "state_path",
@@ -314,6 +315,14 @@ main(int argc, char **argv)
 	}
 
 	hgd_read_config(config_path + num_config);
+
+	while(num_config > 0) {
+		if (config_path[num_config] != NULL) {
+			free (config_path[num_config]);
+			config_path[num_config] = NULL;
+		}
+		num_config--;
+	}
 
 	RESET_GETOPT();
 
