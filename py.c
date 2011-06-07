@@ -64,6 +64,13 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
 
 	/* check the debug level before doing all this junk */
 	level = PyLong_AsLong(PyTuple_GetItem(args, 0));
+	if ((level > 3) || (level < 0)) {
+		(void) PyErr_Format(PyExc_AttributeError,
+		    "invalid debug level");
+		Py_RETURN_NONE;
+	}
+
+	/* silent if debug level not high enough */
 	if (level > hgd_debug)
 		Py_RETURN_NONE;
 
@@ -114,7 +121,9 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
 
 	msg = PyString_AsString(PyTuple_GetItem(args, 1));
 
-	fprintf(stderr, "[Python: %s:%s():%ld]\n\t%s\n",
+	fprintf(stderr, "[Python: %s - %08d %s:%s():%ld]\n\t%s\n",
+	    debug_names[level],
+	    getpid(),
 	    PyString_AsString(file),
 	    PyString_AsString(meth),
 	    PyLong_AsLong(line),
