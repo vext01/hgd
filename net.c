@@ -31,6 +31,16 @@
 #include "config.h"
 #include "hgd.h"
 
+
+void
+hgd_cleanup_ssl(SSL_CTX **ctx) {
+	(void) ERR_free_strings();
+	(void) EVP_cleanup();
+	if (*ctx != NULL) {
+		 SSL_CTX_free(*ctx);
+	}	
+}
+
 int
 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
     int server, char *cert_path, char *key_path) {
@@ -43,6 +53,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 
 	SSL_library_init();
 	OpenSSL_add_all_algorithms();
+
 	SSL_load_error_strings();
 
 	DPRINTF(HGD_D_DEBUG, "Setting up TLSv1_client_method");

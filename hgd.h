@@ -217,6 +217,7 @@ void				*xcalloc(size_t sz, size_t size);
 char				*xstrdup(const char *s);
 
 /* socket ops */
+void				 hgd_cleanup_ssl(SSL_CTX **ctx);
 void				 hgd_sock_send(int fd, char *msg);
 void				 hgd_sock_send_line(int fd, SSL* ssl,
 				     char *msg);
