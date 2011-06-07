@@ -58,6 +58,8 @@ hgd_exit_nicely()
 	if (filestore_path)
 		free(filestore_path);
 
+	hgd_cleanup_ssl(NULL);
+
 	exit (!exit_ok);
 }
 /* NOTE! -c is reserved for 'config file path' */
@@ -104,11 +106,11 @@ hgd_acmd_user_add(char **args)
 	memset(pass, 0, strlen(pass));
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_hex);
 
-	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
-		return (HGD_FAIL);
-
 	free(salt_hex);
 	free(hash_hex);
+
+	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
+		return (HGD_FAIL);
 
 	return (HGD_OK);
 }
