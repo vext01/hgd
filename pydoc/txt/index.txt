@@ -2,7 +2,7 @@ NNAAMMEE
     hgd - Hackathon Gunther Daemon Extensions
 
 FFIILLEE
-    /usr/local/share/hgd/pylib/hgd/__init__.py
+    /home/edd/source/hgd/pylib/hgd/__init__.py
 
 PPAACCKKAAGGEE  CCOONNTTEENNTTSS
     doccer

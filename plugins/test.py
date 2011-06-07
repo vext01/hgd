@@ -3,7 +3,7 @@ import time
 def hgd_hook_init(ctx):
     """ test members """
 
-    ctx.dprint(0, "test");
+    ctx.dprint(HGD_D_DEBUG, "testing dprint()");
 
     if (ctx.debug_level >= 2):
         print("")
@@ -26,14 +26,14 @@ def hgd_hook_init(ctx):
 
 def hgd_hook_pre_play(ctx):
     """ load test api """
-    ctx.dprint(1,"test starting")
+    ctx.dprint(ctx.D_WARN,"test starting")
 
     for i in range(9000):
         l = ctx.get_playlist();
 
         if (i % 1000 == 0):
             time.sleep(1);
-            ctx.dprint(1, "1000 pause")
+            ctx.dprint(ctx.D_INFO, "1000 pause")
 
-    ctx.dprint(1, "DONE!")
+    ctx.dprint(ctx.D_DEBUG, "DONE!")
     return 0

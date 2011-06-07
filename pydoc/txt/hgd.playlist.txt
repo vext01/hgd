@@ -2,7 +2,7 @@ NNAAMMEE
     hgd.playlist - Module for working with playlist items in HGD
 
 FFIILLEE
-    /usr/local/share/hgd/pylib/hgd/playlist.py
+    /home/edd/source/hgd/pylib/hgd/playlist.py
 
 CCLLAASSSSEESS
     __builtin__.object
