@@ -44,7 +44,7 @@ char				*hgd_py_plugin_dir;
  * ret:
  */
 static PyObject *
-hgd_py_meth_dprint(PyObject *self, PyObject *args)
+hgd_py_func_dprint(PyObject *self, PyObject *args)
 {
 	Py_ssize_t		 n_args = PyTuple_GET_SIZE(args);
 	PyObject		*f_currentframe = NULL, *f_getframeinfo = NULL;
@@ -439,7 +439,7 @@ static PyTypeObject HgdType = {
 /* attribute table for the hgd module */
 static PyMethodDef hgd_py_hgd_mod_attrs[] = {
 	{"dprint",
-	    (PyCFunction) hgd_py_meth_dprint,
+	    (PyCFunction) hgd_py_func_dprint,
 	    METH_VARARGS, "Print a debug message"},
 	{ 0, 0, 0, 0 }
 };
