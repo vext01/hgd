@@ -44,7 +44,7 @@ char				*hgd_py_plugin_dir;
  * ret:
  */
 static PyObject *
-hgd_py_meth_dprint(Hgd *self, PyObject *args)
+hgd_py_meth_dprint(PyObject *self, PyObject *args)
 {
 	Py_ssize_t		 n_args = PyTuple_GET_SIZE(args);
 	PyObject		*f_currentframe = NULL, *f_getframeinfo = NULL;
@@ -271,38 +271,11 @@ hgd_py_meth_get_component(Hgd *self, void *closure)
 	return (self->component);
 }
 
-static PyObject *
-hgd_py_meth_get_d_error(Hgd *self, void *closure)
-{
-	return (PyInt_FromLong(self->d_error));
-}
-
-static PyObject *
-hgd_py_meth_get_d_warn(Hgd *self, void *closure)
-{
-	return (PyInt_FromLong(self->d_warn));
-}
-
-static PyObject *
-hgd_py_meth_get_d_info(Hgd *self, void *closure)
-{
-	return (PyInt_FromLong(self->d_info));
-}
-
-static PyObject *
-hgd_py_meth_get_d_debug(Hgd *self, void *closure)
-{
-	return (PyInt_FromLong(self->d_debug));
-}
-
-/* method table */
+/* method table for the Hgd type */
 static PyMethodDef hgd_py_methods[] = {
 	{"get_playlist",
 	    (PyCFunction) hgd_py_meth_get_playlist,
 	    METH_NOARGS, "Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem"},
-	{"dprint",
-	    (PyCFunction) hgd_py_meth_dprint,
-	    METH_VARARGS, "Print a debug message"},
 	{ 0, 0, 0, 0 }
 };
 
@@ -312,7 +285,7 @@ static PyMemberDef hgd_py_members[] = {
 	{0, 0, 0, 0, 0}
 };
 
-/* member get/set table */
+/* member get/set table for Hgd type */
 static PyGetSetDef hgd_py_get_setters[] = {
 	{"hgd_version", (getter) hgd_py_meth_get_hgd_version,
 		(setter) hgd_py_meth_read_only_raise,
@@ -326,18 +299,6 @@ static PyGetSetDef hgd_py_get_setters[] = {
 	{"component", (getter) hgd_py_meth_get_component,
 		(setter) hgd_py_meth_read_only_raise,
 		"hgd component", NULL},
-	{"D_ERROR", (getter) hgd_py_meth_get_d_error,
-		(setter) hgd_py_meth_read_only_raise,
-		"error debug level", NULL},
-	{"D_WARN", (getter) hgd_py_meth_get_d_warn,
-		(setter) hgd_py_meth_read_only_raise,
-		"warn debug level", NULL},
-	{"D_INFO", (getter) hgd_py_meth_get_d_info,
-		(setter) hgd_py_meth_read_only_raise,
-		"info debug level", NULL},
-	{"D_DEBUG", (getter) hgd_py_meth_get_d_debug,
-		(setter) hgd_py_meth_read_only_raise,
-		"debug debug level (most verbose)", NULL},
 	{NULL, NULL, NULL, NULL, NULL}  /* Sentinel */
 };
 
@@ -373,10 +334,6 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
 	self->proto_version = HGD_PROTO_VERSION;
 	self->debug_level = hgd_debug;
-	self->d_error = HGD_D_ERROR;
-	self->d_warn = HGD_D_WARN;
-	self->d_info = HGD_D_INFO;
-	self->d_debug = HGD_D_DEBUG;
 
 	return (PyObject *)self;
 }
@@ -396,10 +353,6 @@ hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 	self->debug_level = 0;
 	self->component = Py_None;
 	self->hgd_version = Py_None;
-	self->d_error = 0;
-	self->d_warn = 0;
-	self->d_info = 0;
-	self->d_debug = 0;
 
 	return (0);
 }
@@ -483,6 +436,15 @@ static PyTypeObject HgdType = {
 #endif
 };
 
+/* attribute table for the hgd module */
+static PyMethodDef hgd_py_hgd_mod_attrs[] = {
+	{"dprint",
+	    (PyCFunction) hgd_py_meth_dprint,
+	    METH_VARARGS, "Print a debug message"},
+	//{"D_ERROR", T_INT, offsetof(hgd_mod_t, d_debug), 0, "ERROR debug level"},
+	{ 0, 0, 0, 0 }
+};
+
 /*
  * initialise hgd module
  */
@@ -492,7 +454,7 @@ static PyTypeObject HgdType = {
 PyMODINIT_FUNC
 hgd_init_hgd_mod(void)
 {
-    PyObject* m;
+    PyObject			*m = NULL, *dict = NULL;
 
     HgdType.tp_new = PyType_GenericNew;
     if (PyType_Ready(&HgdType) < 0) {
@@ -500,8 +462,18 @@ hgd_init_hgd_mod(void)
 	return;
     }
 
-    m = Py_InitModule3("hgd", NULL,
+    m = Py_InitModule3("hgd", hgd_py_hgd_mod_attrs,
                        "Hackathon Gunther Daemon Extensions");
+
+    dict = PyModule_GetDict(m); /* never fails (tm) */
+
+    /* add debug levels to global namespace of module */
+    PyDict_SetItemString(dict, "D_ERROR", PyLong_FromLong(HGD_D_ERROR));
+    PyDict_SetItemString(dict, "D_WARN", PyLong_FromLong(HGD_D_WARN));
+    PyDict_SetItemString(dict, "D_INFO", PyLong_FromLong(HGD_D_INFO));
+    PyDict_SetItemString(dict, "D_DEBUG", PyLong_FromLong(HGD_D_DEBUG));
+
+    //Py_XDECREF(dict);
 
     Py_INCREF(&HgdType);
     PyModule_AddObject(m, "Hgd", (PyObject *) &HgdType);
