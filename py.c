@@ -460,7 +460,12 @@ static PyTypeObject HgdType = {
 static PyMethodDef hgd_py_hgd_mod_attrs[] = {
 	{"dprint",
 	    (PyCFunction) hgd_py_func_dprint,
-	    METH_VARARGS, "Print a debug message"},
+	    METH_VARARGS, "Print a debug message\n\nKeyword arguments\n"
+	    "debug_level -- debug level to show message at.\n"
+	    "               This should be one of: hgd.D_ERROR, hgd.D_WARN, "
+	    "hgd.D_INFO, hgd.D_DEBUG\n"
+	    "msg         -- The message to show."
+	},
 	{ 0, 0, 0, 0 }
 };
 

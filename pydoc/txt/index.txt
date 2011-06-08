@@ -47,6 +47,11 @@ CCLLAASSSSEESS
 FFUUNNCCTTIIOONNSS
     ddpprriinntt(...)
         Print a debug message
+        
+        Keyword arguments
+        debug_level -- debug level to show message at.
+                       This should be one of: hgd.D_ERROR, hgd.D_WARN, hgd.D_INFO, hgd.D_DEBUG
+        msg         -- The message to show.
 
 DDAATTAA
     DD__DDEEBBUUGG = 3L
