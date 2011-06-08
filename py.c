@@ -51,7 +51,7 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	PyObject		*currentframe = NULL, *frameinfo = NULL;
 	PyObject		*a_getframeinfo = NULL;
 	PyObject		*file = NULL, *line = NULL;
-	PyObject		*meth = NULL;
+	PyObject		*meth = NULL, *str_cvt = NULL, *str_cvt_tup;
 	long			 level;
 	char			*msg;
 
@@ -119,7 +119,27 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	meth = PyTuple_GetItem(frameinfo, 2);
 	Py_XDECREF(frameinfo);
 
-	msg = PyString_AsString(PyTuple_GetItem(args, 1));
+	/* Convert the message to a string: str(msg) */
+	str_cvt_tup = PyTuple_New(1);
+	if (str_cvt_tup == NULL) {
+		PRINT_PY_ERROR();
+		(void) PyErr_Format(PyExc_RuntimeError,
+		    "Failed to allocate");
+		return (NULL);
+	}
+
+	if (PyTuple_SetItem(str_cvt_tup, 0, PyTuple_GetItem(args, 1)) != 0) {
+		PRINT_PY_ERROR();
+		(void) PyErr_Format(PyExc_RuntimeError,
+		    "Failed to set in tuple");
+		return (NULL);
+	}
+
+	str_cvt = PyString_Format(PyString_FromString("%s"), str_cvt_tup);
+	msg = PyString_AsString(str_cvt);
+
+	Py_XDECREF(str_cvt);
+	Py_XDECREF(str_cvt_tup);
 
 	fprintf(stderr, "[Python: %s - %08d %s:%s():%ld]\n\t%s\n",
 	    debug_names[level],
