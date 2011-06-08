@@ -441,7 +441,6 @@ static PyMethodDef hgd_py_hgd_mod_attrs[] = {
 	{"dprint",
 	    (PyCFunction) hgd_py_meth_dprint,
 	    METH_VARARGS, "Print a debug message"},
-	//{"D_ERROR", T_INT, offsetof(hgd_mod_t, d_debug), 0, "ERROR debug level"},
 	{ 0, 0, 0, 0 }
 };
 
@@ -454,29 +453,27 @@ static PyMethodDef hgd_py_hgd_mod_attrs[] = {
 PyMODINIT_FUNC
 hgd_init_hgd_mod(void)
 {
-    PyObject			*m = NULL, *dict = NULL;
+	PyObject			*m = NULL, *dict = NULL;
 
-    HgdType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&HgdType) < 0) {
-	DPRINTF(HGD_D_ERROR, "Hgd type not ready");
-	return;
-    }
+	HgdType.tp_new = PyType_GenericNew;
+	if (PyType_Ready(&HgdType) < 0) {
+		DPRINTF(HGD_D_ERROR, "Hgd type not ready");
+		return;
+	}
 
-    m = Py_InitModule3("hgd", hgd_py_hgd_mod_attrs,
-                       "Hackathon Gunther Daemon Extensions");
+	m = Py_InitModule3("hgd", hgd_py_hgd_mod_attrs,
+	    "Hackathon Gunther Daemon Extensions");
 
-    dict = PyModule_GetDict(m); /* never fails (tm) */
+	dict = PyModule_GetDict(m); /* never fails (tm) */
 
-    /* add debug levels to global namespace of module */
-    PyDict_SetItemString(dict, "D_ERROR", PyLong_FromLong(HGD_D_ERROR));
-    PyDict_SetItemString(dict, "D_WARN", PyLong_FromLong(HGD_D_WARN));
-    PyDict_SetItemString(dict, "D_INFO", PyLong_FromLong(HGD_D_INFO));
-    PyDict_SetItemString(dict, "D_DEBUG", PyLong_FromLong(HGD_D_DEBUG));
+	/* add debug levels to global namespace of module */
+	PyDict_SetItemString(dict, "D_ERROR", PyLong_FromLong(HGD_D_ERROR));
+	PyDict_SetItemString(dict, "D_WARN", PyLong_FromLong(HGD_D_WARN));
+	PyDict_SetItemString(dict, "D_INFO", PyLong_FromLong(HGD_D_INFO));
+	PyDict_SetItemString(dict, "D_DEBUG", PyLong_FromLong(HGD_D_DEBUG));
 
-    //Py_XDECREF(dict);
-
-    Py_INCREF(&HgdType);
-    PyModule_AddObject(m, "Hgd", (PyObject *) &HgdType);
+	Py_INCREF(&HgdType);
+	PyModule_AddObject(m, "Hgd", (PyObject *) &HgdType);
 }
 
 /*
