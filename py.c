@@ -496,6 +496,8 @@ hgd_init_hgd_mod(void)
 	PyDict_SetItemString(dict, "D_WARN", PyLong_FromLong(HGD_D_WARN));
 	PyDict_SetItemString(dict, "D_INFO", PyLong_FromLong(HGD_D_INFO));
 	PyDict_SetItemString(dict, "D_DEBUG", PyLong_FromLong(HGD_D_DEBUG));
+	PyDict_SetItemString(dict, "__author__",
+	    PyString_FromString("Edd Barrett"));
 
 	Py_INCREF(&HgdType);
 	PyModule_AddObject(m, "Hgd", (PyObject *) &HgdType);

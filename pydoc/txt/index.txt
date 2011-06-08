@@ -58,4 +58,8 @@ DDAATTAA
     DD__EERRRROORR = 0L
     DD__IINNFFOO = 2L
     DD__WWAARRNN = 1L
+    ____aauutthhoorr____ = 'Edd Barrett'
+
+AAUUTTHHOORR
+    Edd Barrett
 
