@@ -226,8 +226,8 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|0");
 	} else {
 		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s",
-		    playing.id, playing.filename, playing.tag_artist,
-		    playing.tag_title, playing.user);
+		    playing.id, playing.filename + strlen(HGD_UNIQ_FILE_PFX),
+		    playing.tag_artist, playing.tag_title, playing.user);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
 
 		free(reply);
@@ -321,7 +321,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	}
 
 	/* prepare to recieve the media file and stash away */
-	xasprintf(&unique_fn, "%s/XXXXXXXX-%s", filestore_path, filename);
+	xasprintf(&unique_fn, "%s/" HGD_UNIQ_FILE_PFX "%s", filestore_path, filename);
 	DPRINTF(HGD_D_DEBUG, "Template for filestore is '%s'", unique_fn);
 
 	f = mkstemps(unique_fn, strlen(filename) + 1); /* +1 for hyphen */
@@ -459,8 +459,9 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 
 	for (i = 0; i < list.n_items; i++) {
 		xasprintf(&resp, "%d|%s|%s|%s|%s", list.items[i]->id,
-		    list.items[i]->filename, list.items[i]->tag_artist,
-		    list.items[i]->tag_title, list.items[i]->user);
+		    list.items[i]->filename + strlen(HGD_UNIQ_FILE_PFX),
+		    list.items[i]->tag_artist, list.items[i]->tag_title,
+		    list.items[i]->user);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 		DPRINTF(HGD_D_DEBUG, "%s\n", resp);
 		free(resp);

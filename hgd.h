@@ -33,6 +33,7 @@
 #define HGD_MAX_PASS_SZ		20
 #define HGD_MAX_USER_QUEUE	5
 #define HGD_MB			(1024L * 1024L)
+#define HGD_UNIQ_FILE_PFX	"XXXXXXXX-"
 
 /* paths */
 #define HGD_DFL_DIR		"/var/hgd"
