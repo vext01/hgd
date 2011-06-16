@@ -324,46 +324,6 @@ hgd_usage(void)
 	printf("    -x <level>		Set debug level (0-3)\n");
 }
 
-#if 0
-/* eventually remove, this was just us getting to grips with python */
-void
-py_test()
-{
-	PyObject		*mod, *func, *ret, *args = NULL, *arg1;
-
-	Py_Initialize();
-
-	mod = PyImport_ImportModule("os");
-	if (mod == NULL) {
-		PyErr_Print();
-		DPRINTF(HGD_D_ERROR, "failed to import");
-	}
-
-	func = PyObject_GetAttrString(mod, "getenv");
-	if (func && PyCallable_Check(func)) {
-		args = PyTuple_New(1);
-		arg1 = PyString_FromString("HOME");
-		PyTuple_SetItem(args, 0, arg1);
-	} else {
-		PyErr_Print();
-		DPRINTF(HGD_D_ERROR, "failed find func");
-	}
-
-	ret = PyObject_CallObject(func, args);
-	if (ret == NULL) {
-		PyErr_Print();
-		DPRINTF(HGD_D_ERROR, "call failed");
-	}
-
-	printf("HOME = %s\n", PyString_AsString(ret));
-
-	Py_DECREF(ret);
-	Py_DECREF(func);
-	Py_DECREF(mod);
-
-}
-#endif
-
 int
 main(int argc, char **argv)
 {
