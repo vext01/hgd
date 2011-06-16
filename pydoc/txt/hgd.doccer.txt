@@ -2,7 +2,7 @@ NNAAMMEE
     hgd.doccer - Generate Python API Docs.
 
 FFIILLEE
-    /usr/local/share/hgd/pylib/hgd/doccer.py
+    /home/edd/source/hgd/pylib/hgd/doccer.py
 
 DDEESSCCRRIIPPTTIIOONN
     This is non-trivial, as the core 'Hgd' type is only available in the embedded

@@ -44,14 +44,14 @@ char				*hgd_py_plugin_dir;
  * ret:
  */
 static PyObject *
-hgd_py_meth_dprint(Hgd *self, PyObject *args)
+hgd_py_func_dprint(PyObject *self, PyObject *args)
 {
 	Py_ssize_t		 n_args = PyTuple_GET_SIZE(args);
 	PyObject		*f_currentframe = NULL, *f_getframeinfo = NULL;
 	PyObject		*currentframe = NULL, *frameinfo = NULL;
 	PyObject		*a_getframeinfo = NULL;
 	PyObject		*file = NULL, *line = NULL;
-	PyObject		*meth = NULL;
+	PyObject		*meth = NULL, *str_cvt = NULL, *str_cvt_tup;
 	long			 level;
 	char			*msg;
 
@@ -64,6 +64,13 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
 
 	/* check the debug level before doing all this junk */
 	level = PyLong_AsLong(PyTuple_GetItem(args, 0));
+	if ((level > 3) || (level < 0)) {
+		(void) PyErr_Format(PyExc_AttributeError,
+		    "invalid debug level");
+		Py_RETURN_NONE;
+	}
+
+	/* silent if debug level not high enough */
 	if (level > hgd_debug)
 		Py_RETURN_NONE;
 
@@ -112,9 +119,31 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
 	meth = PyTuple_GetItem(frameinfo, 2);
 	Py_XDECREF(frameinfo);
 
-	msg = PyString_AsString(PyTuple_GetItem(args, 1));
+	/* Convert the message to a string: str(msg) */
+	str_cvt_tup = PyTuple_New(1);
+	if (str_cvt_tup == NULL) {
+		PRINT_PY_ERROR();
+		(void) PyErr_Format(PyExc_RuntimeError,
+		    "Failed to allocate");
+		return (NULL);
+	}
 
-	fprintf(stderr, "[Python: %s:%s():%ld]\n\t%s\n",
+	if (PyTuple_SetItem(str_cvt_tup, 0, PyTuple_GetItem(args, 1)) != 0) {
+		PRINT_PY_ERROR();
+		(void) PyErr_Format(PyExc_RuntimeError,
+		    "Failed to set in tuple");
+		return (NULL);
+	}
+
+	str_cvt = PyString_Format(PyString_FromString("%s"), str_cvt_tup);
+	msg = PyString_AsString(str_cvt);
+
+	Py_XDECREF(str_cvt);
+	Py_XDECREF(str_cvt_tup);
+
+	fprintf(stderr, "[Python: %s - %08d %s:%s():%ld]\n\t%s\n",
+	    debug_names[level],
+	    getpid(),
 	    PyString_AsString(file),
 	    PyString_AsString(meth),
 	    PyLong_AsLong(line),
@@ -133,7 +162,7 @@ hgd_py_meth_dprint(Hgd *self, PyObject *args)
  * ret: list of hgd.playlist.PlaylistItem
  */
 static PyObject *
-hgd_py_meth_get_playlist(Hgd *self)
+hgd_py_meth_Hgd_get_playlist(Hgd *self)
 {
 	struct hgd_playlist	  list;
 	struct hgd_playlist_item *it;
@@ -230,75 +259,72 @@ hgd_py_meth_get_playlist(Hgd *self)
 
 /* make some stuff read only */
 static int
-hgd_py_meth_read_only_raise(Hgd *self, PyObject *value, void *closure)
+hgd_py_meth_Hgd_read_only_raise(Hgd *self, PyObject *value, void *closure)
 {
 	(void) PyErr_Format(PyExc_AttributeError, "attribute is read-only");
 	return (-1);
 }
 
 static PyObject *
-hgd_py_meth_get_hgd_version(Hgd *self, void *closure)
+hgd_py_meth_Hgd_get_hgd_version(Hgd *self, void *closure)
 {
 	Py_INCREF(self->hgd_version);
 	return (self->hgd_version);
 }
 
 static PyObject *
-hgd_py_meth_get_proto_version(Hgd *self, void *closure)
+hgd_py_meth_Hgd_get_proto_version(Hgd *self, void *closure)
 {
 	return (PyInt_FromLong(self->proto_version));
 }
 
 static PyObject *
-hgd_py_meth_get_debug_level(Hgd *self, void *closure)
+hgd_py_meth_Hgd_get_debug_level(Hgd *self, void *closure)
 {
 	return (PyInt_FromLong(self->debug_level));
 }
 
 static PyObject *
-hgd_py_meth_get_component(Hgd *self, void *closure)
+hgd_py_meth_Hgd_get_component(Hgd *self, void *closure)
 {
 	Py_INCREF(self->component);
 	return (self->component);
 }
 
-/* method table */
-static PyMethodDef hgd_py_methods[] = {
+/* method table for the Hgd type */
+static PyMethodDef hgd_py_Hgd_methods[] = {
 	{"get_playlist",
-	    (PyCFunction) hgd_py_meth_get_playlist,
-	    METH_NOARGS, "Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem"},
-	{"dprint",
-	    (PyCFunction) hgd_py_meth_dprint,
-	    METH_VARARGS, "Print a debug message"},
+	    (PyCFunction) hgd_py_meth_Hgd_get_playlist,
+	    METH_NOARGS,"Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem"},
 	{ 0, 0, 0, 0 }
 };
 
-/* member table */
-static PyMemberDef hgd_py_members[] = {
+/* member table for Hgd type */
+static PyMemberDef hgd_py_Hgd_members[] = {
 	/* empty, as all members need to be read only for now */
 	{0, 0, 0, 0, 0}
 };
 
-/* member get/set table */
-static PyGetSetDef hgd_py_get_setters[] = {
-	{"hgd_version", (getter) hgd_py_meth_get_hgd_version,
-		(setter) hgd_py_meth_read_only_raise,
+/* member get/set table for Hgd type */
+static PyGetSetDef hgd_py_Hgd_get_setters[] = {
+	{"hgd_version", (getter) hgd_py_meth_Hgd_get_hgd_version,
+		(setter) hgd_py_meth_Hgd_read_only_raise,
 		"hgd version", NULL},
-	{"proto_version", (getter) hgd_py_meth_get_proto_version,
-		(setter) hgd_py_meth_read_only_raise,
+	{"proto_version", (getter) hgd_py_meth_Hgd_get_proto_version,
+		(setter) hgd_py_meth_Hgd_read_only_raise,
 		"hgd protocol version", NULL},
-	{"debug_level", (getter) hgd_py_meth_get_debug_level,
-		(setter) hgd_py_meth_read_only_raise,
+	{"debug_level", (getter) hgd_py_meth_Hgd_get_debug_level,
+		(setter) hgd_py_meth_Hgd_read_only_raise,
 		"hgd debug level", NULL},
-	{"component", (getter) hgd_py_meth_get_component,
-		(setter) hgd_py_meth_read_only_raise,
+	{"component", (getter) hgd_py_meth_Hgd_get_component,
+		(setter) hgd_py_meth_Hgd_read_only_raise,
 		"hgd component", NULL},
 	{NULL, NULL, NULL, NULL, NULL}  /* Sentinel */
 };
 
 /* __new__ */
 static PyObject *
-hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+hgd_py_meth_Hgd_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
 	Hgd			*self;
 
@@ -334,7 +360,7 @@ hgd_py_meth_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
 /* __init__ */
 static int
-hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
+hgd_py_meth_Hgd_init(Hgd *self, PyObject *args, PyObject *kwds)
 {
 	DPRINTF(HGD_D_INFO, "__init__ hgd object");
 
@@ -343,13 +369,16 @@ hgd_py_meth_init(Hgd *self, PyObject *args, PyObject *kwds)
 	args = args;
 	kwds = kwds;
 
-	/* does nothing for now, but may need it later? */
+	self->proto_version = 0;
+	self->debug_level = 0;
+	self->component = Py_None;
+	self->hgd_version = Py_None;
 
 	return (0);
 }
 
 static void
-hgd_py_meth_dealloc(Hgd *self)
+hgd_py_meth_Hgd_dealloc(Hgd *self)
 {
 	if (self != NULL) {
 		if (self->hgd_version != NULL) {
@@ -374,7 +403,7 @@ static PyTypeObject HgdType = {
 	"hgd.Hgd",			/* tp_name */
 	sizeof(Hgd),			/* tp_basicsize */
 	0,				/* tp_itemsize */
-	(destructor) hgd_py_meth_dealloc,	/* tp_dealloc */
+	(destructor) hgd_py_meth_Hgd_dealloc,	/* tp_dealloc */
 	0,				/* tp_print */
 	0,				/* tp_getattr */
 	0,				/* tp_setattr */
@@ -398,17 +427,17 @@ static PyTypeObject HgdType = {
 	0,				/* tp_weaklistoffset */
 	0,				/* tp_iter */
 	0,				/* tp_iternext */
-	hgd_py_methods,			/* tp_methods */
-	hgd_py_members,			/* tp_members */
-	hgd_py_get_setters,		/* tp_getset */
+	hgd_py_Hgd_methods,		/* tp_methods */
+	hgd_py_Hgd_members,		/* tp_members */
+	hgd_py_Hgd_get_setters,		/* tp_getset */
 	0,				/* tp_base */
 	0,				/* tp_dict */
 	0,				/* tp_descr_get */
 	0,				/* tp_descr_set */
 	0,				/* tp_dictoffset */
-	(initproc) hgd_py_meth_init,	/* tp_init */
+	(initproc) hgd_py_meth_Hgd_init,	/* tp_init */
 	0,				/* tp_alloc */
-	hgd_py_meth_new,		/* tp_new */
+	hgd_py_meth_Hgd_new,		/* tp_new */
 	0,				/* tp_free */
 	0,				/* tp_is_gc */
 	0,				/* tp_bases */
@@ -427,6 +456,19 @@ static PyTypeObject HgdType = {
 #endif
 };
 
+/* attribute table for the hgd module */
+static PyMethodDef hgd_py_hgd_mod_attrs[] = {
+	{"dprint",
+	    (PyCFunction) hgd_py_func_dprint,
+	    METH_VARARGS, "Print a debug message\n\nKeyword arguments\n"
+	    "debug_level -- debug level to show message at.\n"
+	    "               This should be one of: hgd.D_ERROR, hgd.D_WARN, "
+	    "hgd.D_INFO, hgd.D_DEBUG\n"
+	    "msg         -- The message to show."
+	},
+	{ 0, 0, 0, 0 }
+};
+
 /*
  * initialise hgd module
  */
@@ -436,19 +478,29 @@ static PyTypeObject HgdType = {
 PyMODINIT_FUNC
 hgd_init_hgd_mod(void)
 {
-    PyObject* m;
+	PyObject			*m = NULL, *dict = NULL;
 
-    HgdType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&HgdType) < 0) {
-	DPRINTF(HGD_D_ERROR, "Hgd type not ready");
-	return;
-    }
+	HgdType.tp_new = PyType_GenericNew;
+	if (PyType_Ready(&HgdType) < 0) {
+		DPRINTF(HGD_D_ERROR, "Hgd type not ready");
+		return;
+	}
 
-    m = Py_InitModule3("hgd", hgd_py_methods,
-                       "Hackathon Gunther Daemon Extensions");
+	m = Py_InitModule3("hgd", hgd_py_hgd_mod_attrs,
+	    "Hackathon Gunther Daemon Extensions");
 
-    Py_INCREF(&HgdType);
-    PyModule_AddObject(m, "Hgd", (PyObject *) &HgdType);
+	dict = PyModule_GetDict(m); /* never fails (tm) */
+
+	/* add debug levels to global namespace of module */
+	PyDict_SetItemString(dict, "D_ERROR", PyLong_FromLong(HGD_D_ERROR));
+	PyDict_SetItemString(dict, "D_WARN", PyLong_FromLong(HGD_D_WARN));
+	PyDict_SetItemString(dict, "D_INFO", PyLong_FromLong(HGD_D_INFO));
+	PyDict_SetItemString(dict, "D_DEBUG", PyLong_FromLong(HGD_D_DEBUG));
+	PyDict_SetItemString(dict, "__author__",
+	    PyString_FromString("Edd Barrett"));
+
+	Py_INCREF(&HgdType);
+	PyModule_AddObject(m, "Hgd", (PyObject *) &HgdType);
 }
 
 /*
@@ -572,7 +624,7 @@ hgd_embed_py(uint8_t enable_user_scripts)
 
 	/* init hgd module and stash an instance */
 	hgd_init_hgd_mod();
-	hgd_py_mods.hgd_o = hgd_py_meth_new(&HgdType, NULL, NULL);
+	hgd_py_mods.hgd_o = hgd_py_meth_Hgd_new(&HgdType, NULL, NULL);
 
 	hgd_execute_py_hook("init");
 
@@ -583,7 +635,7 @@ void
 hgd_free_py()
 {
 	DPRINTF(HGD_D_INFO, "Clearing up python stuff");
-	hgd_py_meth_dealloc((Hgd *) hgd_py_mods.hgd_o);
+	hgd_py_meth_Hgd_dealloc((Hgd *) hgd_py_mods.hgd_o);
 
 	if (hgd_py_plugin_dir != NULL)
 		free(hgd_py_plugin_dir);
