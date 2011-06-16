@@ -105,8 +105,8 @@ void
 hgd_usage(void)
 {
 	printf("Usage: hgd-mk-pydoc [opts]\n\n");
-	printf("    -h\t\t\tShow this message and exit\n");
-	printf("    -x level\t\tSet debug level (0-3)\n");
+	printf("    -h			Show this message and exit\n");
+	printf("    -x <level>		Set debug level (0-3)\n");
 }
 
 int

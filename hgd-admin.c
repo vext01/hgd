@@ -67,21 +67,21 @@ void
 hgd_usage()
 {
         printf("Usage: hgdc [opts] command [args]\n\n");
-        printf("  Commands include:\n");
-        printf("    user-add username [password]\tAdd a user.\n");
-        printf("    user-del username\t\t\tDelete a user.\n");
-        printf("    user-list\t\t\t\tList users.\n");
+        printf("Commands include:\n");
+        printf("    user-add <username> [password]	Add a user.\n");
+        printf("    user-del <username>			Delete a user.\n");
+        printf("    user-list				List users.\n");
 	/*
         printf("    user-disable username\tDisable a user account");
         printf("    user-chpw username\t\t\tChange a users password\n");
         printf("    user-enable username\t\t\Re-enable a user\n\n");
 	*/
         printf("\n  Options include:\n");
-	printf("    -c\t\t\tLocation of config files\n");
-        printf("    -d\t\t\tLocation of state directory\n");
-        printf("    -h\t\t\tShow this message and exit\n");
-        printf("    -x level\t\tSet debug level (0-3)\n");
-        printf("    -v\t\t\tShow version and exit\n");
+	printf("    -c <path>		Location of config files\n");
+        printf("    -d <path>		Location of state directory\n");
+        printf("    -h			Show this message and exit\n");
+        printf("    -x <level>		Set debug level (0-3)\n");
+        printf("    -v			Show version and exit\n");
 }
 
 int

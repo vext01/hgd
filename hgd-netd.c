@@ -1179,23 +1179,23 @@ hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
 #ifdef HAVE_LIBCONFIG
-	printf("  -c		Path to a config file to use\n");
+	printf("    -c <path>	Path to a config file to use\n");
 #endif
-	printf("  -D		Disable reverse DNS lookups for clients\n");
-	printf("  -d		Set hgd state directory\n");
-	printf("  -E		Disable SSL encryption support\n");
-	printf("  -e		Require SSL encryption from clients\n");
-	printf("  -f		Don't fork - service single client (debug)\n");
-	printf("  -F		Flood limit (-1 for no limit)\n");
-	printf("  -h		Show this message and exit\n");
-	printf("  -k		Set path to SSL private key file\n");
-	printf("  -n		Set number of votes required to vote-off\n");
-	printf("  -p		Set network port number\n");
-	printf("  -s		Set maximum upload size (in MB)\n");
-	printf("  -S		Set path to SSL certificate file\n");
-	printf("  -v		Show version and exit\n");
-	printf("  -x		Set debug level (0-3)\n");
-	printf("  -y		Set path to noise to play when voting off\n");
+	printf("    -D			Disable reverse DNS lookups for clients\n");
+	printf("    -d <path>		Set hgd state directory\n");
+	printf("    -E			Disable SSL encryption support\n");
+	printf("    -e			Require SSL encryption from clients\n");
+	printf("    -f			Don't fork - service single client (debug)\n");
+	printf("    -F			Flood limit (-1 for no limit)\n");
+	printf("    -h			Show this message and exit\n");
+	printf("    -k <path>		Set path to SSL private key file\n");
+	printf("    -n <num>		Set number of votes required to vote-off\n");
+	printf("    -p <port>		Set network port number\n");
+	printf("    -s <mbs>		Set maximum upload size (in MB)\n");
+	printf("    -S <path>		Set path to SSL certificate file\n");
+	printf("    -v			Show version and exit\n");
+	printf("    -x <level>		Set debug level (0-3)\n");
+	printf("    -y <path>		Set path to noise to play when voting off\n");
 }
 
 int

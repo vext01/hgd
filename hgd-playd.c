@@ -310,18 +310,18 @@ hgd_usage(void)
 {
 	printf("usage: hgd-netd <options>\n");
 #ifdef HAVE_LIBCONFIG
-	printf("  -c	Path to a config file to use\n");
+	printf("    -c <path>	Path to a config file to use\n");
 #endif
-	printf("  -C	Clear playlist on startup\n");
-	printf("  -d	Set hgd state directory\n");
-	printf("  -h	Show this message and exit\n");
-	printf("  -p	Don't purge finished tracks from filesystem\n");
+	printf("    -C			Clear playlist on startup\n");
+	printf("    -d <path>		Set hgd state directory\n");
+	printf("    -h			Show this message and exit\n");
+	printf("    -p			Don't purge finished tracks from filesystem\n");
 #ifdef HAVE_PYTHON
-	printf("  -P	Location of user scripts\n");
+	printf("    -P <path>		Location of Python plugins\n");
 #endif
-	printf("  -q	Don't purge finished tracks in database\n");
-	printf("  -v	Show version and exit\n");
-	printf("  -x	Set debug level (0-3)\n");
+	printf("    -q			Don't purge finished tracks in database\n");
+	printf("    -v			Show version and exit\n");
+	printf("    -x <level>		Set debug level (0-3)\n");
 }
 
 #if 0
