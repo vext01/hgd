@@ -90,6 +90,7 @@ hgd_acmd_user_add(char **args)
 	unsigned char		 salt[HGD_SHA_SALT_SZ];
 	char			*salt_hex, *hash_hex;
 	char			*user = args[0], *pass = args[1];
+	int			 ret = HGD_OK;
 
 	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
 
@@ -106,13 +107,13 @@ hgd_acmd_user_add(char **args)
 	memset(pass, 0, strlen(pass));
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_hex);
 
+	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
+		ret = HGD_FAIL;
+
 	free(salt_hex);
 	free(hash_hex);
-
-	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
-		return (HGD_FAIL);
-
-	return (HGD_OK);
+	
+	return (ret);
 }
 
 int
