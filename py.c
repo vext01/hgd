@@ -49,9 +49,9 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	Py_ssize_t		 n_args = PyTuple_GET_SIZE(args);
 	PyObject		*f_currentframe = NULL, *f_getframeinfo = NULL;
 	PyObject		*currentframe = NULL, *frameinfo = NULL;
-	PyObject		*a_getframeinfo = NULL;
+	PyObject		*a_getframeinfo = NULL, *arg1 = NULL;
 	PyObject		*file = NULL, *line = NULL;
-	PyObject		*meth = NULL, *str_cvt = NULL, *str_cvt_tup;
+	PyObject		*meth = NULL, *str_cvt = NULL, *str_cvt_tup = NULL;
 	long			 level;
 	char			*msg;
 
@@ -128,7 +128,9 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 		return (NULL);
 	}
 
-	if (PyTuple_SetItem(str_cvt_tup, 0, PyTuple_GetItem(args, 1)) != 0) {
+	arg1 = PyTuple_GetItem(args, 1);
+	Py_INCREF(arg1); /* PyTuple_SetItem is about to steal our ref */
+	if (PyTuple_SetItem(str_cvt_tup, 0, arg1) != 0) {
 		PRINT_PY_ERROR();
 		(void) PyErr_Format(PyExc_RuntimeError,
 		    "Failed to set in tuple");
@@ -139,7 +141,8 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	msg = PyString_AsString(str_cvt);
 
 	Py_XDECREF(str_cvt);
-	Py_XDECREF(str_cvt_tup);
+	/* crash if you do this, not sure why */
+	 Py_XDECREF(str_cvt_tup);
 
 	fprintf(stderr, "[Python: %s - %08d %s:%s():%ld]\n\t%s\n",
 	    debug_names[level],
