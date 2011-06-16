@@ -240,6 +240,7 @@ void				 hgd_kill_sighandler(int sig);
 void				 hgd_register_sig_handlers(void);
 char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
+void				 hgd_bytes_to_hex_buf(char*, char*, int len);
 int				 hgd_readpassphrase_confirmed(
 				     char buf[HGD_MAX_PASS_SZ]);
 

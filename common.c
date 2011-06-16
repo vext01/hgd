@@ -224,6 +224,22 @@ hgd_bytes_to_hex(unsigned char *bytes, int len)
 	return (hex);
 }
 
+/*
+ * Non allocating version of the above.
+ * out should be twice as big as in + 1.
+ */
+void
+hgd_bytes_to_hex_buf(char *in, char *out, int length)
+{
+	int			i;
+
+	for (i = 0; i < length; ++i) {
+		sprintf(out+(i*2), "%X", (unsigned int) *in+i);
+	}
+
+	return;
+}
+
 /* free a user struct's members */
 void
 hgd_free_user(struct hgd_user *u)
