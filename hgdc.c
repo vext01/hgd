@@ -406,11 +406,11 @@ hgd_usage()
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -m\t\t\tMax playlist items to show in hud mode\n");
-	printf("    -p port\t\tSet connection port\n");
-	printf("    -r refresh rate (only in hud mode)\n");
-	printf("    -s host/ip\t\tSet connection address\n");
-	printf("    -u username\t\tSet username\n");
-	printf("    -x level\t\tSet debug level (0-3)\n");
+	printf("    -p <port>\t\tSet connection port\n");
+	printf("    -r <secs>\t\trefresh rate (only in hud mode)\n");
+	printf("    -s <host/ip>\tSet connection address\n");
+	printf("    -u <username>\tSet username\n");
+	printf("    -x <level>\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
 	printf("    -e\t\t\tEnable encryption\n");
 }
