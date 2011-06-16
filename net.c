@@ -387,16 +387,17 @@ hgd_sock_recv_line_nossl(int fd)
 		/* recieve one byte */
 		recvd = recv(fd, &recv_char, 1, 0);
 
-
 		switch (recvd) {
 		case 0:
 			/* should not happen */
 			DPRINTF(HGD_D_WARN, "No bytes recvd");
+			free(full_msg);
 			return (NULL);
 		case -1:
 			if (errno == EINTR)
 				continue;
 			DPRINTF(HGD_D_WARN, "recv: %s", SERROR);
+			free(full_msg);
 			return (NULL);
 		default:
 			/* good */
