@@ -809,7 +809,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	}
 
 	/* otherwise despatch */
-	if (correct_desp->handler(sess, &tokens[1]) < HGD_OK) {
+	if (correct_desp->handler(sess, &tokens[1]) != HGD_OK) {
 		/*
 		 * This happens often, ie when a client tries to
 		 * vote off twice, and that is fine, so we put the message
@@ -820,10 +820,12 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		num_bad_commands++;
 	} else
 		num_bad_commands = 0;
+
 clean:
 	/* free tokens */
 	for (; n_toks > 0; )
 		free(tokens[--n_toks]);
+	
 
 	return (bye);
 }

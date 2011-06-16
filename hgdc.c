@@ -697,7 +697,7 @@ clean:
 }
 
 /* parse command line args */
-void
+int
 hgd_exec_req(int argc, char **argv)
 {
 	struct hgd_req_despatch	*desp, *correct_desp = NULL;
@@ -729,14 +729,17 @@ hgd_exec_req(int argc, char **argv)
 
 	/* check protocol matches the server before we continue */
 	if (hgd_check_svr_proto() != HGD_OK)
-		return;
+		return (HGD_FAIL);
 
 	DPRINTF(HGD_D_DEBUG, "Despatching request '%s'", correct_desp->req);
 	if ((!authenticated) && (correct_desp->need_auth)) {
-		if (hgd_client_login(sock_fd, ssl, user) != HGD_OK)
-			hgd_exit_nicely();
+		if (hgd_client_login(sock_fd, ssl, user) != HGD_OK) {
+			return (HGD_FAIL);
+		}
 	}
 	correct_desp->handler(&argv[1]);
+
+	return (HGD_OK);
 }
 
 int
@@ -1011,9 +1014,10 @@ main(int argc, char **argv)
 	umask(~S_IRWXU);
 
 	/* do whatever the user wants */
-	hgd_exec_req(argc, argv);
-
-	/* sign off */
+	if (hgd_exec_req(argc, argv) == HGD_OK)
+		exit_ok = 1;
+	
+	/* try to sign off */
 	hgd_sock_send_line(sock_fd, ssl, "bye");
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	hgd_check_svr_response(resp, 1);
