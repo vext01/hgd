@@ -141,8 +141,7 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	msg = PyString_AsString(str_cvt);
 
 	Py_XDECREF(str_cvt);
-	/* crash if you do this, not sure why */
-	 Py_XDECREF(str_cvt_tup);
+	Py_XDECREF(str_cvt_tup);
 
 	fprintf(stderr, "[Python: %s - %08d %s:%s():%ld]\n\t%s\n",
 	    debug_names[level],
