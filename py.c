@@ -150,8 +150,8 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 {
 	struct hgd_playlist	  list;
 	struct hgd_playlist_item *it;
-	unsigned int		  i;
-	PyObject		 *rec, *ret_list;
+	unsigned int		  i, err = 0, free_playlist = 0;
+	PyObject		 *rec = NULL, *ret_list = NULL;
 	PyObject		 *plist_item = NULL;
 	PyObject		 *ctor = NULL, *args = NULL;
 
@@ -160,30 +160,27 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 	if (hgd_get_playlist(&list) == HGD_FAIL) {
 		(void) PyErr_Format(PyExc_RuntimeError,
 		    "Failed to get playlist from HGD");
-		return (NULL);
+		err = 1;
+		goto clean;
 	}
+	free_playlist = 1;
 
 	ret_list = PyList_New(list.n_items);
 	if (!ret_list) {
-		PRINT_PY_ERROR();
-		(void) PyErr_Format(PyExc_RuntimeError, "Failed to allocate");
-		return (NULL);
+		err = 1;
+		goto clean;
 	}
 
 	/* get ready to construct some stuff */
 	ctor = PyObject_GetAttrString(hgd_py_mods.playlist_mod, "PlaylistItem");
 	if (!ctor) {
-		PRINT_PY_ERROR();
-		(void) PyErr_Format(PyExc_RuntimeError,
-		    "Failed to get PlaylistItem");
-		return (NULL);
+		err = 1;
+		goto clean;
 	}
 
 	if (!PyCallable_Check(ctor)) {
-		PRINT_PY_ERROR();
-		(void) PyErr_Format(PyExc_RuntimeError,
-		    "Constructor not callable");
-		return (NULL);
+		err = 1;
+		goto clean;
 	}
 
 	for (i = 0; i < list.n_items; i++) {
@@ -197,47 +194,42 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 		    "user", it->user);
 
 		if (rec == NULL) {
-			PRINT_PY_ERROR();
-			(void) PyErr_Format(PyExc_RuntimeError,
-			    "Failed to allocate");
-			return (NULL);
+			err = 1;
+			goto clean;
 		}
 
 		args = PyTuple_New(1);
 		if (args == NULL) {
-			PRINT_PY_ERROR();
-			(void) PyErr_Format(PyExc_RuntimeError,
-			    "Failed to allocate");
-			return (NULL);
+			err = 1;
+			goto clean;
 		}
 
 		if (PyTuple_SetItem(args, 0, rec) != 0) {
-			PRINT_PY_ERROR();
-			(void) PyErr_Format(PyExc_RuntimeError,
-			    "Failed to set in tuple");
-			return (NULL);
+			err = 1;
+			goto clean;
 		}
 
 		plist_item = PyObject_CallObject(ctor, args);
-		Py_XDECREF(rec); /* don't decrement tuple refct! */
+		Py_XDECREF(args);
 		if (plist_item == NULL) {
-			PRINT_PY_ERROR();
-			(void) PyErr_Format(PyExc_RuntimeError,
-			    "Failed to call constructor");
-			return (NULL);
+			err = 1;
+			goto clean;
 		}
 
 		/* steals ref */
 		if (PyList_SetItem(ret_list, i, plist_item) != 0) {
-			PRINT_PY_ERROR();
-			(void) PyErr_Format(PyExc_RuntimeError,
-			    "Failed to set in list");
-			return (NULL);
+			err = 1;
+			goto clean;
 		}
 	}
 
+clean:
 	Py_XDECREF(ctor);
-	hgd_free_playlist(&list);
+	if (free_playlist)
+		hgd_free_playlist(&list);
+
+	if (err)
+		return (NULL);
 	return (ret_list);
 }
 
