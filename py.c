@@ -42,8 +42,6 @@ char				*hgd_py_plugin_dir;
  *
  * args: level, message
  * ret:
- *
- * XXX this is leaking refs
  */
 static PyObject *
 hgd_py_func_dprint(PyObject *self, PyObject *args)
@@ -52,102 +50,81 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	PyObject		*f_currentframe = NULL, *f_getframeinfo = NULL;
 	PyObject		*currentframe = NULL, *frameinfo = NULL;
 	PyObject		*a_getframeinfo = NULL, *arg1 = NULL;
-	PyObject		*file = NULL, *line = NULL;
-	PyObject		*meth = NULL, *str_cvt = NULL, *str_cvt_tup = NULL;
+	PyObject		*file = NULL, *line = NULL, *str_arg1 = NULL;
+	PyObject		*meth = NULL;
 	long			 level;
-	char			*msg;
+	int			 err = 0;
 
 	/* check number of args */
 	if ((int) n_args != 2) {
 		(void) PyErr_Format(PyExc_TypeError,
 		    "dprint() takes 2 arguments");
-		return (NULL);
+		err = 1;
+		goto clean;
 	}
 
 	/* check the debug level before doing all this junk */
 	level = PyLong_AsLong(PyTuple_GetItem(args, 0));
 	if ((level > 3) || (level < 0)) {
-		(void) PyErr_Format(PyExc_AttributeError,
-		    "invalid debug level");
-		Py_RETURN_NONE;
+		(void) PyErr_Format(PyExc_AttributeError, "invalid debug level");
+		err = 1;
+		goto clean;
 	}
 
 	/* silent if debug level not high enough */
 	if (level > hgd_debug)
-		Py_RETURN_NONE;
+		goto clean;
 
 	/* get current frame */
 	f_currentframe = PyObject_GetAttrString(
 	    hgd_py_mods.inspect_mod, "currentframe");
 	if (!f_currentframe) {
-		DPRINTF(HGD_D_DEBUG, "Failed to find currentframe()");
+		err = 1;
+		goto clean;
 	}
 
 	DPRINTF(HGD_D_INFO, "Calling currentframe()");
 	currentframe = PyObject_CallObject(f_currentframe, NULL);
-	Py_XDECREF(f_currentframe);
 	if (currentframe == NULL) {
-		PRINT_PY_ERROR();
-		DPRINTF(HGD_D_WARN, "failed to call currentframe()");
+		err = 1;
+		goto clean;
 	}
 
 	/* get frame info */
 	f_getframeinfo = PyObject_GetAttrString(
 	    hgd_py_mods.inspect_mod, "getframeinfo");
 	if (!f_getframeinfo) {
-		DPRINTF(HGD_D_DEBUG, "Failed to find getframeinfo()");
+		err = 1;
+		goto clean;
 	}
 
 	a_getframeinfo = PyTuple_New(1);
 	if ((a_getframeinfo == NULL) ||
-	    /* NB. steals ref */
 	    (PyTuple_SetItem(a_getframeinfo, 0, currentframe) != 0)) {
-		PRINT_PY_ERROR();
-		DPRINTF(HGD_D_WARN, "Failed to assign tuple");
+		/* NB. PyTuple_SetItem() steals ref */
+		err = 1;
+		goto clean;
 	}
 
 	DPRINTF(HGD_D_INFO, "Calling getframeinfo()");
 	frameinfo = PyObject_CallObject(f_getframeinfo, a_getframeinfo);
-	Py_XDECREF(f_getframeinfo);
-	Py_XDECREF(a_getframeinfo);
 	if (frameinfo == NULL) {
-		PRINT_PY_ERROR();
-		DPRINTF(HGD_D_WARN, "Failed to call getframeinfo()");
+		err = 1;
+		goto clean;
 	}
 
-	/* don't decref these */
+	/* don't decref these, borrowed from frameinfo */
 	file = PyTuple_GetItem(frameinfo, 0);
 	line = PyTuple_GetItem(frameinfo, 1);
 	meth = PyTuple_GetItem(frameinfo, 2);
-	Py_XDECREF(frameinfo);
-	/*
-	 * XXX surely this causes a race on borrowed refs from
-	 * file, line, meth? Moving later causes seg.
-	 * */
 
-	/* Convert the message to a string: str(msg) */
-	str_cvt_tup = PyTuple_New(1);
-	if (str_cvt_tup == NULL) {
-		PRINT_PY_ERROR();
-		(void) PyErr_Format(PyExc_RuntimeError,
-		    "Failed to allocate");
-		return (NULL);
-	}
-
+	/* Convert the message to a string */
 	arg1 = PyTuple_GetItem(args, 1);
-	Py_INCREF(arg1); /* PyTuple_SetItem is about to steal our ref */
-	if (PyTuple_SetItem(str_cvt_tup, 0, arg1) != 0) {
-		PRINT_PY_ERROR();
-		(void) PyErr_Format(PyExc_RuntimeError,
-		    "Failed to set in tuple");
-		return (NULL);
+	str_arg1 = PyObject_Str(arg1);
+	if (!str_arg1) {
+		err = 1;
+		goto clean;
 	}
-
-	str_cvt = PyString_Format(PyString_FromString("%s"), str_cvt_tup);
-	msg = PyString_AsString(str_cvt);
-
-	Py_XDECREF(str_cvt);
-	Py_XDECREF(str_cvt_tup);
 
 	fprintf(stderr, "[Python: %s - %08d %s:%s():%ld]\n\t%s\n",
 	    debug_names[level],
@@ -155,9 +132,18 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	    PyString_AsString(file),
 	    PyString_AsString(meth),
 	    PyLong_AsLong(line),
-	    msg);
+	    PyString_AsString(str_arg1));
 
-	Py_RETURN_NONE;
+clean:
+	Py_XDECREF(f_currentframe);
+	Py_XDECREF(f_getframeinfo);
+	Py_XDECREF(a_getframeinfo);
+	Py_XDECREF(str_arg1);
+	Py_XDECREF(frameinfo); /* file, meth, line are borrowing */
+
+	if (!err)
+		Py_RETURN_NONE;
+	return (NULL);
 }
 
 /*
