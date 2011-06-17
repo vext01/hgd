@@ -55,8 +55,6 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	int			 err = 0;
 
 	if (PyArg_ParseTuple(args, "lO", &level, &arg1) == 0) {
-		(void) PyErr_Format(PyExc_AttributeError,
-		    "dprint() takes a integer and object to __str__ as args");
 		err = 1;
 		goto clean;
 	}
@@ -636,7 +634,7 @@ hgd_execute_py_hook(char *hook)
 		if (!func) {
 			DPRINTF(HGD_D_DEBUG, "Python hook '%s.%s' undefined",
 			    hgd_py_mods.user_mod_names[i], func_name);
-			any_errors = HGD_FAIL;
+			PyErr_Clear();
 			continue;
 		}
 
@@ -662,6 +660,7 @@ hgd_execute_py_hook(char *hook)
 		    hgd_py_mods.user_mod_names[i], func_name);
 
 		ret = PyObject_CallObject(func, args);
+		Py_XDECREF(args);
 		Py_XDECREF(hgd_py_mods.hgd_o);
 		if (ret == NULL) {
 			PRINT_PY_ERROR();
@@ -673,6 +672,7 @@ hgd_execute_py_hook(char *hook)
 		}
 
 		c_ret = PyInt_AsLong(ret);
+		Py_XDECREF(ret);
 
 		/* if the user returns non HGD_OK (non-zero), indicates fail */
 		if (c_ret != HGD_OK) {
