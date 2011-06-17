@@ -46,7 +46,6 @@ char				*hgd_py_plugin_dir;
 static PyObject *
 hgd_py_func_dprint(PyObject *self, PyObject *args)
 {
-	Py_ssize_t		 n_args = PyTuple_GET_SIZE(args);
 	PyObject		*f_currentframe = NULL, *f_getframeinfo = NULL;
 	PyObject		*currentframe = NULL, *frameinfo = NULL;
 	PyObject		*a_getframeinfo = NULL, *arg1 = NULL;
@@ -55,18 +54,9 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	long			 level;
 	int			 err = 0;
 
-	/* check number of args */
-	if ((int) n_args != 2) {
-		(void) PyErr_Format(PyExc_TypeError,
-		    "dprint() takes 2 arguments");
-		err = 1;
-		goto clean;
-	}
-
-	/* check the debug level before doing all this junk */
-	level = PyLong_AsLong(PyTuple_GetItem(args, 0));
-	if ((level > 3) || (level < 0)) {
-		(void) PyErr_Format(PyExc_AttributeError, "invalid debug level");
+	if (PyArg_ParseTuple(args, "lO", &level, &arg1) == 0) {
+		(void) PyErr_Format(PyExc_AttributeError,
+		    "dprint() takes a integer and object to __str__ as args");
 		err = 1;
 		goto clean;
 	}
