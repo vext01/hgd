@@ -665,7 +665,6 @@ hgd_execute_py_hook(char *hook)
 		ret = PyObject_CallObject(func, args);
 		Py_XDECREF(func);
 		Py_XDECREF(args);
-		Py_XDECREF(hgd_py_mods.hgd_o);
 		if (ret == NULL) {
 			PRINT_PY_ERROR();
 			DPRINTF(HGD_D_WARN,
