@@ -115,7 +115,7 @@ History
  * 0.1 - basic functionality.
  * 0.2 - SSL crypto support and user authentication.
  * 0.3 - Config file support.
- * 0.4 - Autoconf, taglib, python scripting
+ * 0.4 - Autoconf, taglib, Python scripting
 
 Roadmap
 -------
@@ -127,6 +127,13 @@ Bugs
 
 Inevitable. Please report bugs on github:
 https://github.com/vext01/hgd/issues/
+
+Thanks
+------
+
+We thanks the following people:
+
+ * Yhg1s on #python on freenode for code reviews on Python C API code.
 
 Feedback / Questions
 --------------------
