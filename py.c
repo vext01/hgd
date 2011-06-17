@@ -88,10 +88,8 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 		goto clean;
 	}
 
-	a_getframeinfo = PyTuple_New(1);
-	if ((a_getframeinfo == NULL) ||
-	    (PyTuple_SetItem(a_getframeinfo, 0, currentframe) != 0)) {
-		/* NB. PyTuple_SetItem() steals ref */
+	a_getframeinfo = Py_BuildValue("(O)", currentframe);
+	if (a_getframeinfo == NULL) {
 		err = 1;
 		goto clean;
 	}
@@ -198,13 +196,8 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 			goto clean;
 		}
 
-		args = PyTuple_New(1);
+		args = Py_BuildValue("(O)", rec);
 		if (args == NULL) {
-			err = 1;
-			goto clean;
-		}
-
-		if (PyTuple_SetItem(args, 0, rec) != 0) {
 			err = 1;
 			goto clean;
 		}
@@ -271,7 +264,9 @@ hgd_py_meth_Hgd_get_component(Hgd *self, void *closure)
 static PyMethodDef hgd_py_Hgd_methods[] = {
 	{"get_playlist",
 	    (PyCFunction) hgd_py_meth_Hgd_get_playlist,
-	    METH_NOARGS,"Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem"},
+	    METH_NOARGS,
+	    "Get the current hgd playlist. "
+	    "Returns a List of hgd.playlist.PlaylistItem"},
 	{ 0, 0, 0, 0 }
 };
 
