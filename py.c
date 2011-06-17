@@ -203,6 +203,7 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 
 		plist_item = PyObject_CallObject(ctor, args);
 		Py_XDECREF(args);
+		Py_XDECREF(rec);
 		if (plist_item == NULL) {
 			err = 1;
 			goto clean;
