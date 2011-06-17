@@ -122,10 +122,11 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 
 clean:
 	Py_XDECREF(f_currentframe);
+	Py_XDECREF(frameinfo);
+	Py_XDECREF(currentframe);
 	Py_XDECREF(f_getframeinfo);
 	Py_XDECREF(a_getframeinfo);
 	Py_XDECREF(str_arg1);
-	Py_XDECREF(frameinfo); /* file, meth, line are borrowing */
 
 	if (!err)
 		Py_RETURN_NONE;
@@ -643,6 +644,7 @@ hgd_execute_py_hook(char *hook)
 			DPRINTF(HGD_D_WARN,
 			    "Python hook '%s.%s' is not callable",
 			    hgd_py_mods.user_mod_names[i], func_name);
+			Py_XDECREF(func);
 			any_errors = HGD_FAIL;
 			continue;
 		}
@@ -653,6 +655,7 @@ hgd_execute_py_hook(char *hook)
 			    "Failed to build args for '%s.%s'",
 			    hgd_py_mods.user_mod_names[i], func_name);
 			any_errors = HGD_FAIL;
+			Py_XDECREF(func);
 			continue;
 		}
 
@@ -660,6 +663,7 @@ hgd_execute_py_hook(char *hook)
 		    hgd_py_mods.user_mod_names[i], func_name);
 
 		ret = PyObject_CallObject(func, args);
+		Py_XDECREF(func);
 		Py_XDECREF(args);
 		Py_XDECREF(hgd_py_mods.hgd_o);
 		if (ret == NULL) {
