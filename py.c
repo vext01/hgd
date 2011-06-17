@@ -42,6 +42,8 @@ char				*hgd_py_plugin_dir;
  *
  * args: level, message
  * ret:
+ *
+ * XXX this is leaking refs
  */
 static PyObject *
 hgd_py_func_dprint(PyObject *self, PyObject *args)
@@ -118,6 +120,10 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	line = PyTuple_GetItem(frameinfo, 1);
 	meth = PyTuple_GetItem(frameinfo, 2);
 	Py_XDECREF(frameinfo);
+	/*
+	 * XXX surely this causes a race on borrowed refs from
+	 * file, line, meth? Moving later causes seg.
+	 * */
 
 	/* Convert the message to a string: str(msg) */
 	str_cvt_tup = PyTuple_New(1);
