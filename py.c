@@ -641,6 +641,7 @@ hgd_execute_py_hook(char *hook)
 		if (!func) {
 			DPRINTF(HGD_D_DEBUG, "Python hook '%s.%s' undefined",
 			    hgd_py_mods.user_mod_names[i], func_name);
+			any_errors = HGD_FAIL;
 			continue;
 		}
 
@@ -649,21 +650,30 @@ hgd_execute_py_hook(char *hook)
 			DPRINTF(HGD_D_WARN,
 			    "Python hook '%s.%s' is not callable",
 			    hgd_py_mods.user_mod_names[i], func_name);
+			any_errors = HGD_FAIL;
 			continue;
 		}
 
-		args = PyTuple_New(1);
-		PyTuple_SetItem(args, 0, hgd_py_mods.hgd_o);
+		args = Py_BuildValue("(O)", hgd_py_mods.hgd_o);
+		if (args == NULL) {
+			DPRINTF(HGD_D_WARN,
+			    "Failed to build args for '%s.%s'",
+			    hgd_py_mods.user_mod_names[i], func_name);
+			any_errors = HGD_FAIL;
+			continue;
+		}
 
 		DPRINTF(HGD_D_INFO, "Calling Python hook '%s.%s'",
 		    hgd_py_mods.user_mod_names[i], func_name);
 
 		ret = PyObject_CallObject(func, args);
+		Py_XDECREF(hgd_py_mods.hgd_o);
 		if (ret == NULL) {
 			PRINT_PY_ERROR();
 			DPRINTF(HGD_D_WARN,
 			    "failed to call Python hook '%s.%s'",
 			    hgd_py_mods.user_mod_names[i], func_name);
+			any_errors = HGD_FAIL;
 			continue;
 		}
 
