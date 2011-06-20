@@ -81,7 +81,7 @@ Rolling a Release
  3.   Bump version macro.
  4.   Check README has history updated.
  5.   Run "make pydoc"
- 6.   Run (on an OpenBSD host) 'make lint-man'. Fix any man bugs.
+ 6.   Run (on an OpenBSD host) 'make lint-mans'. Fix any man bugs.
  7.   Commit and push to git.
  8.   Tag the version in git. It should be tagged as 'x.x.x', eg '0.2.1'
  9.   Turn debug flag back on.
