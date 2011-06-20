@@ -85,8 +85,8 @@ Rolling a Release
  7.   Commit and push to git.
  8.   If this is a major version, make a branch in git. Eg. "0.4.x". Push it.
  9.   Tag the version in git. It should be tagged as 'x.x.x', eg '0.2.1'. Push.
- 10.   Turn debug flag back on. Push.
- 11.   Get a tarball of tag off github.
+ 10.  Turn debug flag back on. Push.
+ 11.  Get a tarball of tag off github.
  12.  Untar it and rename.
  13.  Rename the directory hgd-x.x.x
  14.  Generate the configure script (autogen.sh)
