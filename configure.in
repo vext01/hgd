@@ -153,4 +153,8 @@ Modules Enabled :${enabled}
 Modules Disabled:${disabled}
 =============================])
 
+
+AS_IF([test "x$have_python" != "xyes"],,
+      AC_MSG_NOTICE([NOTE: Python scripting backend is EXPERIMENTAL!]))
+
 AS_IF([test "$mplayer" = "no"], AC_MSG_WARN("mplayer was not found. Please install it to use playd."))
