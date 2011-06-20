@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd April 21, 2011
+.Dd June 20, 2011
 .Dt HGD-NETD 1
 .Os
 .Sh NAME
@@ -98,8 +98,8 @@ communications, thus protecting passwords. The simplest way to do this
 is to do the following:
 .Bl -tag -width Ds
 .It cd /etc/hgd
-.It openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout \\
-privkey.key -out certificate.crt
+.It openssl req -x509 -nodes -days 365 -newkey rsa:2048 \\\\
+-keyout privkey.key -out certificate.crt
 .El
 .Pp
 When hgd-netd sees a valid SSL certificate and private key, it will allow

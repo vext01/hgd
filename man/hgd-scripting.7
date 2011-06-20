@@ -15,16 +15,16 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd June 3, 2011
+.Dd June 20, 2011
 .Dt HGD-SCRIPTING 7
 .Os
 .Sh NAME
-.Nm hgd-admin
+.Nm hgd-scripting
 .Nd HGD Python Scripting Backend Manual
 .Sh DESCRIPTION
 .Nm
 describes how to use Python to extend HGD.
-.Sh FUNDAMENTALS
+.Sh SCRIPTING API
 NOTE: The Python scripting backend is experimental at this time, and the API is
 subject to change. You have been warned.
 .Pp
@@ -50,7 +50,6 @@ Triggers after a track has played.
 .It hgd_hook_nothing_to_play()
 Triggers every second there is nothing to play.
 .El
-.Sh SCRIPTING API
 Each hook is passed a hgd.Hgd instance from which the user can obtain
 information about the running
 .Xr hgd-playd 1
@@ -71,8 +70,6 @@ docs for. This is what hgd-mk-pydoc is for.
 .An -nosplit
 .Nm
 was written by
-.An Edd Barrett Aq vext01@gmail.com ,
-and
-.An Martin Ellis Aq ellism88@gmail.com .
+.An Edd Barrett Aq vext01@gmail.com
 .Sh BUGS
 Please report bugs in this guide back to use via the github issue tracker.
