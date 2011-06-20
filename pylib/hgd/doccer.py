@@ -14,9 +14,10 @@
 
 """ Generate Python API Docs.
 
-This is non-trivial, as the core 'Hgd' type is only available in the embedded
-interpreter. Hence the hgd-mk-pydoc embeds Python, defines the types and then
-uses this module to make documentation.
+This class generates docs for the HGD Python API. This is non-trivial, as
+the core 'Hgd' type is only available in the embedded interpreter. Hence
+the hgd-mk-pydoc embeds Python, defines the types and then uses this module
+to make documentation.
 """
 
 __author__ = "Edd Barrett"
@@ -33,7 +34,9 @@ def hgd_mk_pydoc():
     if (not os.path.exists(outdir)):
         os.mkdir(outdir)
 
-    for doctype in ["txt", "html"]:
+    # HTML doc disabled for now
+    #for doctype in ["txt", "html"]:
+    for doctype in ["txt"]:
 
         if (not os.path.exists(outdir + "/" + doctype)):
             os.mkdir(outdir + "/" + doctype)
