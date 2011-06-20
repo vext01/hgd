@@ -5,9 +5,10 @@ FFIILLEE
     /home/edd/source/hgd/pylib/hgd/doccer.py
 
 DDEESSCCRRIIPPTTIIOONN
-    This is non-trivial, as the core 'Hgd' type is only available in the embedded
-    interpreter. Hence the hgd-mk-pydoc embeds Python, defines the types and then
-    uses this module to make documentation.
+    This class generates docs for the HGD Python API. This is non-trivial, as
+    the core 'Hgd' type is only available in the embedded interpreter. Hence
+    the hgd-mk-pydoc embeds Python, defines the types and then uses this module
+    to make documentation.
 
 FFUUNNCCTTIIOONNSS
     hhggdd__mmkk__ppyyddoocc()

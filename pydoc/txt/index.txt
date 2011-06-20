@@ -18,7 +18,7 @@ CCLLAASSSSEESS
      |  Methods defined here:
      |  
      |  ____iinniitt____(...)
-     |      x.__init__(...) initializes x; see x.__class__.__doc__ for signature
+     |      x.__init__(...) initializes x; see help(type(x)) for signature
      |  
      |  ggeett__ppllaayylliisstt(...)
      |      Get the current hgd playlist. Returns a List of hgd.playlist.PlaylistItem
