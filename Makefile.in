@@ -130,6 +130,7 @@ install-doc: install-pydoc
 	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}
 
 .PHONY: pydoc
+# XXX this makes build time references to the build dir. sigh...
 pydoc: hgd-mk-pydoc
 	./hgd-mk-pydoc
 
