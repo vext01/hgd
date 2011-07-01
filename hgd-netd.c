@@ -50,6 +50,8 @@
 #include <tag_c.h>
 #endif
 
+const char			*hgd_component = "hgd-netd";
+
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
@@ -1208,7 +1210,7 @@ main(int argc, char **argv)
 	int			 num_config = 2;
 
 	/* as early as possible */
-	HGD_INIT_SYSLOG();
+	HGD_INIT_SYSLOG_DAEMON();
 
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );

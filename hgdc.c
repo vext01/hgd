@@ -46,6 +46,7 @@
 
 #include "hgd.h"
 
+const char		*hgd_component = "hgdc";
 
 char			*user = NULL, *host = NULL, *password = NULL;
 int			 port = HGD_DFL_PORT;

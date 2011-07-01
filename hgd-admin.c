@@ -36,6 +36,8 @@
 #include "hgd.h"
 #include "db.h"
 
+const char			*hgd_component = "hgd-admin";
+
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
 uint8_t				 clear_playlist_on_start = 0;
