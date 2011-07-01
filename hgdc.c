@@ -38,7 +38,6 @@
 #else
 #include <readpassphrase.h>
 #endif
-#include <libconfig.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
