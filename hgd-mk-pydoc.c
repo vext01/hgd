@@ -47,6 +47,9 @@ hgd_exit_nicely(void)
 		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
 
 	hgd_free_py();
+
+	HGD_CLOSE_SYSLOG();
+
 	exit (!exit_ok);
 }
 
@@ -113,6 +116,9 @@ int
 main(int argc, char **argv)
 {
 	int			ch;
+
+	/* open syslog as early as possible */
+	HGD_INIT_SYSLOG();
 
 	while ((ch = getopt(argc, argv, "hx:")) != -1) {
 		switch (ch) {

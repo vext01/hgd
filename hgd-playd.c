@@ -72,6 +72,8 @@ hgd_exit_nicely()
 	hgd_free_py();
 #endif
 
+	HGD_CLOSE_SYSLOG();
+
 	exit (!exit_ok);
 }
 
@@ -330,6 +332,9 @@ main(int argc, char **argv)
 	char			 ch, *xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
+
+	/* early as possible */
+	HGD_INIT_SYSLOG();
 
 	config_path[0] = NULL;
 

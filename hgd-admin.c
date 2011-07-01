@@ -60,6 +60,8 @@ hgd_exit_nicely()
 
 	hgd_cleanup_ssl(NULL);
 
+	HGD_CLOSE_SYSLOG();
+
 	exit (!exit_ok);
 }
 /* NOTE! -c is reserved for 'config file path' */
@@ -279,8 +281,11 @@ main(int argc, char **argv)
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
+	/* syslog as early as possible */
+	HGD_INIT_SYSLOG();
+
 	config_path[0] = NULL;
-	xasprintf(&config_path[1], "%s", HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
+	xasprintf(&config_path[1], "%s", HGD_GLOBAL_CFG_DIR HGD_SERV_CFG);
 
 	xdg_config_home =  getenv("XDG_CONFIG_HOME");
 	if (xdg_config_home == NULL) {
