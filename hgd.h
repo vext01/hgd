@@ -81,11 +81,12 @@
 #define ANSII_GREEN		(colours_on ? "\033[32m" : "")
 #define ANSII_WHITE		(colours_on ? "\033[0m" : "")
 
-
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/stat.h>
+#include <syslog.h>
+#include <stdarg.h>
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -95,6 +96,7 @@ extern int8_t			 hgd_debug;
 extern uint8_t			 dying;
 extern uint8_t			 exit_ok;
 extern char			*debug_names[];
+extern int			 syslog_error_map[];
 extern pid_t			 pid;
 extern const char		*hgd_component;
 
@@ -179,8 +181,17 @@ struct hgd_req_despatch {
 			    __FILE__, __func__, __LINE__);		\
 			fprintf(stderr, x);				\
 			fprintf(stderr, "\n");				\
+			/* same again for syslog */			\
+			syslog(syslog_error_map[level],			\
+			    "[%s - %08d %s:%s():%d]\n\t",		\
+			    debug_names[level], getpid(),		\
+			    __FILE__, __func__, __LINE__);		\
+			syslog(syslog_error_map[level], x);		\
+			closelog();					\
 		}							\
 	} while (0)
+#define HGD_INIT_SYSLOG()	openlog("hgd", 0, LOG_DAEMON);
+#define HGD_CLOSE_SYSLOG()	closelog();
 
 #define PRINT_SSL_ERR(msg)						\
 	do {								\

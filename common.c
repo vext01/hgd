@@ -35,6 +35,8 @@
 #include <poll.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <syslog.h>
+#include <stdarg.h>
 
 #include "config.h"
 #include "hgd.h"
@@ -46,6 +48,9 @@ pid_t				 pid = 0;
 
 char				*debug_names[] = {
 				    "error", "warn", "info", "debug"};
+int				syslog_error_map[] = {
+				    LOG_ERR, LOG_WARNING, LOG_INFO, LOG_DEBUG
+				};
 
 /* these are unused in client */
 char				*state_path = NULL;
@@ -233,11 +238,8 @@ hgd_bytes_to_hex_buf(char *in, char *out, int length)
 {
 	int			i;
 
-	for (i = 0; i < length; ++i) {
-		sprintf(out+(i*2), "%X", (unsigned int) *in+i);
-	}
-
-	return;
+	for (i = 0; i < length; ++i)
+		snprintf(out+(i*2), 3, "%X", (unsigned int) *in+i);
 }
 
 /* free a user struct's members */

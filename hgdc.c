@@ -107,6 +107,7 @@ hgd_exit_nicely()
 		close(sock_fd);
 	}
 
+	HGD_CLOSE_SYSLOG();
 	_exit(!exit_ok);
 }
 
@@ -885,6 +886,9 @@ main(int argc, char **argv)
 	char			*resp, ch, *xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			num_config = 2;
+
+	/* open syslog as soon as possible */
+	HGD_INIT_SYSLOG();
 
 	host = xstrdup(HGD_DFL_HOST);
 	config_path[0] = NULL;
