@@ -255,5 +255,6 @@ char				*hgd_bytes_to_hex(unsigned char *bs, int len);
 void				 hgd_bytes_to_hex_buf(char*, char*, int len);
 int				 hgd_readpassphrase_confirmed(
 				     char buf[HGD_MAX_PASS_SZ]);
+int				 hgd_daemonise();
 
 #endif

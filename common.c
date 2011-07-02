@@ -295,3 +295,25 @@ hgd_readpassphrase_confirmed(char buf[HGD_MAX_PASS_SZ])
 
 	return (HGD_OK);
 }
+
+int
+hgd_daemonise()
+{
+	pid_t			pid;
+	pid = fork();
+	if (pid) {
+		/* parent */
+		DPRINTF(HGD_D_INFO, "Daemonising. PID=%d", pid);
+		exit_ok = 1;
+		hgd_exit_nicely();
+	} else {
+		/* child */
+		if (setsid() != getpid()) {
+			DPRINTF(HGD_D_ERROR, "failed to setsid: %s", SERROR);
+			return (HGD_FAIL);
+		}
+	}
+
+	return (HGD_OK);
+}
+

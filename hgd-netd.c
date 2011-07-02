@@ -1208,8 +1208,7 @@ main(int argc, char **argv)
 {
 	char			 ch, *xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
-	int			 num_config = 2, fg_status;
-	pid_t			 bg_pid;
+	int			 num_config = 2;
 
 	/* as early as possible */
 	HGD_INIT_SYSLOG_DAEMON();
@@ -1386,19 +1385,8 @@ main(int argc, char **argv)
 	}
 
 	/* alright, everything looks good, lets be a daemon and background */
-	/* XXX make re-usable */
-	bg_pid = fork();
-	if (bg_pid) {
-		DPRINTF(HGD_D_INFO, "Backgrounding. PID=%d", bg_pid);
-		exit_ok = 1;
-		hgd_exit_nicely();
-	} else {
-		/* child */
-		if (setsid() != getpid()) {
-			DPRINTF(HGD_D_ERROR, "failed to setsid: %s", SERROR);
-			hgd_exit_nicely();
-		}
-	}
+	hgd_daemonise();
+
 	hgd_listen_loop();
 
 	exit_ok = 1;
