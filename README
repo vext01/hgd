@@ -37,6 +37,12 @@ And optionally:
  * TagLib, if you want media tag support.
  * Python-{2.6,2.7}, if you want the scripting backend.
 
+On ubuntu (and debian?) you can do:
+
+sudo apt-get install libbsd0 libbsd-dev mplayer python2.7 python2.7-dev	\
+	libtagc0 libtagc0-dev libconfig8 libconfig8-dev libsqlite3-0	\
+	libsqlite3-dev libssl-dev libssl0.9.8
+
 Building
 --------
 
