@@ -473,6 +473,7 @@ main(int argc, char **argv)
 #endif
 
 	/* start */
+	hgd_daemonise();
 	hgd_play_loop();
 
 	exit_ok = 1;
