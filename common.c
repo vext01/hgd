@@ -306,13 +306,16 @@ hgd_daemonise()
 		DPRINTF(HGD_D_INFO, "Daemonising. PID=%d", pid);
 		exit_ok = 1;
 		hgd_exit_nicely();
-	} else {
-		/* child */
-		if (setsid() != getpid()) {
-			DPRINTF(HGD_D_ERROR, "failed to setsid: %s", SERROR);
-			return (HGD_FAIL);
-		}
 	}
+
+	/* child */
+	if (setsid() != getpid()) {
+		DPRINTF(HGD_D_ERROR, "failed to setsid: %s", SERROR);
+		return (HGD_FAIL);
+	}
+
+	fclose(stdout);
+	fclose(stderr);
 
 	return (HGD_OK);
 }
