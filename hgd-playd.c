@@ -50,6 +50,7 @@ const char			*hgd_component = "hgd-playd";
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
 uint8_t				 clear_playlist_on_start = 0;
+int				 background = 1;
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -354,7 +355,7 @@ main(int argc, char **argv)
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:Cd:hpP:qvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "Bc:Cd:hpP:qvx:")) != -1) {
 		switch (ch) {
 		case 'c':
 			if (num_config < 3) {
@@ -393,8 +394,12 @@ main(int argc, char **argv)
 	RESET_GETOPT();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
-	while ((ch = getopt(argc, argv, "c:Cd:hpP:qvx:")) != -1) {
+	while ((ch = getopt(argc, argv, "Bc:Cd:hpP:qvx:")) != -1) {
 		switch (ch) {
+		case 'B':
+			background = 0;
+			DPRINTF(HGD_D_DEBUG, "Not \"backgrounding\" daemon.");
+			break;
 		case 'c':
 			break; /* already handled */
 		case 'C':
@@ -473,7 +478,7 @@ main(int argc, char **argv)
 #endif
 
 	/* start */
-	hgd_daemonise();
+	if (background) hgd_daemonise();
 	hgd_play_loop();
 
 	exit_ok = 1;

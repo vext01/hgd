@@ -57,6 +57,7 @@ int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 int				flood_limit = HGD_MAX_USER_QUEUE;
+int				background = 1;
 long int			max_upload_size = HGD_DFL_MAX_UPLOAD;
 uint8_t				num_bad_commands = 0;
 uint8_t				lookup_client_dns = 1;
@@ -1233,7 +1234,7 @@ main(int argc, char **argv)
 	ssl_cert_path = xstrdup(HGD_DFL_CERT_FILE);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
-	while ((ch = getopt(argc, argv, "c:Dd:EefF:hk:n:p:s:S:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "Bc:Dd:EefF:hk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
 		case 'c':
 			if (num_config < 3) {
@@ -1263,8 +1264,12 @@ main(int argc, char **argv)
 	hgd_read_config(config_path + num_config);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:2");
-	while ((ch = getopt(argc, argv, "c:Dd:EefF:hk:n:p:s:S:vx:y:")) != -1) {
+	while ((ch = getopt(argc, argv, "Bc:Dd:EefF:hk:n:p:s:S:vx:y:")) != -1) {
 		switch (ch) {
+		case 'B':
+			background = 0;
+			DPRINTF(HGD_D_DEBUG, "Not \"backgrounding\" daemon.");
+			break;
 		case 'c':
 			break; /* already handled */
 		case 'D':
@@ -1385,7 +1390,7 @@ main(int argc, char **argv)
 	}
 
 	/* alright, everything looks good, lets be a daemon and background */
-	hgd_daemonise();
+	if (background) hgd_daemonise();
 
 	hgd_listen_loop();
 
