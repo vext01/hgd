@@ -1023,24 +1023,10 @@ start:
 }
 
 int
-hgd_read_config(char **config_locations)
+hgd_load_config(config_t *cf, char **config_locations)
 {
-#ifdef HAVE_LIBCONFIG
-	/*
-	 * config_lookup_int64 is used because lib_config changed
-	 * config_lookup_int from returning a long int, to a int, and debian
-	 * still uses the old version.
-	 * See hgd-playd.c for how to remove the stat when deb get into gear
-	 */
-	config_t		 cfg, *cf;
-	int			 tmp_dont_fork, tmp_no_rdns, tmp_background;
-	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
-	long long int		 tmp_hgd_debug, tmp_flood_limit;
-	char			*temp_state_path, *crypto, *tmp_vote_sound;
-	char			*tmp_ssl_cert_path, *tmp_ssl_key_path;
 	struct stat		 st;
-
-	cf = &cfg;
+	
 	config_init(cf);
 
 	while (*config_locations != NULL) {
@@ -1069,6 +1055,32 @@ hgd_read_config(char **config_locations)
 
 	if (*config_locations == NULL) {
 		config_destroy(cf);
+		return (HGD_FAIL);
+	} else {
+		return (HGD_OK);	
+	}
+}
+
+int
+hgd_read_config(char **config_locations)
+{
+#ifdef HAVE_LIBCONFIG
+	/*
+	 * config_lookup_int64 is used because lib_config changed
+	 * config_lookup_int from returning a long int, to a int, and debian
+	 * still uses the old version.
+	 * See hgd-playd.c for how to remove the stat when deb get into gear
+	 */
+	config_t		 cfg, *cf;
+	int			 tmp_dont_fork, tmp_no_rdns, tmp_background;
+	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
+	long long int		 tmp_hgd_debug, tmp_flood_limit;
+	char			*temp_state_path, *crypto, *tmp_vote_sound;
+	char			*tmp_ssl_cert_path, *tmp_ssl_key_path;
+
+	cf = &cfg;
+
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
 		return (HGD_OK);
 	}
 
