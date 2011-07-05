@@ -210,6 +210,7 @@ hgd_read_config(char **config_locations)
 	config_t		 cfg, *cf;
 	long long int		 tmp_hgd_debug;
 	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
+	int			 tmp_background;
 	char			*tmp_state_path;
 #ifdef HAVE_PYTHON
 	char			*tmp_py_dir;
@@ -261,6 +262,13 @@ hgd_read_config(char **config_locations)
 	if (*config_locations == NULL) {
 		config_destroy(cf);
 		return (HGD_OK);
+	}
+
+	/* -B */
+	if (config_lookup_bool(cf, "playd.daemonise", &tmp_background)) {
+		background = tmp_background;
+		DPRINTF(HGD_D_DEBUG, "%s to background daemon",
+		    background ? "Going" : "Not going");	
 	}
 
 	/* -d */

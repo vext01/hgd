@@ -1033,7 +1033,7 @@ hgd_read_config(char **config_locations)
 	 * See hgd-playd.c for how to remove the stat when deb get into gear
 	 */
 	config_t		 cfg, *cf;
-	int			 tmp_dont_fork, tmp_no_rdns;
+	int			 tmp_dont_fork, tmp_no_rdns, tmp_background;
 	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
 	long long int		 tmp_hgd_debug, tmp_flood_limit;
 	char			*temp_state_path, *crypto, *tmp_vote_sound;
@@ -1070,6 +1070,13 @@ hgd_read_config(char **config_locations)
 	if (*config_locations == NULL) {
 		config_destroy(cf);
 		return (HGD_OK);
+	}
+
+	/* -B */
+	if (config_lookup_bool(cf, "netd.daemonise", &tmp_background)) {
+		background = tmp_background;
+		DPRINTF(HGD_D_DEBUG, "%s to background daemon",
+		    background ? "Going" : "Not going");	
 	}
 
 	/* -D */
