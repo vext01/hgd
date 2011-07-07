@@ -45,6 +45,7 @@
 
 #include "hgd.h"
 #include "db.h"
+#include "net.h"
 
 #include <openssl/ssl.h>
 #ifdef HAVE_TAGLIB
@@ -689,21 +690,21 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	DPRINTF(HGD_D_DEBUG, "New SSL for session");
 	sess->ssl = SSL_new(ctx);
 	if (sess->ssl == NULL) {
-		PRINT_SSL_ERR("SSL_new");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_new");
 		goto clean;
 	}
 
 	DPRINTF(HGD_D_DEBUG, "SSL_set_fd");
 	ssl_err = SSL_set_fd(sess->ssl, sess->sock_fd);
 	if (ssl_err == 0) {
-		PRINT_SSL_ERR("SSL_set_fd");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_set_fd");
 		goto clean;
 	}
 
 	DPRINTF(HGD_D_DEBUG, "SSL_accept");
 	ssl_err = SSL_accept(sess->ssl);
 	if (ssl_err != 1) {
-		PRINT_SSL_ERR("SSL_accept");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_accept");
 		goto clean;
 	}
 

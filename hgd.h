@@ -194,16 +194,6 @@ struct hgd_req_despatch {
 #define HGD_INIT_SYSLOG()		openlog(hgd_component, 0, 0);
 #define HGD_CLOSE_SYSLOG()		closelog();
 
-#define PRINT_SSL_ERR(msg)						\
-	do {								\
-		char error[255];					\
-		unsigned long err;					\
-		err = ERR_get_error();					\
-		ERR_error_string_n(err, error, sizeof(error));		\
-		DPRINTF(HGD_D_ERROR, "%s: %s", msg, error);		\
-	} while(0)
-
-
 #if defined(__linux__)
 	#define RESET_GETOPT() do {optind = 1;} while (0)
 #elif defined (__OpenBSD__) || defined(__FreeBSD__) || defined(__APPLE__)

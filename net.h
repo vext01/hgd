@@ -42,15 +42,14 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#define PRINT_SSL_ERR(msg)						\
+#define PRINT_SSL_ERR(level, msg)					\
 	do {								\
 		char error[255];					\
 		unsigned long err;					\
 		err = ERR_get_error();					\
 		ERR_error_string_n(err, error, sizeof(error));		\
-		DPRINTF(HGD_D_ERROR, "%s: %s", msg, error);		\
+		DPRINTF(level, "%s: %s", msg, error);		\
 	} while(0)
-
 
 void				 hgd_cleanup_ssl(SSL_CTX **ssl);
 void				 hgd_sock_send(int fd, char *msg);
