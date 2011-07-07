@@ -36,9 +36,9 @@ void
 hgd_cleanup_ssl(SSL_CTX **ctx) {
 	(void) ERR_free_strings();
 	(void) EVP_cleanup();
-	if (ctx!=NULL && *ctx != NULL) {
+
+	if ((ctx != NULL) && (*ctx != NULL))
 		 SSL_CTX_free(*ctx);
-	}	
 }
 
 int
