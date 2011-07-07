@@ -321,8 +321,9 @@ void
 hgd_usage(void)
 {
 	printf("usage: hgd-netd <options>\n");
+	printf("    -B			Do not daemonise, run in foreground\n");
 #ifdef HAVE_LIBCONFIG
-	printf("    -c <path>	Path to a config file to use\n");
+	printf("    -c <path>		Path to a config file to use\n");
 #endif
 	printf("    -C			Clear playlist on startup\n");
 	printf("    -d <path>		Set hgd state directory\n");

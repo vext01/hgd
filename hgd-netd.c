@@ -1204,8 +1204,9 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
+	printf("    -B			Do not daemonise, run in foreground\n");
 #ifdef HAVE_LIBCONFIG
-	printf("    -c <path>	Path to a config file to use\n");
+	printf("    -c <path>		Path to a config file to use\n");
 #endif
 	printf("    -D			Disable reverse DNS lookups for clients\n");
 	printf("    -d <path>		Set hgd state directory\n");

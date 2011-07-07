@@ -190,6 +190,7 @@ struct hgd_req_despatch {
 			closelog();					\
 		}							\
 	} while (0)
+
 #define HGD_INIT_SYSLOG_DAEMON()	openlog(hgd_component, 0, LOG_DAEMON);
 #define HGD_INIT_SYSLOG()		openlog(hgd_component, 0, 0);
 #define HGD_CLOSE_SYSLOG()		closelog();
