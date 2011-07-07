@@ -43,6 +43,7 @@
 
 int8_t				 hgd_debug = HGD_D_WARN;
 uint8_t				 dying = 0;
+uint8_t				 restarting = 0;
 uint8_t				 exit_ok = 0;
 pid_t				 pid = 0;
 
@@ -163,7 +164,9 @@ xasprintf(char **buf, char *fmt, ...)
 void
 hgd_kill_sighandler(int sig)
 {
-	sig = sig; /* quiet */
+	if (sig == SIGHUP)
+		restarting = 1;
+
 	dying = 1;
 }
 
@@ -173,6 +176,7 @@ hgd_register_sig_handlers()
 	signal(SIGTERM, hgd_kill_sighandler);
 	signal(SIGABRT, hgd_kill_sighandler);
 	signal(SIGINT, hgd_kill_sighandler);
+	signal(SIGHUP, hgd_kill_sighandler);
 }
 
 /* make state dir if not existing */
