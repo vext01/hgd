@@ -101,8 +101,12 @@ hgd_exit_nicely()
 	if (db)
 		sqlite3_close(db);
 
-	hgd_cleanup_ssl(&ctx);	
+	hgd_cleanup_ssl(&ctx);
 
+	if (restarting)
+		hgd_restart_myself();
+
+	/* after restart, so that we can report a SIGHUP */
 	HGD_CLOSE_SYSLOG();
 
 	_exit (!exit_ok);
@@ -628,7 +632,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		return (HGD_OK);
 	} else {
-		DPRINTF(HGD_D_WARN, 
+		DPRINTF(HGD_D_WARN,
 		    "Hmm that was racey! wanted to kill %d but %s was playing",
 		    playing.id, id_str);
 		return(HGD_FAIL);
@@ -832,7 +836,6 @@ clean:
 	/* free tokens */
 	for (; n_toks > 0; )
 		free(tokens[--n_toks]);
-	
 
 	return (bye);
 }
@@ -1231,6 +1234,8 @@ main(int argc, char **argv)
 	char			 ch, *xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
+
+	cmd_line_args = argv; /* cache this incase of SIGHUP */
 
 	/* as early as possible */
 	HGD_INIT_SYSLOG_DAEMON();

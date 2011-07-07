@@ -92,16 +92,18 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-extern int8_t			 hgd_debug;
-extern uint8_t			 dying;
-extern uint8_t			 exit_ok;
-extern char			*debug_names[];
-extern int			 syslog_error_map[];
-extern pid_t			 pid;
-extern const char		*hgd_component;
+extern int8_t			  hgd_debug;
+extern uint8_t			  dying;
+extern uint8_t			  restarting;
+extern char			**cmd_line_args;
+extern uint8_t			  exit_ok;
+extern char			 *debug_names[];
+extern int			  syslog_error_map[];
+extern pid_t			  pid;
+extern const char		 *hgd_component;
 
-extern char			*state_path;
-extern char			*filestore_path;
+extern char			 *state_path;
+extern char			 *filestore_path;
 
 struct hgd_user {
 	char			*name;
@@ -247,5 +249,6 @@ void				 hgd_bytes_to_hex_buf(char*, char*, int len);
 int				 hgd_readpassphrase_confirmed(
 				     char buf[HGD_MAX_PASS_SZ]);
 int				 hgd_daemonise(void);
+void				 hgd_restart_myself();
 
 #endif
