@@ -519,15 +519,15 @@ hgd_print_track(char *resp, uint8_t hilight)
 	if (n_toks == 5) {
 
 		if (hilight)
-			printf(ANSII_GREEN);
+			puts(ANSII_GREEN);
 		else
-			printf(ANSII_RED);
+			puts(ANSII_RED);
 
 		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
 		printf("  '%s' by '%s'  from '%s'\n",
 		    tokens[3], tokens[2], tokens[4]);
 
-		printf(ANSII_WHITE);
+		puts(ANSII_WHITE);
 	} else {
 		fprintf(stderr,
 		    "%s: wrong number of tokens from server\n",
