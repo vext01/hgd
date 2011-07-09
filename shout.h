@@ -20,9 +20,11 @@
 
 #include <shout/shout.h>
 
-extern shout_t *shout;
+extern shout_t		*shout;
 
-int hgd_init_shout();
-int hgd_close_shout();
+int			 hgd_init_shout();
+int			 hgd_close_shout();
+void			 hgd_play_track_shout(struct hgd_playlist_item *t);
+int			 hgd_shout_silence();
 
 #endif

@@ -44,6 +44,7 @@
 
 #include "hgd.h"
 #include "db.h"
+#include "shout.h"
 
 const char			*hgd_component = "hgd-playd";
 
@@ -51,6 +52,7 @@ uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
 uint8_t				 clear_playlist_on_start = 0;
 int				 background = 1;
+uint8_t				 shoutcast = 1; /* XXX config option */
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -74,11 +76,32 @@ hgd_exit_nicely()
 	hgd_free_py();
 #endif
 
+	if (shoutcast)
+		hgd_close_shout();
+
 	HGD_CLOSE_SYSLOG();
 
 	exit (!exit_ok);
 }
 
+/*
+ * play locally with mplayer
+ */
+void
+hgd_play_track_mplayer(struct hgd_playlist_item *t)
+{
+		/* child - your the d00d who will play this track */
+		execlp("mplayer", "mplayer", "-really-quiet",
+		    t->filename, (char *) NULL);
+
+		/* if we get here, the shit hit the fan with execlp */
+		DPRINTF(HGD_D_ERROR, "execlp() failed");
+		hgd_exit_nicely();
+}
+
+/*
+ * play a track
+ */
 void
 hgd_play_track(struct hgd_playlist_item *t)
 {
@@ -121,12 +144,10 @@ hgd_play_track(struct hgd_playlist_item *t)
 	pid = fork();
 	if (!pid) {
 		/* child - your the d00d who will play this track */
-		execlp("mplayer", "mplayer", "-really-quiet",
-		    t->filename, (char *) NULL);
-
-		/* if we get here, the shit hit the fan with execlp */
-		DPRINTF(HGD_D_ERROR, "execlp() failed");
-		hgd_exit_nicely();
+		if (shoutcast)
+			hgd_play_track_shout(t);
+		else
+			hgd_play_track_mplayer(t);
 	} else {
 		fprintf(pid_file, "%d\n%d", pid, t->id);
 
@@ -184,12 +205,16 @@ hgd_play_loop(void)
 
 			hgd_clear_votes();
 			hgd_play_track(&track);
+
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
 #ifdef HAVE_PYTHON
 			hgd_execute_py_hook("nothing_to_play");
 #endif
-			sleep(1);
+			if (shoutcast)
+				hgd_shout_silence();
+			else
+				sleep(1);
 		}
 		hgd_free_playlist_item(&track);
 	}
@@ -360,7 +385,6 @@ main(int argc, char **argv)
 		    "%s%s", xdg_config_home , "/hgd" HGD_SERV_CFG);
 	}
 
-	hgd_register_sig_handlers();
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
@@ -486,8 +510,16 @@ main(int argc, char **argv)
 	}
 #endif
 
+	hgd_register_sig_handlers();
+
 	/* start */
-	if (background) hgd_daemonise();
+	if (background)
+		hgd_daemonise();
+
+	if (shoutcast)
+		if (hgd_init_shout() != HGD_OK)
+			hgd_exit_nicely();
+
 	hgd_play_loop();
 
 	exit_ok = 1;

@@ -44,7 +44,7 @@ all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
 
 .PHONY: clean
 clean:
-	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o
+	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o shout.o
 
 crypto.o: crypto.h crypto.c hgd.h config.h
 	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o crypto.c
@@ -61,11 +61,16 @@ common.o: common.c hgd.h config.h
 db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
-hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o
+# XXX proper shout flags
+shout.o: shout.c hgd.h shout.h config.h
+	${CC} ${CPPFLAGS} ${CFLAGS} -I/usr/local/include -c -o shout.o shout.c
+
+# XXX proper shout flags
+hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o shout.o
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} \
-		-o hgd-playd db.o common.o crypto.o py.o hgd-playd.c
+		${CONFIG_LDFLAGS} -lshout -lspeex -pthread \
+		-o hgd-playd db.o common.o crypto.o py.o shout.o hgd-playd.c
 
 hgd-netd: common.o net.o hgd-netd.c hgd.h db.o config.h crypto.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
