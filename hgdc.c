@@ -32,7 +32,6 @@
 #include <libconfig.h>
 #endif
 
-
 #ifdef __linux__
 #include <bsd/readpassphrase.h>
 #else
@@ -45,6 +44,7 @@
 #include <netdb.h>
 
 #include "hgd.h"
+#include "net.h"
 
 const char		*hgd_component = "hgdc";
 
@@ -175,19 +175,19 @@ hgd_encrypt(int fd)
 	DPRINTF(HGD_D_DEBUG, "Setting up SSL_new");
 	ssl = SSL_new(ctx);
 	if (ssl == NULL) {
-		PRINT_SSL_ERR ("SSL_new");
+		PRINT_SSL_ERR (HGD_D_ERROR, "SSL_new");
 		return (HGD_FAIL);
 	}
 
 	ssl_res = SSL_set_fd(ssl, fd);
 	if (ssl_res == 0) {
-		PRINT_SSL_ERR ("SSL_set_fd");
+		PRINT_SSL_ERR (HGD_D_ERROR, "SSL_set_fd");
 		return (HGD_FAIL);
 	}
 
 	ssl_res = SSL_connect(ssl);
 	if (ssl_res != 1) {
-		PRINT_SSL_ERR ("SSL_connect");
+		PRINT_SSL_ERR (HGD_D_ERROR, "SSL_connect");
 		return (HGD_FAIL);
 	}
 

@@ -92,16 +92,18 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-extern int8_t			 hgd_debug;
-extern uint8_t			 dying;
-extern uint8_t			 exit_ok;
-extern char			*debug_names[];
-extern int			 syslog_error_map[];
-extern pid_t			 pid;
-extern const char		*hgd_component;
+extern int8_t			  hgd_debug;
+extern uint8_t			  dying;
+extern uint8_t			  restarting;
+extern char			**cmd_line_args;
+extern uint8_t			  exit_ok;
+extern char			 *debug_names[];
+extern int			  syslog_error_map[];
+extern pid_t			  pid;
+extern const char		 *hgd_component;
 
-extern char			*state_path;
-extern char			*filestore_path;
+extern char			 *state_path;
+extern char			 *filestore_path;
 
 struct hgd_user {
 	char			*name;
@@ -190,19 +192,10 @@ struct hgd_req_despatch {
 			closelog();					\
 		}							\
 	} while (0)
+
 #define HGD_INIT_SYSLOG_DAEMON()	openlog(hgd_component, 0, LOG_DAEMON);
 #define HGD_INIT_SYSLOG()		openlog(hgd_component, 0, 0);
 #define HGD_CLOSE_SYSLOG()		closelog();
-
-#define PRINT_SSL_ERR(msg)						\
-	do {								\
-		char error[255];					\
-		unsigned long err;					\
-		err = ERR_get_error();					\
-		ERR_error_string_n(err, error, sizeof(error));		\
-		DPRINTF(HGD_D_ERROR, "%s: %s", msg, error);		\
-	} while(0)
-
 
 #if defined(__linux__)
 	#define RESET_GETOPT() do {optind = 1;} while (0)
@@ -256,5 +249,6 @@ void				 hgd_bytes_to_hex_buf(char*, char*, int len);
 int				 hgd_readpassphrase_confirmed(
 				     char buf[HGD_MAX_PASS_SZ]);
 int				 hgd_daemonise(void);
+void				 hgd_restart_myself();
 
 #endif

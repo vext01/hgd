@@ -30,15 +30,16 @@
 
 #include "config.h"
 #include "hgd.h"
+#include "net.h"
 
 
 void
 hgd_cleanup_ssl(SSL_CTX **ctx) {
 	(void) ERR_free_strings();
 	(void) EVP_cleanup();
-	if (ctx!=NULL && *ctx != NULL) {
+
+	if ((ctx != NULL) && (*ctx != NULL))
 		 SSL_CTX_free(*ctx);
-	}	
 }
 
 int
@@ -60,13 +61,13 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	if (server) {
 		*method = (SSL_METHOD *) TLSv1_server_method();
 		if (*method == NULL) {
-			PRINT_SSL_ERR ("TLSv1_server_method");
+			PRINT_SSL_ERR(HGD_D_ERROR, "TLSv1_server_method");
 			return (HGD_FAIL);
 		}
 	} else {
 		*method = (SSL_METHOD *) TLSv1_client_method();
 		if (*method == NULL) {
-			PRINT_SSL_ERR ("TLSv1_client_method");
+			PRINT_SSL_ERR(HGD_D_ERROR, "TLSv1_client_method");
 			return (HGD_FAIL);
 		}
 /* XXX: if'd out because we won't get this finished before barcamp*/
@@ -87,7 +88,7 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	DPRINTF(HGD_D_DEBUG, "Setting up SSL_CTX_new");
 	*ctx = SSL_CTX_new(*method);
 	if (*ctx == NULL) {
-		PRINT_SSL_ERR ("SSL_CTX_new");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_CTX_new");
 		return (HGD_FAIL);
 	}
 
@@ -110,8 +111,8 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	DPRINTF(HGD_D_DEBUG, "Loading SSL certificate");
 	if (!SSL_CTX_use_certificate_file(
 	    *ctx, cert_path, SSL_FILETYPE_PEM)) {
-		DPRINTF(HGD_D_ERROR, "Can't load SSL cert: %s", cert_path);
-		PRINT_SSL_ERR("SSL_CTX_use_certificate_file");
+		DPRINTF(HGD_D_WARN, "Can't load SSL cert: %s", cert_path);
+		PRINT_SSL_ERR(HGD_D_WARN, "SSL_CTX_use_certificate_file");
 		return (HGD_FAIL);
 	}
 
@@ -119,16 +120,16 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	DPRINTF(HGD_D_DEBUG, "Loading SSL private key");
 	if (!SSL_CTX_use_PrivateKey_file(
 	    *ctx, key_path, SSL_FILETYPE_PEM)) {
-		DPRINTF(HGD_D_ERROR, "Can't load SSL key: %s", key_path);
-		PRINT_SSL_ERR("SSL_CTX_use_PrivateKey_file");
+		DPRINTF(HGD_D_WARN, "Can't load SSL key: %s", key_path);
+		PRINT_SSL_ERR(HGD_D_WARN, "SSL_CTX_use_PrivateKey_file");
 		return (HGD_FAIL);
 	}
 
 	/* verify private key */
 	DPRINTF(HGD_D_DEBUG, "Verify SSL private certificate");
 	if (!SSL_CTX_check_private_key(*ctx)) {
-		DPRINTF(HGD_D_ERROR, "Can't verify SSL key: %s", key_path);
-		PRINT_SSL_ERR("SSL_CTX_check_private_key");
+		DPRINTF(HGD_D_WARN, "Can't verify SSL key: %s", key_path);
+		PRINT_SSL_ERR(HGD_D_WARN, "SSL_CTX_check_private_key");
 		return (HGD_FAIL);
 	}
 
@@ -332,7 +333,7 @@ hgd_sock_recv_bin_ssl(SSL *ssl, ssize_t len)
 		recvd = SSL_read(ssl, msg, len - recvd_tot);
 
 		if (recvd <= 0) {
-			PRINT_SSL_ERR(__func__);
+			PRINT_SSL_ERR(HGD_D_ERROR, __func__);
 			recvd = 0;
 			return (NULL);
 		}
@@ -439,7 +440,7 @@ hgd_sock_recv_line_ssl(SSL *ssl)
 
 	ssl_ret = SSL_read(ssl, buffer, HGD_MAX_LINE);
 	if (ssl_ret <= 0) {
-		PRINT_SSL_ERR("SSL_read");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_read");
 		free(buffer);
 		return (NULL);
 	}

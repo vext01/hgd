@@ -45,6 +45,7 @@
 
 #include "hgd.h"
 #include "db.h"
+#include "net.h"
 
 #include <openssl/ssl.h>
 #ifdef HAVE_TAGLIB
@@ -100,8 +101,12 @@ hgd_exit_nicely()
 	if (db)
 		sqlite3_close(db);
 
-	hgd_cleanup_ssl(&ctx);	
+	hgd_cleanup_ssl(&ctx);
 
+	if (restarting)
+		hgd_restart_myself();
+
+	/* after restart, so that we can report a SIGHUP */
 	HGD_CLOSE_SYSLOG();
 
 	_exit (!exit_ok);
@@ -627,7 +632,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		return (HGD_OK);
 	} else {
-		DPRINTF(HGD_D_WARN, 
+		DPRINTF(HGD_D_WARN,
 		    "Hmm that was racey! wanted to kill %d but %s was playing",
 		    playing.id, id_str);
 		return(HGD_FAIL);
@@ -689,21 +694,21 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 	DPRINTF(HGD_D_DEBUG, "New SSL for session");
 	sess->ssl = SSL_new(ctx);
 	if (sess->ssl == NULL) {
-		PRINT_SSL_ERR("SSL_new");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_new");
 		goto clean;
 	}
 
 	DPRINTF(HGD_D_DEBUG, "SSL_set_fd");
 	ssl_err = SSL_set_fd(sess->ssl, sess->sock_fd);
 	if (ssl_err == 0) {
-		PRINT_SSL_ERR("SSL_set_fd");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_set_fd");
 		goto clean;
 	}
 
 	DPRINTF(HGD_D_DEBUG, "SSL_accept");
 	ssl_err = SSL_accept(sess->ssl);
 	if (ssl_err != 1) {
-		PRINT_SSL_ERR("SSL_accept");
+		PRINT_SSL_ERR(HGD_D_ERROR, "SSL_accept");
 		goto clean;
 	}
 
@@ -831,7 +836,6 @@ clean:
 	/* free tokens */
 	for (; n_toks > 0; )
 		free(tokens[--n_toks]);
-	
 
 	return (bye);
 }
@@ -1203,8 +1207,9 @@ void
 hgd_usage()
 {
 	printf("usage: hgd-netd <options>\n");
+	printf("    -B			Do not daemonise, run in foreground\n");
 #ifdef HAVE_LIBCONFIG
-	printf("    -c <path>	Path to a config file to use\n");
+	printf("    -c <path>		Path to a config file to use\n");
 #endif
 	printf("    -D			Disable reverse DNS lookups for clients\n");
 	printf("    -d <path>		Set hgd state directory\n");
@@ -1229,6 +1234,8 @@ main(int argc, char **argv)
 	char			 ch, *xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
+
+	cmd_line_args = argv; /* cache this incase of SIGHUP */
 
 	/* as early as possible */
 	HGD_INIT_SYSLOG_DAEMON();
