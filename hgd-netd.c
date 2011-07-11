@@ -876,6 +876,17 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		}
 	} while (!exit && !dying && !restarting);
 
+	/*
+	 * client service procs should not respawn as liesteners,
+	 * that would suck. This may need tweaking later, as the exit
+	 * message may be misinterpreted (?) Handling HUP is hard.
+	 */
+	if (restarting) {
+		dying = 1;
+		restarting = 0;
+		exit_ok = 1;
+	}
+
 	/* laters */
 	hgd_sock_send_line(cli_fd, sess.ssl, HGD_BYE);
 
@@ -1003,7 +1014,7 @@ start:
 		if (!child_pid) {
 
 			/* turn off HUP handler */
-			signal(SIGHUP, SIG_DFL);
+			//signal(SIGHUP, SIG_DFL);
 
 			db = hgd_open_db(db_path);
 			if (db == NULL)
