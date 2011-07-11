@@ -144,8 +144,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 		fclose(pid_file);
 		if (waitpid(pid, &status, 0) < 0) {
 			/* it is ok for this to fail if we are restarting */
-			if (restarting) {
-				/* in which case kill mplayer */
+			if (restarting || dying) {
 				kill(pid, SIGINT);
 			}
 			DPRINTF(HGD_D_WARN, "Could not wait(): %s", SERROR);
