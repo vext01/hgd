@@ -74,6 +74,10 @@ hgd_exit_nicely()
 	hgd_free_py();
 #endif
 
+	/* before syslog goes down */
+	if (restarting)
+		hgd_restart_myself();
+
 	HGD_CLOSE_SYSLOG();
 
 	exit (!exit_ok);
@@ -138,7 +142,14 @@ hgd_play_track(struct hgd_playlist_item *t)
 		}
 
 		fclose(pid_file);
-		wait(&status);
+		if (waitpid(pid, &status, 0) < 0) {
+			/* it is ok for this to fail if we are restarting */
+			if (restarting) {
+				/* in which case kill mplayer */
+				kill(pid, SIGINT);
+			}
+			DPRINTF(HGD_D_WARN, "Could not wait(): %s", SERROR);
+		}
 
 		/* unlink mplayer pid path */
 		DPRINTF(HGD_D_DEBUG, "Deleting mplayer pid file");
@@ -147,8 +158,8 @@ hgd_play_track(struct hgd_playlist_item *t)
 		}
 		free(pid_path);
 
-		/* unlink media */
-		if ((purge_finished_fs) && (unlink(t->filename) < 0)) {
+		/* unlink media (but not if restarting, we replay the track) */
+		if ((!restarting) && (purge_finished_fs) && (unlink(t->filename) < 0)) {
 			DPRINTF(HGD_D_DEBUG,
 			    "Deleting finished: %s", t->filename);
 			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
@@ -160,7 +171,9 @@ hgd_play_track(struct hgd_playlist_item *t)
 
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
-	if (hgd_mark_finished(t->id, purge_finished_db) == HGD_FAIL)
+	/* if we are restarting, we replay the track on restart */
+	if ((!restarting) &&
+	    (hgd_mark_finished(t->id, purge_finished_db) == HGD_FAIL))
 		DPRINTF(HGD_D_WARN,
 		    "Could not purge/mark finished -- trying to continue");
 }
@@ -172,7 +185,7 @@ hgd_play_loop(void)
 
 	/* forever play songs */
 	DPRINTF(HGD_D_DEBUG, "Starting play loop");
-	while (!dying) {
+	while ((!dying) && (!restarting)) {
 		memset(&track, 0, sizeof(track));
 
 		if (hgd_get_next_track(&track) == HGD_FAIL)
@@ -193,9 +206,6 @@ hgd_play_loop(void)
 		}
 		hgd_free_playlist_item(&track);
 	}
-
-	if (dying)
-		hgd_exit_nicely();
 }
 
 int
@@ -343,6 +353,8 @@ main(int argc, char **argv)
 	char			 ch, *xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
+
+	cmd_line_args = argv; /* cache for restart */
 
 	/* early as possible */
 	HGD_INIT_SYSLOG_DAEMON();

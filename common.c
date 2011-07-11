@@ -167,8 +167,8 @@ hgd_kill_sighandler(int sig)
 {
 	if (sig == SIGHUP)
 		restarting = 1;
-
-	dying = 1;
+	else
+		dying = 1;
 }
 
 void
