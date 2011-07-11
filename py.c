@@ -299,7 +299,7 @@ hgd_py_meth_Hgd_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
 	Hgd			*self;
 
-	DPRINTF(HGD_D_INFO, "__new__ hgd object");
+	DPRINTF(HGD_D_DEBUG, "__new__ hgd object");
 
 	/* quiet */
 	args = args;
