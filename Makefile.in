@@ -46,6 +46,33 @@ all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
 clean:
 	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o shout.o
 
+.PHONY: analyze
+analyze:
+	echo ****** THIS NEEDS CLANG *******
+	${CC} --analyze ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} crypto.c
+	${CC} --analyze ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} net.c
+	${CC} --analyze ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} py.c
+	${CC} --analyze ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} common.c
+	${CC} --analyze ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} db.c
+	${CC} --analyze ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
+		${CONFIG_LDFLAGS} hgd-playd.c
+	${CC} --analyze ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
+		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
+		${CONFIG_LDFLAGS} hgd-netd.c
+	${CC} --analyze ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
+		${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
+		hgdc.c
+	${CC} --analyze ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
+		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
+		hgd-admin.c
+	${CC} --analyze ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
+		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQLITE_CFLAGS} \
+		${SQL_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS}  hgd-mk-pydoc
+	
+
+
+
 crypto.o: crypto.h crypto.c hgd.h config.h
 	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o crypto.c
 
