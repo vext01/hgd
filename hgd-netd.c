@@ -874,7 +874,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 			exit_ok = 1;
 			hgd_exit_nicely();
 		}
-	} while (!exit && !dying);
+	} while (!exit && !dying && !restarting);
 
 	/* laters */
 	hgd_sock_send_line(cli_fd, sess.ssl, HGD_BYE);
@@ -960,7 +960,7 @@ start:
 		pfd.events = POLLIN;
 		data_ready = 0;
 
-		while (!dying && !data_ready) {
+		while (!dying && !restarting && !data_ready) {
 			data_ready = poll(&pfd, 1, INFTIM);
 			if (data_ready == -1) {
 				if (errno != EINTR) {
@@ -971,8 +971,9 @@ start:
 			}
 		}
 
-		if (dying) {
-			exit_ok = 0;
+		if (dying || restarting) {
+			if (restarting)
+				exit_ok = 1;
 			hgd_exit_nicely();
 		}
 

@@ -199,7 +199,7 @@ hgd_mk_state_dir()
 		}
 	}
 
-	/*correct any insecure perms (user may think he knows better) */
+	/* correct any insecure perms (user may think he knows better) */
 	if (chmod(filestore_path, S_IRWXU) != 0)
 		DPRINTF(HGD_D_WARN, "Could not make filestore secure");
 
