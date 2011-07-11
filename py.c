@@ -624,7 +624,7 @@ hgd_execute_py_hook(char *hook)
 	int			 i, c_ret, any_errors = HGD_OK;
 	char			*func_name = NULL;
 
-	DPRINTF(HGD_D_INFO, "Executing Python hooks for '%s'", hook);
+	DPRINTF(HGD_D_DEBUG, "Executing Python hooks for '%s'", hook);
 
 	xasprintf(&func_name, "hgd_hook_%s", hook);
 
