@@ -54,6 +54,8 @@ hgd_py_func_dprint(PyObject *self, PyObject *args)
 	long			 level;
 	int			 err = 0;
 
+	(void)self;
+
 	if (PyArg_ParseTuple(args, "lO", &level, &arg1) == 0) {
 		err = 1;
 		goto clean;
@@ -228,8 +230,11 @@ clean:
 
 /* make some stuff read only */
 static int
-hgd_py_meth_Hgd_read_only_raise(Hgd *self, PyObject *value, void *closure)
+hgd_py_meth_Hgd_read_only_raise(Hgd self, PyObject *value, void *closure)
 {
+	(void)closure;
+	(void)value;
+	(void)self;
 	(void) PyErr_Format(PyExc_AttributeError, "attribute is read-only");
 	return (-1);
 }
@@ -237,6 +242,7 @@ hgd_py_meth_Hgd_read_only_raise(Hgd *self, PyObject *value, void *closure)
 static PyObject *
 hgd_py_meth_Hgd_get_hgd_version(Hgd *self, void *closure)
 {
+	(void)closure;
 	Py_INCREF(self->hgd_version);
 	return (self->hgd_version);
 }
@@ -244,18 +250,21 @@ hgd_py_meth_Hgd_get_hgd_version(Hgd *self, void *closure)
 static PyObject *
 hgd_py_meth_Hgd_get_proto_version(Hgd *self, void *closure)
 {
+	(void)closure;
 	return (PyInt_FromLong(self->proto_version));
 }
 
 static PyObject *
 hgd_py_meth_Hgd_get_debug_level(Hgd *self, void *closure)
 {
+	(void)closure;
 	return (PyInt_FromLong(self->debug_level));
 }
 
 static PyObject *
 hgd_py_meth_Hgd_get_component(Hgd *self, void *closure)
 {
+	(void)closure;
 	Py_INCREF(self->component);
 	return (self->component);
 }
@@ -336,9 +345,9 @@ hgd_py_meth_Hgd_init(Hgd *self, PyObject *args, PyObject *kwds)
 	DPRINTF(HGD_D_INFO, "__init__ hgd object");
 
 	/* quiet */
-	self = self;
-	args = args;
-	kwds = kwds;
+	(void)self;
+	(void)args;
+	(void)kwds;
 
 	self->proto_version = 0;
 	self->debug_level = 0;
