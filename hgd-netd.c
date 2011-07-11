@@ -1001,6 +1001,9 @@ start:
 
 		if (!child_pid) {
 
+			/* turn off HUP handler */
+			signal(SIGHUP, SIG_DFL);
+
 			db = hgd_open_db(db_path);
 			if (db == NULL)
 				hgd_exit_nicely();
