@@ -48,7 +48,7 @@ clean:
 
 .PHONY: analyze
 analyze:
-	echo ****** THIS NEEDS CLANG *******
+	@echo "****** THIS NEEDS CLANG *******"
 	${CC} --analyze ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} crypto.c
 	${CC} --analyze ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} net.c
 	${CC} --analyze ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} py.c
