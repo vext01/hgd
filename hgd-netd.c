@@ -862,7 +862,6 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	hgd_sock_send_line(cli_fd, sess.ssl, HGD_GREET);
 
 	/* main command recieve loop */
-	exit = 0;
 	do {
 		recv_line = hgd_sock_recv_line(sess.sock_fd, sess.ssl);
 		exit = hgd_parse_line(&sess, recv_line);

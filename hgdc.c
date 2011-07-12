@@ -246,7 +246,7 @@ hgd_check_svr_response(char *resp, uint8_t x)
 		DPRINTF(HGD_D_DEBUG, "Check reponse '%s'", trunc);
 		free(trunc);
 	} else
-		trunc = trunc; /* silence compiler */
+		(void)trunc; /* silence compiler */
 
 	if (len < 2) {
 		DPRINTF(HGD_D_ERROR, "Malformed server response");
