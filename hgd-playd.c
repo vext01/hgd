@@ -158,7 +158,8 @@ hgd_play_track(struct hgd_playlist_item *t)
 		free(pid_path);
 
 		/* unlink media (but not if restarting, we replay the track) */
-		if ((!restarting) && (purge_finished_fs) && (unlink(t->filename) < 0)) {
+		if ((!restarting) && (!dying)
+		    && (purge_finished_fs) && (unlink(t->filename) < 0)) {
 			DPRINTF(HGD_D_DEBUG,
 			    "Deleting finished: %s", t->filename);
 			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
@@ -171,7 +172,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
 	/* if we are restarting, we replay the track on restart */
-	if ((!restarting) &&
+	if ((!restarting) && (!dying) &&
 	    (hgd_mark_finished(t->id, purge_finished_db) == HGD_FAIL))
 		DPRINTF(HGD_D_WARN,
 		    "Could not purge/mark finished -- trying to continue");
