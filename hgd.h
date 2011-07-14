@@ -249,6 +249,6 @@ void				 hgd_bytes_to_hex_buf(char*, char*, int len);
 int				 hgd_readpassphrase_confirmed(
 				     char buf[HGD_MAX_PASS_SZ]);
 int				 hgd_daemonise(void);
-void				 hgd_restart_myself();
+void				 hgd_restart_myself(void);
 
 #endif
