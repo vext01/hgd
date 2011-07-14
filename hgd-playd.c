@@ -172,7 +172,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
 
 	/* if we are restarting, we replay the track on restart */
-	if ((!restarting) &&
+	if ((!restarting) && (!dying) &&
 	    (hgd_mark_finished(t->id, purge_finished_db) == HGD_FAIL))
 		DPRINTF(HGD_D_WARN,
 		    "Could not purge/mark finished -- trying to continue");
