@@ -330,7 +330,8 @@ hgd_py_meth_Hgd_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 			Py_DECREF(self);
 			return NULL;
 		}
-		
+	}
+	
 	self->proto_version = HGD_PROTO_VERSION;
 	self->debug_level = hgd_debug;
 
