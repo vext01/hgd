@@ -132,6 +132,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
 		hgd_exit_nicely();
 	} else {
+		DPRINTF(HGD_D_INFO, "Mplayer spawned: pid=%d", pid);
 		fprintf(pid_file, "%d\n%d", pid, t->id);
 
 		fl.l_type = F_UNLCK;  /* set to unlock same region */
@@ -142,6 +143,7 @@ hgd_play_track(struct hgd_playlist_item *t)
 		}
 
 		fclose(pid_file);
+		DPRINTF(HGD_D_INFO, "Waiting for mplayer to finish: pid=%d", pid);
 		if (waitpid(pid, &status, 0) < 0) {
 			/* it is ok for this to fail if we are restarting */
 			if (restarting || dying) {
