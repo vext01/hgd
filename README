@@ -34,10 +34,10 @@ To build, you will need:
 And optionally:
 
  * LibConfig, if you want config file support.
- * TagLib, if you want media tag support.
+ * TagLib, if you want media tag support in the server.
  * Python-{2.6,2.7}, if you want the scripting backend.
 
-On ubuntu (and debian?) you can do:
+On ubuntu (and debian?) you can do something like:
 
 sudo apt-get install libbsd0 libbsd-dev mplayer python2.7 python2.7-dev	\
 	libtagc0 libtagc0-dev libconfig8 libconfig8-dev libsqlite3-0	\
@@ -46,16 +46,14 @@ sudo apt-get install libbsd0 libbsd-dev mplayer python2.7 python2.7-dev	\
 Building
 --------
 
-The build system is both bmake and gmake compatible, as it stands we use
-only make.
- 
  1) If you checked out from git, first run:
     ./autogen.sh
 
  2) Configure the build:
     ./configure
 
-    If you don't want to pollute /usr/local, pass a --prefix=XXX argument.
+    If you don't want to pollute /usr/local, pass a --prefix=/some/path
+    argument.
 
     Examine the output and install anything missing. Don't forget linux
     packages headers and libraries separately.
@@ -75,6 +73,8 @@ only make.
 
 NOTES:
 
+HGD will happily run out of it's build directory.
+
 On MacOS X, you may have to jump through hoops. Others have succeeded using
 macports for libconfig and sqlite3 dependencies. You may need to set the
 include path and library path to /opt/include and /opt/lib respectively (good
@@ -83,21 +83,26 @@ luck).
 Quickstart for the Lazy
 -----------------------
 
-If you upgraded from a previous version of HGD, i would reccommend
+This is how to configure a HGD server an client:
+
+If you upgraded from a previous version of HGD, i would recommend
 removing your state directory and starting afresh, as the database
 structure does change from time to time.
+
+If you need a custom state path (ie. not /var/hgd), you can either pass -d to
+all server components (make sure they are the same of course), or make a hgd.rc
+config file (see the FILES sections in manual pages).
 
 Now you should make user accounts:
 
  % hgd-admin user-add <username>
 
+You will be asked to type a password twice. Do this for all users.
+
 Then you can run the hgd daemons:
 
  % hgd-netd
- % hgd-playd
-
-If you don't have permission to /var/hgd, you can use a different place for
-the state directory; pass '-d <path>' to hgd-playd, hgd-netd and hgd-admin.
+ % hgd-play
 
 Then you can queue tracks:
  % hgdc q <some media file>
@@ -118,10 +123,11 @@ identity.
 History
 -------
 
- * 0.1 - basic functionality.
- * 0.2 - SSL crypto support and user authentication.
- * 0.3 - Config file support.
- * 0.4 - Autoconf, taglib, Python scripting
+ * 0.1   - basic functionality.
+ * 0.2   - SSL crypto support and user authentication.
+ * 0.3   - Config file support.
+ * 0.4   - Autoconf, taglib, Python scripting.
+ * 0.4.1 - Properly daemonise, log to syslog, honor SIGHUP.
 
 Roadmap
 -------
