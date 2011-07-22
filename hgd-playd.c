@@ -124,6 +124,10 @@ hgd_play_track(struct hgd_playlist_item *t)
 #endif
 	pid = fork();
 	if (!pid) {
+
+		/* close stdin, or mplayer catches keyboard shortcuts */
+		fclose(stdin);
+
 		/* child - your the d00d who will play this track */
 		execlp("mplayer", "mplayer", "-really-quiet",
 		    t->filename, (char *) NULL);
