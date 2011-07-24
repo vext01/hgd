@@ -364,6 +364,9 @@ main(int argc, char **argv)
 
 	cmd_line_args = argv; /* cache for restart */
 
+	if (hgd_cache_abs_path(argv[0]) != HGD_OK)
+		hgd_exit_nicely();
+
 	/* early as possible */
 	HGD_INIT_SYSLOG_DAEMON();
 

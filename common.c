@@ -48,6 +48,8 @@ uint8_t				  restarting = 0;
 uint8_t				  exit_ok = 0;
 pid_t				  pid = 0;
 
+char				 *self_abs_path;
+
 char				 *debug_names[] = {
 				    "error", "warn", "info", "debug"};
 int				 syslog_error_map[] = {
@@ -328,8 +330,9 @@ hgd_daemonise()
 void
 hgd_restart_myself()
 {
-	DPRINTF(HGD_D_INFO, "Caught SIGHUP, restarting");
-	if (execvp(hgd_component, cmd_line_args) < 0) {
+	DPRINTF(HGD_D_WARN, "Caught SIGHUP, restarting");
+
+	if (execv(self_abs_path, cmd_line_args) < 0) {
 		DPRINTF(HGD_D_ERROR, "Failed to restart"
 		    ", is %s in your path?: %s", hgd_component, SERROR);
 	}
@@ -340,4 +343,18 @@ hgd_restart_myself()
 	 * everything is already freed. So we just exit.
 	 */
 	DPRINTF(HGD_D_ERROR, "%s was interrupted or crashed", hgd_component);
+}
+
+
+int
+hgd_cache_abs_path(char *inv)
+{
+	if (*inv != '/') {
+		DPRINTF(HGD_D_ERROR,
+		    "HGD daemons must be started with an absolute path");
+		return (HGD_FAIL);
+	}
+
+	self_abs_path = inv;
+	return (HGD_OK);
 }
