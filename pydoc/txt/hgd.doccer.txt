@@ -1,9 +1,6 @@
 NNAAMMEE
     hgd.doccer - Generate Python API Docs.
 
-FFIILLEE
-    /home/edd/source/hgd/pylib/hgd/doccer.py
-
 DDEESSCCRRIIPPTTIIOONN
     This class generates docs for the HGD Python API. This is non-trivial, as
     the core 'Hgd' type is only available in the embedded interpreter. Hence
