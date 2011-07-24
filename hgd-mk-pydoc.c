@@ -17,6 +17,9 @@
 
 #include "config.h"
 
+/* must be outside HAVE_PYTHON */
+const char			*hgd_component = "hgd-mk-pydoc";
+
 #ifdef HAVE_PYTHON
 
 #include <Python.h> /* defines _GNU_SOURCE */
@@ -34,8 +37,6 @@
 #include "py.h"
 
 #include "hgd.h"
-
-const char			*hgd_component = "hgd-mk-pydoc";
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -155,6 +156,8 @@ main(int argc, char **argv)
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "hgd.h"
+
 /* unused, but must be defined */
 void
 hgd_exit_nicely()
@@ -165,7 +168,11 @@ hgd_exit_nicely()
 int
 main(int argc, char **argv)
 {
+	(void) argc;
+	(void) argv;
+
 	printf("HGD was built without Python support\n");
+
 	return (EXIT_SUCCESS);
 }
 #endif

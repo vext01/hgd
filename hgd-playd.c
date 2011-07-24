@@ -32,6 +32,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
+
 #ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
 #endif
