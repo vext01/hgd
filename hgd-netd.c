@@ -1249,11 +1249,6 @@ main(int argc, char **argv)
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
-	cmd_line_args = argv; /* cache this incase of SIGHUP */
-
-	if (hgd_cache_abs_path(argv[0]) != HGD_OK)
-		hgd_exit_nicely();
-
 	/* as early as possible */
 	HGD_INIT_SYSLOG_DAEMON();
 
@@ -1302,7 +1297,12 @@ main(int argc, char **argv)
 		}
 	}
 
+
 	RESET_GETOPT();
+
+	/* cache HUP info */
+	if (hgd_cache_exec_context(argv) != HGD_OK)
+		hgd_exit_nicely();
 
 	hgd_read_config(config_path + num_config);
 

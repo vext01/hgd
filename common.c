@@ -48,8 +48,6 @@ uint8_t				  restarting = 0;
 uint8_t				  exit_ok = 0;
 pid_t				  pid = 0;
 
-char				 *self_abs_path;
-
 char				 *debug_names[] = {
 				    "error", "warn", "info", "debug"};
 int				 syslog_error_map[] = {
@@ -332,7 +330,7 @@ hgd_restart_myself()
 {
 	DPRINTF(HGD_D_WARN, "Caught SIGHUP, restarting");
 
-	if (execv(self_abs_path, cmd_line_args) < 0) {
+	if (execv(cmd_line_args[0], cmd_line_args) < 0) {
 		DPRINTF(HGD_D_ERROR, "Failed to restart"
 		    ", is %s in your path?: %s", hgd_component, SERROR);
 	}
@@ -345,16 +343,20 @@ hgd_restart_myself()
 	DPRINTF(HGD_D_ERROR, "%s was interrupted or crashed", hgd_component);
 }
 
-
 int
-hgd_cache_abs_path(char *inv)
+hgd_cache_exec_context(char **argv)
 {
-	if (*inv != '/') {
+	if (*(argv[0]) != '/') {
 		DPRINTF(HGD_D_ERROR,
-		    "HGD daemons must be started with an absolute path");
+		    "HGD daemons must be started with an absolute path. "
+		    "You passed '%s'", argv[0]);
 		return (HGD_FAIL);
 	}
 
-	self_abs_path = inv;
+	//self_abs_path = argv[0];
+	cmd_line_args = argv;
+
+	DPRINTF(HGD_D_INFO, "daemon='%s'", argv[0]);
+
 	return (HGD_OK);
 }

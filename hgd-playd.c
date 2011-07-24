@@ -362,11 +362,6 @@ main(int argc, char **argv)
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
 
-	cmd_line_args = argv; /* cache for restart */
-
-	if (hgd_cache_abs_path(argv[0]) != HGD_OK)
-		hgd_exit_nicely();
-
 	/* early as possible */
 	HGD_INIT_SYSLOG_DAEMON();
 
@@ -424,6 +419,9 @@ main(int argc, char **argv)
 	}
 
 	RESET_GETOPT();
+
+	if (hgd_cache_exec_context(argv) != HGD_OK)
+		hgd_exit_nicely();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options");
 	while ((ch = getopt(argc, argv, "Bc:Cd:hpP:qvx:")) != -1) {

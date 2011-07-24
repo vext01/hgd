@@ -101,7 +101,6 @@ extern char			 *debug_names[];
 extern int			  syslog_error_map[];
 extern pid_t			  pid;
 extern const char		 *hgd_component;
-extern char			 *self_abs_path;
 
 extern char			 *state_path;
 extern char			 *filestore_path;
@@ -251,6 +250,6 @@ int				 hgd_readpassphrase_confirmed(
 				     char buf[HGD_MAX_PASS_SZ]);
 int				 hgd_daemonise(void);
 void				 hgd_restart_myself(void);
-int				 hgd_cache_abs_path(char *inv);
+int				 hgd_cache_exec_context(char **args);
 
 #endif
