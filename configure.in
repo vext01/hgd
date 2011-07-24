@@ -1,6 +1,6 @@
 # HGD Autogunk
 
-AC_INIT([hgd], [0.4.0], [vext01@gmail.com, me92@kent.ac.uk])
+AC_INIT([hgd], [0.4.1], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
 
 # we need the install prefix at compile time
