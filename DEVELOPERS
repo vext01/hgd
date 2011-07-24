@@ -80,14 +80,14 @@ Rolling a Release
  2.   Turn off debug flag (-g in CFLAGS).
  3.   Bump version macro.
  4.   Check README has history updated.
- 5.   Run "make pydoc"
+ 5.   Run "make pydoc" and remove the FILE sections from the output (sigh).
  6.   Run (on an OpenBSD host) 'make lint-mans'. Fix any man bugs.
  7.   Commit and push to git.
  8.   If this is a major version, make a branch in git. Eg. "0.4.x". Push it.
  9.   Tag the version in git. It should be tagged as 'x.x.x', eg '0.2.1'. Push.
  10.  Turn debug flag back on. Push.
  11.  Get a tarball of tag off github.
- 12.  Untar it and rename.
+ 12.  Untar it.
  13.  Rename the directory hgd-x.x.x
  14.  Generate the configure script (autogen.sh)
  15.  Tar it up the whole dir as hgd-x.x.x.tar.gz (not .tgz)
