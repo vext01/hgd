@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd June 20, 2011
+.Dd July 24, 2011
 .Dt HGD-NETD 1
 .Os
 .Sh NAME
@@ -24,7 +24,7 @@
 .Sh SYNOPSIS
 .Nm hgd-netd
 .Bk -words
-.Op Fl DeEfhv
+.Op Fl BDeEfhv
 .Op Fl c Ar config
 .Op Fl d Ar state-dir
 .Op Fl F Ar flood-limit
@@ -51,6 +51,8 @@ the currently playing song, if the user dislikes the song.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl B
+Do not daemonise, remain in foreground.
 .It Fl c Ar config
 Location fo the config file.
 .It Fl D
