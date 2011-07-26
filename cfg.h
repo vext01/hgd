@@ -19,3 +19,11 @@ void	hgd_cfg_playd_purgefs(config_t *cf, uint8_t *purge_finished_fs);
 void	hgd_cfg_pluginpath(config_t *cf, char **hgd_py_plugin_dir);
 void	hgd_cfg_playd_purgedb(config_t *cf, uint8_t *purge_finished_db);
 void	hgd_cfg_c_colours(config_t *cf, uint8_t *colours_on);
+void	hgd_cfg_c_maxitems(config_t *cf, uint8_t *hud_max_items);
+void	hgd_cfg_c_hostname(config_t *cf, char **host);
+void	hgd_cfg_c_port(config_t *cf, int *port);
+void	hgd_cfg_c_password(config_t *cf, char **password, char *config_location);
+void	hgd_cfg_c_refreshrate(config_t *cf, uint8_t *hud_refresh_speed);
+void	hgd_cfg_c_username(config_t *cf, char** user);
+void	hgd_cfg_c_debug(config_t *cf, int8_t *hgd_debug);
+

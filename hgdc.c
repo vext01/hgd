@@ -755,15 +755,7 @@ hgd_read_config(char **config_locations)
 	 * see hgd-playd.c for how to remove need for stat.
 	 */
 	config_t		 cfg, *cf;
-	char			*cypto_pref, *tmp_host, *tmp_user;
-	char			*tmp_password;
 	int			 ret = HGD_OK;
-	struct stat		 st;
-
-	/* temp variables */
-	long long int		tmp_dbglevel, tmp_port, tmp_hud_refresh_rate;
-	long long int		tmp_hud_max_items;
-	int			tmp_colours_on;
 
 	cf = &cfg;
 
@@ -773,59 +765,13 @@ hgd_read_config(char **config_locations)
 
 	hgd_cfg_c_colours(cf, &colours_on);
 	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);	
-
-
-	/* -m */
-	if (config_lookup_int64(cf, "max_items", &tmp_hud_max_items)) {
-		hud_max_items = tmp_hud_max_items;
-		DPRINTF(HGD_D_DEBUG, "max items=%d", hud_max_items);
-	}
-
-	/* -s */
-	if (config_lookup_string(cf, "hostname", (const char **) &tmp_host)) {
-		free(host);
-		host = xstrdup(tmp_host);
-		DPRINTF(HGD_D_DEBUG, "host=%s", host);
-	}
-
-	/* -p */
-	if (config_lookup_int64(cf, "port", &tmp_port)) {
-		port = tmp_port;
-		DPRINTF(HGD_D_DEBUG, "port=%d", port);
-	}
-
-	/* password */
-	if (config_lookup_string(cf, "password", (const char**) &tmp_password)) {
-		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
-			DPRINTF(HGD_D_ERROR,
-				"Config file with your password in is readable by"
-				" other people.  Please chmod it.");
-			hgd_exit_nicely();
-
-		}
-
-		password = xstrdup(tmp_password);
-		DPRINTF(HGD_D_DEBUG, "Set password from config");
-	}
-
-	/* -r */
-	if (config_lookup_int64(cf, "refresh_rate", &tmp_hud_refresh_rate)) {
-		hud_refresh_speed = tmp_hud_refresh_rate;
-		DPRINTF(HGD_D_DEBUG, "refresh rate=%d", hud_refresh_speed);
-	}
-
-	/* -u */
-	if (config_lookup_string(cf, "username", (const char**) &tmp_user)) {
-		free(user);
-		user = strdup(tmp_user);
-		DPRINTF(HGD_D_DEBUG, "user='%s'", user);
-	}
-
-	/* -x */
-	if (config_lookup_int64(cf, "debug", &tmp_dbglevel)) {
-		hgd_debug = tmp_dbglevel;
-		DPRINTF(HGD_D_DEBUG, "debug level=%d", hgd_debug);
-	}
+	hgd_cfg_c_maxitems(cf, &hud_max_items);
+	hgd_cfg_c_hostname(cf, &host);
+	hgd_cfg_c_port(cf, &port);
+	hgd_cfg_c_password(cf, &password, *config_locations);
+	hgd_cfg_c_refreshrate(cf, &hud_refresh_speed);
+	hgd_cfg_c_username(cf, &user);
+	hgd_cfg_c_debug(cf, &hgd_debug);
 
 	config_destroy(cf);
 	return (ret);
