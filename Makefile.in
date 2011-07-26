@@ -87,13 +87,13 @@ common.o: common.c hgd.h config.h
 db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
-hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o
+hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o cfg.o
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} \
-		-o hgd-playd db.o common.o crypto.o py.o hgd-playd.c
+		-o hgd-playd cfg.o db.o common.o crypto.o py.o hgd-playd.c
 
-hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o config.h crypto.o
+hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o cfg.o crypto.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
 		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \

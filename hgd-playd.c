@@ -16,6 +16,7 @@
  */
 
 #include "config.h"
+#include "cfg.h"
 
 #ifdef HAVE_PYTHON
 #include <Python.h> /* defines _GNU_SOURCE */
@@ -226,109 +227,21 @@ hgd_read_config(char **config_locations)
 	 * still uses the old version.
 	 */
 	config_t		 cfg, *cf;
-	long long int		 tmp_hgd_debug;
-	int			 tmp_purge_fin_fs, tmp_purge_fin_db;
-	int			 tmp_background;
-	char			*tmp_state_path;
-#ifdef HAVE_PYTHON
-	char			*tmp_py_dir;
-#endif
-	struct stat		 st;
 
 	cf = &cfg;
-	config_init(cf);
 
-	while (*config_locations != NULL) {
-
-		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
-		    *config_locations);
-
-		/* XXX: can be removed when deb get new libconfig */
-		if ( stat (*config_locations, &st) < 0 ) {
-			DPRINTF(HGD_D_INFO, "Could not stat %s",
-			    *config_locations);
-			config_locations--;
-			continue;
-		}
-
-		if (config_read_file(cf, *config_locations)) {
-			break;
-		} else {
-#if 1
-			DPRINTF(HGD_D_ERROR, "%s (line: %d)",
-			    config_error_text(cf), config_error_line(cf));
-#else
-			/*
-			 * XXX: we can use this verion when debian
-			 * get new libconfig
-			 */
-                        if (config_error_type (cf) == CONFIG_ERR_FILE_IO) {
-				DPRINTF(HGD_D_INFO, "%s (line: %d)",
-				    config_error_text(cf),
-				    config_error_line(cf));
-			} else {
-				DPRINTF(HGD_D_ERROR, "%s (line: %d)",
-				    config_error_text(cf),
-				    config_error_line(cf));
-			}
-#endif
-			config_locations--;
-		}
-	}
-
-	if (*config_locations == NULL) {
-		config_destroy(cf);
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
 		return (HGD_OK);
 	}
-
-	/* -B */
-	if (config_lookup_bool(cf, "playd.daemonise", &tmp_background)) {
-		background = tmp_background;
-		DPRINTF(HGD_D_DEBUG, "%s to background daemon",
-		    background ? "Going" : "Not going");	
-	}
-
-	/* -d */
-	if (config_lookup_string(cf, "state_path",
-	    (const char **) &tmp_state_path)) {
-		free(state_path);
-		state_path = xstrdup(tmp_state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
-	}
-
-	/* -p */
-	if (config_lookup_bool(cf, "playd.purge_fs", &tmp_purge_fin_fs)) {
-		purge_finished_fs = tmp_purge_fin_fs;
-		DPRINTF(HGD_D_DEBUG,
-		    "fs purging is %s", (purge_finished_fs ? "on" : "off"));
-	}
-
+	
+	hgd_cfg_daemonise(cf, "playd", &background);
+	hgd_cfg_statepath(cf, &state_path);
+	hgd_cfg_playd_purgefs(cf, &purge_finished_fs);
 #ifdef HAVE_PYTHON
-	/* -P */
-	if (config_lookup_string(cf, "py_plugins.plugin_path",
-	    (const char **) &tmp_py_dir)) {
-		if (hgd_py_plugin_dir != NULL)
-			free(hgd_py_plugin_dir);
-
-		hgd_py_plugin_dir = strdup(tmp_py_dir);
-		DPRINTF(HGD_D_DEBUG,"Setting Python plugin path to %s",
-		    hgd_py_plugin_dir);
-	}
+	hgd_cfg_pluginpath(cf, &hgd_py_plugin_dir);
 #endif
-
-	/* -p */
-	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
-		purge_finished_db = tmp_purge_fin_db;
-		DPRINTF(HGD_D_DEBUG,
-		    "db purging is %s", (purge_finished_db ? "on" : "off"));
-	}
-
-	/* -x */
-	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
-		hgd_debug = tmp_hgd_debug;
-		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
-	}
+	hgd_cfg_playd_purgedb(cf, &purge_finished_db);
+	hgd_cfg_debug(cf, "playd", &hgd_debug);
 
 	config_destroy(cf);
 #endif

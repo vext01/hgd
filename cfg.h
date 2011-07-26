@@ -15,5 +15,7 @@ void	hgd_cfg_netd_max_filesize(config_t *cf, long int *max_upload_size);
 void	hgd_cfg_netd_sslcert(config_t *cf, char **ssl_cert_path);
 void	hgd_cfg_debug(config_t *cf, char* service, int8_t *hgd_debug);
 void	hgd_cfg_netd_voteoff_sound(config_t *cf, char **vote_sound);
-
+void	hgd_cfg_playd_purgefs(config_t *cf, uint8_t *purge_finished_fs);
+void	hgd_cfg_pluginpath(config_t *cf, char **hgd_py_plugin_dir);
+void	hgd_cfg_playd_purgedb(config_t *cf, uint8_t *purge_finished_db);
 
