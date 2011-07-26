@@ -16,6 +16,7 @@
  */
 
 #include "config.h"
+#include "cfg.h"
 
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>
@@ -1041,45 +1042,6 @@ start:
 }
 
 int
-hgd_load_config(config_t *cf, char **config_locations)
-{
-	struct stat		 st;
-	
-	config_init(cf);
-
-	while (*config_locations != NULL) {
-
-		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from - %s",
-		    *config_locations);
-
-		if ( stat (*config_locations, &st) < 0 ) {
-			DPRINTF(HGD_D_INFO, "Could not stat %s",
-			    *config_locations);
-			config_locations--;
-			continue;
-		}
-
-		if (config_read_file(cf, *config_locations)) {
-			break;
-		} else {
-			DPRINTF(HGD_D_ERROR, "%s (line: %d)",
-			    config_error_text(cf),
-			    config_error_line(cf));
-
-			config_locations--;
-		}
-	}
-
-	if (*config_locations == NULL) {
-		config_destroy(cf);
-		return (HGD_FAIL);
-	} else {
-		return (HGD_OK);	
-	}
-}
-
-int
 hgd_read_config(char **config_locations)
 {
 #ifdef HAVE_LIBCONFIG
@@ -1090,11 +1052,6 @@ hgd_read_config(char **config_locations)
 	 * See hgd-playd.c for how to remove the stat when deb get into gear
 	 */
 	config_t		 cfg, *cf;
-	int			 tmp_dont_fork, tmp_no_rdns, tmp_background;
-	long long int		 tmp_req_votes, tmp_port, tmp_max_upload_size;
-	long long int		 tmp_hgd_debug, tmp_flood_limit;
-	char			*temp_state_path, *crypto, *tmp_vote_sound;
-	char			*tmp_ssl_cert_path, *tmp_ssl_key_path;
 
 	cf = &cfg;
 
@@ -1102,113 +1059,19 @@ hgd_read_config(char **config_locations)
 		return (HGD_OK);
 	}
 
-	/* -B */
-	if (config_lookup_bool(cf, "netd.daemonise", &tmp_background)) {
-		background = tmp_background;
-		DPRINTF(HGD_D_DEBUG, "%s to background daemon",
-		    background ? "Going" : "Not going");	
-	}
-
-	/* -D */
-	if (config_lookup_bool(cf, "netd.rdns_lookup", &tmp_no_rdns)) {
-		lookup_client_dns = tmp_no_rdns;
-		DPRINTF(HGD_D_DEBUG, "%s reverse dns lookups",
-		    lookup_client_dns ? "Doing" : "Not doing");
-	}
-
-	/* -d */
-	if (config_lookup_string(cf,
-	    "state_path", (const char **) &temp_state_path)) {
-		free(state_path);
-		state_path = strdup(temp_state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
-	}
-
-	/* -e -E */
-	if (config_lookup_string(cf, "crypto", (const char **) &crypto)) {
-		if (strcmp(crypto, "always") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Server will insist upon cryto");
-			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
-		} else if (strcmp(crypto, "never") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Server will insist upon "
-			   " no crypto");
-			crypto_pref = HGD_CRYPTO_PREF_NEVER;
-		} else if (strcmp(crypto, "if_avaliable") == 0) {
-			DPRINTF(HGD_D_DEBUG,
-			    "Server will use crypto if avaliable");
-		} else {
-			DPRINTF(HGD_D_WARN,
-			    "Invalid crypto option, using default");
-		}
-
-	}
-
-	/* -f */
-	if (config_lookup_bool(cf, "netd.dont_fork", &tmp_dont_fork)) {
-		single_client = tmp_dont_fork;
-		DPRINTF(HGD_D_DEBUG, 
-		    "Chose to %sfork", single_client ? "not " : "");
-	}
-
-	/* -F */
-	if (config_lookup_int64(cf, "flood_limit", &tmp_flood_limit)) {
-		flood_limit = tmp_flood_limit;
-		DPRINTF(HGD_D_DEBUG, "Flood limit set to %d",
-		    flood_limit);
-	}
-
-	/* -k */
-	if (config_lookup_string(cf,
-	    "netd.ssl.privatekey", (const char**)&tmp_ssl_key_path)) {
-		free(ssl_key_path);
-		ssl_key_path = xstrdup(tmp_ssl_key_path);
-		DPRINTF(HGD_D_DEBUG,
-		    "Set ssl private key path to '%s'", ssl_key_path);
-	}
-
-	/* -n */
-	if (config_lookup_int64(cf, "netd.voteoff_count", &tmp_req_votes)) {
-		req_votes = tmp_req_votes;
-		DPRINTF(HGD_D_DEBUG, "Set required-votes to %d", req_votes);
-	}
-
-	/* -p */
-	if (config_lookup_int64(cf, "netd.port", &tmp_port)) {
-		port = tmp_port;
-		DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
-	}
-
-	/* -s*/
-	if (config_lookup_int64(cf,
-	    "netd.max_file_size", &tmp_max_upload_size)) {
-		/* XXX: check for overflow? */
-		tmp_max_upload_size *= HGD_MB;
-		max_upload_size = (long int) tmp_max_upload_size;
-		DPRINTF(HGD_D_DEBUG, "Set max upload size to %ld",
-		    max_upload_size);
-	}
-
-	/* -S */
-	if (config_lookup_string(cf,
-	    "netd.ssl.cert", (const char **) &tmp_ssl_cert_path)) {
-		free(ssl_cert_path);
-		ssl_cert_path = xstrdup(tmp_ssl_cert_path);
-		DPRINTF(HGD_D_DEBUG, "Set cert path to '%s'", ssl_cert_path);
-	}
-
-	/* -x */
-	if (config_lookup_int64(cf, "debug", &tmp_hgd_debug)) {
-		hgd_debug = tmp_hgd_debug;
-		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
-	}
-
-	/* -y */
-	if (config_lookup_string(cf, "voteoff_sound",
-		    (const char **) &tmp_vote_sound)) {
-		free(vote_sound);
-		vote_sound = xstrdup(tmp_vote_sound);
-		DPRINTF(HGD_D_DEBUG, "Set voteoff sound to '%s'", vote_sound);
-	}
+	hgd_cfg_daemonise(cf, "netd", &background);
+	hgd_cfg_netd_rdns(cf, &lookup_client_dns); 
+	hgd_cfg_statepath(cf, &state_path);
+	hgd_cfg_netd_crypto(cf, &crypto_pref);	
+	hgd_cfg_fork(cf, "netd", &single_client);
+	hgd_cfg_netd_flood_limit(cf, &flood_limit);
+	hgd_cf_netd_ssl_privkey(cf, &ssl_key_path);
+	hgd_cfg_netd_votesound(cf, &req_votes);
+	hgd_cfg_netd_port(cf, &port);
+	hgd_cfg_netd_max_filesize(cf, &max_upload_size);
+	hgd_cfg_netd_sslcert(cf, &ssl_cert_path);
+	hgd_cfg_debug(cf, "netd", &hgd_debug);
+	hgd_cfg_netd_voteoff_sound(cf, &vote_sound);
 
 	/* we can destory config here because we copy all heap alloc'd stuff */
 	config_destroy(cf);

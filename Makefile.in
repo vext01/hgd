@@ -69,6 +69,8 @@ analyze:
 	
 
 
+cfg.o: cfg.h cfg.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_LDFLAGS} -c -o cfg.o cfg.c
 
 crypto.o: crypto.h crypto.c hgd.h config.h
 	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o crypto.c
@@ -91,11 +93,11 @@ hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o
 		${CONFIG_LDFLAGS} \
 		-o hgd-playd db.o common.o crypto.o py.o hgd-playd.c
 
-hgd-netd: common.o net.o hgd-netd.c hgd.h db.o config.h crypto.o
+hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o config.h crypto.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
 		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
-		-o hgd-netd common.o db.o net.o crypto.o hgd-netd.c
+		-o hgd-netd cfg.o common.o db.o net.o crypto.o hgd-netd.c
 
 hgdc: common.o net.o hgdc.c hgd.h config.h
 	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
