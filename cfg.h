@@ -5,7 +5,7 @@ int	hgd_load_config(config_t *cf, char **config_locations);
 void	hgd_cfg_daemonise(config_t *cf, char *service, int *background); 
 void	hgd_cfg_netd_rdns(config_t *cf, uint8_t *lookup_client_dns);
 void	hgd_cfg_statepath(config_t *cf, char **state_path);
-void	hgd_cfg_netd_crypto(config_t *cf, uint8_t *crypro_pref);
+void	hgd_cfg_crypto(config_t *cf, char* service, uint8_t *crypro_pref);
 void	hgd_cfg_fork(config_t *cf, char *service, uint8_t *single_client);
 void	hgd_cfg_netd_flood_limit(config_t *cf, int *flood_limit);
 void	hgd_cf_netd_ssl_privkey(config_t *cf, char **ssl_key_path);
@@ -18,4 +18,4 @@ void	hgd_cfg_netd_voteoff_sound(config_t *cf, char **vote_sound);
 void	hgd_cfg_playd_purgefs(config_t *cf, uint8_t *purge_finished_fs);
 void	hgd_cfg_pluginpath(config_t *cf, char **hgd_py_plugin_dir);
 void	hgd_cfg_playd_purgedb(config_t *cf, uint8_t *purge_finished_db);
-
+void	hgd_cfg_c_colours(config_t *cf, uint8_t *colours_on);

@@ -1062,7 +1062,7 @@ hgd_read_config(char **config_locations)
 	hgd_cfg_daemonise(cf, "netd", &background);
 	hgd_cfg_netd_rdns(cf, &lookup_client_dns); 
 	hgd_cfg_statepath(cf, &state_path);
-	hgd_cfg_netd_crypto(cf, &crypto_pref);	
+	hgd_cfg_crypto(cf, "netd", &crypto_pref);	
 	hgd_cfg_fork(cf, "netd", &single_client);
 	hgd_cfg_netd_flood_limit(cf, &flood_limit);
 	hgd_cf_netd_ssl_privkey(cf, &ssl_key_path);

@@ -17,6 +17,7 @@
 
 /* Needed first so we can optionaly include libs */
 #include "config.h"
+#include "cfg.h"
 
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>
@@ -765,62 +766,14 @@ hgd_read_config(char **config_locations)
 	int			tmp_colours_on;
 
 	cf = &cfg;
-	config_init(cf);
 
-	while (*config_locations != NULL) {
-		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
-		    *config_locations);
-
-		if ( stat (*config_locations, &st) < 0 ) {
-			DPRINTF(HGD_D_INFO, "Could not stat %s",
-			    *config_locations);
-			config_locations--;
-			continue;
-		}
-
-		/* if we find a config, use it */
-		if (config_read_file(cf, *config_locations))
-			break;
-
-		/* otherwise look for another */
-		DPRINTF(HGD_D_ERROR, "%s (line: %d)",
-		    config_error_text(cf), config_error_line(cf));
-		config_locations--;
-	}
-
-	DPRINTF(HGD_D_DEBUG, "Using config: '%s'", *config_locations);
-
-	/* if no configs found */
-	if (*config_locations == NULL) {
-		config_destroy(cf);
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
 		return (HGD_OK);
 	}
 
-	/* -a -A */
-	if (config_lookup_bool(cf, "colours", &tmp_colours_on)) {
-		colours_on = tmp_colours_on;
-		DPRINTF(HGD_D_DEBUG, "colours %s", colours_on ? "on" : "off");
-	}
+	hgd_cfg_c_colours(cf, &colours_on);
+	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);	
 
-	/* -e -E */
-	if (config_lookup_string(cf, "crypto", (const char **) &cypto_pref)) {
-
-		if (strcmp(cypto_pref, "always") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
-			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
-		} else if (strcmp(cypto_pref, "never") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Client will insist upon "
-			   " no crypto");
-			crypto_pref = HGD_CRYPTO_PREF_NEVER;
-		} else if (strcmp(cypto_pref, "if_avaliable") == 0) {
-			DPRINTF(HGD_D_DEBUG,
-			    "Client will use crypto if avaliable");
-		} else {
-			DPRINTF(HGD_D_WARN,
-			    "Invalid crypto option, using default");
-		}
-	}
 
 	/* -m */
 	if (config_lookup_int64(cf, "max_items", &tmp_hud_max_items)) {
