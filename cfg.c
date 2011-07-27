@@ -335,8 +335,8 @@ hgd_cfg_c_password(config_t *cf, char **password, char *config_location)
 	char			*tmp_password;
 	struct stat		 st;	
 
-	if ( stat (*config_location, &st) < 0 ) {
-		DPRINTF(HGD_D_INFO, "Could not stat %s",
+	if ( stat (config_location, &st) < 0 ) {
+		DPRINTF(HGD_D_INFO, "Could not stat %s, skipping looking up password.",
 		    config_location);
 		return;
 	}
