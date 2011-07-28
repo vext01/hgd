@@ -228,7 +228,7 @@ hgd_cfg_netd_voteoff_sound(config_t *cf, char **vote_sound)
 	/* -y */
 	char			*tmp_vote_sound;
 
-	if (config_lookup_string(cf, "voteoff_sound",
+	if (config_lookup_string(cf, "netd.voteoff_sound",
 		    (const char **) &tmp_vote_sound)) {
 		if (*vote_sound != NULL) free(*vote_sound);
 		*vote_sound = xstrdup(tmp_vote_sound);
