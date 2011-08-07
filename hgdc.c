@@ -690,7 +690,7 @@ hgd_check_svr_proto()
 	/* minor */
 	v = strtok_r(NULL, split, &saveptr1); 
 	if (v == NULL) {
-		DPRINTF(HGD_D_ERROR, "Could not find protocol MAJOR version");
+		DPRINTF(HGD_D_ERROR, "Could not find protocol MINOR version");
 		ret = HGD_FAIL;
 		goto clean;
 	}
