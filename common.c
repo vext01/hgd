@@ -165,8 +165,6 @@ xasprintf(char **buf, char *fmt, ...)
 void
 hgd_kill_sighandler(int sig)
 {
-	DPRINTF(HGD_D_INFO, "Boom!***************");
-
 	if (sig == SIGHUP)
 		restarting = 1;
 	else
