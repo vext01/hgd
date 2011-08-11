@@ -737,6 +737,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"encrypt",	0,	0,	hgd_cmd_encrypt},
 	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
 	{"ls",		0,	1,	hgd_cmd_playlist},
+	{"pl",		0,	1,	hgd_cmd_playlist},
 	{"np",		0,	1,	hgd_cmd_now_playing},
 	{"proto",	0,	0,	hgd_cmd_proto},
 	{"q",		2,	1,	hgd_cmd_queue},
