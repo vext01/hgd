@@ -662,7 +662,9 @@ int
 hgd_check_svr_proto()
 {
 	char			*v, *resp = NULL;
-	int			 vv = -1, ret = HGD_OK;
+	int			 major = -1, minor = -1, ret = HGD_OK;
+	char			*split = "|"; 
+	char			*saveptr1;
 
 	hgd_sock_send_line(sock_fd, ssl, "proto");
 	resp = hgd_sock_recv_line(sock_fd, ssl);
@@ -673,20 +675,43 @@ hgd_check_svr_proto()
 		goto clean;
 	}
 
-	v = strchr(resp, '|');
-	if ((v == 0) || (*(v + 1) == 0)) {
-		DPRINTF(HGD_D_ERROR, "Could not find protocol version");
+	v = strtok_r(resp, split, &saveptr1);
+
+	/* major */
+	v = strtok_r(NULL, split, &saveptr1); 
+	if (v == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not find protocol MAJOR version");
 		ret = HGD_FAIL;
 		goto clean;
 	}
 
-	vv = atoi(v + 1);
-	if (vv != HGD_PROTO_VERSION) {
-		DPRINTF(HGD_D_ERROR, "Protocol mismatch: "
-		    "Server=%d, Client=%d", HGD_PROTO_VERSION, vv);
+	major = atoi(v);
+
+	/* minor */
+	v = strtok_r(NULL, split, &saveptr1); 
+	if (v == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not find protocol MINOR version");
 		ret = HGD_FAIL;
 		goto clean;
 	}
+
+	minor = atoi(v);
+
+
+	if (major == HGD_PROTO_VERSION_MAJOR && minor >= HGD_PROTO_VERSION_MINOR) {
+		if (minor > HGD_PROTO_VERSION_MINOR) {
+			DPRINTF(HGD_D_INFO, "Server is running a newer minor version"
+			    "of the server.Server=%d,%d, Client=%d,%d", major, minor,
+			    HGD_PROTO_VERSION_MAJOR, HGD_PROTO_VERSION_MINOR);			    
+		}
+	} else {
+		DPRINTF(HGD_D_ERROR, "Protocol mismatch: "
+		    "Server=%d,%d, Client=%d,%d", major, minor,
+		    HGD_PROTO_VERSION_MAJOR, HGD_PROTO_VERSION_MINOR);
+		ret = HGD_FAIL;
+		goto clean;
+	} 
+
 
 	DPRINTF(HGD_D_DEBUG, "Protocol version matches server");
 

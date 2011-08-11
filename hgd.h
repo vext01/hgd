@@ -23,7 +23,8 @@
 #endif
 
 #define HGD_VERSION		PACKAGE_VERSION
-#define HGD_PROTO_VERSION	3
+#define HGD_PROTO_VERSION_MAJOR	3
+#define HGD_PROTO_VERSION_MINOR 0
 
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
