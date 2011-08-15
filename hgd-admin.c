@@ -75,6 +75,7 @@ hgd_usage()
         printf("    user-add <username> [password]	Add a user.\n");
         printf("    user-del <username>			Delete a user.\n");
         printf("    user-list				List users.\n");
+        printf("    pause				Pause MPlayer.\n");
 	/*
         printf("    user-disable username\tDisable a user account");
         printf("    user-chpw username\t\t\tChange a users password\n");
@@ -168,11 +169,48 @@ hgd_acmd_user_list(char **args)
 
 }
 
+int
+hgd_acmd_pause(char **args)
+{
+	FILE			*pipe = NULL;
+	char			*mplayer_fifo_path = 0;
+	char			*pause = "pause\n";
+	int			 ret = HGD_FAIL;
+
+	(void) args;
+
+	xasprintf(&mplayer_fifo_path, "%s/%s",
+	    state_path, HGD_MPLAYER_PIPE_NAME);
+
+	if ((pipe = fopen(mplayer_fifo_path, "w")) == NULL) {
+		DPRINTF(HGD_D_ERROR,
+		    "Can't open mplayer pipe, is a track playing?\n");
+		goto clean;
+	}
+
+	if (fwrite(pause, strlen(pause), 1, pipe) == 0) {
+		if (ferror(pipe))
+			DPRINTF(HGD_D_ERROR,
+			    "Failed to write to pipe: %s", SERROR);
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	if (pipe)
+		fclose(pipe);
+	if (mplayer_fifo_path)
+		free(mplayer_fifo_path);
+
+	return (ret);
+}
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },
 	{ "user-del", 1, hgd_acmd_user_del },
 	{ "user-list", 0, hgd_acmd_user_list },
+	{ "pause", 0, hgd_acmd_pause },
 #if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },
