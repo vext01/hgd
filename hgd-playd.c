@@ -53,6 +53,7 @@ uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;
 uint8_t				 clear_playlist_on_start = 0;
 int				 background = 1;
+char				*mplayer_fifo_path = 0;
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
@@ -63,6 +64,8 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
 
+	if (mplayer_fifo_path)
+		free(mplayer_fifo_path);
 	if (db)
 		sqlite3_close(db);
 	if (state_path)
@@ -85,11 +88,26 @@ hgd_exit_nicely()
 	exit (!exit_ok);
 }
 
+/*
+ * make a fifo that mplayer can take commands from
+ */
+int
+hgd_make_mplayer_input_fifo()
+{
+	if (mkfifo(mplayer_fifo_path, 0600) < 0) {
+		DPRINTF(HGD_D_WARN,
+		    "Failed to create mplayer input fifo: %s", SERROR);
+		return (HGD_FAIL);
+	}
+
+	return (HGD_OK);
+}
+
 void
 hgd_play_track(struct hgd_playlist_item *t)
 {
 	int			status = 0, pid;
-	char			*pid_path;
+	char			*pid_path, *pipe_arg = 0;
 	FILE			*pid_file;
 	struct flock		fl;
 
@@ -124,6 +142,12 @@ hgd_play_track(struct hgd_playlist_item *t)
 #ifdef HAVE_PYTHON
 	hgd_execute_py_hook("pre_play");
 #endif
+
+	if (hgd_make_mplayer_input_fifo() != HGD_OK)
+		goto clean;
+
+	xasprintf(&pipe_arg, "file=%s", mplayer_fifo_path);
+
 	pid = fork();
 	if (!pid) {
 
@@ -131,8 +155,9 @@ hgd_play_track(struct hgd_playlist_item *t)
 		fclose(stdin);
 
 		/* child - your the d00d who will play this track */
-		execlp("mplayer", "mplayer", "-really-quiet",
-		    t->filename, (char *) NULL);
+		execlp("mplayer", "mplayer", "-really-quiet", "-slave",
+		    "-input", pipe_arg, t->filename,
+		    (char *) NULL);
 
 		/* if we get here, the shit hit the fan with execlp */
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
@@ -163,7 +188,6 @@ hgd_play_track(struct hgd_playlist_item *t)
 		if (unlink(pid_path) < 0) {
 			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
 		}
-		free(pid_path);
 
 		/* unlink media (but not if restarting, we replay the track) */
 		if ((!restarting) && (!dying)
@@ -184,6 +208,10 @@ hgd_play_track(struct hgd_playlist_item *t)
 	    (hgd_mark_finished(t->id, purge_finished_db) == HGD_FAIL))
 		DPRINTF(HGD_D_WARN,
 		    "Could not purge/mark finished -- trying to continue");
+
+clean:
+	if (pipe_arg)
+		free(pipe_arg);
 }
 
 void
@@ -483,6 +511,7 @@ main(int argc, char **argv)
 
 	xasprintf(&db_path, "%s/%s", state_path, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", state_path, HGD_FILESTORE_NAME);
+	xasprintf(&mplayer_fifo_path, "%s/%s", state_path, HGD_MPLAYER_PIPE_NAME);
 
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();
