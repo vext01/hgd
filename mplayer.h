@@ -21,8 +21,8 @@
 extern char		*mplayer_fifo_path;
 
 
-int			 hgd_init_mplayer_globals();
-int			 hgd_free_mplayer_globals();
+int			 hgd_init_mplayer_globals(void);
+int			 hgd_free_mplayer_globals(void);
 int			 hgd_mplayer_pipe_send(char *what);
 
 #endif
