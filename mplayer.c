@@ -71,8 +71,6 @@ hgd_mplayer_pipe_send(char *what)
 clean:
 	if (pipe)
 		fclose(pipe);
-	if (mplayer_fifo_path)
-		free(mplayer_fifo_path);
 
 	return (ret);
 }
