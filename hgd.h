@@ -39,10 +39,8 @@
 /* paths */
 #define HGD_DFL_DIR		"/var/hgd"
 #define HGD_DB_NAME		"hgd.db"
-#define HGD_MPLAYER_PID_NAME	"mplayer.pid"
 #define HGD_FILESTORE_NAME	"files"
 #define HGD_DFL_SVR_CONF_DIR	"/etc/hgd"
-#define HGD_MPLAYER_PIPE_NAME	"mplayer.pipe"
 
 /* networking */
 #define HGD_DFL_PORT		6633
