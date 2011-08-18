@@ -580,6 +580,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	DPRINTF(HGD_D_INFO, "Vote limit exceeded - kill track");
 
 	/* kill mplayer then */
+	/* XXX some of this needs to go in mplayer.c */
 	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
 
 	pid_file = fopen(pid_path, "r");
