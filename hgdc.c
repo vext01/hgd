@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <libgen.h>
 #ifdef HAVE_LIBCONFIG
 #include <libconfig.h>
 #endif
@@ -424,8 +425,9 @@ hgd_req_queue(char **args)
 	struct stat		st;
 	ssize_t			written = 0, fsize, chunk_sz;
 	char			chunk[HGD_BINARY_CHUNK], *filename = args[0];
-	char			*q_req, *resp;
-	int			 bar = 0, iters = 0;
+	char			*q_req, *resp, stars_buf[81];
+	int			 iters = 0, barspace;
+	float			 n_stars;
 
 	DPRINTF(HGD_D_DEBUG, "Will queue '%s'", args[0]);
 
@@ -461,14 +463,26 @@ hgd_req_queue(char **args)
 		return (HGD_FAIL);
 	}
 
+	/* prepare progress bar */
+	barspace =  (float) (80 - strlen(basename(filename)) - 2) - 2;
+	memset(stars_buf, ' ', 80);
+	stars_buf[80] = 0;
+
 	/*
 	 * start sending the file
 	 */
 	while (written != fsize) {
 
+		/* update progress bar */
 		if ((iters % 50 == 0) && (hgd_debug <= 1)) {
-			bar = ((float) written/fsize) * 100;
-			printf("\r%3d%%", bar);
+			n_stars = barspace * ((float) written/fsize) + 1;
+			memset(stars_buf, '*', n_stars);
+
+			/* progress bar caps */
+			stars_buf[0] = '|';
+			stars_buf[barspace] = '|';
+
+			printf("\r%s: %s", basename(filename), stars_buf);
 			fflush(stdout);
 		}
 		iters++;
@@ -489,10 +503,11 @@ hgd_req_queue(char **args)
 		DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
 		   (int)  written, (int) fsize);
 	}
-	printf("\r     \r");
-	fflush(stdout);
 
-	fclose(f);	
+	memset(stars_buf, ' ', 80);
+	printf("\r%s\r%s: OK\n", stars_buf, basename(filename));
+
+	fclose(f);
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
