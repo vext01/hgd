@@ -667,7 +667,8 @@ hgd_cmd_proto(struct hgd_session *sess, char **unused)
 	char			*reply;
 
 	unused = unused; /* lalalala */
-	xasprintf(&reply, "ok|%d", HGD_PROTO_VERSION);
+	xasprintf(&reply, "ok|%d|%d", HGD_PROTO_VERSION_MAJOR,
+	    HGD_PROTO_VERSION_MINOR);
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
 	free(reply);
 
