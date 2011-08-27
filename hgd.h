@@ -165,7 +165,8 @@ struct hgd_req_despatch {
 	char			*req;
 	uint8_t			 n_args;
 	uint8_t			 need_auth;
-	int			 (*handler)(char **);
+	int			 (*handler)(int n_args, char **);
+	uint8_t			 varargs; /* if !0, n_args is the minimum */
 };
 
 /* debug levels */

@@ -419,104 +419,114 @@ hgd_usage()
 
 /* upload and queue a file to the playlist */
 int
-hgd_req_queue(char **args)
+hgd_req_queue(int n_args, char **args)
 {
 	FILE			*f;
 	struct stat		st;
 	ssize_t			written = 0, fsize, chunk_sz;
-	char			chunk[HGD_BINARY_CHUNK], *filename = args[0];
+	char			chunk[HGD_BINARY_CHUNK], *filename = 0;
 	char			*q_req, *resp, stars_buf[81];
-	int			 iters = 0, barspace;
+	int			 iters = 0, barspace, tnum;
 	float			 n_stars;
 
-	DPRINTF(HGD_D_DEBUG, "Will queue '%s'", args[0]);
+	DPRINTF(HGD_D_DEBUG, "Will queue %d tracks", n_args);
 
-	if (stat(filename, &st) < 0) {
-		DPRINTF(HGD_D_ERROR, "Can't stat '%s'", filename);
-		hgd_exit_nicely();
-	}
+	/* one iteration per track which will be uploaded */
+	for (tnum = 0; tnum < n_args; tnum++) {
 
-	if (st.st_mode & S_IFDIR) {
-		DPRINTF(HGD_D_ERROR, "Can't upload directories");
-		hgd_exit_nicely();
-	}
+		filename = args[tnum];
+		DPRINTF(HGD_D_INFO, "Uploading file '%s'", filename);
 
-	fsize = st.st_size;
-
-	/* send request to upload */
-	xasprintf(&q_req, "q|%s|%d", filename, fsize);
-	hgd_sock_send_line(sock_fd, ssl, q_req);
-	free(q_req);
-
-	/* check we are allowed */
-	resp = hgd_sock_recv_line(sock_fd, ssl);
-	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		free(resp);
-		return (HGD_FAIL);
-	}
-	free(resp);
-
-	DPRINTF(HGD_D_DEBUG, "opening '%s' for reading", filename);
-	f = fopen(filename, "r");
-	if (f == NULL) {
-		DPRINTF(HGD_D_ERROR, "fopen %s: %s", filename, SERROR);
-		return (HGD_FAIL);
-	}
-
-	/* prepare progress bar */
-	barspace =  (float) (80 - strlen(basename(filename)) - 2) - 2;
-	memset(stars_buf, ' ', 80);
-	stars_buf[80] = 0;
-
-	/*
-	 * start sending the file
-	 */
-	while (written != fsize) {
-
-		/* update progress bar */
-		if ((iters % 50 == 0) && (hgd_debug <= 1)) {
-			n_stars = barspace * ((float) written/fsize) + 1;
-			memset(stars_buf, '*', n_stars);
-
-			/* progress bar caps */
-			stars_buf[0] = '|';
-			stars_buf[barspace] = '|';
-
-			printf("\r%s: %s", basename(filename), stars_buf);
-			fflush(stdout);
-		}
-		iters++;
-
-		if (fsize - written < HGD_BINARY_CHUNK)
-			chunk_sz = fsize - written;
-		else
-			chunk_sz = HGD_BINARY_CHUNK;
-
-		if (fread(chunk, chunk_sz, 1, f) != 1) {
-			DPRINTF(HGD_D_WARN, "Retrying fread");
-			continue;
+		if (stat(filename, &st) < 0) {
+			DPRINTF(HGD_D_ERROR, "Can't stat '%s'", filename);
+			return (HGD_FAIL);
 		}
 
-		hgd_sock_send_bin(sock_fd, ssl, chunk, chunk_sz);
+		if (st.st_mode & S_IFDIR) {
+			DPRINTF(HGD_D_ERROR, "Can't upload directories");
+			return (HGD_FAIL);
+		}
 
-		written += chunk_sz;
-		DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
-		   (int)  written, (int) fsize);
-	}
+		fsize = st.st_size;
 
-	memset(stars_buf, ' ', 80);
-	printf("\r%s\r%s: OK\n", stars_buf, basename(filename));
+		/* send request to upload */
+		xasprintf(&q_req, "q|%s|%d", filename, fsize);
+		hgd_sock_send_line(sock_fd, ssl, q_req);
+		free(q_req);
 
-	fclose(f);
-
-	resp = hgd_sock_recv_line(sock_fd, ssl);
-	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* check we are allowed */
+		resp = hgd_sock_recv_line(sock_fd, ssl);
+		if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+			free(resp);
+			return (HGD_FAIL);
+		}
 		free(resp);
-		return (HGD_FAIL);
+
+		DPRINTF(HGD_D_DEBUG, "opening '%s' for reading", filename);
+		f = fopen(filename, "r");
+		if (f == NULL) {
+			DPRINTF(HGD_D_ERROR, "fopen %s: %s", filename, SERROR);
+			return (HGD_FAIL);
+		}
+
+		/* prepare progress bar */
+		barspace =  (float) (80 - strlen(basename(filename)) - 2) - 2;
+		memset(stars_buf, ' ', 80);
+		stars_buf[80] = 0;
+
+		/*
+		 * start sending the file
+		 */
+		written = 0;
+		while (written != fsize) {
+
+			/* update progress bar */
+			if ((iters % 50 == 0) && (hgd_debug <= 1)) {
+				n_stars = barspace * ((float) written/fsize) + 1;
+				memset(stars_buf, '*', n_stars);
+
+				/* progress bar caps */
+				stars_buf[0] = '|';
+				stars_buf[barspace] = '|';
+
+				printf("\r%s: %s", basename(filename), stars_buf);
+				fflush(stdout);
+			}
+			iters++;
+
+			if (fsize - written < HGD_BINARY_CHUNK)
+				chunk_sz = fsize - written;
+			else
+				chunk_sz = HGD_BINARY_CHUNK;
+
+			if (fread(chunk, chunk_sz, 1, f) != 1) {
+				DPRINTF(HGD_D_WARN, "Retrying fread");
+				continue;
+			}
+
+			hgd_sock_send_bin(sock_fd, ssl, chunk, chunk_sz);
+
+			written += chunk_sz;
+			DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
+			    (int)  written, (int) fsize);
+		}
+
+		memset(stars_buf, ' ', 80);
+		printf("\r%s\r%s: OK\n", stars_buf, basename(filename));
+
+		fclose(f);
+
+		resp = hgd_sock_recv_line(sock_fd, ssl);
+		if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+			free(resp);
+			return (HGD_FAIL);
+		}
+
+		DPRINTF(HGD_D_INFO, "Transfer complete");
+		free(resp);
 	}
 
-	DPRINTF(HGD_D_DEBUG, "Transfer complete");
-	free(resp);
+	DPRINTF(HGD_D_INFO, "Finished uploading tracks");
 
 	return (HGD_OK);
 }
@@ -564,11 +574,12 @@ hgd_hline()
 }
 
 int
-hgd_req_vote_off(char **args)
+hgd_req_vote_off(int n_args, char **args)
 {
 	char			*resp;
 
-	args = args; /* sssh */
+	(void) args;
+	(void) n_args;
 
 	hgd_sock_send_line(sock_fd, ssl, "vo");
 
@@ -584,12 +595,13 @@ hgd_req_vote_off(char **args)
 }
 
 int
-hgd_req_playlist(char **args)
+hgd_req_playlist(int n_args, char **args)
 {
 	char			*resp, *track_resp, *p;
 	int			n_items, i;
 
-	args = args; /* shhh */
+	(void) args;
+	(void) n_args;
 
 	hgd_sock_send_line(sock_fd, ssl, "ls");
 	resp = hgd_sock_recv_line(sock_fd, ssl);
@@ -633,11 +645,12 @@ hgd_req_playlist(char **args)
  * May make this more spctacular at some stage...
  */
 int
-hgd_req_hud(char **args)
+hgd_req_hud(int n_args, char **args)
 {
 	int			status;
 
-	args = args; /* silence */
+	(void) args;
+	(void) n_args;
 
 	/* pretty clunky ;) */
 	while (1) {
@@ -649,9 +662,9 @@ hgd_req_hud(char **args)
 		/* XXX ansii off option */
 		printf("%sHGD Server @ %s -- Playlist:%s\n\n", 
 		    ANSII_YELLOW, host, ANSII_WHITE);
-		
 
-		if (hgd_req_playlist(NULL) != HGD_OK)
+
+		if (hgd_req_playlist(0, NULL) != HGD_OK)
 			return (HGD_FAIL);
 
 		sleep(hud_refresh_speed);
@@ -663,11 +676,11 @@ hgd_req_hud(char **args)
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 /*	cmd,		n_args,	need_auth,	handler */
-	{"ls",		0,	0,		hgd_req_playlist},
-	{"hud",		0,	0,		hgd_req_hud},
-	{"vo",		0,	1,		hgd_req_vote_off},
-	{"q",		1,	1,		hgd_req_queue},
-	{NULL,		0,	0,		NULL} /* terminate */
+	{"ls",		0,	0,		hgd_req_playlist, 0},
+	{"hud",		0,	0,		hgd_req_hud,	  0},
+	{"vo",		0,	1,		hgd_req_vote_off, 0},
+	{"q",		1,	1,		hgd_req_queue,	  1},
+	{NULL,		0,	0,		NULL,		  0} /* end */
 };
 
 /*
@@ -678,7 +691,7 @@ hgd_check_svr_proto()
 {
 	char			*v, *resp = NULL;
 	int			 major = -1, minor = -1, ret = HGD_OK;
-	char			*split = "|"; 
+	char			*split = "|";
 	char			*saveptr1;
 
 	hgd_sock_send_line(sock_fd, ssl, "proto");
@@ -693,7 +706,7 @@ hgd_check_svr_proto()
 	v = strtok_r(resp, split, &saveptr1);
 
 	/* major */
-	v = strtok_r(NULL, split, &saveptr1); 
+	v = strtok_r(NULL, split, &saveptr1);
 	if (v == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not find protocol MAJOR version");
 		ret = HGD_FAIL;
@@ -725,7 +738,7 @@ hgd_check_svr_proto()
 		    HGD_PROTO_VERSION_MAJOR, HGD_PROTO_VERSION_MINOR);
 		ret = HGD_FAIL;
 		goto clean;
-	} 
+	}
 
 
 	DPRINTF(HGD_D_DEBUG, "Protocol version matches server");
@@ -741,7 +754,10 @@ clean:
 int
 hgd_exec_req(int argc, char **argv)
 {
-	struct hgd_req_despatch	*desp, *correct_desp = NULL;
+	struct hgd_req_despatch		*desp, *correct_desp = NULL;
+
+	DPRINTF(HGD_D_DEBUG, "Try to execute a '%s' command with %d args",
+	    argv[0], argc - 1);
 
 	if (argc == 0) {
 		hgd_usage();
@@ -752,7 +768,10 @@ hgd_exec_req(int argc, char **argv)
 	for (desp = req_desps; desp->req != NULL; desp++) {
 		if (strcmp(desp->req, argv[0]) != 0)
 			continue;
-		if (argc - 1 != desp->n_args)
+
+		if ((desp->varargs) && (argc - 1 < desp->n_args))
+			continue;
+		else if ((!desp->varargs) && (argc - 1 != desp->n_args))
 			continue;
 
 		correct_desp = desp; /* found it */
@@ -778,7 +797,8 @@ hgd_exec_req(int argc, char **argv)
 			return (HGD_FAIL);
 		}
 	}
-	correct_desp->handler(&argv[1]);
+
+	correct_desp->handler(argc - 1, &argv[1]);
 
 	return (HGD_OK);
 }
