@@ -417,139 +417,154 @@ hgd_usage()
 	printf("    -e\t\t\tEnable encryption\n");
 }
 
-/* upload and queue a file to the playlist */
 int
-hgd_req_queue(int n_args, char **args)
+hgd_queue_track(char *filename)
 {
 	FILE			*f;
 	struct stat		st;
 	ssize_t			written = 0, fsize, chunk_sz;
-	char			chunk[HGD_BINARY_CHUNK], *filename = 0;
-	char			*q_req, *resp, stars_buf[81], *trunc_filename;
-	int			 iters = 0, barspace, tnum, percent, ret = HGD_OK;
+	char			chunk[HGD_BINARY_CHUNK];
+	char			*q_req = 0, *resp1 = 0, *resp2 = 0;
+	char			 stars_buf[81], *trunc_filename = 0;
+	int			 iters = 0, barspace, percent, ret = HGD_FAIL;
 	float			 n_stars;
 	int			 i;
+
+	/* anything allocated to zero for cleaning */
+	trunc_filename = xstrdup(basename(filename));
+
+	/* maximum length of filename in progress bar */
+	if (strlen(trunc_filename) > 40) {
+		trunc_filename[40] = 0;
+		for (i = 1; i <= 3; i++)
+			trunc_filename[40 - i] = '.';
+	}
+
+	DPRINTF(HGD_D_INFO, "Uploading file '%s'", filename);
+
+	if (stat(filename, &st) < 0) {
+		DPRINTF(HGD_D_ERROR, "Can't stat '%s'", filename);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	if (st.st_mode & S_IFDIR) {
+		DPRINTF(HGD_D_ERROR, "Can't upload directories");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	fsize = st.st_size;
+
+	/* send request to upload */
+	xasprintf(&q_req, "q|%s|%d", filename, fsize);
+	hgd_sock_send_line(sock_fd, ssl, q_req);
+
+	/* check we are allowed */
+	resp1 = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp1, 0) == HGD_FAIL)
+		goto clean;
+
+	DPRINTF(HGD_D_DEBUG, "opening '%s' for reading", filename);
+	f = fopen(filename, "r");
+	if (f == NULL) {
+		DPRINTF(HGD_D_ERROR, "fopen %s: %s", filename, SERROR);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	/* prepare progress bar */
+	barspace =  (float) (80 - strlen(basename(trunc_filename)) - 2) - 7;
+	memset(stars_buf, ' ', 80);
+	stars_buf[80] = 0;
+
+	/*
+	 * start sending the file
+	 */
+	written = 0;
+	while (written != fsize) {
+
+		/* update progress bar */
+		if ((iters % 50 == 0) && (hgd_debug <= 1)) {
+			percent = (float) written/fsize * 100;
+			n_stars = barspace * ((float) written/fsize) + 1;
+			memset(stars_buf, '*', n_stars);
+
+			/* progress bar caps */
+			stars_buf[0] = '|';
+			stars_buf[barspace - 1] = '|';
+			stars_buf[barspace] = 0;
+
+			printf("\r%s: %s %3d%%",
+			    trunc_filename, stars_buf, percent);
+			fflush(stdout);
+		}
+		iters++;
+
+		if (fsize - written < HGD_BINARY_CHUNK)
+			chunk_sz = fsize - written;
+		else
+			chunk_sz = HGD_BINARY_CHUNK;
+
+		if (fread(chunk, chunk_sz, 1, f) != 1) {
+			DPRINTF(HGD_D_WARN, "Retrying fread");
+			continue;
+		}
+
+		hgd_sock_send_bin(sock_fd, ssl, chunk, chunk_sz);
+
+		written += chunk_sz;
+		DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
+		    (int)  written, (int) fsize);
+	}
+
+	if (hgd_debug <= 1) {
+		memset(stars_buf, ' ', 80);
+		printf("\r%s\r%s: OK\n", stars_buf, basename(trunc_filename));
+	}
+
+	fclose(f);
+
+	resp2 = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp2, 0) == HGD_FAIL) {
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	DPRINTF(HGD_D_INFO, "Transfer complete");
+
+	ret = HGD_OK;
+clean:
+	if (trunc_filename)
+		free(trunc_filename);
+	if (resp1)
+		free(resp1);
+	if (resp2)
+		free(resp2);
+	if (q_req)
+		free(q_req);
+
+	return (ret);
+}
+
+/* upload and queue a file to the playlist */
+int
+hgd_req_queue(int n_args, char **args)
+{
+	int			tnum, ret = HGD_OK;
 
 	DPRINTF(HGD_D_DEBUG, "Will queue %d tracks", n_args);
 
 	/* one iteration per track which will be uploaded */
-	for (tnum = 0; tnum < n_args; tnum++) {
-
-		filename = args[tnum];
-
-		/* anything allocated to zero for cleaning */
-		trunc_filename = xstrdup(basename(filename));
-
-		/* maximum length of filename in progress bar */
-		if (strlen(trunc_filename) > 40) {
-			trunc_filename[40] = 0;
-			for (i = 1; i <= 3; i++)
-				trunc_filename[40 - i] = '.';
-		}
-
-		DPRINTF(HGD_D_INFO, "Uploading file '%s'", filename);
-
-		if (stat(filename, &st) < 0) {
-			DPRINTF(HGD_D_ERROR, "Can't stat '%s'", filename);
+	for (tnum = 0; tnum < n_args; tnum++)
+		if (hgd_queue_track(args[tnum]) != HGD_OK) {
 			ret = HGD_FAIL;
-			goto next;
 		}
 
-		if (st.st_mode & S_IFDIR) {
-			DPRINTF(HGD_D_ERROR, "Can't upload directories");
-			ret = HGD_FAIL;
-			goto next;
-		}
-
-		fsize = st.st_size;
-
-		/* send request to upload */
-		xasprintf(&q_req, "q|%s|%d", filename, fsize);
-		hgd_sock_send_line(sock_fd, ssl, q_req);
-		free(q_req);
-
-		/* check we are allowed */
-		resp = hgd_sock_recv_line(sock_fd, ssl);
-		if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-			free(resp);
-			return (HGD_FAIL);
-		}
-		free(resp);
-
-		DPRINTF(HGD_D_DEBUG, "opening '%s' for reading", filename);
-		f = fopen(filename, "r");
-		if (f == NULL) {
-			DPRINTF(HGD_D_ERROR, "fopen %s: %s", filename, SERROR);
-			ret = HGD_FAIL;
-			goto next;
-		}
-
-		/* prepare progress bar */
-		barspace =  (float) (80 - strlen(basename(trunc_filename)) - 2) - 7;
-		memset(stars_buf, ' ', 80);
-		stars_buf[barspace] = 0;
-
-		/*
-		 * start sending the file
-		 */
-		written = 0;
-		while (written != fsize) {
-
-			/* update progress bar */
-			if ((iters % 50 == 0) && (hgd_debug <= 1)) {
-				percent = (float) written/fsize * 100;
-				n_stars = barspace * ((float) written/fsize) + 1;
-				memset(stars_buf, '*', n_stars);
-
-				/* progress bar caps */
-				stars_buf[0] = '|';
-				stars_buf[barspace - 1] = '|';
-				stars_buf[barspace] = 0;
-
-				printf("\r%s: %s %3d%%",
-				    trunc_filename, stars_buf, percent);
-				fflush(stdout);
-			}
-			iters++;
-
-			if (fsize - written < HGD_BINARY_CHUNK)
-				chunk_sz = fsize - written;
-			else
-				chunk_sz = HGD_BINARY_CHUNK;
-
-			if (fread(chunk, chunk_sz, 1, f) != 1) {
-				DPRINTF(HGD_D_WARN, "Retrying fread");
-				continue;
-			}
-
-			hgd_sock_send_bin(sock_fd, ssl, chunk, chunk_sz);
-
-			written += chunk_sz;
-			DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
-			    (int)  written, (int) fsize);
-		}
-
-		if (hgd_debug <= 1) {
-			memset(stars_buf, ' ', 80);
-			printf("\r%s     \r%s: OK\n", stars_buf,
-			    basename(trunc_filename));
-		}
-
-		fclose(f);
-
-		resp = hgd_sock_recv_line(sock_fd, ssl);
-		if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-			ret = HGD_FAIL;
-			goto next;
-		}
-
-		DPRINTF(HGD_D_INFO, "Transfer complete");
-		free(resp);
-next:
-		free(trunc_filename);
-	}
-
-	DPRINTF(HGD_D_INFO, "Finished uploading tracks");
+	if (ret != HGD_OK)
+		DPRINTF(HGD_D_INFO, "Some tracks failed to upload");
+	else
+		DPRINTF(HGD_D_INFO, "Finished uploading tracks");
 
 	return (ret);
 }
