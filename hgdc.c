@@ -426,7 +426,7 @@ hgd_req_queue(int n_args, char **args)
 	ssize_t			written = 0, fsize, chunk_sz;
 	char			chunk[HGD_BINARY_CHUNK], *filename = 0;
 	char			*q_req, *resp, stars_buf[81];
-	int			 iters = 0, barspace, tnum;
+	int			 iters = 0, barspace, tnum, percent;
 	float			 n_stars;
 
 	DPRINTF(HGD_D_DEBUG, "Will queue %d tracks", n_args);
@@ -470,9 +470,9 @@ hgd_req_queue(int n_args, char **args)
 		}
 
 		/* prepare progress bar */
-		barspace =  (float) (80 - strlen(basename(filename)) - 2) - 2;
+		barspace =  (float) (80 - strlen(basename(filename)) - 2) - 7;
 		memset(stars_buf, ' ', 80);
-		stars_buf[80] = 0;
+		stars_buf[barspace] = 0;
 
 		/*
 		 * start sending the file
@@ -482,14 +482,17 @@ hgd_req_queue(int n_args, char **args)
 
 			/* update progress bar */
 			if ((iters % 50 == 0) && (hgd_debug <= 1)) {
+				percent = (float) written/fsize * 100;
 				n_stars = barspace * ((float) written/fsize) + 1;
 				memset(stars_buf, '*', n_stars);
 
 				/* progress bar caps */
 				stars_buf[0] = '|';
-				stars_buf[barspace] = '|';
+				stars_buf[barspace - 1] = '|';
+				stars_buf[barspace] = 0;
 
-				printf("\r%s: %s", basename(filename), stars_buf);
+				printf("\r%s: %s %3d%%",
+				    basename(filename), stars_buf, percent);
 				fflush(stdout);
 			}
 			iters++;
@@ -511,8 +514,10 @@ hgd_req_queue(int n_args, char **args)
 			    (int)  written, (int) fsize);
 		}
 
-		memset(stars_buf, ' ', 80);
-		printf("\r%s\r%s: OK\n", stars_buf, basename(filename));
+		if (hgd_debug <= 1) {
+			memset(stars_buf, ' ', 80);
+			printf("\r%s     \r%s: OK\n", stars_buf, basename(filename));
+		}
 
 		fclose(f);
 
