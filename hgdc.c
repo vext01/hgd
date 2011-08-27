@@ -395,7 +395,7 @@ hgd_usage()
 	printf("Usage: hgdc [opts] command [args]\n\n");
 	printf("  Commands include:\n");
 	printf("    hud\t\t\tHeads up display\n");
-	printf("    q <filename>\tQueue a track\n");
+	printf("    q <file1> [...]\tQueue a track\n");
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
 	printf("  Options include:\n");
@@ -1080,7 +1080,7 @@ main(int argc, char **argv)
 	/* do whatever the user wants */
 	if (hgd_exec_req(argc, argv) == HGD_OK)
 		exit_ok = 1;
-	
+
 	/* try to sign off */
 	hgd_sock_send_line(sock_fd, ssl, "bye");
 	resp = hgd_sock_recv_line(sock_fd, ssl);
