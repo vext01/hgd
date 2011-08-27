@@ -18,7 +18,7 @@ BSD_LDFLAGS=@BSD_LIBS@
 TAG_CFLAGS=@TAGLIB_CFLAGS@
 TAG_LDFLAGS=@TAGLIB_LIBS@
 
-CFLAGS+=@CFLAGS@ -Wall -Wextra
+CFLAGS+=@CFLAGS@ -Wall -Wextra -g
 LDFLAGS+=@LIBS@
 CPPFLAGS+=@CPPFLAGS@
 
@@ -87,11 +87,14 @@ common.o: common.c hgd.h config.h
 db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
-hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o cfg.o
+mplayer.o: mplayer.c mplayer.h py.o
+	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o mplayer.o py.o mplayer.c
+
+hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} \
-		-o hgd-playd cfg.o db.o common.o crypto.o py.o hgd-playd.c
+		-o hgd-playd db.o common.o crypto.o py.o mplayer.o cfg.o hgd-playd.c
 
 hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o cfg.o crypto.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
@@ -104,11 +107,11 @@ hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 		${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
 		-o hgdc common.o net.o cfg.o hgdc.c
 
-hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o
+hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o mplayer.o py.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} -o hgd-admin common.o net.o crypto.o \
-		db.o hgd-admin.c
+		${CONFIG_LDFLAGS} ${PY_LDFLAGS} -o hgd-admin common.o net.o crypto.o \
+		db.o mplayer.o py.o hgd-admin.c
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \

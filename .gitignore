@@ -17,6 +17,7 @@ hgd-mk-pydoc
 hgd-netd
 hgd-playd
 hgdc
+mplayer.o
 net.o
 plugins/*.pyc
 py.o

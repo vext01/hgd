@@ -174,10 +174,23 @@ hgd_kill_sighandler(int sig)
 void
 hgd_register_sig_handlers()
 {
-	signal(SIGTERM, hgd_kill_sighandler);
-	signal(SIGABRT, hgd_kill_sighandler);
-	signal(SIGINT, hgd_kill_sighandler);
-	signal(SIGHUP, hgd_kill_sighandler);
+	struct sigaction	sa;
+	/* NB: update loop bounds if adding more */
+	int			sigs[] =
+				    {SIGTERM, SIGABRT, SIGINT, SIGHUP};
+	int			i;
+
+	DPRINTF(HGD_D_INFO, "Registering signal handlers");
+
+	sa.sa_handler = hgd_kill_sighandler;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0;
+
+	for (i = 0; i < 4; i++) {
+		if (sigaction (sigs[i], &sa, NULL) != 0)
+			DPRINTF(HGD_D_WARN,
+			    "registering sighandler failed: %s", SERROR);
+	}
 }
 
 /* make state dir if not existing */

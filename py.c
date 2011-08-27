@@ -332,7 +332,8 @@ hgd_py_meth_Hgd_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 		}
 	}
 
-	self->proto_version = HGD_PROTO_VERSION;
+	self->proto_version = HGD_PROTO_VERSION_MAJOR;
+	/* XXX 0.5.0 minor version */
 	self->debug_level = hgd_debug;
 
 	return (PyObject *)self;
