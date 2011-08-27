@@ -304,6 +304,13 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	ssize_t			write_ret;
 	char			*filename, *tag_artist, *tag_title;
 
+	if (sess->user == NULL) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|user_not_identified");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
 	if ((flood_limit >= 0) &&
 	    (hgd_num_tracks_user(sess->user->name) >= flood_limit)) {
 
@@ -321,13 +328,6 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	if ((bytes == 0) || ((long int) bytes > max_upload_size)) {
 		DPRINTF(HGD_D_WARN, "Incorrect file size");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
-		ret = HGD_FAIL;
-		goto clean;
-	}
-
-	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "err|user_not_identified");
 		ret = HGD_FAIL;
 		goto clean;
 	}
