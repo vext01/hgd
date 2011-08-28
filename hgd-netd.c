@@ -161,6 +161,7 @@ hgd_get_tag_metadata(char *filename, char **artist, char **title)
 int
 hgd_get_tag_metadata(char *filename, char **artist, char **title)
 {
+	(void) filename;
 	*artist = xstrdup("");
 	*title = xstrdup("");
 

@@ -226,7 +226,7 @@ hgd_cfg_netd_sslcert(config_t *cf, char **ssl_cert_path)
 }
 
 void
-hgd_cfg_debug(config_t *cf, char* service, int8_t *hgd_debug)
+hgd_cfg_debug(config_t *cf, char* service, int8_t *debug)
 {
 	/* -x */
 	long long int		 tmp_hgd_debug;
@@ -235,8 +235,8 @@ hgd_cfg_debug(config_t *cf, char* service, int8_t *hgd_debug)
 	xasprintf(&lookup, "%s:dont_fork", service);
 
 	if (config_lookup_int64(cf, lookup, &tmp_hgd_debug)) {
-		*hgd_debug = tmp_hgd_debug;
-		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", *hgd_debug);
+		*debug = tmp_hgd_debug;
+		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", *debug);
 	}
 }
 
@@ -400,14 +400,14 @@ hgd_cfg_c_username(config_t *cf, char** user)
 }
 
 void
-hgd_cfg_c_debug(config_t *cf, int8_t *hgd_debug)
+hgd_cfg_c_debug(config_t *cf, int8_t *debug)
 {
 	/* -x */
 	long long int		tmp_dbglevel;
 
 	if (config_lookup_int64(cf, "debug", &tmp_dbglevel)) {
-		*hgd_debug = tmp_dbglevel;
-		DPRINTF(HGD_D_DEBUG, "debug level=%d", *hgd_debug);
+		*debug = tmp_dbglevel;
+		DPRINTF(HGD_D_DEBUG, "debug level=%d", *debug);
 	}
 }
 
