@@ -178,10 +178,11 @@ hgd_get_tag_metadata(char *filename, struct hgd_media_tag *meta)
 	}
 
 	DPRINTF(HGD_D_INFO,
-	    "Got tag from '%s': '%s' by '%s' from '%s' from the year %u "
-	    "[%d secs, %d chans, %d Hz, %d bps]\n",
+	    "Got tag from '%s': '%s' by '%s' from the album '%s' from the year"
+	    "'%u' of genre '%s' [%d secs, %d chans, %d Hz, %d bps]\n",
 	    filename, meta->title, meta->artist, meta->album, meta->year,
-	    meta->duration, meta->channels, meta->samplerate, meta->bitrate);
+	    meta->genre, meta->duration, meta->channels, meta->samplerate,
+	    meta->bitrate);
 
 	taglib_tag_free_strings();
 #else
