@@ -242,9 +242,6 @@ hgd_read_config(char **config_locations)
 	 */
 	config_t		 cfg, *cf;
 	int			 dont_fork = dont_fork;
-	long long int		 tmp_debuglevel;
-	char			*tmp_state_path;
-	struct stat		 st;
 
 	cf = &cfg;
 
