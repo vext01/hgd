@@ -22,7 +22,7 @@ int
 hgd_load_config(config_t *cf, char **config_locations)
 {
 	struct stat		 st;
-	
+
 	config_init(cf);
 
 	while (*config_locations != NULL) {
@@ -53,7 +53,7 @@ hgd_load_config(config_t *cf, char **config_locations)
 		config_destroy(cf);
 		return (HGD_FAIL);
 	} else {
-		return (HGD_OK);	
+		return (HGD_OK);
 	}
 }
 
@@ -62,14 +62,14 @@ hgd_cfg_daemonise(config_t *cf, char* service, int* background)
 {
 	/* -B */
 	int			 tmp_background;
-	char 			*lookup;
+	char			*lookup;
 
 	xasprintf(&lookup, "%s:daemonise", service);
 
 	if (config_lookup_bool(cf, service, &tmp_background)) {
 		*background = tmp_background;
 		DPRINTF(HGD_D_DEBUG, "%s to background daemon",
-		    *background ? "Going" : "Not going");	
+		    *background ? "Going" : "Not going");
 	}
 	if (service != NULL) free(service);
 }
@@ -96,7 +96,8 @@ hgd_cfg_statepath(config_t *cf, char **state_path)
 	    "state_path", (const char **) &tmp_state_path)) {
 		if (*state_path != NULL) free(*state_path);
 		*state_path = strdup(tmp_state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", *state_path);
+		DPRINTF(HGD_D_DEBUG,
+		    "Set hgd state path to '%s'", *state_path);
 	}
 }
 
@@ -126,18 +127,18 @@ hgd_cfg_crypto(config_t *cf, char *service, uint8_t *crypto_pref)
 	}
 }
 
-void 
+void
 hgd_cfg_fork(config_t *cf, char *service, uint8_t *single_client)
 {
 	/* -f */
 	int			tmp_dont_fork;
-	char 			*lookup;
+	char			*lookup;
 
 	xasprintf(&lookup, "%s:dont_fork", service);
 
 	if (config_lookup_bool(cf, lookup, &tmp_dont_fork)) {
 		*single_client = tmp_dont_fork;
-		DPRINTF(HGD_D_DEBUG, 
+		DPRINTF(HGD_D_DEBUG,
 		    "Chose to %sfork", *single_client ? "not " : "");
 	}
 	if (service != NULL) free(service);
@@ -176,7 +177,7 @@ hgd_cfg_netd_votesound(config_t *cf, int *req_votes)
 {
 	/* -n */
 	long long int		tmp_req_votes;
-	
+
 	if (config_lookup_int64(cf, "netd.voteoff_count", &tmp_req_votes)) {
 		*req_votes = tmp_req_votes;
 		DPRINTF(HGD_D_DEBUG, "Set required-votes to %d", *req_votes);
@@ -188,7 +189,7 @@ hgd_cfg_netd_port(config_t *cf, int *port)
 {
 	/* -p */
 	long long int		tmp_port;
-	
+
 	if (config_lookup_int64(cf, "netd.port", &tmp_port)) {
 		*port = tmp_port;
 		DPRINTF(HGD_D_DEBUG, "Set port to %d", *port);
@@ -229,7 +230,7 @@ hgd_cfg_debug(config_t *cf, char* service, int8_t *hgd_debug)
 {
 	/* -x */
 	long long int		 tmp_hgd_debug;
-	char 			*lookup;
+	char			*lookup;
 
 	xasprintf(&lookup, "%s:dont_fork", service);
 
@@ -287,7 +288,7 @@ void
 hgd_cfg_playd_purgedb(config_t *cf, uint8_t *purge_finished_db)
 {
 	/* -p */
-	int			tmp_purge_fin_db;	
+	int			tmp_purge_fin_db;
 
 	if (config_lookup_bool(cf, "playd.purge_db", &tmp_purge_fin_db)) {
 		*purge_finished_db = tmp_purge_fin_db;
@@ -301,7 +302,7 @@ hgd_cfg_c_colours(config_t *cf, uint8_t *colours_on)
 {
 	/* -a -A */
 	int			tmp_colours_on;
-	
+
 	if (config_lookup_bool(cf, "colours", &tmp_colours_on)) {
 		*colours_on = tmp_colours_on;
 		DPRINTF(HGD_D_DEBUG, "colours %s", *colours_on ? "on" : "off");
@@ -359,13 +360,13 @@ hgd_cfg_c_password(config_t *cf, char **password, char *config_location)
 	}
 
 
-	if (config_lookup_string(cf, "password", (const char**) &tmp_password)) {
+	if (config_lookup_string(cf, "password",
+	    (const char**) &tmp_password)) {
 		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
 			DPRINTF(HGD_D_ERROR,
-				"Config file with your password in is readable by"
-				" other people.  Please chmod it.");
+				"Config file with your password in is "
+				"readable by other people.  Please chmod it.");
 			hgd_exit_nicely();
-
 		}
 
 		*password = xstrdup(tmp_password);
@@ -389,7 +390,7 @@ void
 hgd_cfg_c_username(config_t *cf, char** user)
 {
 	/* -u */
-	char			*tmp_user;	
+	char			*tmp_user;
 
 	if (config_lookup_string(cf, "username", (const char**) &tmp_user)) {
 		if (*user != NULL) free(*user);
