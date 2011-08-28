@@ -70,7 +70,7 @@ analyze:
 
 
 cfg.o: cfg.h cfg.c
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_LDFLAGS} -c -o cfg.o cfg.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o cfg.o cfg.c
 
 crypto.o: crypto.h crypto.c hgd.h config.h
 	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o crypto.c
