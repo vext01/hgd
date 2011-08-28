@@ -17,6 +17,7 @@
 
 /* Needed first so we can optionaly include libs */
 #include "config.h"
+#include "cfg.h"
 
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>
@@ -852,125 +853,23 @@ hgd_read_config(char **config_locations)
 	 * see hgd-playd.c for how to remove need for stat.
 	 */
 	config_t		 cfg, *cf;
-	char			*cypto_pref, *tmp_host, *tmp_user;
-	char			*tmp_password;
 	int			 ret = HGD_OK;
-	struct stat		 st;
-
-	/* temp variables */
-	long long int		tmp_dbglevel, tmp_port, tmp_hud_refresh_rate;
-	long long int		tmp_hud_max_items;
-	int			tmp_colours_on;
 
 	cf = &cfg;
-	config_init(cf);
 
-	while (*config_locations != NULL) {
-		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
-		    *config_locations);
-
-		if ( stat (*config_locations, &st) < 0 ) {
-			DPRINTF(HGD_D_INFO, "Could not stat %s",
-			    *config_locations);
-			config_locations--;
-			continue;
-		}
-
-		/* if we find a config, use it */
-		if (config_read_file(cf, *config_locations))
-			break;
-
-		/* otherwise look for another */
-		DPRINTF(HGD_D_ERROR, "%s (line: %d)",
-		    config_error_text(cf), config_error_line(cf));
-		config_locations--;
-	}
-
-	DPRINTF(HGD_D_DEBUG, "Using config: '%s'", *config_locations);
-
-	/* if no configs found */
-	if (*config_locations == NULL) {
-		config_destroy(cf);
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
 		return (HGD_OK);
 	}
 
-	/* -a -A */
-	if (config_lookup_bool(cf, "colours", &tmp_colours_on)) {
-		colours_on = tmp_colours_on;
-		DPRINTF(HGD_D_DEBUG, "colours %s", colours_on ? "on" : "off");
-	}
-
-	/* -e -E */
-	if (config_lookup_string(cf, "crypto", (const char **) &cypto_pref)) {
-
-		if (strcmp(cypto_pref, "always") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Client will insist upon cryto");
-			crypto_pref = HGD_CRYPTO_PREF_ALWAYS;
-		} else if (strcmp(cypto_pref, "never") == 0) {
-			DPRINTF(HGD_D_DEBUG, "Client will insist upon "
-			   " no crypto");
-			crypto_pref = HGD_CRYPTO_PREF_NEVER;
-		} else if (strcmp(cypto_pref, "if_avaliable") == 0) {
-			DPRINTF(HGD_D_DEBUG,
-			    "Client will use crypto if avaliable");
-		} else {
-			DPRINTF(HGD_D_WARN,
-			    "Invalid crypto option, using default");
-		}
-	}
-
-	/* -m */
-	if (config_lookup_int64(cf, "max_items", &tmp_hud_max_items)) {
-		hud_max_items = tmp_hud_max_items;
-		DPRINTF(HGD_D_DEBUG, "max items=%d", hud_max_items);
-	}
-
-	/* -s */
-	if (config_lookup_string(cf, "hostname", (const char **) &tmp_host)) {
-		free(host);
-		host = xstrdup(tmp_host);
-		DPRINTF(HGD_D_DEBUG, "host=%s", host);
-	}
-
-	/* -p */
-	if (config_lookup_int64(cf, "port", &tmp_port)) {
-		port = tmp_port;
-		DPRINTF(HGD_D_DEBUG, "port=%d", port);
-	}
-
-	/* password */
-	if (config_lookup_string(cf, "password", (const char**) &tmp_password)) {
-		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
-			DPRINTF(HGD_D_ERROR,
-				"Config file with your password in is readable by"
-				" other people.  Please chmod it.");
-			hgd_exit_nicely();
-
-		}
-
-		password = xstrdup(tmp_password);
-		DPRINTF(HGD_D_DEBUG, "Set password from config");
-	}
-
-	/* -r */
-	if (config_lookup_int64(cf, "refresh_rate", &tmp_hud_refresh_rate)) {
-		hud_refresh_speed = tmp_hud_refresh_rate;
-		DPRINTF(HGD_D_DEBUG, "refresh rate=%d", hud_refresh_speed);
-	}
-
-	/* -u */
-	if (config_lookup_string(cf, "username", (const char**) &tmp_user)) {
-		free(user);
-		user = strdup(tmp_user);
-		DPRINTF(HGD_D_DEBUG, "user='%s'", user);
-	}
-
-	/* -x */
-	if (config_lookup_int64(cf, "debug", &tmp_dbglevel)) {
-		hgd_debug = tmp_dbglevel;
-		DPRINTF(HGD_D_DEBUG, "debug level=%d", hgd_debug);
-	}
+	hgd_cfg_c_colours(cf, &colours_on);
+	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);	
+	hgd_cfg_c_maxitems(cf, &hud_max_items);
+	hgd_cfg_c_hostname(cf, &host);
+	hgd_cfg_c_port(cf, &port);
+	hgd_cfg_c_password(cf, &password, *config_locations);
+	hgd_cfg_c_refreshrate(cf, &hud_refresh_speed);
+	hgd_cfg_c_username(cf, &user);
+	hgd_cfg_c_debug(cf, &hgd_debug);
 
 	config_destroy(cf);
 	return (ret);
