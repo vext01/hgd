@@ -18,6 +18,7 @@
 #define _GNU_SOURCE	/* linux */
 
 #include "config.h"
+#include "cfg.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -246,53 +247,13 @@ hgd_read_config(char **config_locations)
 	struct stat		 st;
 
 	cf = &cfg;
-	config_init(cf);
 
-	while (*config_locations != NULL) {
-		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
-		    *config_locations);
-
-		/*
-		 * XXX: can be removed when deb get new libconfig
-		 * see hgd-playd.c
-		 */
-		if (stat(*config_locations, &st) < 0) {
-			DPRINTF(HGD_D_INFO, "Could not stat %s",
-			    *config_locations);
-			config_locations--;
-			continue;
-		}
-
-		if (config_read_file(cf, *config_locations)) {
-			break;
-		}
-
-		DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
-				config_error_text(cf),
-				config_error_line(cf));
-
-		config_locations--;
-	}
-
-	if (*config_locations == NULL) {
-		config_destroy(cf);
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
 		return (HGD_OK);
 	}
 
-	/* -d */
-	if (config_lookup_string(cf, "state_path",
-	    (const char **) &tmp_state_path)) {
-		free(state_path);
-		state_path = xstrdup(tmp_state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
-	}
-
-	/* -x */
-	if (config_lookup_int64(cf, "debug", &tmp_debuglevel)) {
-		hgd_debug = tmp_debuglevel;
-		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
-	}
+	hgd_cfg_statepath(cf, &state_path);
+	hgd_cfg_debug(cf, "admin", &hgd_debug);
 
 	config_destroy(cf);
 #endif
