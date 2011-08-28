@@ -169,6 +169,19 @@ struct hgd_req_despatch {
 	uint8_t			 varargs; /* if !0, n_args is the minimum */
 };
 
+/* stuff taglib can give us */
+struct hgd_media_tag {
+	char			*artist;
+	char			*title;
+	char			*album;
+	char			*genre;
+	int			 duration;
+	int			 bitrate;
+	int			 samplerate;
+	int			 channels;
+	int			 year;
+};
+
 /* debug levels */
 #define HGD_D_ERROR		0
 #define HGD_D_WARN		1
