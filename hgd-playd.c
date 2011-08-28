@@ -47,6 +47,7 @@
 
 #include "hgd.h"
 #include "db.h"
+#include "mplayer.h"
 
 const char			*hgd_component = "hgd-playd";
 
@@ -64,6 +65,7 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
 
+	hgd_free_mplayer_globals();
 	if (db)
 		sqlite3_close(db);
 	if (state_path)
@@ -87,107 +89,6 @@ hgd_exit_nicely()
 }
 
 void
-hgd_play_track(struct hgd_playlist_item *t)
-{
-	int			status = 0, pid;
-	char			*pid_path;
-	FILE			*pid_file;
-	struct flock		fl;
-
-	fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-	fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-	fl.l_start  = 0;        /* Offset from l_whence         */
-	fl.l_len    = 0;        /* length, 0 = to EOF           */
-	fl.l_pid    = getpid(); /* our PID                      */
-
-	DPRINTF(HGD_D_INFO, "Playing '%s' for '%s'", t->filename, t->user);
-	if (hgd_mark_playing(t->id) == HGD_FAIL)
-		hgd_exit_nicely();
-
-	/* we will write away child pid */
-	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
-
-	pid_file = fopen(pid_path, "w");
-	if (pid_file == NULL) {
-		DPRINTF(HGD_D_ERROR, "Can't open '%s'", pid_path);
-		free(pid_path);
-		hgd_exit_nicely();
-	}
-
-	if (fcntl(fileno(pid_file), F_SETLKW, &fl) == -1) {
-		DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
-		hgd_exit_nicely();
-	}
-
-	if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
-		DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
-
-#ifdef HAVE_PYTHON
-	hgd_execute_py_hook("pre_play");
-#endif
-	pid = fork();
-	if (!pid) {
-
-		/* close stdin, or mplayer catches keyboard shortcuts */
-		fclose(stdin);
-
-		/* child - your the d00d who will play this track */
-		execlp("mplayer", "mplayer", "-really-quiet",
-		    t->filename, (char *) NULL);
-
-		/* if we get here, the shit hit the fan with execlp */
-		DPRINTF(HGD_D_ERROR, "execlp() failed");
-		hgd_exit_nicely();
-	} else {
-		DPRINTF(HGD_D_INFO, "Mplayer spawned: pid=%d", pid);
-		fprintf(pid_file, "%d\n%d", pid, t->id);
-
-		fl.l_type = F_UNLCK;  /* set to unlock same region */
-
-		if (fcntl(fileno(pid_file), F_SETLK, &fl) == -1) {
-			DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
-			hgd_exit_nicely();
-		}
-
-		fclose(pid_file);
-		DPRINTF(HGD_D_INFO, "Waiting for mplayer to finish: pid=%d", pid);
-		if (waitpid(pid, &status, 0) < 0) {
-			/* it is ok for this to fail if we are restarting */
-			if (restarting || dying) {
-				kill(pid, SIGINT);
-			}
-			DPRINTF(HGD_D_WARN, "Could not wait(): %s", SERROR);
-		}
-
-		/* unlink mplayer pid path */
-		DPRINTF(HGD_D_DEBUG, "Deleting mplayer pid file");
-		if (unlink(pid_path) < 0) {
-			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
-		}
-		free(pid_path);
-
-		/* unlink media (but not if restarting, we replay the track) */
-		if ((!restarting) && (!dying)
-		    && (purge_finished_fs) && (unlink(t->filename) < 0)) {
-			DPRINTF(HGD_D_DEBUG,
-			    "Deleting finished: %s", t->filename);
-			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
-		}
-	}
-#ifdef HAVE_PYTHON
-	hgd_execute_py_hook("post_play");
-#endif
-
-	DPRINTF(HGD_D_DEBUG, "Finished playing (exit %d)", status);
-
-	/* if we are restarting, we replay the track on restart */
-	if ((!restarting) && (!dying) &&
-	    (hgd_mark_finished(t->id, purge_finished_db) == HGD_FAIL))
-		DPRINTF(HGD_D_WARN,
-		    "Could not purge/mark finished -- trying to continue");
-}
-
-void
 hgd_play_loop(void)
 {
 	struct hgd_playlist_item	 track;
@@ -205,7 +106,7 @@ hgd_play_loop(void)
 			    track.filename);
 
 			hgd_clear_votes();
-			hgd_play_track(&track);
+			hgd_play_track(&track, purge_finished_fs, purge_finished_db);
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
 #ifdef HAVE_PYTHON
@@ -396,6 +297,7 @@ main(int argc, char **argv)
 
 	xasprintf(&db_path, "%s/%s", state_path, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", state_path, HGD_FILESTORE_NAME);
+	hgd_init_mplayer_globals();
 
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();

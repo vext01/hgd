@@ -35,6 +35,7 @@
 
 #include "hgd.h"
 #include "db.h"
+#include "mplayer.h"
 
 const char			*hgd_component = "hgd-admin";
 
@@ -51,6 +52,7 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
 
+	hgd_free_mplayer_globals();
 	if (db)
 		sqlite3_close(db);
 	if (state_path)
@@ -75,6 +77,8 @@ hgd_usage()
         printf("    user-add <username> [password]	Add a user.\n");
         printf("    user-del <username>			Delete a user.\n");
         printf("    user-list				List users.\n");
+        printf("    pause				Pause MPlayer.\n");
+        printf("    skip				Next track.\n");
 	/*
         printf("    user-disable username\tDisable a user account");
         printf("    user-chpw username\t\t\tChange a users password\n");
@@ -121,7 +125,7 @@ hgd_acmd_user_add(char **args)
 
 	free(salt_hex);
 	free(hash_hex);
-	
+
 	return (ret);
 }
 
@@ -168,11 +172,31 @@ hgd_acmd_user_list(char **args)
 
 }
 
+int
+hgd_acmd_pause(char **args)
+{
+	(void) args;
+
+	return (hgd_mplayer_pipe_send("pause\n"));
+}
+
+int
+hgd_acmd_skip(char **args)
+{
+	(void) args;
+
+	return (hgd_mplayer_pipe_send("stop\n"));
+}
+
+
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },
 	{ "user-del", 1, hgd_acmd_user_del },
 	{ "user-list", 0, hgd_acmd_user_list },
+	{ "pause", 0, hgd_acmd_pause },
+	{ "skip", 0, hgd_acmd_skip },
 #if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },
@@ -301,6 +325,7 @@ main(int argc, char **argv)
 
 	hgd_register_sig_handlers();
 	state_path = xstrdup(HGD_DFL_DIR);
+	hgd_init_mplayer_globals();
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
 	while ((ch = getopt(argc, argv, "c:d:hvx:" "c:x:")) != -1) {

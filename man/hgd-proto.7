@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd July 7, 2011
+.Dd August 28, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -169,13 +169,21 @@ Arguments: 0
 .It
 Reply type: single-line
 .It
-On success returns: ok|<proto-major-vers>
+On success returns: ok|<proto-major-vers>|<proto-minor-vers>
 .It
 Needs auth: No
 .El
 .Pp
-Requests the protocol major version. Clients should check this upon connecting
-against the protocol version they support.
+Requests the protocol major and minor versions.
+.Pp
+The HGD developers bump the major version when backward compatibility is broken
+with the existing protocol version. A client should never attempt to work with a
+server implementing a differing major HGD protocol version.
+.Pp
+New features that do not break backward compatibility of the existing
+protocol cause a minor bump. Clients should check that server's minor
+version is atleast that expected, otherwise there is the possibility
+that the client requests a feature which does not exist.
 .It q
 .Bl -dash
 .It
@@ -286,7 +294,7 @@ A typical SSL session should go:
 SSL messages should all be 256 chars long (if message is shorter it should be
 padded with nulls).
 .Pp
-If 'encrypt?' does not return ok server does not support SSL.
+If 'encrypt?' returns 'ok|nocrypto', the server does not support SSL.
 If the server has encryption set to "forced", most commands will not work until
 an encrypted session is set up ('encrypt?' and 'encrypt' will always work
 unencrypted).

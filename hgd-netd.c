@@ -47,6 +47,7 @@
 #include "hgd.h"
 #include "db.h"
 #include "net.h"
+#include "mplayer.h"
 
 #include <openssl/ssl.h>
 #ifdef HAVE_TAGLIB
@@ -304,6 +305,13 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	ssize_t			write_ret;
 	char			*filename, *tag_artist, *tag_title;
 
+	if (sess->user == NULL) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|user_not_identified");
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
 	if ((flood_limit >= 0) &&
 	    (hgd_num_tracks_user(sess->user->name) >= flood_limit)) {
 
@@ -321,13 +329,6 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	if ((bytes == 0) || ((long int) bytes > max_upload_size)) {
 		DPRINTF(HGD_D_WARN, "Incorrect file size");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
-		ret = HGD_FAIL;
-		goto clean;
-	}
-
-	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "err|user_not_identified");
 		ret = HGD_FAIL;
 		goto clean;
 	}
@@ -580,6 +581,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	DPRINTF(HGD_D_INFO, "Vote limit exceeded - kill track");
 
 	/* kill mplayer then */
+	/* XXX some of this needs to go in mplayer.c */
 	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
 
 	pid_file = fopen(pid_path, "r");
@@ -738,6 +740,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"encrypt",	0,	0,	hgd_cmd_encrypt},
 	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
 	{"ls",		0,	1,	hgd_cmd_playlist},
+	{"pl",		0,	1,	hgd_cmd_playlist},
 	{"np",		0,	1,	hgd_cmd_now_playing},
 	{"proto",	0,	0,	hgd_cmd_proto},
 	{"q",		2,	1,	hgd_cmd_queue},
