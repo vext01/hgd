@@ -79,7 +79,13 @@ hgd_open_db(char *db_path)
 	    "playing INTEGER,"
 	    "finished INTEGER,"
 	    "tag_artist TEXT,"
-	    "tag_title TEXT)",
+	    "tag_title TEXT,"
+	    "tag_album TEXT,"
+	    "tag_genre TEXT,"
+	    "tag_year INTEGER,"
+	    "tag_channels INTEGER,"
+	    "tag_samplerate INTEGER,"
+	    "tag_bitrate INTEGER)",
 	    NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
