@@ -44,7 +44,7 @@ all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
 
 .PHONY: clean
 clean:
-	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o
+	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o cfg.o
 
 .PHONY: analyze
 analyze:
@@ -69,6 +69,8 @@ analyze:
 	
 
 
+cfg.o: cfg.h cfg.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_LDFLAGS} -c -o cfg.o cfg.c
 
 crypto.o: crypto.h crypto.c hgd.h config.h
 	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o crypto.c
@@ -88,22 +90,22 @@ db.o: db.c hgd.h config.h db.h
 mplayer.o: mplayer.c mplayer.h py.o
 	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o mplayer.o py.o mplayer.c
 
-hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o
+hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
 		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} \
-		-o hgd-playd db.o common.o crypto.o py.o mplayer.o hgd-playd.c
+		-o hgd-playd db.o common.o crypto.o py.o mplayer.o cfg.o hgd-playd.c
 
-hgd-netd: common.o net.o hgd-netd.c hgd.h db.o config.h crypto.o
+hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o cfg.o crypto.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
 		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
-		-o hgd-netd common.o db.o net.o crypto.o hgd-netd.c
+		-o hgd-netd cfg.o common.o db.o net.o crypto.o hgd-netd.c
 
-hgdc: common.o net.o hgdc.c hgd.h config.h
+hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
 		${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
-		-o hgdc common.o net.o hgdc.c
+		-o hgdc common.o net.o cfg.o hgdc.c
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o mplayer.o py.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
