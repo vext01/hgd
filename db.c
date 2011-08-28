@@ -34,31 +34,51 @@
 sqlite3				*db = NULL;
 char				*db_path = NULL;
 
-/* Open, create and initialise database */
-sqlite3 *
-hgd_open_db(char *db_path)
+
+int
+hgd_get_db_vers_cb(void *arg, int argc, char **data, char **names)
 {
-	int			sql_res;
+	int		*vers;
+
+	(void) argc;
+	(void) names;
+
+	vers = (int *) arg;
+	*vers = atoi(data[0]);
+
+	return (SQLITE_OK);
+}
+
+/* Optionally create, and open database */
+sqlite3 *
+hgd_open_db(char *db_path, uint8_t create)
+{
+	int			 sql_res;
 	sqlite3			*db;
+	int			 db_vers = -1;
+	uint8_t			 db_schema_err = 0;
+	struct stat		 st;
+
+	DPRINTF(HGD_D_DEBUG, "opening database");
+
+	if (!create) {
+		if (stat(db_path, &st) < 0) {
+			DPRINTF(HGD_D_ERROR, "Can't stat %s: %s", db_path, SERROR);
+			DPRINTF(HGD_D_ERROR, "Did you run 'hgd-admin db-init'?");
+			return (NULL);
+		}
+	}
 
 	/* open the database */
-	DPRINTF(HGD_D_DEBUG, "opening database");
 	if (sqlite3_open(db_path, &db) != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't open db: %s", DERROR);
+		DPRINTF(HGD_D_ERROR, "Can't open %s: %s", db_path, DERROR);
 		return (NULL);
 	}
 
 	/* make database secure */
 	if (chmod(db_path, S_IRUSR | S_IWUSR) != 0) {
-		DPRINTF(HGD_D_WARN, "Could not make database file secure");
-	}
-
-	/* no-one else should do this at the same time */
-	sql_res = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-	if (sql_res != SQLITE_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
-		sqlite3_close(db);
-		return (NULL);
+		DPRINTF(HGD_D_WARN, "Could not make %s file secure: %s",
+		    db_path, SERROR);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Setting database timeout");
@@ -70,9 +90,93 @@ hgd_open_db(char *db_path)
 		return (NULL);
 	}
 
-	DPRINTF(HGD_D_DEBUG, "Making playlist table (if needed)");
+	/* if we are not creating a db, it should be the right version */
+	if (!create) {
+		sql_res = sqlite3_exec(db,
+		    "SELECT db_schema_version FROM system WHERE id=0",
+		    hgd_get_db_vers_cb, &db_vers, NULL);
+
+		if (sql_res != SQLITE_OK) {
+			DPRINTF(HGD_D_ERROR,
+			    "Can't get db schema version, "
+			    "is your database too old?: %s", DERROR);
+			db_schema_err = 1;
+		} else if (db_vers != atoi(HGD_DB_SCHEMA_VERS)) {
+			DPRINTF(HGD_D_ERROR, "Database schema version "
+			    "mismatch: needed '%s', got '%d'",
+			    HGD_DB_SCHEMA_VERS, db_vers);
+			db_schema_err = 1;
+		} else
+			DPRINTF(HGD_D_INFO, "Database schema version "
+			    "is good: needed '%s', got '%d'",
+			    HGD_DB_SCHEMA_VERS, db_vers);
+
+		if (db_schema_err) {
+			DPRINTF(HGD_D_ERROR, "If you are happy to lose your "
+				"database,you can make a new one with: "
+				"'hgd-admin db-init'");
+			sqlite3_close(db);
+			return (NULL);
+		}
+	}
+	return (db);
+}
+
+/*
+ * remove old db and create new one
+ */
+int
+hgd_make_new_db(char *db_path)
+{
+	int			sql_res;
+	sqlite3			*db;
+
+	DPRINTF(HGD_D_INFO, "Creating new database: %s", db_path);
+
+	if ((unlink(db_path) < 0) && (errno != ENOENT)) {
+		DPRINTF(HGD_D_ERROR, "Could not unlink existing db: %s", SERROR);
+		return (HGD_FAIL);
+	}
+
+	db = hgd_open_db(db_path, 1); /* and create */
+	if (!db)
+		return (HGD_FAIL);
+
+	/* no-one else should do this at the same time */
+	sql_res = sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
+		sqlite3_close(db);
+		return (HGD_FAIL);
+	}
+
+	DPRINTF(HGD_D_DEBUG, "Making system table");
 	sql_res = sqlite3_exec(db,
-	    "CREATE TABLE IF NOT EXISTS playlist ("
+	    "CREATE TABLE system ("
+	    "id INTEGER PRIMARY KEY,"
+	    "db_schema_version INTEGER)",
+	    NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
+		sqlite3_close(db);
+		return (HGD_FAIL);
+	}
+
+	/* the system table should only have one row with id 0 */
+	sql_res = sqlite3_exec(db,
+	    "INSERT into system VALUES(0, '" HGD_DB_SCHEMA_VERS "');",
+	    NULL, NULL, NULL);
+
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
+		sqlite3_close(db);
+		return (HGD_FAIL);
+	}
+
+	DPRINTF(HGD_D_DEBUG, "Making playlist table");
+	sql_res = sqlite3_exec(db,
+	    "CREATE TABLE playlist ("
 	    "id INTEGER PRIMARY KEY,"
 	    "filename TEXT,"
 	    "user TEXT,"
@@ -91,12 +195,12 @@ hgd_open_db(char *db_path)
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
 		sqlite3_close(db);
-		return (NULL);
+		return (HGD_FAIL);
 	}
 
-	DPRINTF(HGD_D_DEBUG, "making votes table (if needed)");
+	DPRINTF(HGD_D_DEBUG, "making votes table");
 	sql_res = sqlite3_exec(db,
-	    "CREATE TABLE IF NOT EXISTS votes ("
+	    "CREATE TABLE votes ("
 	    "user TEXT PRIMARY KEY)",
 	    NULL, NULL, NULL);
 
@@ -104,12 +208,12 @@ hgd_open_db(char *db_path)
 		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
 		    DERROR);
 		sqlite3_close(db);
-		return (NULL);
+		return (HGD_FAIL);
 	}
 
-	DPRINTF(HGD_D_DEBUG, "making user table (if needed)");
+	DPRINTF(HGD_D_DEBUG, "making user table");
 	sql_res = sqlite3_exec(db,
-	    "CREATE TABLE IF NOT EXISTS users ("
+	    "CREATE TABLE users ("
 	    "username TEXT PRIMARY KEY, "
 	    "hash TEXT, "	/* sha1 */
 	    "salt TEXT, "
@@ -121,17 +225,19 @@ hgd_open_db(char *db_path)
 		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s",
 		    DERROR);
 		sqlite3_close(db);
-		return (NULL);
+		return (HGD_FAIL);
 	}
 
 	sql_res = sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't initialise db: %s", DERROR);
 		sqlite3_close(db);
-		return (NULL);
+		return (HGD_FAIL);
 	}
 
-	return (db);
+	sqlite3_close(db);
+
+	return (HGD_OK);
 }
 
 int

@@ -1047,7 +1047,7 @@ start:
 			/* turn off HUP handler */
 			//signal(SIGHUP, SIG_DFL);
 
-			db = hgd_open_db(db_path);
+			db = hgd_open_db(db_path, 0);
 			if (db == NULL)
 				hgd_exit_nicely();
 
@@ -1298,8 +1298,7 @@ main(int argc, char **argv)
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();
 
-	/* Created tables if needed */
-	db = hgd_open_db(db_path);
+	db = hgd_open_db(db_path, 0);
 	if (db == NULL)
 		hgd_exit_nicely();
 

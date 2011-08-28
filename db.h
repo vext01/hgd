@@ -23,10 +23,12 @@
 
 #include <sqlite3.h>
 
+#define	HGD_DB_SCHEMA_VERS	"0"
+
 extern sqlite3			*db;
 extern char			*db_path;
 
-sqlite3				*hgd_open_db(char *);
+sqlite3				*hgd_open_db(char *, uint8_t);
 int				 hgd_get_playing_item_cb(void *arg,
 				     int argc, char **data, char **names);
 int				 hgd_get_playing_item(
@@ -50,5 +52,6 @@ struct hgd_user			*hgd_authenticate_user(char *user, char *pass);
 int				 hgd_delete_user(char *user);
 struct hgd_user_list		*hgd_get_all_users(void);
 int				 hgd_num_tracks_user(char *username);
+int				 hgd_make_new_db(char *db_path);
 
 #endif
