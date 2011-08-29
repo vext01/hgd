@@ -215,6 +215,7 @@ hgd_make_new_db(char *db_path)
 	sql_res = sqlite3_exec(db,
 	    "CREATE TABLE users ("
 	    "username TEXT PRIMARY KEY, "
+	    "privlages INTEGER,"
 	    "hash TEXT, "	/* sha1 */
 	    "salt TEXT, "
 	    "perms INTEGER"

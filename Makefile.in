@@ -44,7 +44,7 @@ all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
 
 .PHONY: clean
 clean:
-	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o cfg.o
+	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o cfg.o admin.o
 
 .PHONY: analyze
 analyze:
