@@ -53,3 +53,76 @@ hgd_acmd_user_add(char **args)
 	
 	return (ret);
 }
+
+
+int
+hgd_acmd_user_add_prompt(char **args)
+{
+	char			 pass[HGD_MAX_PASS_SZ];
+	char			*new_args[2];
+
+	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	if (hgd_readpassphrase_confirmed(pass) != HGD_OK)
+		return (HGD_FAIL);
+
+	new_args[0] = args[0];
+	new_args[1] = pass;
+
+	return (hgd_acmd_user_add(new_args));
+}
+
+int
+hgd_acmd_user_del(char **args)
+{
+	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	if (hgd_delete_user(args[0]) != HGD_OK)
+		return (HGD_FAIL);
+
+	return (HGD_OK);
+}
+
+int
+hgd_acmd_user_list(char **args)
+{
+	struct hgd_user_list	*list;
+	int			 i;
+
+	(void) args;
+
+	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	list = hgd_get_all_users();
+
+	for (i = 0; i < list->n_users; i++)
+		printf("%s\n", list->users[i]->name);
+
+	hgd_free_user_list(list);
+	free(list);
+
+	return (HGD_OK);
+
+}
+
+int
+hgd_acmd_pause(char **args)
+{
+	(void) args;
+
+	return (hgd_mplayer_pipe_send("pause\n"));
+}
+
+int
+hgd_acmd_skip(char **args)
+{
+	(void) args;
+
+	return (hgd_mplayer_pipe_send("stop\n"));
+}

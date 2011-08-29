@@ -68,6 +68,8 @@ analyze:
 		${BSD_CFLAGS} hgd-mk-pydoc
 	
 
+admin.o: admin.h admin.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o admin.o admin.c
 
 cfg.o: cfg.h cfg.c
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o cfg.o cfg.c
@@ -108,11 +110,11 @@ hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 		-o hgdc common.o net.o cfg.o hgdc.c
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
-	mplayer.o py.o cfg.o
+	mplayer.o py.o cfg.o admin.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} ${PY_LDFLAGS} -o hgd-admin \
-		common.o net.o crypto.o db.o mplayer.o py.o cfg.o hgd-admin.c
+		common.o net.o admin.o crypto.o db.o mplayer.o py.o cfg.o hgd-admin.c
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
