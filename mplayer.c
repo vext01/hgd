@@ -35,7 +35,9 @@
 #include "config.h"
 #include "hgd.h"
 #include "mplayer.h"
+#ifdef HAVE_PYTHON
 #include "py.h"
+#endif
 #include "db.h"
 
 char			*mplayer_fifo_path = 0;

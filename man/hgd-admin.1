@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd April 21, 2011
+.Dd August 28, 2011
 .Dt HGD-ADMIN 1
 .Os
 .Sh NAME
@@ -49,6 +49,8 @@ Set the debug level: 0=errors, 1=warnings, 2=info, 3=debug. Defaults to 1.
 .Pp
 The commands are as follows:
 .Bl -tag -width Ds
+.It db-init
+Delete any existing database and make a fresh one.
 .It user-add Ar user [pass]
 Add a user to the system. The password parameter is optional; if no password is
 given,
@@ -58,6 +60,10 @@ will prompt for one.
 Delete a user from the system.
 .It user-list
 List users in the system.
+.It pause
+Toggle pause.
+.It skip
+Skip current track.
 .El
 .Sh FILES
 .Nm

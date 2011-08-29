@@ -93,6 +93,10 @@ If you need a custom state path (ie. not /var/hgd), you can either pass -d to
 all server components (make sure they are the same of course), or make a hgd.rc
 config file (see the FILES sections in manual pages).
 
+First create the sqlite3 database:
+
+ % hgd-admin db-init
+
 Now you should make user accounts:
 
  % hgd-admin user-add <username>
@@ -103,6 +107,10 @@ Then you can run the hgd daemons:
 
  % hgd-netd
  % hgd-play
+
+Examine the system 'daemon' log and look for errors. For debugging, you
+can run the daemons in the foreground -B and turn up debugging with -x
+<level> (0-3).
 
 Then you can queue tracks:
  % hgdc q <some media file>
@@ -128,6 +136,9 @@ History
  * 0.3   - Config file support.
  * 0.4   - Autoconf, taglib, Python scripting.
  * 0.4.1 - Properly daemonise, log to syslog, honor SIGHUP.
+ * 0.5   - Database schema check, add more tag support,
+           network protocol minor version, skip+pause commands in hgd-admin,
+           client can queue more than a single track at a time.
 
 Roadmap
 -------

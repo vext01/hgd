@@ -18,6 +18,7 @@
 #define _GNU_SOURCE	/* linux */
 
 #include "config.h"
+#include "cfg.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -79,6 +80,7 @@ hgd_usage()
         printf("    user-list				List users.\n");
         printf("    pause				Pause MPlayer.\n");
         printf("    skip				Next track.\n");
+        printf("    db-init				Initialise database.\n");
 	/*
         printf("    user-disable username\tDisable a user account");
         printf("    user-chpw username\t\t\tChange a users password\n");
@@ -102,6 +104,10 @@ hgd_acmd_user_add(char **args)
 
 	char			salt_ascii[HGD_SHA_SALT_SZ * 2 + 1];
 	char			hash_ascii[HGD_SHA_SALT_SZ * 2 + 1];
+
+	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
 
 	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
 
@@ -135,6 +141,10 @@ hgd_acmd_user_add_prompt(char **args)
 	char			 pass[HGD_MAX_PASS_SZ];
 	char			*new_args[2];
 
+	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
 	if (hgd_readpassphrase_confirmed(pass) != HGD_OK)
 		return (HGD_FAIL);
 
@@ -147,6 +157,10 @@ hgd_acmd_user_add_prompt(char **args)
 int
 hgd_acmd_user_del(char **args)
 {
+	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
 	if (hgd_delete_user(args[0]) != HGD_OK)
 		return (HGD_FAIL);
 
@@ -156,11 +170,16 @@ hgd_acmd_user_del(char **args)
 int
 hgd_acmd_user_list(char **args)
 {
-	struct hgd_user_list	*list = hgd_get_all_users();
+	struct hgd_user_list	*list;
 	int			 i;
 
-	/* sssh */
-	args = args;
+	(void) args;
+
+	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	list = hgd_get_all_users();
 
 	for (i = 0; i < list->n_users; i++)
 		printf("%s\n", list->users[i]->name);
@@ -188,7 +207,13 @@ hgd_acmd_skip(char **args)
 	return (hgd_mplayer_pipe_send("stop\n"));
 }
 
+int
+hgd_acmd_init_db(char **args)
+{
+	(void) args;
 
+	return (hgd_make_new_db(db_path));
+}
 
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
@@ -197,6 +222,7 @@ struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-list", 0, hgd_acmd_user_list },
 	{ "pause", 0, hgd_acmd_pause },
 	{ "skip", 0, hgd_acmd_skip },
+	{ "db-init", 0, hgd_acmd_init_db },
 #if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },
@@ -241,58 +267,15 @@ hgd_read_config(char **config_locations)
 	 */
 	config_t		 cfg, *cf;
 	int			 dont_fork = dont_fork;
-	long long int		 tmp_debuglevel;
-	char			*tmp_state_path;
-	struct stat		 st;
 
 	cf = &cfg;
-	config_init(cf);
 
-	while (*config_locations != NULL) {
-		/* Try and open usr config */
-		DPRINTF(HGD_D_INFO, "Trying to read config from: %s",
-		    *config_locations);
-
-		/*
-		 * XXX: can be removed when deb get new libconfig
-		 * see hgd-playd.c
-		 */
-		if (stat(*config_locations, &st) < 0) {
-			DPRINTF(HGD_D_INFO, "Could not stat %s",
-			    *config_locations);
-			config_locations--;
-			continue;
-		}
-
-		if (config_read_file(cf, *config_locations)) {
-			break;
-		}
-
-		DPRINTF(HGD_D_ERROR, "%s (line: %d)\n",
-				config_error_text(cf),
-				config_error_line(cf));
-
-		config_locations--;
-	}
-
-	if (*config_locations == NULL) {
-		config_destroy(cf);
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
 		return (HGD_OK);
 	}
 
-	/* -d */
-	if (config_lookup_string(cf, "state_path",
-	    (const char **) &tmp_state_path)) {
-		free(state_path);
-		state_path = xstrdup(tmp_state_path);
-		DPRINTF(HGD_D_DEBUG, "Set hgd state path to '%s'", state_path);
-	}
-
-	/* -x */
-	if (config_lookup_int64(cf, "debug", &tmp_debuglevel)) {
-		hgd_debug = tmp_debuglevel;
-		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", hgd_debug);
-	}
+	hgd_cfg_statepath(cf, &state_path);
+	hgd_cfg_debug(cf, "admin", &hgd_debug);
 
 	config_destroy(cf);
 #endif
@@ -404,10 +387,6 @@ main(int argc, char **argv)
 
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();
-
-	db = hgd_open_db(db_path);
-	if (db == NULL)
-		hgd_exit_nicely();
 
 	if (hgd_parse_command(argc, argv) == -1)
 		hgd_usage();

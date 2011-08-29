@@ -114,18 +114,28 @@ hgd_exit_nicely()
 	_exit (!exit_ok);
 }
 
-#ifdef HAVE_TAGLIB
 int
-hgd_get_tag_metadata(char *filename, char **artist, char **title)
+hgd_get_tag_metadata(char *filename, struct hgd_media_tag *meta)
 {
-	TagLib_File		*file;
-	TagLib_Tag		*tag;
+#ifdef HAVE_TAGLIB
+	TagLib_File			*file;
+	TagLib_Tag			*tag;
+	const TagLib_AudioProperties	*ap;
+#endif
 
 	DPRINTF(HGD_D_DEBUG, "Attempting to read tags for '%s'", filename);
 
-	*artist = xstrdup("");
-	*title = xstrdup("");
+	meta->artist = xstrdup("");
+	meta->title = xstrdup("");
+	meta->album = xstrdup("");
+	meta->genre = xstrdup("");
+	meta->year = 0;
+	meta->duration = 0;
+	meta->samplerate = 0;
+	meta->channels = 0;
+	meta->bitrate = 0;
 
+#ifdef HAVE_TAGLIB
 	file = taglib_file_new(filename);
 	if (file == NULL) {
 		DPRINTF(HGD_D_DEBUG, "taglib could not open '%s'", filename);
@@ -143,30 +153,44 @@ hgd_get_tag_metadata(char *filename, char **artist, char **title)
 		return (HGD_FAIL);
 	}
 
-	/* all went well */
-	free(*artist);
-	free(*title);
+	free(meta->artist);
+	free(meta->title);
+	free(meta->album);
+	free(meta->genre);
 
-	*artist = xstrdup(taglib_tag_artist(tag));
-	*title = xstrdup(taglib_tag_title(tag));
+	meta->artist = xstrdup(taglib_tag_artist(tag));
+	meta->title = xstrdup(taglib_tag_title(tag));
+	meta->album = xstrdup(taglib_tag_album(tag));
+	meta->genre = xstrdup(taglib_tag_genre(tag));
 
-	DPRINTF(HGD_D_DEBUG, "Got tag from '%s': '%s' by '%s'\n",
-	    filename, *title, *artist);
+	meta->year = taglib_tag_year(tag);
+
+	/* now audio properties: i dont consider this failing fatal */
+	ap = taglib_file_audioproperties(file);
+	if (ap != NULL) {
+		meta->duration = taglib_audioproperties_length(ap);
+		meta->samplerate = taglib_audioproperties_samplerate(ap);
+		meta->channels = taglib_audioproperties_channels(ap);
+		meta->bitrate = taglib_audioproperties_bitrate(ap);
+	} else {
+		DPRINTF(HGD_D_WARN,
+		    "failed to get audio properties: %s", filename);
+	}
+
+	DPRINTF(HGD_D_INFO,
+	    "Got tag from '%s': '%s' by '%s' from the album '%s' from the year"
+	    "'%u' of genre '%s' [%d secs, %d chans, %d Hz, %d bps]\n",
+	    filename, meta->title, meta->artist, meta->album, meta->year,
+	    meta->genre, meta->duration, meta->channels, meta->samplerate,
+	    meta->bitrate);
 
 	taglib_tag_free_strings();
+#else
+	DPRINTF(HGD_D_DEBUG, "No taglib support, skipping tag retrieval");
+#endif
 
 	return (HGD_OK);
 }
-#else
-int
-hgd_get_tag_metadata(char *filename, char **artist, char **title)
-{
-	*artist = xstrdup("");
-	*title = xstrdup("");
-
-	return (HGD_FAIL);
-}
-#endif
 
 /* return some kind of host identifier, free when done */
 char *
@@ -303,7 +327,15 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	int			f = -1, ret = HGD_OK;
 	size_t			bytes_recvd = 0, to_write;
 	ssize_t			write_ret;
-	char			*filename, *tag_artist, *tag_title;
+	char			*filename;
+	struct hgd_media_tag	tags;
+
+	if (sess->user == NULL) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|user_not_identified");
+		ret = HGD_FAIL;
+		goto clean;
+	}
 
 	if ((flood_limit >= 0) &&
 	    (hgd_num_tracks_user(sess->user->name) >= flood_limit)) {
@@ -322,13 +354,6 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	if ((bytes == 0) || ((long int) bytes > max_upload_size)) {
 		DPRINTF(HGD_D_WARN, "Incorrect file size");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|size");
-		ret = HGD_FAIL;
-		goto clean;
-	}
-
-	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "err|user_not_identified");
 		ret = HGD_FAIL;
 		goto clean;
 	}
@@ -418,18 +443,20 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	 * get tag metadata
 	 * no error that there is no #ifdef HAVE_TAGLIB
 	 */
-	hgd_get_tag_metadata(unique_fn, &tag_artist, &tag_title);
+	hgd_get_tag_metadata(unique_fn, &tags);
 
 	/* insert track into db */
 	if (hgd_insert_track(basename(unique_fn),
-		    tag_artist, tag_title, sess->user->name) != HGD_OK) {
+		    tags.artist, tags.title, sess->user->name) != HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
 
-	/* always free, as we allocate "unknown" if it goes brown trousers */
-	free(tag_artist);
-	free(tag_title);
+	/* always free, as we allocate "" if it goes brown trousers */
+	free(tags.artist);
+	free(tags.title);
+	free(tags.album);
+	free(tags.genre);
 
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	DPRINTF(HGD_D_INFO, "Transfer of '%s' complete", filename);
@@ -1020,7 +1047,7 @@ start:
 			/* turn off HUP handler */
 			//signal(SIGHUP, SIG_DFL);
 
-			db = hgd_open_db(db_path);
+			db = hgd_open_db(db_path, 0);
 			if (db == NULL)
 				hgd_exit_nicely();
 
@@ -1271,8 +1298,7 @@ main(int argc, char **argv)
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();
 
-	/* Created tables if needed */
-	db = hgd_open_db(db_path);
+	db = hgd_open_db(db_path, 0);
 	if (db == NULL)
 		hgd_exit_nicely();
 
@@ -1306,5 +1332,6 @@ main(int argc, char **argv)
 
 	exit_ok = 1;
 	hgd_exit_nicely();
+
 	return (EXIT_SUCCESS); /* NOREACH */
 }

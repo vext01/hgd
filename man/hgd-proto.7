@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd August 27, 2011
+.Dd August 28, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -294,7 +294,7 @@ A typical SSL session should go:
 SSL messages should all be 256 chars long (if message is shorter it should be
 padded with nulls).
 .Pp
-If 'encrypt?' does not return ok server does not support SSL.
+If 'encrypt?' returns 'ok|nocrypto', the server does not support SSL.
 If the server has encryption set to "forced", most commands will not work until
 an encrypted session is set up ('encrypt?' and 'encrypt' will always work
 unencrypted).
