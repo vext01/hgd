@@ -68,8 +68,8 @@ analyze:
 		${BSD_CFLAGS} hgd-mk-pydoc
 	
 
-admin.o: admin.h admin.c
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o admin.o admin.c
+admin.o: admin.h admin.c mplayer.o
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o admin.o mplayer.o admin.c
 
 cfg.o: cfg.h cfg.c
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o cfg.o cfg.c
@@ -98,11 +98,11 @@ hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.
 		${CONFIG_LDFLAGS} \
 		-o hgd-playd db.o common.o crypto.o py.o mplayer.o cfg.o hgd-playd.c
 
-hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o cfg.o crypto.o
+hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o cfg.o crypto.o admin.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
 		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
-		-o hgd-netd cfg.o common.o db.o net.o crypto.o hgd-netd.c
+		-o hgd-netd mplayer.o cfg.o common.o db.o net.o crypto.o admin.o hgd-netd.c
 
 hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
