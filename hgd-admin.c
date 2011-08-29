@@ -37,6 +37,7 @@
 #include "hgd.h"
 #include "db.h"
 #include "mplayer.h"
+#include "admin.h"
 
 const char			*hgd_component = "hgd-admin";
 
@@ -92,47 +93,6 @@ hgd_usage()
         printf("    -h			Show this message and exit\n");
         printf("    -x <level>		Set debug level (0-3)\n");
         printf("    -v			Show version and exit\n");
-}
-
-int
-hgd_acmd_user_add(char **args)
-{
-	unsigned char		 salt[HGD_SHA_SALT_SZ];
-	char			*salt_hex, *hash_hex;
-	char			*user = args[0], *pass = args[1];
-	int			 ret = HGD_OK;
-
-	char			salt_ascii[HGD_SHA_SALT_SZ * 2 + 1];
-	char			hash_ascii[HGD_SHA_SALT_SZ * 2 + 1];
-
-	db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
-
-	memset(salt, 0, HGD_SHA_SALT_SZ);
-	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
-		DPRINTF(HGD_D_ERROR, "can not generate salt");
-		return (HGD_FAIL);
-	}
-
-	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
-	hgd_bytes_to_hex_buf(salt_hex, salt_ascii, HGD_SHA_SALT_SZ);
-	DPRINTF(HGD_D_DEBUG, "new user's salt '%s'", salt_ascii);
-
-	hash_hex = hgd_sha1(pass, salt_hex);
-	memset(pass, 0, strlen(pass));
-	hgd_bytes_to_hex_buf(hash_hex, hash_ascii, HGD_SHA_SALT_SZ);
-	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_ascii);
-
-	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
-		ret = HGD_FAIL;
-
-	free(salt_hex);
-	free(hash_hex);
-
-	return (ret);
 }
 
 int
