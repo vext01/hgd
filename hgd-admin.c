@@ -108,7 +108,7 @@ struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },
 	{ "user-del", 1, hgd_acmd_user_del },
-	{ "user-list", 0, hgd_acmd_user_list },
+	{ "user-list", 0, hgd_acmd_user_list_print },
 	{ "pause", 0, hgd_acmd_pause },
 	{ "skip", 0, hgd_acmd_skip },
 	{ "db-init", 0, hgd_acmd_init_db },

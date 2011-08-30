@@ -81,6 +81,10 @@
 #define ANSII_GREEN		(colours_on ? "\033[32m" : "")
 #define ANSII_WHITE		(colours_on ? "\033[0m" : "")
 
+/* Authorisation levels */
+#define	HGD_AUTH_NONE			(0)
+#define HGD_AUTH_ADMIN			(2^0)
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -157,6 +161,7 @@ struct hgd_cmd_despatch {
 	 * be used.
 	 */
 	uint8_t			 secure;
+	uint8_t			 authlevel;
 	int			(*handler)(struct hgd_session *, char **);
 };
 

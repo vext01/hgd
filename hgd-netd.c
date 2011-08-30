@@ -767,21 +767,52 @@ clean:
 	return (ret);
 }
 
+int
+hgd_cmd_user_add(struct hgd_session *sess, char **params)
+{
+	return hgd_acmd_user_add(params);
+}
+
+
+int
+hgd_cmd_user_del(struct hgd_session *sess, char **params)
+{
+	return hgd_acmd_user_del(params);
+}
+
+int
+hgd_cmd_user_list(struct hgd_session *sess, char **unused)
+{
+	DPRINTF(HGD_D_WARN, "Not yet implented");
+	return (HGD_FAIL);
+}
+
+int
+hgd_cmd_pause(struct hgd_session *sess, char **unused)
+{
+	DPRINTF(HGD_D_WARN, "Not yet implented");
+	return (HGD_FAIL);
+}
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
-	/* cmd,		n_args,	secure,	handler_function */
-	{"bye",		0,	0,	NULL},	/* bye is special */
-	{"encrypt",	0,	0,	hgd_cmd_encrypt},
-	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
-	{"ls",		0,	1,	hgd_cmd_playlist},
-	{"pl",		0,	1,	hgd_cmd_playlist},
-	{"np",		0,	1,	hgd_cmd_now_playing},
-	{"proto",	0,	0,	hgd_cmd_proto},
-	{"q",		2,	1,	hgd_cmd_queue},
-	{"user",	2,	1,	hgd_cmd_user},
-	{"vo",		0,	1,	hgd_cmd_vote_off_noarg},
-	{"vo",		1,	1,	hgd_cmd_vote_off},
-	{NULL,		0,	0,	NULL}	/* terminate */
+	/* cmd,		n_args,	secure,	auth,		handler_function */
+	{"bye",		0,	0,	HGD_AUTH_NONE,	NULL},	/* bye is special */
+	{"encrypt",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt},
+	{"encrypt?",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt_questionmark},
+	{"ls",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_playlist},
+	{"pl",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_playlist},
+	{"np",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_now_playing},
+	{"proto",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_proto},
+	{"q",		2,	1,	HGD_AUTH_NONE,	hgd_cmd_queue},
+	{"user",	2,	1,	HGD_AUTH_NONE,	hgd_cmd_user},
+	{"vo",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off_noarg},
+	{"vo",		1,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off},
+	{"user-add",	2,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_add},
+	{"user-del",	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_del},
+	{"user-list",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_list},
+	{"pause",	0,	1,	HGD_AUTH_ADMIN,	hgd_cmd_pause},
+	{NULL,		0,	0,	HGD_AUTH_NONE,	NULL}	/* terminate */
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
@@ -856,6 +887,18 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|ssl_only");
 		num_bad_commands++;
 		goto clean;
+	}
+
+	/* if admin command, check user is an admin */
+	if (correct_desp->authlevel != HGD_AUTH_NONE) {
+		if (sess->user->perms & correct_desp->authlevel) {
+			DPRINTF(HGD_D_WARN, 
+			    "Client '%s' is trying to invoke admin  commands",
+			    sess->cli_str);
+			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|not_authed");
+			num_bad_commands++;
+			goto clean;
+		}
 	}
 
 	/* otherwise despatch */

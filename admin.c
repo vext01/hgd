@@ -67,7 +67,8 @@ hgd_acmd_user_add_prompt(char **args)
 	char			 pass[HGD_MAX_PASS_SZ];
 	char			*new_args[2];
 
-	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
 	if (db == NULL)
 		return (HGD_FAIL);
 
@@ -83,7 +84,8 @@ hgd_acmd_user_add_prompt(char **args)
 int
 hgd_acmd_user_del(char **args)
 {
-	db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
 	if (db == NULL)
 		return (HGD_FAIL);
 
@@ -92,20 +94,13 @@ hgd_acmd_user_del(char **args)
 
 	return (HGD_OK);
 }
-
 int
-hgd_acmd_user_list(char **args)
+hgd_acmd_user_list_print(char **args)
 {
-	struct hgd_user_list	*list;
+	struct hgd_user_list *list;
 	int			 i;
-
-	(void) args;
-
-	db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	list = hgd_get_all_users();
+	
+	list = hgd_acmd_user_list(args);
 
 	for (i = 0; i < list->n_users; i++)
 		printf("%s\n", list->users[i]->name);
@@ -114,7 +109,22 @@ hgd_acmd_user_list(char **args)
 	free(list);
 
 	return (HGD_OK);
+}
 
+
+struct hgd_user_list*
+hgd_acmd_user_list(char **args)
+{
+	struct hgd_user_list	*list;
+
+	(void) args;
+
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	return list = hgd_get_all_users();
 }
 
 int

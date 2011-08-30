@@ -22,7 +22,8 @@
 int hgd_acmd_user_add(char **args);
 int hgd_acmd_user_add_prompt(char **args);
 int hgd_acmd_user_del(char **args);
-int hgd_acmd_user_list(char **args);
+struct hgd_user_list* hgd_acmd_user_list(char **args);
+int hgd_acmd_user_list_print(char **args);
 int hgd_acmd_pause(char **args);
 int hgd_acmd_skip(char **args);
 
