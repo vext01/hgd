@@ -18,7 +18,13 @@
 #include "config.h"
 #include "cfg.h"
 
-#define _GNU_SOURCE	/* linux */
+#ifdef HAVE_PYTHON
+#include <Python.h> /* defines _GNU_SOURCE */
+#include "py.h"
+#else
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

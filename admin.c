@@ -17,6 +17,12 @@
 
 #include "admin.h"
 
+#include <sqlite3.h>
+#include <openssl/rand.h>
+#include "hgd.h"
+#include "db.h"
+#include "mplayer.h"
+
 int
 hgd_acmd_user_add(char **args)
 {

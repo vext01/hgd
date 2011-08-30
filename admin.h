@@ -18,11 +18,6 @@
 #ifndef HGD_ADMIN_H
 #define HGD_ADMIN_H
 
-#include <sqlite3.h>
-#include <openssl/rand.h>
-#include "hgd.h"
-#include "db.h"
-#include "mplayer.h"
 
 int hgd_acmd_user_add(char **args);
 int hgd_acmd_user_add_prompt(char **args);
