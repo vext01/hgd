@@ -770,6 +770,7 @@ clean:
 int
 hgd_cmd_user_add(struct hgd_session *sess, char **params)
 {
+	(void) sess;
 	return hgd_acmd_user_add(params);
 }
 
@@ -777,21 +778,49 @@ hgd_cmd_user_add(struct hgd_session *sess, char **params)
 int
 hgd_cmd_user_del(struct hgd_session *sess, char **params)
 {
+	(void) sess;
 	return hgd_acmd_user_del(params);
 }
 
 int
-hgd_cmd_user_list(struct hgd_session *sess, char **unused)
+hgd_cmd_user_list(struct hgd_session *sess, char **args)
 {
-	DPRINTF(HGD_D_WARN, "Not yet implented");
-	return (HGD_FAIL);
+	struct hgd_user_list	*list;
+	int			 i;
+	char			*msg;
+
+	(void) sess;
+	
+	list = hgd_acmd_user_list(args);
+
+	xasprintf(&msg, "ok|%d", list->n_users);
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, msg); 
+	free(msg);
+
+	for (i = 0; i < list->n_users; i++) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, list->users[i]->name);
+	}
+
+	hgd_free_user_list(list);
+	free(list);
+
+	return (HGD_OK);
 }
 
 int
 hgd_cmd_pause(struct hgd_session *sess, char **unused)
 {
-	DPRINTF(HGD_D_WARN, "Not yet implented");
-	return (HGD_FAIL);
+	(void) sess;
+	(void) unused;
+	return hgd_acmd_pause(NULL);
+}
+
+int
+hgd_cmd_skip(struct hgd_session *sess, char **unused)
+{
+	(void) sess;
+	(void) unused;
+	return hgd_acmd_skip(NULL);
 }
 
 /* lookup table for command handlers */
@@ -812,6 +841,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"user-del",	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_del},
 	{"user-list",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_list},
 	{"pause",	0,	1,	HGD_AUTH_ADMIN,	hgd_cmd_pause},
+	{"skip",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_skip},	
 	{NULL,		0,	0,	HGD_AUTH_NONE,	NULL}	/* terminate */
 };
 

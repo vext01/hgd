@@ -94,6 +94,7 @@ hgd_acmd_user_del(char **args)
 
 	return (HGD_OK);
 }
+
 int
 hgd_acmd_user_list_print(char **args)
 {
