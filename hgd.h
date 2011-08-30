@@ -23,8 +23,6 @@
 #endif
 
 #define HGD_VERSION		PACKAGE_VERSION
-#define HGD_PROTO_VERSION_MAJOR	4
-#define HGD_PROTO_VERSION_MINOR 1
 
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
@@ -115,14 +113,26 @@ struct hgd_user_list {
 	int			 n_users;
 };
 
+/* stuff taglib can give us */
+struct hgd_media_tag {
+	char			*artist;
+	char			*title;
+	char			*album;
+	char			*genre;
+	int			 duration;
+	int			 bitrate;
+	int			 samplerate;
+	int			 channels;
+	int			 year;
+};
+
 struct hgd_playlist_item {
 	int			 id;
 	char			*filename;
-	char			*tag_artist;
-	char			*tag_title;
 	char			*user;
 	uint8_t			 playing;
 	uint8_t			 finished;
+	struct hgd_media_tag	 tags;
 };
 
 struct hgd_playlist {
@@ -167,19 +177,6 @@ struct hgd_req_despatch {
 	uint8_t			 need_auth;
 	int			 (*handler)(int n_args, char **);
 	uint8_t			 varargs; /* if !0, n_args is the minimum */
-};
-
-/* stuff taglib can give us */
-struct hgd_media_tag {
-	char			*artist;
-	char			*title;
-	char			*album;
-	char			*genre;
-	int			 duration;
-	int			 bitrate;
-	int			 samplerate;
-	int			 channels;
-	int			 year;
 };
 
 /* debug levels */
@@ -265,5 +262,6 @@ int				 hgd_readpassphrase_confirmed(
 int				 hgd_daemonise(void);
 void				 hgd_restart_myself(void);
 int				 hgd_cache_exec_context(char **args);
+void				 hgd_free_media_tags(struct hgd_media_tag *t);
 
 #endif

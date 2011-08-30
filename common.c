@@ -58,6 +58,22 @@ int				 syslog_error_map[] = {
 char				 *state_path = NULL;
 char				 *filestore_path = NULL;
 
+void
+hgd_free_media_tags(struct hgd_media_tag *t)
+{
+	if (t->artist)
+		free(t->artist);
+
+	if (t->title)
+		free(t->title);
+
+	if (t->album)
+		free(t->album);
+
+	if (t->genre)
+		free(t->genre);
+}
+
 /*
  * frees members of a playlist item, but not the item
  * itself, therefore allowing stack allocation if wished
@@ -69,10 +85,8 @@ hgd_free_playlist_item(struct hgd_playlist_item *i)
 		free(i->filename);
 	if (i->user != NULL)
 		free(i->user);
-	if (i->tag_artist != NULL)
-		free(i->tag_artist);
-	if (i->tag_title != NULL)
-		free(i->tag_title);
+
+	hgd_free_media_tags(&i->tags);
 }
 
 /*

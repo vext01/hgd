@@ -257,9 +257,16 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 	/* populate a struct that we pick up later */
 	t->id = atoi(data[0]);
 	t->filename = xstrdup(data[1]);
-	t->tag_artist = xstrdup(data[2]);
-	t->tag_title = xstrdup(data[3]);
+	t->tags.artist = xstrdup(data[2]);
+	t->tags.title = xstrdup(data[3]);
 	t->user = xstrdup(data[4]);
+	t->tags.album = xstrdup(data[5]);
+	t->tags.genre = xstrdup(data[6]);
+	t->tags.duration = atoi(data[7]);
+	t->tags.bitrate = atoi(data[8]);
+	t->tags.samplerate = atoi(data[9]);
+	t->tags.channels = atoi(data[10]);
+	t->tags.year = atoi(data[11]);
 
 	return (SQLITE_OK);
 }
@@ -270,8 +277,9 @@ hgd_get_playing_item(struct hgd_playlist_item *playing)
 	int				 sql_res;
 
 	sql_res = sqlite3_exec(db,
-	    "SELECT id, filename, tag_artist, tag_title, user "
-	    "FROM playlist WHERE playing=1 LIMIT 1",
+	    "SELECT id, filename, tag_artist, tag_title, user, tag_album, "
+	    "tag_genre, tag_duration, tag_bitrate, tag_samplerate, "
+	    "tag_channels, tag_year FROM playlist WHERE playing=1 LIMIT 1",
 	    hgd_get_playing_item_cb, playing, NULL);
 
 	if (sql_res != SQLITE_OK) {
@@ -416,8 +424,8 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 
 	item->id = atoi(data[0]);
 	item->filename = xstrdup(data[1]);
-	item->tag_artist = xstrdup(data[2]);
-	item->tag_title = xstrdup(data[3]);
+	item->tags.artist = xstrdup(data[2]);
+	item->tags.title = xstrdup(data[3]);
 	item->user = xstrdup(data[4]);
 	item->playing = 0;	/* don't need */
 	item->finished = 0;	/* don't need */
