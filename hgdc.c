@@ -590,12 +590,56 @@ hgd_print_track(char *resp, uint8_t first)
 
 		printf(" [ #%04d queued by '%s' ]\n", atoi(tokens[0]), tokens[4]);
 		printf("   Filename: '%s'\n", tokens[1]);
-		printf("   Artist:   '%s' (%s)\n", tokens[2], tokens[11]);
-		printf("   Title:    '%s'\n", tokens[3]);
-		printf("   Album:    '%s'\n", tokens[5]);
-		printf("   Genre:    '%s'\n", tokens[6]);
-		printf("   Audio:    %s seconds   %shz   %sbps   %s channels\n",
-		   tokens[7], tokens[9], tokens[8], tokens[10] );
+
+		printf("   Artist:   ");
+		if (strcmp(tokens[2], "") != 0)
+			printf("'%s' (%s)\n", tokens[2], tokens[11]);
+		else
+			printf("<unknown>\n");
+
+		printf("   Title:    ");
+		if (strcmp(tokens[3], "") != 0)
+			printf("'%s'\n", tokens[3]);
+		else
+			printf("<unknown>\n");
+
+		printf("   Album:    ");
+		if (strcmp(tokens[5], "") != 0)
+			printf("'%s'\n", tokens[5]);
+		else
+			printf("<unknown>\n");
+
+		printf("   Genre:    ");
+		if (strcmp(tokens[6], "") != 0)
+			printf("'%s'\n", tokens[6]);
+		else
+			printf("<unknown>\n");
+
+		/* audio properties all on one line */
+		printf("   Audio:    ");
+
+		if (atoi(tokens[7]) != 0)
+			printf("%4ss", tokens[7]);
+		else
+			printf("%4ss", "?");
+
+		if (atoi(tokens[9]) != 0)
+			printf("   %5shz", tokens[9]);
+		else
+			printf("   %5shz", "?");
+
+		if (atoi(tokens[8]) != 0)
+			printf("   %3skbps", tokens[8]);
+		else
+			printf("   %3skbps", "?");
+
+		if (atoi(tokens[10]) != 0)
+			printf("   %s channels\n", tokens[10]);
+		else
+			printf("   %s channels\n", "?");
+
+		if (strcmp(tokens[9], "0") == 0)
+			printf("BOOYA: '%s'\n", tokens[9]);
 
 		printf("%s", ANSII_WHITE);
 	} else {
