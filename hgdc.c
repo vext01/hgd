@@ -570,32 +570,36 @@ hgd_req_queue(int n_args, char **args)
 	return (ret);
 }
 
+#define HGD_NUM_TRACK_FIELDS		12
 void
-hgd_print_track(char *resp, uint8_t hilight)
+hgd_print_track(char *resp, uint8_t first)
 {
 	int			n_toks = 0, i;
-	char			*tokens[5] = {NULL, NULL, NULL};
+	char			*tokens[HGD_NUM_TRACK_FIELDS];
 
 	do {
 		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
-	} while ((n_toks++ < 5) && (resp != NULL));
+	} while ((n_toks++ < HGD_NUM_TRACK_FIELDS) && (resp != NULL));
 
-	if (n_toks == 5) {
+	if (n_toks == HGD_NUM_TRACK_FIELDS) {
 
-		if (hilight)
+		if (first)
 			printf("%s", ANSII_GREEN);
 		else
 			printf("%s", ANSII_RED);
 
-		printf(" [ #%04d ] '%s'\n", atoi(tokens[0]), tokens[1]);
-		printf("  '%s' by '%s'  from '%s'\n",
-		    tokens[3], tokens[2], tokens[4]);
+		printf(" [ #%04d queued by '%s' ]\n", atoi(tokens[0]), tokens[4]);
+		printf("   Filename: '%s'\n", tokens[1]);
+		printf("   Artist:   '%s' (%s)\n", tokens[2], tokens[11]);
+		printf("   Title:    '%s'\n", tokens[3]);
+		printf("   Album:    '%s'\n", tokens[5]);
+		printf("   Genre:    '%s'\n", tokens[6]);
+		printf("   Audio:    %s seconds   %shz   %sbps   %s channels\n",
+		   tokens[7], tokens[9], tokens[8], tokens[10] );
 
 		printf("%s", ANSII_WHITE);
 	} else {
-		fprintf(stderr,
-		    "%s: wrong number of tokens from server\n",
-		    __func__);
+		DPRINTF(HGD_D_ERROR, "Wrong number of tokens from server");
 	}
 
 	for (i = 0; i < n_toks; i ++)

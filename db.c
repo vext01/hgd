@@ -415,8 +415,8 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 	struct hgd_playlist_item	*item;
 
 	/* shaddap gcc */
-	argc = argc;
-	names = names;
+	(void) argc;
+	(void) names;
 
 	list = (struct hgd_playlist *) arg;
 
@@ -427,6 +427,13 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 	item->tags.artist = xstrdup(data[2]);
 	item->tags.title = xstrdup(data[3]);
 	item->user = xstrdup(data[4]);
+	item->tags.album = xstrdup(data[5]);
+	item->tags.genre = xstrdup(data[6]);
+	item->tags.duration = atoi(data[7]);
+	item->tags.bitrate = atoi(data[8]);
+	item->tags.samplerate = atoi(data[9]);
+	item->tags.channels = atoi(data[10]);
+	item->tags.year = atoi(data[11]);
 	item->playing = 0;	/* don't need */
 	item->finished = 0;	/* don't need */
 
@@ -453,8 +460,10 @@ hgd_get_playlist(struct hgd_playlist *list)
 	DPRINTF(HGD_D_DEBUG, "Playlist request");
 
 	sql_res = sqlite3_exec(db,
-	    "SELECT id, filename, tag_artist, tag_title, user "
-	    "FROM playlist WHERE finished=0", hgd_get_playlist_cb, list, NULL);
+	    "SELECT id, filename, tag_artist, tag_title, user, tag_album, "
+	    "tag_genre, tag_duration, tag_bitrate, tag_samplerate, "
+	    "tag_channels, tag_year FROM playlist",
+	    hgd_get_playlist_cb, list, NULL);
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s", DERROR);

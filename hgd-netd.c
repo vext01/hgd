@@ -499,10 +499,19 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	free(resp);
 
 	for (i = 0; i < list.n_items; i++) {
-		xasprintf(&resp, "%d|%s|%s|%s|%s", list.items[i]->id,
+		xasprintf(&resp, "%d|%s|%s|%s|%s|%s|%s|%d|%d|%d|%d|%d",
+		    list.items[i]->id,
 		    list.items[i]->filename + strlen(HGD_UNIQ_FILE_PFX),
-		    list.items[i]->tags.artist, list.items[i]->tags.title,
-		    list.items[i]->user);
+		    list.items[i]->tags.artist,
+		    list.items[i]->tags.title,
+		    list.items[i]->user,
+		    list.items[i]->tags.album,
+		    list.items[i]->tags.genre,
+		    list.items[i]->tags.duration,
+		    list.items[i]->tags.bitrate,
+		    list.items[i]->tags.samplerate,
+		    list.items[i]->tags.channels,
+		    list.items[i]->tags.year);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 		DPRINTF(HGD_D_DEBUG, "%s\n", resp);
 		free(resp);
