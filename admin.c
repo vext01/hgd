@@ -123,7 +123,7 @@ hgd_acmd_user_list(char **args)
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
 	if (db == NULL)
-		return (HGD_FAIL);
+		return (NULL);
 
 	return list = hgd_get_all_users();
 }
@@ -143,3 +143,25 @@ hgd_acmd_skip(char **args)
 
 	return (hgd_mplayer_pipe_send("stop\n"));
 }
+
+int
+hgd_acmd_make_admin(char ** args)
+{
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	return (HGD_FAIL);
+}
+
+int
+hgd_acmd_rm_admin(char **args)
+{
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	return (HGD_FAIL);
+}	

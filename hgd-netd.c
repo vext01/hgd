@@ -1030,7 +1030,7 @@ hgd_sigchld(int sig)
 
 /* main loop that deals with network requests */
 void
-hgd_listen_loop()
+hgd_listen_loop(void)
 {
 	struct sockaddr_in	addr, cli_addr;
 	int			cli_fd, child_pid = 0;
@@ -1192,7 +1192,7 @@ hgd_read_config(char **config_locations)
 }
 
 void
-hgd_usage()
+hgd_usage(void)
 {
 	printf("usage: hgd-netd <options>\n");
 	printf("    -B			Do not daemonise, run in foreground\n");

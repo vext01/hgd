@@ -82,6 +82,8 @@ hgd_usage()
         printf("    pause				Pause MPlayer.\n");
         printf("    skip				Next track.\n");
         printf("    db-init				Initialise database.\n");
+	printf("    admin-add				Make a user an admin.\n");
+	printf("    admin-rm				Remove admin privlages from user.\n");
 	/*
         printf("    user-disable username\tDisable a user account");
         printf("    user-chpw username\t\t\tChange a users password\n");
@@ -112,6 +114,8 @@ struct hgd_admin_cmd admin_cmds[] = {
 	{ "pause", 0, hgd_acmd_pause },
 	{ "skip", 0, hgd_acmd_skip },
 	{ "db-init", 0, hgd_acmd_init_db },
+	{ "admin-add", 1, hgd_acmd_make_admin},
+	{ "admin-rm", 1, hgd_acmd_rm_admin},
 #if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },
