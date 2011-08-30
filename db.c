@@ -189,6 +189,7 @@ hgd_make_new_db(char *db_path)
 	    "tag_year INTEGER,"
 	    "tag_channels INTEGER,"
 	    "tag_samplerate INTEGER,"
+	    "tag_duration INTEGER,"
 	    "tag_bitrate INTEGER)",
 	    NULL, NULL, NULL);
 
@@ -314,14 +315,16 @@ hgd_get_num_votes()
 }
 
 int
-hgd_insert_track(char *filename, char *tag_artist, char *tag_title, char *user)
+hgd_insert_track(char *filename, struct hgd_media_tag *t, char *user)
 {
 	int			 ret = HGD_FAIL;
 	int			 sql_res;
 	sqlite3_stmt		*stmt;
 	char			*sql = "INSERT INTO playlist "
-	    "(filename, tag_artist, tag_title, user, playing, finished) "
-	    "VALUES (?, ?, ?, ?, 0, 0)";
+	    "(filename, tag_artist, tag_title, tag_album, tag_duration, "
+	    "tag_samplerate, tag_bitrate, tag_channels, tag_genre, tag_year, "
+	    "user, playing, finished) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "
+	    "?, ?, 0, 0)";
 
 	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
@@ -332,9 +335,17 @@ hgd_insert_track(char *filename, char *tag_artist, char *tag_title, char *user)
 
 	/* bind params */
 	sql_res = sqlite3_bind_text(stmt, 1, filename, -1, SQLITE_TRANSIENT);
-	sql_res &= sqlite3_bind_text(stmt, 2, tag_artist, -1, SQLITE_TRANSIENT);
-	sql_res &= sqlite3_bind_text(stmt, 3, tag_title, -1, SQLITE_TRANSIENT);
-	sql_res &= sqlite3_bind_text(stmt, 4, user, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_text(stmt, 2, t->artist, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_text(stmt, 3, t->title, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_text(stmt, 4, t->album, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_int(stmt, 5, t->duration);
+	sql_res &= sqlite3_bind_int(stmt, 6, t->samplerate);
+	sql_res &= sqlite3_bind_int(stmt, 7, t->bitrate);
+	sql_res &= sqlite3_bind_int(stmt, 8, t->channels);
+	sql_res &= sqlite3_bind_text(stmt, 9, t->genre, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_int(stmt, 10, t->year);
+	sql_res &= sqlite3_bind_text(stmt, 11, user, -1, SQLITE_TRANSIENT);
+
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
 		goto clean;

@@ -447,7 +447,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	/* insert track into db */
 	if (hgd_insert_track(basename(unique_fn),
-		    tags.artist, tags.title, sess->user->name) != HGD_OK) {
+		    &tags, sess->user->name) != HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
