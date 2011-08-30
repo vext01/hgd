@@ -79,6 +79,8 @@
 #define ANSII_GREEN		(colours_on ? "\033[32m" : "")
 #define ANSII_WHITE		(colours_on ? "\033[0m" : "")
 
+#define HGD_TERM_WIDTH		78
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -263,5 +265,6 @@ int				 hgd_daemonise(void);
 void				 hgd_restart_myself(void);
 int				 hgd_cache_exec_context(char **args);
 void				 hgd_free_media_tags(struct hgd_media_tag *t);
+char				*hgd_truncate_string(char *in, size_t sz);
 
 #endif

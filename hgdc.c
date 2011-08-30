@@ -429,17 +429,10 @@ hgd_queue_track(char *filename)
 	char			 stars_buf[81], *trunc_filename = 0;
 	int			 iters = 0, barspace, percent, ret = HGD_FAIL;
 	float			 n_stars;
-	int			 i;
-
-	/* anything allocated to zero for cleaning */
-	trunc_filename = xstrdup(basename(filename));
 
 	/* maximum length of filename in progress bar */
-	if (strlen(trunc_filename) > 40) {
-		trunc_filename[40] = 0;
-		for (i = 1; i <= 3; i++)
-			trunc_filename[40 - i] = '.';
-	}
+	trunc_filename = xstrdup(basename(filename));
+	hgd_truncate_string(trunc_filename, 40);
 
 	DPRINTF(HGD_D_INFO, "Uploading file '%s'", filename);
 
@@ -475,9 +468,10 @@ hgd_queue_track(char *filename)
 	}
 
 	/* prepare progress bar */
-	barspace =  (float) (80 - strlen(basename(trunc_filename)) - 2) - 7;
-	memset(stars_buf, ' ', 80);
-	stars_buf[80] = 0;
+	barspace =  (float) (HGD_TERM_WIDTH - strlen(
+	    basename(trunc_filename)) - 2) - 7;
+	memset(stars_buf, ' ', HGD_TERM_WIDTH);
+	stars_buf[HGD_TERM_WIDTH] = 0;
 
 	/*
 	 * start sending the file
@@ -520,7 +514,7 @@ hgd_queue_track(char *filename)
 	}
 
 	if (hgd_debug <= 1) {
-		memset(stars_buf, ' ', 80);
+		memset(stars_buf, ' ', HGD_TERM_WIDTH);
 		printf("\r%s\r%s: OK\n", stars_buf, basename(trunc_filename));
 	}
 
@@ -588,30 +582,51 @@ hgd_print_track(char *resp, uint8_t first)
 		else
 			printf("%s", ANSII_RED);
 
-		printf(" [ #%04d queued by '%s' ]\n", atoi(tokens[0]), tokens[4]);
-		printf("   Filename: '%s'\n", tokens[1]);
+		printf(" [ #%04d queued by '%s' ]\n",
+		    atoi(tokens[0]), tokens[4]);
+
+		printf("   Filename: '%s'\n",
+		    hgd_truncate_string(tokens[1],
+		    HGD_TERM_WIDTH - strlen("   Filename: ''")));
 
 		printf("   Artist:   ");
 		if (strcmp(tokens[2], "") != 0)
-			printf("'%s' (%s)\n", tokens[2], tokens[11]);
+			printf("'%s'\n", hgd_truncate_string(tokens[2],
+			    HGD_TERM_WIDTH - strlen("   Artist:   ''")));
 		else
 			printf("<unknown>\n");
 
 		printf("   Title:    ");
 		if (strcmp(tokens[3], "") != 0)
-			printf("'%s'\n", tokens[3]);
+			printf("'%s'\n",
+			    hgd_truncate_string(tokens[3],
+			    HGD_TERM_WIDTH - strlen("   Title:    ''")));
 		else
 			printf("<unknown>\n");
 
+
+		/* thats it for compact entries */
+		if (!first)
+			goto skip_full;
+
 		printf("   Album:    ");
 		if (strcmp(tokens[5], "") != 0)
-			printf("'%s'\n", tokens[5]);
+			printf("'%s'\n", hgd_truncate_string(tokens[5],
+			    HGD_TERM_WIDTH - strlen("   Album:    ''")));
 		else
 			printf("<unknown>\n");
 
 		printf("   Genre:    ");
 		if (strcmp(tokens[6], "") != 0)
-			printf("'%s'\n", tokens[6]);
+			printf("'%s'\n", hgd_truncate_string(tokens[6],
+			    HGD_TERM_WIDTH - strlen("   Genre:    ''")));
+		else
+			printf("<unknown>\n");
+
+		printf("   Year:     ");
+		if (strcmp(tokens[11], "") != 0)
+			printf("'%s'\n", hgd_truncate_string(tokens[11],
+			    HGD_TERM_WIDTH - strlen("   Year:     ''")));
 		else
 			printf("<unknown>\n");
 
@@ -621,7 +636,7 @@ hgd_print_track(char *resp, uint8_t first)
 		if (atoi(tokens[7]) != 0)
 			printf("%4ss", tokens[7]);
 		else
-			printf("%4ss", "?");
+			printf("%4ss", "????");
 
 		if (atoi(tokens[9]) != 0)
 			printf("   %5shz", tokens[9]);
@@ -638,9 +653,7 @@ hgd_print_track(char *resp, uint8_t first)
 		else
 			printf("   %s channels\n", "?");
 
-		if (strcmp(tokens[9], "0") == 0)
-			printf("BOOYA: '%s'\n", tokens[9]);
-
+skip_full:
 		printf("%s", ANSII_WHITE);
 	} else {
 		DPRINTF(HGD_D_ERROR, "Wrong number of tokens from server");
@@ -655,7 +668,7 @@ hgd_hline()
 {
 	int			i;
 
-	for (i = 0; i < 78; i ++)
+	for (i = 0; i < HGD_TERM_WIDTH; i ++)
 		printf("-");
 	printf("\n");
 }

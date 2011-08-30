@@ -387,3 +387,19 @@ hgd_cache_exec_context(char **argv)
 
 	return (HGD_OK);
 }
+
+/* in place '...' truncation of long strings if needed */
+char *
+hgd_truncate_string(char *in, size_t sz)
+{
+	int			i;
+
+	if (strlen(in) <= sz)
+		return (in);
+
+	in[sz] = 0;
+	for (i = 1; i <= 3; i++)
+		in[sz - i] = '.';
+
+	return (in);
+}
