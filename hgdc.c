@@ -782,19 +782,74 @@ hgd_req_hud(int n_args, char **args)
 int
 hgd_req_skip(int n_args, char **args)
 {
-	return (HGD_FAIL);
+	char			*resp;
+
+	(void) args;
+	(void) n_args;
+
+	hgd_sock_send_line(sock_fd, ssl, "skip");
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* XXX: check if auth fail */
+		DPRINTF(HGD_D_ERROR, "Skip failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	free(resp);
+	return (HGD_OK);
 }
 
 int
 hgd_req_pause(int n_args, char **args)
 {
-	return (HGD_FAIL);
+	char			*resp;
+
+	(void) args;
+	(void) n_args;
+
+	hgd_sock_send_line(sock_fd, ssl, "pause");
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* XXX: check if auth fail */
+		DPRINTF(HGD_D_ERROR, "Pause failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	free(resp);
+	return (HGD_OK);
 }
 
 int
 hgd_req_adduser(int n_args, char **args)
 {
-	return (HGD_FAIL);
+	char			*resp;
+	char			*msg;
+
+	(void) args;
+	(void) n_args;
+
+	xasprintf(&msg, "user-add|%s|%s", args[0], args[1]);
+
+	hgd_sock_send_line(sock_fd, ssl, msg);
+
+	free(msg);
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* XXX: check if auth fail */
+		DPRINTF(HGD_D_ERROR, "Pause failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	free(resp);
+	return (HGD_OK);
+
+
 }
 
 int
