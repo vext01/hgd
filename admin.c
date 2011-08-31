@@ -147,6 +147,8 @@ hgd_acmd_skip(char **args)
 int
 hgd_acmd_make_admin(char ** args)
 {
+	char	*user = args[0];
+
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
 	if (db == NULL)
@@ -158,10 +160,14 @@ hgd_acmd_make_admin(char ** args)
 int
 hgd_acmd_rm_admin(char **args)
 {
+	char	*user = args[0];
+	
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
 	if (db == NULL)
 		return (HGD_FAIL);
+
+	
 
 	return (HGD_FAIL);
 }	
