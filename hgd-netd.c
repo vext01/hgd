@@ -257,7 +257,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	struct hgd_playlist_item	 playing;
 	char				*reply;
 
-	args = args; /* silence compiler */
+	(void) args; /* silence compiler */
 
 	memset(&playing, 0, sizeof(playing));
 	if (hgd_get_playing_item(&playing) == HGD_FAIL) {
@@ -269,9 +269,14 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	if (playing.filename == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|0");
 	} else {
-		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s",
+		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s"
+		    "%s|%s|%d|%d|%d|%d|%d", /* added in 0.5 */
 		    playing.id, playing.filename + strlen(HGD_UNIQ_FILE_PFX),
-		    playing.tag_artist, playing.tag_title, playing.user);
+		    playing.tags.artist, playing.tags.title, playing.user,
+		    playing.tags.album, playing.tags.genre,
+		    playing.tags.duration, playing.tags.bitrate,
+		    playing.tags.samplerate, playing.tags.channels,
+		    playing.tags.year);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
 
 		free(reply);
@@ -454,16 +459,12 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 
 	/* insert track into db */
 	if (hgd_insert_track(basename(unique_fn),
-		    tags.artist, tags.title, sess->user->name) != HGD_OK) {
+		    &tags, sess->user->name) != HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|sql");
 		goto clean;
 	}
 
-	/* always free, as we allocate "" if it goes brown trousers */
-	free(tags.artist);
-	free(tags.title);
-	free(tags.album);
-	free(tags.genre);
+	hgd_free_media_tags(&tags);
 
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	DPRINTF(HGD_D_INFO, "Transfer of '%s' complete", filename);
@@ -505,10 +506,19 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	free(resp);
 
 	for (i = 0; i < list.n_items; i++) {
-		xasprintf(&resp, "%d|%s|%s|%s|%s", list.items[i]->id,
+		xasprintf(&resp, "%d|%s|%s|%s|%s|%s|%s|%d|%d|%d|%d|%d",
+		    list.items[i]->id,
 		    list.items[i]->filename + strlen(HGD_UNIQ_FILE_PFX),
-		    list.items[i]->tag_artist, list.items[i]->tag_title,
-		    list.items[i]->user);
+		    list.items[i]->tags.artist,
+		    list.items[i]->tags.title,
+		    list.items[i]->user,
+		    list.items[i]->tags.album,
+		    list.items[i]->tags.genre,
+		    list.items[i]->tags.duration,
+		    list.items[i]->tags.bitrate,
+		    list.items[i]->tags.samplerate,
+		    list.items[i]->tags.channels,
+		    list.items[i]->tags.year);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 		DPRINTF(HGD_D_DEBUG, "%s\n", resp);
 		free(resp);

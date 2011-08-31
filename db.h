@@ -23,7 +23,7 @@
 
 #include <sqlite3.h>
 
-#define	HGD_DB_SCHEMA_VERS	"0"
+#define	HGD_DB_SCHEMA_VERS	"1"
 
 extern sqlite3			*db;
 extern char			*db_path;
@@ -37,7 +37,7 @@ int				 hgd_get_num_votes_cb(void *arg,
 				     int argc, char **data, char **names);
 int				 hgd_get_num_votes(void);
 int				 hgd_insert_track(char *filename,
-				     char *tag_artist, char *tag_title, char *user);
+				     struct hgd_media_tag *, char *user);
 int				 hgd_insert_vote(char *user);
 int				 hgd_get_playlist(struct hgd_playlist *list);
 int				 hgd_get_next_track(

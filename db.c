@@ -189,6 +189,7 @@ hgd_make_new_db(char *db_path)
 	    "tag_year INTEGER,"
 	    "tag_channels INTEGER,"
 	    "tag_samplerate INTEGER,"
+	    "tag_duration INTEGER,"
 	    "tag_bitrate INTEGER)",
 	    NULL, NULL, NULL);
 
@@ -256,9 +257,16 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 	/* populate a struct that we pick up later */
 	t->id = atoi(data[0]);
 	t->filename = xstrdup(data[1]);
-	t->tag_artist = xstrdup(data[2]);
-	t->tag_title = xstrdup(data[3]);
+	t->tags.artist = xstrdup(data[2]);
+	t->tags.title = xstrdup(data[3]);
 	t->user = xstrdup(data[4]);
+	t->tags.album = xstrdup(data[5]);
+	t->tags.genre = xstrdup(data[6]);
+	t->tags.duration = atoi(data[7]);
+	t->tags.bitrate = atoi(data[8]);
+	t->tags.samplerate = atoi(data[9]);
+	t->tags.channels = atoi(data[10]);
+	t->tags.year = atoi(data[11]);
 
 	return (SQLITE_OK);
 }
@@ -269,8 +277,9 @@ hgd_get_playing_item(struct hgd_playlist_item *playing)
 	int				 sql_res;
 
 	sql_res = sqlite3_exec(db,
-	    "SELECT id, filename, tag_artist, tag_title, user "
-	    "FROM playlist WHERE playing=1 LIMIT 1",
+	    "SELECT id, filename, tag_artist, tag_title, user, tag_album, "
+	    "tag_genre, tag_duration, tag_bitrate, tag_samplerate, "
+	    "tag_channels, tag_year FROM playlist WHERE playing=1 LIMIT 1",
 	    hgd_get_playing_item_cb, playing, NULL);
 
 	if (sql_res != SQLITE_OK) {
@@ -314,14 +323,16 @@ hgd_get_num_votes()
 }
 
 int
-hgd_insert_track(char *filename, char *tag_artist, char *tag_title, char *user)
+hgd_insert_track(char *filename, struct hgd_media_tag *t, char *user)
 {
 	int			 ret = HGD_FAIL;
 	int			 sql_res;
 	sqlite3_stmt		*stmt;
 	char			*sql = "INSERT INTO playlist "
-	    "(filename, tag_artist, tag_title, user, playing, finished) "
-	    "VALUES (?, ?, ?, ?, 0, 0)";
+	    "(filename, tag_artist, tag_title, tag_album, tag_duration, "
+	    "tag_samplerate, tag_bitrate, tag_channels, tag_genre, tag_year, "
+	    "user, playing, finished) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "
+	    "?, ?, 0, 0)";
 
 	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
@@ -332,9 +343,17 @@ hgd_insert_track(char *filename, char *tag_artist, char *tag_title, char *user)
 
 	/* bind params */
 	sql_res = sqlite3_bind_text(stmt, 1, filename, -1, SQLITE_TRANSIENT);
-	sql_res &= sqlite3_bind_text(stmt, 2, tag_artist, -1, SQLITE_TRANSIENT);
-	sql_res &= sqlite3_bind_text(stmt, 3, tag_title, -1, SQLITE_TRANSIENT);
-	sql_res &= sqlite3_bind_text(stmt, 4, user, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_text(stmt, 2, t->artist, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_text(stmt, 3, t->title, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_text(stmt, 4, t->album, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_int(stmt, 5, t->duration);
+	sql_res &= sqlite3_bind_int(stmt, 6, t->samplerate);
+	sql_res &= sqlite3_bind_int(stmt, 7, t->bitrate);
+	sql_res &= sqlite3_bind_int(stmt, 8, t->channels);
+	sql_res &= sqlite3_bind_text(stmt, 9, t->genre, -1, SQLITE_TRANSIENT);
+	sql_res &= sqlite3_bind_int(stmt, 10, t->year);
+	sql_res &= sqlite3_bind_text(stmt, 11, user, -1, SQLITE_TRANSIENT);
+
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
 		goto clean;
@@ -396,8 +415,8 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 	struct hgd_playlist_item	*item;
 
 	/* shaddap gcc */
-	argc = argc;
-	names = names;
+	(void) argc;
+	(void) names;
 
 	list = (struct hgd_playlist *) arg;
 
@@ -405,9 +424,16 @@ hgd_get_playlist_cb(void *arg, int argc, char **data, char **names)
 
 	item->id = atoi(data[0]);
 	item->filename = xstrdup(data[1]);
-	item->tag_artist = xstrdup(data[2]);
-	item->tag_title = xstrdup(data[3]);
+	item->tags.artist = xstrdup(data[2]);
+	item->tags.title = xstrdup(data[3]);
 	item->user = xstrdup(data[4]);
+	item->tags.album = xstrdup(data[5]);
+	item->tags.genre = xstrdup(data[6]);
+	item->tags.duration = atoi(data[7]);
+	item->tags.bitrate = atoi(data[8]);
+	item->tags.samplerate = atoi(data[9]);
+	item->tags.channels = atoi(data[10]);
+	item->tags.year = atoi(data[11]);
 	item->playing = 0;	/* don't need */
 	item->finished = 0;	/* don't need */
 
@@ -434,8 +460,10 @@ hgd_get_playlist(struct hgd_playlist *list)
 	DPRINTF(HGD_D_DEBUG, "Playlist request");
 
 	sql_res = sqlite3_exec(db,
-	    "SELECT id, filename, tag_artist, tag_title, user "
-	    "FROM playlist WHERE finished=0", hgd_get_playlist_cb, list, NULL);
+	    "SELECT id, filename, tag_artist, tag_title, user, tag_album, "
+	    "tag_genre, tag_duration, tag_bitrate, tag_samplerate, "
+	    "tag_channels, tag_year FROM playlist",
+	    hgd_get_playlist_cb, list, NULL);
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get playing track: %s", DERROR);

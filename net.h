@@ -18,6 +18,9 @@
 #ifndef __NET_H
 #define __NET_H
 
+#define HGD_PROTO_VERSION_MAJOR	7
+#define HGD_PROTO_VERSION_MINOR 0
+
 /* networking */
 #define HGD_DFL_PORT		6633
 #define HGD_DFL_HOST		"127.0.0.1"
