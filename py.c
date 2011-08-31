@@ -29,6 +29,7 @@
 #include "hgd.h"
 #include "py.h"
 #include "db.h"
+#include "net.h"
 
 struct hgd_py_modules		 hgd_py_mods;
 char				*hgd_py_plugin_dir;
