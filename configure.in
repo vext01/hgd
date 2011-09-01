@@ -3,7 +3,7 @@
 AC_INIT([hgd], [0.5.0b], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
 
-hgd_components="hgdc"
+hgd_components=" hgdc"
 
 # we need the install prefix at compile time
 if test "${prefix}" = "NONE"; then
@@ -60,6 +60,41 @@ AS_IF([test "x$enable_server" != "xno"], [
 			[AC_MSG_ERROR([taglib requested but not found])])
 	])
 
+	# python is only in hgd-playd at the moment.
+	# check for python manually, as we can't find a portable way
+	# we accept 2.6 and 2.7 for now
+	if test "x${with_python}" = "x"; then
+		py_config_search="python2.7-config python2.6-config python-config"
+	else
+		py_config_search=python${with_python}-config
+	fi
+
+	AS_IF([test "x$with_python" != "xno"], [
+
+	       for i in ${py_config_search}; do
+		       AC_MSG_CHECKING([$i])
+		       if test -n "`which $i 2> /dev/null`"; then
+			       AC_MSG_RESULT([yes])
+			       PYTHON_CONFIG=$i
+			       break;
+		       fi
+		       AC_MSG_RESULT([no])
+		       have_python=no
+	       done
+
+	       if test -n "${PYTHON_CONFIG}"; then
+		       PYTHON_LDFLAGS="`$PYTHON_CONFIG --ldflags` -L`$PYTHON_CONFIG --prefix`/lib"
+		       PYTHON_CFLAGS=`$PYTHON_CONFIG --cflags`
+		       have_python=yes
+	       fi
+	       ], [have_python=no])
+
+	AS_IF([test "x$have_python" = "xyes"],[
+		AC_DEFINE(HAVE_PYTHON)
+		hgd_components="${hgd_components} hgd-mk-pydoc"
+	], [AS_IF([test "x$with_python" = "xyes"],
+		[AC_MSG_ERROR([python requested but not found])])
+	])
 ], [])
 
 
@@ -80,43 +115,7 @@ AS_IF([test "x$have_libconfig" = "xyes"],
       ])
 ])
 
-# XXX python is a server only dep
-# XXX adds hgd-mk-pydoc component
-#
-# check for python manually, as we can't find a portable way
-# we accept 2.6 and 2.7 for now
-if test "x${with_python}" = "x"; then
-	py_config_search="python2.7-config python2.6-config python-config"
-else
-	py_config_search=python${with_python}-config
-fi
 
-AS_IF([test "x$with_python" != "xno"], [
-
-for i in ${py_config_search}; do
-	AC_MSG_CHECKING([$i])
-	if test -n "`which $i 2> /dev/null`"; then
-		AC_MSG_RESULT([yes])
-		PYTHON_CONFIG=$i
-		break;
-	fi
-	AC_MSG_RESULT([no])
-	have_python=no
-done
-
-if test -n "${PYTHON_CONFIG}"; then
-	PYTHON_LDFLAGS="`$PYTHON_CONFIG --ldflags` -L`$PYTHON_CONFIG --prefix`/lib"
-	PYTHON_CFLAGS=`$PYTHON_CONFIG --cflags`
-	have_python=yes
-fi
-], [have_python=no])
-
-AS_IF([test "x$have_python" = "xyes"],
-      [AC_DEFINE(HAVE_PYTHON)],
-      [AS_IF([test "x$with_python" = "xyes"],
-             [AC_MSG_ERROR([python requested but not found])
-      ])
-])
 
 # where we are building will go into the python class path
 CFLAGS="${CFLAGS} -DBUILD_DIR='\"`pwd`\"'"
@@ -171,9 +170,9 @@ AS_IF([test "x$have_taglib" != "xyes"],
 
 AC_MSG_NOTICE([
 =============================
-Components to build   : ${hgd_components}
-Enabled optional deps : ${enabled}
-Disabled optional deps: ${disabled}
+Components to build   :${hgd_components}
+Enabled optional deps :${enabled}
+Disabled optional deps:${disabled}
 =============================])
 
 AS_IF([test "x$have_python" != "xyes"],,
