@@ -394,8 +394,11 @@ hgd_truncate_string(char *in, size_t sz)
 {
 	int			i;
 
-	if (strlen(in) <= sz)
+	if (sz < 3) {
+		DPRINTF(HGD_D_WARN, "cannot truncate string < 3");
 		return (in);
+	} else if (strlen(in) <= sz)
+		return (in); /* fits */
 
 	in[sz] = 0;
 	for (i = 1; i <= 3; i++)
