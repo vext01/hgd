@@ -841,7 +841,7 @@ hgd_req_adduser(int n_args, char **args)
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
 		/* XXX: check if auth fail */
-		DPRINTF(HGD_D_ERROR, "Pause failed");
+		DPRINTF(HGD_D_ERROR, "Add user failed");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -861,7 +861,49 @@ hgd_req_adduser_pop(int n_args, char **args)
 int
 hgd_req_list_users(int n_args, char **args)
 {
-	return (HGD_FAIL);
+	char			*resp;
+	char			*msg, *p;
+	int			n_items, i;
+
+	(void) args;
+	(void) n_args;
+
+	xasprintf(&msg, "user-list");
+
+	hgd_sock_send_line(sock_fd, ssl, msg);
+
+	free(msg);
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* XXX: check if auth fail */
+		DPRINTF(HGD_D_ERROR, "Add user failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	for (p = resp; (*p != 0 && *p != '|'); p ++);
+	if (*p != '|') {
+		DPRINTF(HGD_D_ERROR, "didn't find a argument separator");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	n_items = atoi(++p);
+	free(resp);
+
+	DPRINTF(HGD_D_DEBUG, "expecting %d users in list", n_items);
+
+	for (i = 0; i < n_items; i++) {
+		DPRINTF(HGD_D_DEBUG, "getting user %d", i);
+		resp = hgd_sock_recv_line(sock_fd, ssl);
+		printf("%d:\t%s\n", i + 1, resp);
+
+		free(resp);
+	}
+
+
+	return (HGD_OK);
 }
 
 /* lookup for request despatch */
