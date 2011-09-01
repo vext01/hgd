@@ -72,7 +72,7 @@ hgd_acmd_user_add_prompt(char **args)
 	if (db == NULL)
 		return (HGD_FAIL);
 
-	if (hgd_readpassphrase_confirmed(pass) != HGD_OK)
+	if (hgd_readpassphrase_confirmed(pass, NULL) != HGD_OK)
 		return (HGD_FAIL);
 
 	new_args[0] = args[0];

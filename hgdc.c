@@ -855,7 +855,14 @@ hgd_req_adduser(int n_args, char **args)
 int
 hgd_req_adduser_pop(int n_args, char **args)
 {
-	return (HGD_FAIL);
+	char	*pass = calloc (HGD_MAX_PASS_SZ, sizeof(char));
+	char 	*args2[2];
+	
+	hgd_readpassphrase_confirmed(pass, "New user's password: ");
+	args2[0] = args[0];
+	args2[1] = pass;
+
+	return hgd_req_adduser(2, args2);
 }
 
 int
@@ -915,8 +922,8 @@ struct hgd_req_despatch req_desps[] = {
 	{"q",		1,	1,		hgd_req_queue,	  	1},
 	{"skip",	0,	1,		hgd_req_skip,		0},
 	{"pause",	0,	1,		hgd_req_pause,		0},
-	{"add-user",	1,	1,		hgd_req_adduser,	0},
-	{"add-user",	2,	1,		hgd_req_adduser_pop,	0},
+	{"add-user",	2,	1,		hgd_req_adduser,	0},
+	{"add-user",	1,	1,		hgd_req_adduser_pop,	0},
 	{"list-users",	0,	1,		hgd_req_list_users,	0},
 	{NULL,		0,	0,		NULL,		  	0} /* end */
 };
