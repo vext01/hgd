@@ -848,8 +848,6 @@ hgd_req_adduser(int n_args, char **args)
 
 	free(resp);
 	return (HGD_OK);
-
-
 }
 
 int
@@ -913,6 +911,33 @@ hgd_req_list_users(int n_args, char **args)
 	return (HGD_OK);
 }
 
+int
+hgd_req_rm_user(int n_args, char **args)
+{
+	char			*resp;
+	char			*msg;
+
+	(void) args;
+	(void) n_args;
+
+	xasprintf(&msg, "user-del|%s", args[0]);
+
+	hgd_sock_send_line(sock_fd, ssl, msg);
+
+	free(msg);
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* XXX: check if auth fail */
+		DPRINTF(HGD_D_ERROR, "rm user failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	free(resp);
+	return (HGD_OK);
+}
+
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 /*	cmd,		n_args,	need_auth,	handler, 		varargs */
@@ -925,6 +950,7 @@ struct hgd_req_despatch req_desps[] = {
 	{"add-user",	2,	1,		hgd_req_adduser,	0},
 	{"add-user",	1,	1,		hgd_req_adduser_pop,	0},
 	{"list-users",	0,	1,		hgd_req_list_users,	0},
+	{"rm-user",	1,	1,		hgd_req_rm_user,	0},
 	{NULL,		0,	0,		NULL,		  	0} /* end */
 };
 
