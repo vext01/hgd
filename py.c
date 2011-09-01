@@ -29,6 +29,7 @@
 #include "hgd.h"
 #include "py.h"
 #include "db.h"
+#include "net.h"
 
 struct hgd_py_modules		 hgd_py_mods;
 char				*hgd_py_plugin_dir;
@@ -188,8 +189,9 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 		rec = Py_BuildValue("{sissssssss}",
 		    "tid", it->id,
 		    "filename", it->filename,
-		    "tag_artist", it->tag_artist,
-		    "tag_title", it->tag_title,
+		    "tag_artist", it->tags.artist,
+		    "tag_title", it->tags.title,
+		    /* XXX needs other tags here too */
 		    "user", it->user);
 
 		if (rec == NULL) {
