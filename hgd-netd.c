@@ -782,8 +782,20 @@ clean:
 int
 hgd_cmd_user_add(struct hgd_session *sess, char **params)
 {
+	int			ret;
+
 	(void) sess;
-	return hgd_acmd_user_add(params);
+	ret = hgd_acmd_user_add(params);
+	
+	if (ret == HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else {
+		/* XXX: correct error if user already exisits */
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
+	}
+
+	return (ret);
+
 }
 
 
