@@ -624,7 +624,7 @@ hgd_print_track(char *resp, uint8_t first)
 			printf("<unknown>\n");
 
 		printf("   Year:     ");
-		if (strcmp(tokens[11], "") != 0)
+		if (strcmp(tokens[11], "0") != 0)
 			printf("'%s'\n", hgd_truncate_string(tokens[11],
 			    HGD_TERM_WIDTH - strlen("   Year:     ''")));
 		else
