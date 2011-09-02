@@ -399,12 +399,16 @@ hgd_usage()
 	printf("    q <file1> [...]\tQueue a track\n");
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
+
 	printf("  Admin Commands include:\n");
 	printf("    skip\t\t\tSkip the current song\n");
 	printf("    pause\t\t\tPause the current song\n");
 	printf("    add-user <user>[password]\tAdd a user\n");
 	printf("    rm-user <user>\t\tRemove a user\n");
-	printf("    list-users\t\t\tList Users\n\n");
+	printf("    list-users\t\t\tList Users\n");
+	printf("    user-mk-admin <user>\tMake user an admin\n");
+	printf("    user-rm-admin <user>\tRemove user's admin privs\n\n");
+	
 	printf("  Options include:\n");
 	printf("    -a\t\t\tColours on (only in hud mode)\n");
 	printf("    -A\t\t\tColours off (only in hud mode)\n");
@@ -938,6 +942,61 @@ hgd_req_rm_user(int n_args, char **args)
 	return (HGD_OK);
 }
 
+
+int
+hgd_req_mk_admin(int n_args, char **args)
+{
+	char			*resp;
+	char			*msg;
+
+	(void) args;
+	(void) n_args;
+
+	xasprintf(&msg, "user-mk-admin|%s", args[0]);
+
+	hgd_sock_send_line(sock_fd, ssl, msg);
+
+	free(msg);
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* XXX: check if auth fail */
+		DPRINTF(HGD_D_ERROR, "rm user failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	free(resp);
+	return (HGD_OK);
+}
+
+int
+hgd_req_rm_admin(int n_args, char **args)
+{
+	char			*resp;
+	char			*msg;
+
+	(void) args;
+	(void) n_args;
+
+	xasprintf(&msg, "user-rm-admin|%s", args[0]);
+
+	hgd_sock_send_line(sock_fd, ssl, msg);
+
+	free(msg);
+
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		/* XXX: check if auth fail */
+		DPRINTF(HGD_D_ERROR, "rm user failed");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	free(resp);
+	return (HGD_OK);
+}
+
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 /*	cmd,		n_args,	need_auth,	handler, 		varargs */
@@ -947,10 +1006,12 @@ struct hgd_req_despatch req_desps[] = {
 	{"q",		1,	1,		hgd_req_queue,	  	1},
 	{"skip",	0,	1,		hgd_req_skip,		0},
 	{"pause",	0,	1,		hgd_req_pause,		0},
-	{"add-user",	2,	1,		hgd_req_adduser,	0},
-	{"add-user",	1,	1,		hgd_req_adduser_pop,	0},
-	{"list-users",	0,	1,		hgd_req_list_users,	0},
-	{"rm-user",	1,	1,		hgd_req_rm_user,	0},
+	{"user-add",	2,	1,		hgd_req_adduser,	0},
+	{"user-add",	1,	1,		hgd_req_adduser_pop,	0},
+	{"users-list",	0,	1,		hgd_req_list_users,	0},
+	{"user-rm",	1,	1,		hgd_req_rm_user,	0},
+	{"user-mk-admin",1,	1,		hgd_req_mk_admin,	0},
+	{"user-rm-admin",1,	1,		hgd_req_rm_admin,	0},
 	{NULL,		0,	0,		NULL,		  	0} /* end */
 };
 

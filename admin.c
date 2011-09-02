@@ -147,27 +147,18 @@ hgd_acmd_skip(char **args)
 int
 hgd_acmd_make_admin(char ** args)
 {
-	char	*user = args[0];
-
-	if (db == NULL)
-		db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	return (HGD_FAIL);
+	struct hgd_user user;
+	user.name = args[0];
+	user.perms = HGD_AUTH_ADMIN; 
+	return (hgd_update_user(&user));
 }
 
 int
 hgd_acmd_rm_admin(char **args)
 {
-	char	*user = args[0];
-	
-	if (db == NULL)
-		db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
+	struct hgd_user user;
+	user.name = args[0];
+	user.perms = HGD_AUTH_NONE; 
+	return (hgd_update_user(&user));
+}
 
-	
-
-	return (HGD_FAIL);
-}	

@@ -81,7 +81,7 @@
 
 /* Authorisation levels */
 #define	HGD_AUTH_NONE			(0)
-#define HGD_AUTH_ADMIN			(2^0)
+#define HGD_AUTH_ADMIN			(1 << 0)
 
 #define HGD_TERM_WIDTH		78
 
