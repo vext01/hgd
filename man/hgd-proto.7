@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd August 28, 2011
+.Dd September 02, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -258,11 +258,11 @@ Opening the connection and checking protocol version
 .Bd -literal
 < ok|HGD-0.3.0
 > proto
-< ok|2
+< ok|5|0
 .Ed
 .Pp
-At this stage the client should check the protocol major version against that
-expected. If there is a mismatch, then the client should not continue.
+At this stage the client should check the protocol major and minor versions as
+described above (see 'proto' command).
 .It
 Retrieving the playlist
 .Bd -literal
