@@ -4,7 +4,7 @@ AC_INIT([hgd], [0.5.0b], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
 
 ALL_TARGETS="hgdc"
-INSTALL_TARGETS="install-hgdc"
+INSTALL_TARGETS="install-hgdc install-readme install-man-hgd-proto"
 
 # we need the install prefix at compile time
 if test "${prefix}" = "NONE"; then
@@ -88,7 +88,7 @@ AS_IF([test "x$enable_server" != "xno"], [
 	AS_IF([test "x$have_python" = "xyes"], [
 		AC_DEFINE(HAVE_PYTHON)
 		ALL_TARGETS="${ALL_TARGETS} hgd-mk-pydoc"
-		INSTALL_TARGETS="${INSTALL_TARGETS} install-pydoc"
+		INSTALL_TARGETS="${INSTALL_TARGETS} install-pydoc install-man-hgd-scripting"
 	], [AS_IF([test "x$with_python" = "xyes"],
 		[AC_MSG_ERROR([python requested but not found])])
 	])
@@ -99,7 +99,6 @@ AS_IF([test "x$enable_server" != "xno"], [
 # If readpassphrase() is not in libc, it is in libbsd (linux)
 AC_CHECK_FUNC([readpassphrase],,
 	      [PKG_CHECK_MODULES([BSD], [libbsd >= 0.2.0])])
-
 
 # ssl always needed, hashing / crypto
 PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
