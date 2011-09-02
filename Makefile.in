@@ -40,7 +40,7 @@ sampledir?=${datarootdir}/examples/hgd
 pysupportdir=${datarootdir}/hgd/pylib/hgd
 
 .PHONY: all
-all: hgd-playd hgd-netd hgd-admin hgdc hgd-mk-pydoc
+all: @HGD_COMPONENTS@
 
 .PHONY: clean
 clean:

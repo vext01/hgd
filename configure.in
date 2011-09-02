@@ -1,7 +1,9 @@
 # HGD Autogunk
 
-AC_INIT([hgd], [0.4.1], [vext01@gmail.com, me92@kent.ac.uk])
+AC_INIT([hgd], [0.5.0b], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
+
+HGD_COMPONENTS=" hgdc"
 
 # we need the install prefix at compile time
 if test "${prefix}" = "NONE"; then
@@ -9,6 +11,7 @@ if test "${prefix}" = "NONE"; then
 fi
 CFLAGS="${CFLAGS} -DPREFIX='\"${prefix}\"'"
            
+# optional external libs
 AC_ARG_WITH([python], AS_HELP_STRING([--without-python],
 	    [Ignore presence of python and disable it]))
 AC_ARG_WITH([python], AS_HELP_STRING([--with-python=<version>],
@@ -20,15 +23,83 @@ AC_ARG_WITH([libconfig], AS_HELP_STRING([--without-libconfig],
 AC_ARG_WITH([taglib], AS_HELP_STRING([--without-taglib],
 	    [Ignore presence of taglib and disable it]))
 
+# conditional compilation of server
+AC_ARG_ENABLE([server], AS_HELP_STRING([--disable-server],
+	    [Dont build server components (default)]))
+
 AC_LANG_C
-        
 AC_PROG_MAKE_SET
-               
 AC_HEADER_STDC
 
 AH_TEMPLATE(HAVE_LIBCONFIG, "defined if we are building with libconfig support")
 AH_TEMPLATE(HAVE_TAGLIB, "defined if we are building with taglib support")
 AH_TEMPLATE(HAVE_PYTHON, "defined if we are building with python support")
+
+# SERVER DEPS
+AS_IF([test "x$enable_server" != "xno"], [
+
+	HGD_COMPONENTS="${HGD_COMPONENTS} hgd-netd hgd-playd hgd-admin"
+
+	# server just cant work without sqlite
+	PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.6.22])
+
+	# taglib
+	AS_IF([test "x$with_taglib" != "xno"], 
+	     [PKG_CHECK_MODULES([TAGLIB], [taglib_c >= 1.6],
+				[have_taglib=yes], [have_taglib=no])], [have_taglib=no])
+
+	AS_IF([test "x$have_taglib" = "xyes"],
+		[AC_DEFINE(HAVE_TAGLIB)],
+		[AS_IF([test "x$with_taglib" = "xyes"],
+			[AC_MSG_ERROR([taglib requested but not found])])
+	])
+
+	# python is only in hgd-playd at the moment.
+	# check for python manually, as we can't find a portable way
+	# we accept 2.6 and 2.7 for now
+	if test "x${with_python}" = "x"; then
+		py_config_search="python2.7-config python2.6-config python-config"
+	else
+		py_config_search=python${with_python}-config
+	fi
+
+	AS_IF([test "x$with_python" != "xno"], [
+
+	       for i in ${py_config_search}; do
+		       AC_MSG_CHECKING([$i])
+		       if test -n "`which $i 2> /dev/null`"; then
+			       AC_MSG_RESULT([yes])
+			       PYTHON_CONFIG=$i
+			       break;
+		       fi
+		       AC_MSG_RESULT([no])
+		       have_python=no
+	       done
+
+	       if test -n "${PYTHON_CONFIG}"; then
+		       PYTHON_LDFLAGS="`$PYTHON_CONFIG --ldflags` -L`$PYTHON_CONFIG --prefix`/lib"
+		       PYTHON_CFLAGS=`$PYTHON_CONFIG --cflags`
+		       have_python=yes
+	       fi
+	       ], [have_python=no])
+
+	AS_IF([test "x$have_python" = "xyes"], [
+		AC_DEFINE(HAVE_PYTHON)
+		HGD_COMPONENTS="${HGD_COMPONENTS} hgd-mk-pydoc"
+	], [AS_IF([test "x$with_python" = "xyes"],
+		[AC_MSG_ERROR([python requested but not found])])
+	])
+], [])
+
+
+# SHARED DEPS
+# If readpassphrase() is not in libc, it is in libbsd (linux)
+AC_CHECK_FUNC([readpassphrase],,
+	      [PKG_CHECK_MODULES([BSD], [libbsd >= 0.2.0])])
+
+
+# ssl always needed, hashing / crypto
+PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
 
 # libconfig
 AS_IF([test "x$with_libconfig" != "xno"], 
@@ -42,63 +113,9 @@ AS_IF([test "x$have_libconfig" = "xyes"],
       ])
 ])
 
-# taglib
-AS_IF([test "x$with_taglib" != "xno"], 
-	[PKG_CHECK_MODULES([TAGLIB], [taglib_c >= 1.6],
-		[have_taglib=yes], [have_taglib=no])], [have_taglib=no])
-
-AS_IF([test "x$have_taglib" = "xyes"],
-      [AC_DEFINE(HAVE_TAGLIB)],
-      [AS_IF([test "x$with_taglib" = "xyes"],
-             [AC_MSG_ERROR([taglib requested but not found])
-      ])
-])
-
-# we just cant work without sqlite or ssl
-PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.6.22])
-PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
-
-# If readpassphrase() is not in libc, it is in libbsd (linux)
-AC_CHECK_FUNC([readpassphrase],,
-	      [PKG_CHECK_MODULES([BSD], [libbsd >= 0.2.0])]
-	      )
-
-# check for python manually, as we can't find a portable way
-# we accept 2.6 and 2.7 for now
-if test "x${with_python}" = "x"; then
-	py_config_search="python2.7-config python2.6-config python-config"
-else
-	py_config_search=python${with_python}-config
-fi
-AS_IF([test "x$with_python" != "xno"], [
-
-for i in ${py_config_search}; do
-	AC_MSG_CHECKING([$i])
-	if test -n "`which $i 2> /dev/null`"; then
-		AC_MSG_RESULT([yes])
-		PYTHON_CONFIG=$i
-		break;
-	fi
-	AC_MSG_RESULT([no])
-	have_python=no
-done
-
-if test -n "${PYTHON_CONFIG}"; then
-	PYTHON_LDFLAGS="`$PYTHON_CONFIG --ldflags` -L`$PYTHON_CONFIG --prefix`/lib"
-	PYTHON_CFLAGS=`$PYTHON_CONFIG --cflags`
-	have_python=yes
-fi
-], [have_python=no])
-
-AS_IF([test "x$have_python" = "xyes"],
-      [AC_DEFINE(HAVE_PYTHON)],
-      [AS_IF([test "x$with_python" = "xyes"],
-             [AC_MSG_ERROR([python requested but not found])
-      ])
-])
-
 # where we are building will go into the python class path
 CFLAGS="${CFLAGS} -DBUILD_DIR='\"`pwd`\"'"
+
 # and where to pick up installed systemwide python support
 CFLAGS="${CFLAGS} -DDATAROOTDIR='\"${datarootdir}\"'"
 
@@ -108,6 +125,7 @@ AC_CHECK_PROG([MPLAYER], "mplayer", "yes", "no")
 AC_SUBST([PYTHON_CFLAGS])
 AC_SUBST([PYTHON_LDFLAGS])
 AC_SUBST([prefix])
+AC_SUBST([HGD_COMPONENTS])
 
 AC_OUTPUT([Makefile])
  
@@ -137,22 +155,23 @@ AC_MSG_NOTICE([
                    j#P^. .. . ....:%x,?r--......... ..-.:.:: 
 ])
 
+# XXX move inside checks, no need for separate AS_IF
 AS_IF([test "x$have_python" != "xyes"],
-	disabled="$disabled python"
-    , enabled="$enabled python")
+	EXTERNAL_OPTIONALS_DISABLED="${EXTERNAL_OPTIONALS_DISABLED} python"
+    , EXTERNAL_OPTIONALS_ENABLED="${EXTERNAL_OPTIONALS_ENABLED} python")
 AS_IF([test "x$have_libconfig" != "xyes"],
-	disabled="$disabled libconfig"
-    , enabled="$enabled libconfig")
+	EXTERNAL_OPTIONALS_DISABLED="${EXTERNAL_OPTIONALS_DISABLED} libconfig"
+    , EXTERNAL_OPTIONALS_ENABLED="${EXTERNAL_OPTIONALS_ENABLED} libconfig")
 AS_IF([test "x$have_taglib" != "xyes"],
-	disabled="$disabled taglib"
-    , enabled="$enabled taglib")
+	EXTERNAL_OPTIONALS_DISABLED="${EXTERNAL_OPTIONALS_DISABLED} taglib"
+    , EXTERNAL_OPTIONALS_ENABLED="${EXTERNAL_OPTIONALS_ENABLED} taglib")
 
 AC_MSG_NOTICE([
 =============================
-Modules Enabled :${enabled}
-Modules Disabled:${disabled}
+Components to build   :${HGD_COMPONENTS}
+Enabled optional deps :${EXTERNAL_OPTIONALS_ENABLED}
+Disabled optional deps:${EXTERNAL_OPTIONALS_DISABLED}
 =============================])
-
 
 AS_IF([test "x$have_python" != "xyes"],,
       AC_MSG_NOTICE([NOTE: Python scripting backend is EXPERIMENTAL!]))
