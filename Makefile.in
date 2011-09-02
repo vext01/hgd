@@ -120,50 +120,105 @@ hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 		${SQL_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} db.o \
 		common.o py.o crypto.o hgd-mk-pydoc.c -o hgd-mk-pydoc
 
-client: hgdc
-server: hgd-netd hgd-playd hgd-admin
-
-.PHONY: install
-install: install-client install-server install-doc
-
-.PHONY: install-client
-install-client: hgdc
-	${INSTALL} -d ${DESTDIR}${bindir}
-	${INSTALL} hgdc ${DESTDIR}${bindir}
-
-.PHONY: install-server
-install-server: hgd-netd hgd-admin hgd-playd
-	${INSTALL} -d ${DESTDIR}${sbindir}
-	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
-	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
-	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
-
-	${INSTALL} -d ${DESTDIR}${pysupportdir}
-	${INSTALL} pylib/hgd/__init__.py ${DESTDIR}${pysupportdir}
-	${INSTALL} pylib/hgd/playlist.py ${DESTDIR}${pysupportdir}
-	${INSTALL} pylib/hgd/doccer.py ${DESTDIR}${pysupportdir}
-
-.PHONY: install-doc
-install-doc: install-pydoc
-	${INSTALL} -d ${DESTDIR}${mandir}/man1
-	${INSTALL} -d ${DESTDIR}${mandir}/man7
-	${INSTALL} -d ${DESTDIR}${docdir}
-	${INSTALL} -d ${DESTDIR}${sampledir}
-	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}/man1/
-	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}/man1/
-	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}/man1/
-	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}/man1/
-	${INSTALL} man/hgd-proto.7 ${DESTDIR}${mandir}/man7/
-	${INSTALL} man/hgd-scripting.7 ${DESTDIR}${mandir}/man7/
-	${INSTALL} README ${DESTDIR}${docdir}
-	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
-	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}
+#client: hgdc
+#server: hgd-netd hgd-playd hgd-admin
 
 .PHONY: pydoc
 # XXX this makes build time references to the build dir. sigh...
 pydoc: hgd-mk-pydoc
 	./hgd-mk-pydoc
 
+# OpenBSD hosts only - checks manuals are well formed
+.PHONY: lint-mans
+lint-mans:
+	for i in `ls man`; do mandoc -Tlint man/$$i; done
+
+.PHONY: install
+install: @INSTALL_TARGETS@
+
+# top level, per tool install targets
+.PHONY: install-hgdc
+install-hgdc: install-man-hgdc install-bin-hgdc
+
+.PHONY: install-hgd-netd
+install-hgd-netd: install-man-hgd-netd install-bin-hgd-netd
+
+.PHONY: install-hgd-playd
+install-hgd-playd: install-man-hgd-playd install-bin-hgd-playd
+
+.PHONY: install-hgd-admin
+install-hgd-admin: install-man-hgd-admin install-bin-hgd-admin
+
+# Install binaries
+.PHONY: install-bin-hgdc
+install-bin-hgdc: hgdc
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} hgdc ${DESTDIR}${bindir}
+
+.PHONY: install-bin-hgd-netd
+install-bin-hgd-netd: hgd-netd
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL} hgd-netd ${DESTDIR}${sbindir}
+
+.PHONY: install-bin-hgd-playd
+install-bin-hgd-playd: hgd-playd
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL} hgd-playd ${DESTDIR}${sbindir}
+
+.PHONY: install-bin-hgd-admin
+install-bin-hgd-admin: hgd-admin
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL} hgd-admin ${DESTDIR}${sbindir}
+
+# install README
+.PHONY: install-readme
+install-readme:
+	${INSTALL} -d ${DESTDIR}${docdir}
+	${INSTALL} README ${DESTDIR}${docdir}
+
+# install example config files
+.PHONY: install-example-server
+install-example-server:
+	${INSTALL} -d ${DESTDIR}${sampledir}
+	${INSTALL} share/examples/hgd.rc ${DESTDIR}${sampledir}
+
+.PHONY: install-example-client
+install-example-client:
+	${INSTALL} -d ${DESTDIR}${sampledir}
+	${INSTALL} share/examples/hgdc.rc ${DESTDIR}${sampledir}
+
+# Installs manuals
+.PHONY: install-doc-hgd-netd
+install-man-hgd-netd:
+	${INSTALL} -d ${DESTDIR}${mandir}/man1
+	${INSTALL} man/hgd-netd.1 ${DESTDIR}${mandir}/man1/
+
+.PHONY: install-man-hgd-playd
+install-man-hgd-playd:
+	${INSTALL} -d ${DESTDIR}${mandir}/man1
+	${INSTALL} man/hgd-playd.1 ${DESTDIR}${mandir}/man1/
+
+.PHONY: install-man-hgd-admin
+install-man-hgd-admin:
+	${INSTALL} -d ${DESTDIR}${mandir}/man1
+	${INSTALL} man/hgd-admin.1 ${DESTDIR}${mandir}/man1/
+
+.PHONY: install-man-hgdc
+install-man-hgdc:
+	${INSTALL} -d ${DESTDIR}${mandir}/man1
+	${INSTALL} man/hgdc.1 ${DESTDIR}${mandir}/man1/
+
+.PHONY: install-man-hgd-proto
+install-man-hgd-proto:
+	${INSTALL} -d ${DESTDIR}${mandir}/man7
+	${INSTALL} man/hgd-proto.7 ${DESTDIR}${mandir}/man7/
+
+.PHONY: install-man-hgd-scripting
+install-man-proto:
+	${INSTALL} -d ${DESTDIR}${mandir}/man7
+	${INSTALL} man/hgd-proto.7 ${DESTDIR}${mandir}/man7/
+
+# Install pydoc
 .PHONY: install-pydoc
 install-pydoc:
 	${INSTALL} -d ${DESTDIR}${pydocdir}
@@ -176,7 +231,4 @@ install-pydoc:
 	#${INSTALL} pydoc/html/hgd.playlist.html ${DESTDIR}${pydocdir}/html/
 	#${INSTALL} pydoc/html/hgd.doccer.html ${DESTDIR}${pydocdir}/html/
 
-# OpenBSD hosts only
-.PHONY: lint-mans
-lint-mans:
-	for i in `ls man`; do mandoc -Tlint man/$$i; done
+

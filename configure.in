@@ -3,7 +3,8 @@
 AC_INIT([hgd], [0.5.0b], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
 
-HGD_COMPONENTS=" hgdc"
+HGD_COMPONENTS="hgdc"
+INSTALL_TARGETS="install-hgdc"
 
 # we need the install prefix at compile time
 if test "${prefix}" = "NONE"; then
@@ -39,6 +40,7 @@ AH_TEMPLATE(HAVE_PYTHON, "defined if we are building with python support")
 AS_IF([test "x$enable_server" != "xno"], [
 
 	HGD_COMPONENTS="${HGD_COMPONENTS} hgd-netd hgd-playd hgd-admin"
+	INSTALL_TARGETS="${INSTALL_TARGETS} install-hgd-netd install-hgd-playd install-hgd-admin"
 
 	# server just cant work without sqlite
 	PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.6.22])
@@ -86,6 +88,7 @@ AS_IF([test "x$enable_server" != "xno"], [
 	AS_IF([test "x$have_python" = "xyes"], [
 		AC_DEFINE(HAVE_PYTHON)
 		HGD_COMPONENTS="${HGD_COMPONENTS} hgd-mk-pydoc"
+		INSTALL_TARGETS="${INSTALL_TARGETS} install-pydoc"
 	], [AS_IF([test "x$with_python" = "xyes"],
 		[AC_MSG_ERROR([python requested but not found])])
 	])
@@ -126,6 +129,7 @@ AC_SUBST([PYTHON_CFLAGS])
 AC_SUBST([PYTHON_LDFLAGS])
 AC_SUBST([prefix])
 AC_SUBST([HGD_COMPONENTS])
+AC_SUBST([INSTALL_TARGETS])
 
 AC_OUTPUT([Makefile])
  
@@ -168,9 +172,10 @@ AS_IF([test "x$have_taglib" != "xyes"],
 
 AC_MSG_NOTICE([
 =============================
-Components to build   :${HGD_COMPONENTS}
-Enabled optional deps :${EXTERNAL_OPTIONALS_ENABLED}
-Disabled optional deps:${EXTERNAL_OPTIONALS_DISABLED}
+Components to build   : ${HGD_COMPONENTS}
+Enabled optional deps : ${EXTERNAL_OPTIONALS_ENABLED}
+Disabled optional deps: ${EXTERNAL_OPTIONALS_DISABLED}
+Install targets       : ${INSTALL_TARGETS}
 =============================])
 
 AS_IF([test "x$have_python" != "xyes"],,
