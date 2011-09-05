@@ -1,4 +1,8 @@
 # HGD Autogunk
+m4_include([m4/m4_ax_append_compile_flags.m4])
+m4_include([m4/m4_ax_check_compile_flag.m4])
+m4_include([m4/m4_ax_append_flag.m4])
+
 
 AC_INIT([hgd], [0.5.0b], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
@@ -11,6 +15,8 @@ if test "${prefix}" = "NONE"; then
 	prefix=/usr/local
 fi
 CFLAGS="${CFLAGS} -DPREFIX='\"${prefix}\"'"
+
+AX_APPEND_COMPILE_FLAGS([-Wextra -Wall -g],[CFLAGS],[])
            
 # optional external libs
 AC_ARG_WITH([python], AS_HELP_STRING([--without-python],
