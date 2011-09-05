@@ -216,6 +216,13 @@ install-man-hgd-scripting:
 	${INSTALL} -d ${DESTDIR}${mandir}/man7
 	${INSTALL} man/hgd-scripting.7 ${DESTDIR}${mandir}/man7/
 
+.PHONY: install-py-lib
+install-py-lib: hgd-playd
+	${INSTALL} -d ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/__init__.py ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/playlist.py ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/doccer.py ${DESTDIR}${pysupportdir}
+
 # Install pydoc
 .PHONY: install-pydoc
 install-pydoc:

@@ -94,7 +94,7 @@ AS_IF([test "x$enable_server" != "xno"], [
 	AS_IF([test "x$have_python" = "xyes"], [
 		AC_DEFINE(HAVE_PYTHON)
 		ALL_TARGETS="${ALL_TARGETS} hgd-mk-pydoc"
-		INSTALL_TARGETS="${INSTALL_TARGETS} install-pydoc install-man-hgd-scripting"
+		INSTALL_TARGETS="${INSTALL_TARGETS} install-pydoc install-man-hgd-scripting install-py-lib"
 	], [AS_IF([test "x$with_python" = "xyes"],
 		[AC_MSG_ERROR([python requested but not found])])
 	])
