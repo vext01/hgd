@@ -396,6 +396,7 @@ hgd_usage()
 	printf("Usage: hgdc [opts] command [args]\n\n");
 	printf("  Commands include:\n");
 	printf("    hud\t\t\tHeads up display\n");
+	printf("    np\t\t\tNow playing\n");
 	printf("    q <file1> [...]\tQueue a track\n");
 	printf("    vo\t\t\tVote-off current track\n");
 	printf("    ls\t\t\tShow playlist\n\n");
@@ -773,11 +774,52 @@ hgd_req_hud(int n_args, char **args)
 	return (HGD_OK);
 }
 
+int
+hgd_req_np(int n_args, char **args)
+{
+	char			*resp = NULL, *p;
+	int			 ret = HGD_FAIL;
+
+	(void) args;
+	(void) n_args;
+
+	hgd_sock_send_line(sock_fd, ssl, "np");
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL)
+		return (HGD_FAIL);
+
+	/* find 1st | */
+	p = strchr(resp, '|');
+	if (!p) {
+		DPRINTF(HGD_D_ERROR, "Failed to find separator1");
+		goto fail;
+	}
+
+	/* find 2nd | */
+	p = strchr(p + 1, '|');
+	if (!p) {
+		DPRINTF(HGD_D_ERROR, "Failed to find separator2");
+		goto fail;
+	}
+
+	hgd_print_track(p + 1, 1);
+
+	ret = HGD_OK;
+fail:
+	if (resp)
+		free(resp);
+
+	return (ret);
+}
+
+
+
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 /*	cmd,		n_args,	need_auth,	handler */
 	{"ls",		0,	0,		hgd_req_playlist, 0},
 	{"hud",		0,	0,		hgd_req_hud,	  0},
+	{"np",		0,	0,		hgd_req_np,	  0},
 	{"vo",		0,	1,		hgd_req_vote_off, 0},
 	{"q",		1,	1,		hgd_req_queue,	  1},
 	{NULL,		0,	0,		NULL,		  0} /* end */
