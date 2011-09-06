@@ -65,7 +65,8 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
 
-	hgd_free_mplayer_globals();
+	if (mplayer_fifo_path)
+		free(mplayer_fifo_path);
 	if (db)
 		sqlite3_close(db);
 	if (state_path)
@@ -297,7 +298,8 @@ main(int argc, char **argv)
 
 	xasprintf(&db_path, "%s/%s", state_path, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", state_path, HGD_FILESTORE_NAME);
-	hgd_init_mplayer_globals();
+	xasprintf(&mplayer_fifo_path, "%s/%s",
+	    state_path, HGD_MPLAYER_PIPE_NAME);
 
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();
