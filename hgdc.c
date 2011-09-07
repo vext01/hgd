@@ -795,14 +795,18 @@ hgd_req_np(int n_args, char **args)
 		goto fail;
 	}
 
-	/* find 2nd | */
-	p = strchr(p + 1, '|');
-	if (!p) {
-		DPRINTF(HGD_D_ERROR, "Failed to find separator2");
-		goto fail;
+	/* check that something is even playing */
+	if (*(p+1) != '1')
+		printf("Nothing playing right now.\n");
+	else {
+		/* find 2nd | */
+		p = strchr(p + 1, '|');
+		if (!p) {
+			DPRINTF(HGD_D_ERROR, "Failed to find separator2");
+			goto fail;
+		}
+		hgd_print_track(p + 1, 1);
 	}
-
-	hgd_print_track(p + 1, 1);
 
 	ret = HGD_OK;
 fail:
