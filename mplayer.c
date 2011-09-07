@@ -47,6 +47,15 @@ hgd_mplayer_pipe_send(char *what)
 {
 	FILE			*pipe = NULL;
 	int			 ret = HGD_FAIL;
+	struct stat		 st;
+
+	if (stat(mplayer_fifo_path, &st) < 0) {
+		if (errno == ENOENT) /* no pipe = not playing */
+			DPRINTF(HGD_D_ERROR, "No track is playing");
+		else
+			DPRINTF(HGD_D_ERROR, "Pipe failure: %s", SERROR);
+		goto clean;
+	}
 
 	if ((pipe = fopen(mplayer_fifo_path, "w")) == NULL) {
 		DPRINTF(HGD_D_ERROR,
