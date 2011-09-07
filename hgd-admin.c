@@ -391,7 +391,7 @@ main(int argc, char **argv)
 	hgd_mk_state_dir();
 
 	if (hgd_parse_command(argc, argv) == -1)
-		hgd_usage();
+		hgd_exit_nicely();
 
 	exit_ok = 1;
 	hgd_exit_nicely();
