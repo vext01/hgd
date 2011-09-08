@@ -828,6 +828,15 @@ hgd_cmd_user_list(struct hgd_session *sess, char **args)
 	
 	list = hgd_acmd_user_list(args);
 
+	if (list == NULL) {
+		DPRINTF(HGD_D_WARN, "List retuned NULL,"
+		    " there are either no users or"
+		    " an error occoured"); 
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			"err|list_null");
+		
+		goto clean;
+	}
 	xasprintf(&msg, "ok|%d", list->n_users);
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, msg); 
 	free(msg);
@@ -836,8 +845,11 @@ hgd_cmd_user_list(struct hgd_session *sess, char **args)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, list->users[i]->name);
 	}
 
-	hgd_free_user_list(list);
-	free(list);
+clean:
+	if (list != NULL) {
+		hgd_free_user_list(list);
+		free(list);
+	}
 
 	return (HGD_OK);
 }

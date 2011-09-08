@@ -103,11 +103,20 @@ hgd_acmd_user_list_print(char **args)
 	
 	list = hgd_acmd_user_list(args);
 
+	if (list == NULL) {
+		DPRINTF(HGD_D_WARN, "Get user list returned NULL,"
+		    " either there are no users or an error occoured");
+		goto: clean;
+	}
+	
 	for (i = 0; i < list->n_users; i++)
 		printf("%s\n", list->users[i]->name);
 
-	hgd_free_user_list(list);
-	free(list);
+clean:
+	if (list != NULL) {
+		hgd_free_user_list(list);
+		free(list);
+	}
 
 	return (HGD_OK);
 }
