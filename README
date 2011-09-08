@@ -58,22 +58,15 @@ Building
     Examine the output and install anything missing. Don't forget linux
     packages headers and libraries separately.
 
- 3) Build the components you need:
+ 3) Build and install:
 
-    * To build everything, type 'make'.
-    * To build only the client type 'make client'.
-    * To build only the server components 'make server'.
-
- 4) Install:
-
-    * To install everything, type 'make install'.
-    * To install in a custom path, type 'make prefix=/home/gunther install'.
-    * Other useful install targets are 'install-server', 'install-client'
-      and 'install-docs'.
+    * Run 'make'
+    * Run 'make install'
 
 NOTES:
 
-HGD will happily run out of it's build directory.
+HGD will happily run out of it's build directory, so the 'make install' step is
+optional.
 
 On MacOS X, you may have to jump through hoops. Others have succeeded using
 macports for libconfig and sqlite3 dependencies. You may need to set the
@@ -138,7 +131,8 @@ History
  * 0.4.1 - Properly daemonise, log to syslog, honor SIGHUP.
  * 0.5   - Database schema check, add more tag support,
            network protocol minor version, skip+pause commands in hgd-admin,
-           client can queue more than a single track at a time.
+           client can queue more than a single track at a time, overhaul build
+           system so that you can build just the client if that is all you need.
 
 Roadmap
 -------

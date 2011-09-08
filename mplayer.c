@@ -43,29 +43,19 @@
 char			*mplayer_fifo_path = 0;
 
 int
-hgd_init_mplayer_globals()
-{
-	xasprintf(&mplayer_fifo_path, "%s/%s",
-	    state_path, HGD_MPLAYER_PIPE_NAME);
-
-	return (HGD_OK);
-}
-
-int
-hgd_free_mplayer_globals()
-{
-	if (mplayer_fifo_path)
-		free(mplayer_fifo_path);
-	mplayer_fifo_path = 0;
-
-	return (HGD_OK);
-}
-
-int
 hgd_mplayer_pipe_send(char *what)
 {
 	FILE			*pipe = NULL;
 	int			 ret = HGD_FAIL;
+	struct stat		 st;
+
+	if (stat(mplayer_fifo_path, &st) < 0) {
+		if (errno == ENOENT) /* no pipe = not playing */
+			DPRINTF(HGD_D_ERROR, "No track is playing");
+		else
+			DPRINTF(HGD_D_ERROR, "Pipe failure: %s", SERROR);
+		goto clean;
+	}
 
 	if ((pipe = fopen(mplayer_fifo_path, "w")) == NULL) {
 		DPRINTF(HGD_D_ERROR,

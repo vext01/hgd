@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd August 28, 2011
+.Dd September 06, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -76,6 +76,10 @@ All command arguments are separated by the pipe character,
 .Pp
 Some commands require the connection to be authenticated.
 .Pp
+For readability, we put spaces around reply and argument fields in this
+document. In reality arguments and reply fields have no spaces before and after
+the pipe separator (unless the spaces are part of actual data).
+.Pp
 The command set is as follows:
 .Bl -tag -width Ds
 .It bye
@@ -85,7 +89,7 @@ Arguments: 0
 .It
 Reply type: single-line
 .It
-On success returns: ok|<exit_message>
+On success returns: ok | <exit_message>
 .It
 Needs auth: No
 .El
@@ -115,7 +119,7 @@ Arguments: 0
 .It
 Reply type: single-line
 .It
-On success returns: ok|<crypto-method>
+On success returns: ok | <crypto-method>
 .It
 Needs auth: No
 .El
@@ -130,7 +134,7 @@ Arguments: 0
 .It
 Reply type: multi-line
 .It
-On success returns: ok|<num-items> ...
+On success returns: ok | <num-items> ...
 .It
 Needs auth: No
 .El
@@ -139,12 +143,11 @@ Requests the playlist. <num_items> indicates how many further lines to expect
 from the server. Each line returned represents one track in the playlist; the
 line is of the form:
 .Pp
-<track-id>|<filename>|<artist>|<title>|<user>
+<track-id> | <filename> | <artist> | <title> | <user> | <album> | <genre>
+| <duration> | <bitrate> | <samplerate> | <channels> | <year>
 .Pp
- The <artist>
-and <title> fields are generated from metadata using taglib at time of
-upload. If no tag information was available, the <artist> and <title>
-fields remain blank.
+In the event of missing tag information, string fields (artist, title, ...)
+are blank and unknown integer fields (samplerate, duration, ...) are set to 0.
 .It np
 .Bl -dash
 .It
@@ -152,16 +155,18 @@ Arguments: 0
 .It
 Reply type: single-line
 .It
-On success returns: ok|<playing?>[|<track-id>|<filename>|<artist>|<title>|<user>]
+On success returns:
+ok | <playing?> [| <track-id> | <filename> | <artist> | <title> | <user> |
+<album> | <genre> | <duration> | <bitrate> | <samplerate> | <channels> | <year>]
 .It
 Needs auth: No
 .El
 .Pp
-Get the currently playing item, if any. If <playing?> = 0, then nothing is
-playing and therefore, no further information is available. The <artist>
-and <title> fields are generated from metadata using taglib at time of
-upload. If no tag information was available, the <artist> and <title>
-fields remain blank.
+Get the currently playing item, if any. If <playing?> = 0, then nothing
+is playing and therefore, no further information is available. In the
+event of missing tag information, string fields (artist, title, ...) are
+blank and unknown integer fields (samplerate, duration, ...) are set to
+0.
 .It proto
 .Bl -dash
 .It
@@ -169,7 +174,7 @@ Arguments: 0
 .It
 Reply type: single-line
 .It
-On success returns: ok|<proto-major-vers>|<proto-minor-vers>
+On success returns: ok | <proto-major-vers> | <proto-minor-vers>
 .It
 Needs auth: No
 .El
@@ -187,7 +192,7 @@ that the client requests a feature which does not exist.
 .It q
 .Bl -dash
 .It
-Arguments: 2 <filename>|<byte-sz>
+Arguments: 2 <filename> | <byte-sz>
 .It
 Reply type: special
 .It
@@ -196,7 +201,7 @@ Needs auth: Yes
 .Pp
 Indicates that a file of size <byte-sz> is to be uploaded. If the
 file size is within bounds, then the server replies
-.Sq ok|...
+.Sq ok | ...
 , which prompts the client to send the file in binary mode. The client
 should send exactly <byte-sz> bytes. If this goes to plan then the
 server switches back to text-mode and sends
@@ -206,7 +211,7 @@ playlist under the name <flename>.
 .It user
 .Bl -dash
 .It
-Arguments: 2 <username>|<password>
+Arguments: 2 <username> | <password>
 .It
 Reply type: single-line
 .It
@@ -256,21 +261,22 @@ indicates that it is a reply sent by the server.
 .It
 Opening the connection and checking protocol version
 .Bd -literal
-< ok|HGD-0.3.0
+< ok|HGD-0.5.0
 > proto
-< ok|2
+< ok|7|0
 .Ed
 .Pp
-At this stage the client should check the protocol major version against that
-expected. If there is a mismatch, then the client should not continue.
+At this stage the client should check the protocol major and minor versions as
+described above (see 'proto' command).
 .It
 Retrieving the playlist
 .Bd -literal
 > ls
 < ok|3
-< 1|gunther-tralala.flv|Gunther|Tralala|gunther
-< 2|crabs.mp4|||mex
-< 3|slipknot-duality.wma|Slipknot|Duality|tris
+> ok|3
+> 10|10.MX.ogg|Deftones|MX|edd|Around the Fur|Metal|2238|192|44100|2|1997
+> 11|01-Dracula_With_Glasses.ogg|Burnt By The Sun|Dracula With Glasses|edd|Soundtrack To The Personal Revolution|Metal|106|192|44100|2|2002
+> 12|02-Soundtrack_To_The_Worst_Movie_Ever.ogg|Burnt By The Sun|Soundtrack To The Worst Movie Ever|edd|Soundtrack To The Personal Revolution|Metal|152|192|44100|2|2002
 .Ed
 .It
 Disconnecting

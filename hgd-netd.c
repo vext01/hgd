@@ -271,7 +271,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	if (playing.filename == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|0");
 	} else {
-		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s"
+		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s|"
 		    "%s|%s|%d|%d|%d|%d|%d", /* added in 0.5 */
 		    playing.id, playing.filename + strlen(HGD_UNIQ_FILE_PFX),
 		    playing.tags.artist, playing.tags.title, playing.user,

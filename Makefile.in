@@ -18,9 +18,9 @@ BSD_LDFLAGS=@BSD_LIBS@
 TAG_CFLAGS=@TAGLIB_CFLAGS@
 TAG_LDFLAGS=@TAGLIB_LIBS@
 
-CFLAGS+=@CFLAGS@ -Wall -Wextra -g
-LDFLAGS+=@LIBS@
-CPPFLAGS+=@CPPFLAGS@
+CFLAGS=@CFLAGS@
+LDFLAGS=@LIBS@
+CPPFLAGS=@CPPFLAGS@
 
 INSTALL?=install
 PACKAGE_TARNAME=@PACKAGE_TARNAME@
@@ -214,9 +214,16 @@ install-man-hgd-proto:
 	${INSTALL} man/hgd-proto.7 ${DESTDIR}${mandir}/man7/
 
 .PHONY: install-man-hgd-scripting
-install-man-proto:
+install-man-hgd-scripting:
 	${INSTALL} -d ${DESTDIR}${mandir}/man7
-	${INSTALL} man/hgd-proto.7 ${DESTDIR}${mandir}/man7/
+	${INSTALL} man/hgd-scripting.7 ${DESTDIR}${mandir}/man7/
+
+.PHONY: install-py-lib
+install-py-lib: hgd-playd
+	${INSTALL} -d ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/__init__.py ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/playlist.py ${DESTDIR}${pysupportdir}
+	${INSTALL} pylib/hgd/doccer.py ${DESTDIR}${pysupportdir}
 
 # Install pydoc
 .PHONY: install-pydoc
