@@ -56,7 +56,7 @@ hgd_acmd_user_add(char **args)
 
 	free(salt_hex);
 	free(hash_hex);
-	
+
 	return (ret);
 }
 
@@ -100,15 +100,15 @@ hgd_acmd_user_list_print(char **args)
 {
 	struct hgd_user_list *list;
 	int			 i;
-	
+
 	list = hgd_acmd_user_list(args);
 
 	if (list == NULL) {
 		DPRINTF(HGD_D_WARN, "Get user list returned NULL,"
 		    " either there are no users or an error occoured");
-		goto: clean;
+		goto clean;
 	}
-	
+
 	for (i = 0; i < list->n_users; i++)
 		printf("%s\n", list->users[i]->name);
 
@@ -158,7 +158,7 @@ hgd_acmd_make_admin(char ** args)
 {
 	struct hgd_user user;
 	user.name = args[0];
-	user.perms = HGD_AUTH_ADMIN; 
+	user.perms = HGD_AUTH_ADMIN;
 	return (hgd_update_user(&user));
 }
 
@@ -167,7 +167,7 @@ hgd_acmd_rm_admin(char **args)
 {
 	struct hgd_user user;
 	user.name = args[0];
-	user.perms = HGD_AUTH_NONE; 
+	user.perms = HGD_AUTH_NONE;
 	return (hgd_update_user(&user));
 }
 
