@@ -61,10 +61,10 @@ analyze:
 	${CC} --analyze ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} \
 		${CONFIG_LDFLAGS}  \
 		hgdc.c
-	${CC} --analyze ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
+	${CC} --analyze ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_FLAGS} \
 		hgd-admin.c
 	${CC} --analyze ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS}  \
-		${SSL_CFLAGS} ${SQLITE_CFLAGS} \
+		${SSL_CFLAGS} ${SQL_CFLAGS} \
 		${BSD_CFLAGS} hgd-mk-pydoc
 	
 
@@ -109,14 +109,14 @@ hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 	mplayer.o py.o cfg.o
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CPPFLAGS} \
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CFLAGS} \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} ${PY_LDFLAGS} -o hgd-admin \
 		common.o net.o crypto.o db.o mplayer.o py.o cfg.o hgd-admin.c
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
-		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQLITE_CFLAGS} \
+		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQL_CFLAGS} \
 		${SQL_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} db.o \
 		common.o py.o crypto.o hgd-mk-pydoc.c -o hgd-mk-pydoc
 

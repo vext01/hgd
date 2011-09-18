@@ -18,7 +18,11 @@
 #define _GNU_SOURCE	/* linux */
 
 #include "config.h"
+
+#ifdef HAVE_LIBCONFIG
 #include "cfg.h"
+#endif /* HAVE_LIBCONFIG */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

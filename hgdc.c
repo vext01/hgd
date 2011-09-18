@@ -17,7 +17,10 @@
 
 /* Needed first so we can optionaly include libs */
 #include "config.h"
+
+#ifdef HAVE_LIBCONFIG
 #include "cfg.h"
+#endif /* HAVE_LIBCONFIG */
 
 #define _GNU_SOURCE	/* linux */
 #include <stdio.h>

@@ -15,6 +15,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifdef HAVE_LIBCONFIG
+
 #include "cfg.h"
 #include "hgd.h"
 
@@ -350,14 +352,13 @@ hgd_cfg_c_password(config_t *cf, char **password, char *config_location)
 {
 	/* password */
 	char			*tmp_password;
-	struct stat		 st;	
+	struct stat		 st;
 
 	if ( stat (config_location, &st) < 0 ) {
-		DPRINTF(HGD_D_INFO, "Could not stat %s, skipping looking up password.",
-		    config_location);
+		DPRINTF(HGD_D_INFO, "Could not stat %s, skipping looking "
+		    "up password.", config_location);
 		return;
 	}
-
 
 	if (config_lookup_string(cf, "password",
 	    (const char**) &tmp_password)) {
@@ -453,4 +454,4 @@ hgd_cfg_c_debug(config_t *cf, int8_t *debug)
 
 #endif
 
-
+#endif /* HAVE_LIBCONFIG */
