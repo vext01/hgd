@@ -82,7 +82,7 @@ clean:
  * make a fifo that mplayer can take commands from
  */
 int
-hgd_make_mplayer_input_fifo()
+hgd_make_mplayer_input_fifo(void)
 {
 	if (mkfifo(mplayer_fifo_path, 0600) < 0) {
 		/* pipe should not exist, but no harm if it does */

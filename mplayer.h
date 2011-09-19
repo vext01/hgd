@@ -26,7 +26,7 @@ extern char		*mplayer_fifo_path;
 #define HGD_MPLAYER_PID_NAME	"mplayer.pid"
 
 int			 hgd_mplayer_pipe_send(char *what);
-int			 hgd_make_mplayer_input_fifo();
+int			 hgd_make_mplayer_input_fifo(void);
 int			 hgd_play_track(
 			     struct hgd_playlist_item *t, uint8_t, uint8_t);
 
