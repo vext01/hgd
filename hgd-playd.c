@@ -173,9 +173,9 @@ hgd_usage(void)
 int
 main(int argc, char **argv)
 {
-	char			 ch, *xdg_config_home;
+	char			*xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
-	int			 num_config = 2;
+	int			 num_config = 2, ch;
 
 	/* early as possible */
 	HGD_INIT_SYSLOG_DAEMON();
