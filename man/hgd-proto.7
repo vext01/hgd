@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd September 06, 2011
+.Dd September 17, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -92,6 +92,8 @@ Reply type: single-line
 On success returns: ok | <exit_message>
 .It
 Needs auth: No
+.It
+Needs admin: No
 .El
 .Pp
 Notifies the server that you (the client) are now disconnecting. This
@@ -106,6 +108,8 @@ Reply type: single-line
 On success returns: ok
 .It
 Needs auth: No
+.It
+Needs admin: No
 .El
 .Pp
 Notifies the server that all communications from here onward are to encrypted
@@ -122,6 +126,8 @@ Reply type: single-line
 On success returns: ok | <crypto-method>
 .It
 Needs auth: No
+.It
+Needs admin: No
 .El
 .Pp
 Asks the server if it supports encryption. A <crypto-method> of
@@ -137,6 +143,8 @@ Reply type: multi-line
 On success returns: ok | <num-items> ...
 .It
 Needs auth: No
+.It
+Needs admin: No
 .El
 .Pp
 Requests the playlist. <num_items> indicates how many further lines to expect
@@ -160,6 +168,8 @@ ok | <playing?> [| <track-id> | <filename> | <artist> | <title> | <user> |
 <album> | <genre> | <duration> | <bitrate> | <samplerate> | <channels> | <year>]
 .It
 Needs auth: No
+.It
+Needs admin: No
 .El
 .Pp
 Get the currently playing item, if any. If <playing?> = 0, then nothing
@@ -177,6 +187,8 @@ Reply type: single-line
 On success returns: ok | <proto-major-vers> | <proto-minor-vers>
 .It
 Needs auth: No
+.It
+Needs admin: No
 .El
 .Pp
 Requests the protocol major and minor versions.
@@ -197,6 +209,8 @@ Arguments: 2 <filename> | <byte-sz>
 Reply type: special
 .It
 Needs auth: Yes
+.It
+Needs admin: No
 .El
 .Pp
 Indicates that a file of size <byte-sz> is to be uploaded. If the
@@ -218,6 +232,8 @@ Reply type: single-line
 On success returns: ok
 .It
 Needs auth: No
+.It
+Needs admin: No
 .El
 .Pp
 Authenticates a user with the current connection.
@@ -231,6 +247,8 @@ Reply type: single-line
 On success returns: ok
 .It
 Needs auth: Yes
+.It
+Needs admin: No
 .El
 .Pp
 Votes off the currently playing track. It is recommended that clients use the
@@ -245,10 +263,117 @@ Reply type: single-line
 On success returns: ok
 .It
 Needs auth: Yes
+.It
+Needs admin: No
 .El
 .Pp
 Votes off the track with the playlist id <playlist-id> if and only if it is
 now playing.
+.It user-add
+.Bl -dash
+.It
+Arguments: 2 <username> <password>
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.It
+Needs admin: Yes
+.El
+.Pp
+Adds a user to the system.
+.It user-del 
+.Bl -dash
+.It
+Arguments: 1 <username>
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.It
+Needs admin: Yes
+.El
+.Pp
+Remove a user from the system.
+.It user-list 
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: multi-line
+.It
+On success returns: ok | <num-items> ...
+.It
+Needs auth: Yes
+.It
+Needs admin: Yes
+.El
+.Pp
+List all users on the system. XXX: finish this
+.It user-mk-admin 
+.Bl -dash
+.It
+Arguments: 1 <username>
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.It
+Needs admin: Yes
+.El
+.Pp
+Make a user an admin enable him/her to use the commands marked "Needs admin: Yes"
+.It user-rm-user 
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.It
+Needs admin: Yes
+.El
+.Pp
+Remove admin rights from a user.
+.It pause 
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.It
+Needs admin: Yes
+.El
+.Pp
+Pauses/Un-pauses the current playing track
+.It skip
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: singe-line
+.It
+On success returns: ok
+.It
+Needs auth: Yes
+.It
+Needs admin: Yes
+.El
+.Pp
+Skip the current playing track.
 .El
 .Sh TYPICAL SESSION
 Here we will demonstrate a simple HGD session. In these examples, a line
