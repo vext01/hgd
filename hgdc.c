@@ -1204,7 +1204,7 @@ hgd_read_config(char **config_locations)
 	}
 
 	hgd_cfg_c_colours(cf, &colours_on);
-	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);	
+	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);
 	hgd_cfg_c_maxitems(cf, &hud_max_items);
 	hgd_cfg_c_hostname(cf, &host);
 	hgd_cfg_c_port(cf, &port);

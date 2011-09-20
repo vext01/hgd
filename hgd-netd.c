@@ -115,8 +115,6 @@ hgd_exit_nicely()
 	if (restarting)
 		hgd_restart_myself();
 
-	hgd_free_mplayer_globals();
-
 	/* after restart, so that we can report a SIGHUP */
 	HGD_CLOSE_SYSLOG();
 
@@ -1486,8 +1484,6 @@ main(int argc, char **argv)
 	/* set up paths */
 	xasprintf(&db_path, "%s/%s", state_path, HGD_DB_NAME);
 	xasprintf(&filestore_path, "%s/%s", state_path, HGD_FILESTORE_NAME);
-
-	hgd_init_mplayer_globals();
 
 	umask(~S_IRWXU);
 	hgd_mk_state_dir();
