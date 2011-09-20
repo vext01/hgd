@@ -407,9 +407,9 @@ hgd_usage()
 	printf("  Admin Commands include:\n");
 	printf("    skip\t\t\tSkip the current song\n");
 	printf("    pause\t\t\tPause the current song\n");
-	printf("    add-user <user>[password]\tAdd a user\n");
-	printf("    rm-user <user>\t\tRemove a user\n");
-	printf("    list-users\t\t\tList Users\n");
+	printf("    user-add <user>[password]\tAdd a user\n");
+	printf("    user-rm <user>\t\tRemove a user\n");
+	printf("    users-list\t\t\tList Users\n");
 	printf("    user-mk-admin <user>\tMake user an admin\n");
 	printf("    user-rm-admin <user>\tRemove user's admin privs\n\n");
 	
@@ -772,8 +772,6 @@ hgd_req_hud(int n_args, char **args)
 		if (status != 0)
 			DPRINTF(HGD_D_WARN, "clear screen failed");
 
-
-		/* XXX ansii off option */
 		printf("%sHGD Server @ %s -- Playlist:%s\n\n", 
 		    ANSII_YELLOW, host, ANSII_WHITE);
 
@@ -799,7 +797,6 @@ hgd_req_skip(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		/* XXX: check if auth fail */
 		DPRINTF(HGD_D_ERROR, "Skip failed");
 		free(resp);
 		return (HGD_FAIL);
@@ -821,7 +818,6 @@ hgd_req_pause(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		/* XXX: check if auth fail */
 		DPRINTF(HGD_D_ERROR, "Pause failed");
 		free(resp);
 		return (HGD_FAIL);
@@ -848,8 +844,7 @@ hgd_req_adduser(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		/* XXX: check if auth fail */
-		DPRINTF(HGD_D_ERROR, "Add user failed");
+		DPRINTF(HGD_D_ERROR, "Add user failed: \"%s\"");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -862,10 +857,10 @@ int
 hgd_req_adduser_pop(int n_args, char **args)
 {
 	char	*pass = calloc (HGD_MAX_PASS_SZ, sizeof(char));
-	char 	*args2[2];
+	char	*args2[2];
 
 	(void) n_args;
-	
+
 	hgd_readpassphrase_confirmed(pass, "New user's password: ");
 	args2[0] = args[0];
 	args2[1] = pass;
@@ -891,7 +886,6 @@ hgd_req_list_users(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		/* XXX: check if auth fail */
 		DPRINTF(HGD_D_ERROR, "Add user failed");
 		free(resp);
 		return (HGD_FAIL);
@@ -938,7 +932,6 @@ hgd_req_rm_user(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		/* XXX: check if auth fail */
 		DPRINTF(HGD_D_ERROR, "rm user failed");
 		free(resp);
 		return (HGD_FAIL);
@@ -966,7 +959,6 @@ hgd_req_mk_admin(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		/* XXX: check if auth fail */
 		DPRINTF(HGD_D_ERROR, "rm user failed");
 		free(resp);
 		return (HGD_FAIL);
@@ -993,7 +985,6 @@ hgd_req_rm_admin(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		/* XXX: check if auth fail */
 		DPRINTF(HGD_D_ERROR, "rm user failed");
 		free(resp);
 		return (HGD_FAIL);
@@ -1047,12 +1038,12 @@ fail:
 
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
-/*	cmd,		n_args,	need_auth,	handler, 		varargs */
-	{"ls",		0,	0,		hgd_req_playlist, 	0},
-	{"hud",		0,	0,		hgd_req_hud,	  	0},
-	{"vo",		0,	1,		hgd_req_vote_off, 	0},
+/*	cmd,		n_args,	need_auth,	handler,		varargs */
+	{"ls",		0,	0,		hgd_req_playlist,	0},
+	{"hud",		0,	0,		hgd_req_hud,		0},
+	{"vo",		0,	1,		hgd_req_vote_off,	0},
 	{"np",		0,	0,		hgd_req_np,	  0},
-	{"q",		1,	1,		hgd_req_queue,	  	1},
+	{"q",		1,	1,		hgd_req_queue,		1},
 	{"skip",	0,	1,		hgd_req_skip,		0},
 	{"pause",	0,	1,		hgd_req_pause,		0},
 	{"user-add",	2,	1,		hgd_req_adduser,	0},
@@ -1061,7 +1052,7 @@ struct hgd_req_despatch req_desps[] = {
 	{"user-rm",	1,	1,		hgd_req_rm_user,	0},
 	{"user-mk-admin",1,	1,		hgd_req_mk_admin,	0},
 	{"user-rm-admin",1,	1,		hgd_req_rm_admin,	0},
-	{NULL,		0,	0,		NULL,		  	0} /* end */
+	{NULL,		0,	0,		NULL,			0} /* end */
 };
 
 /*
@@ -1097,7 +1088,7 @@ hgd_check_svr_proto()
 	major = atoi(v);
 
 	/* minor */
-	v = strtok_r(NULL, split, &saveptr1); 
+	v = strtok_r(NULL, split, &saveptr1);
 	if (v == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not find protocol MINOR version");
 		ret = HGD_FAIL;
@@ -1111,7 +1102,7 @@ hgd_check_svr_proto()
 		if (minor > HGD_PROTO_VERSION_MINOR) {
 			DPRINTF(HGD_D_INFO, "Server is running a newer minor version"
 			    "of the server.Server=%d,%d, Client=%d,%d", major, minor,
-			    HGD_PROTO_VERSION_MAJOR, HGD_PROTO_VERSION_MINOR);			    
+			    HGD_PROTO_VERSION_MAJOR, HGD_PROTO_VERSION_MINOR);
 		}
 	} else {
 		DPRINTF(HGD_D_ERROR, "Protocol mismatch: "
