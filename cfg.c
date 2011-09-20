@@ -21,6 +21,7 @@
 
 #include "cfg.h"
 #include "hgd.h"
+#include <limits.h>
 
 int
 hgd_load_config(config_t *cf, char **config_locations)
@@ -207,7 +208,11 @@ hgd_cfg_netd_max_filesize(config_t *cf, long int *max_upload_size)
 
 	if (config_lookup_int64(cf,
 	    "netd.max_file_size", &tmp_max_upload_size)) {
-		/* XXX: check for overflow? */
+		if (tmp_max_upload_size >= INT_MAX) {
+			DPRINTF(HGD_D_WARN, "Value %ld is too large to store so ignoring",
+			    tmp_max_upload_size);
+			return;
+		}
 		tmp_max_upload_size *= HGD_MB;
 		*max_upload_size = (long int) tmp_max_upload_size;
 		DPRINTF(HGD_D_DEBUG, "Set max upload size to %ld",
