@@ -41,6 +41,7 @@
 #include "hgd.h"
 #include "db.h"
 #include "mplayer.h"
+#include "admin.h"
 
 const char			*hgd_component = "hgd-admin";
 
@@ -86,6 +87,8 @@ hgd_usage()
         printf("    pause				Pause MPlayer.\n");
         printf("    skip				Next track.\n");
         printf("    db-init				Initialise database.\n");
+	printf("    admin-add				Make a user an admin.\n");
+	printf("    admin-rm				Remove admin privlages from user.\n");
 	/*
         printf("    user-disable username\tDisable a user account");
         printf("    user-chpw username\t\t\tChange a users password\n");
@@ -99,118 +102,6 @@ hgd_usage()
         printf("    -v			Show version and exit\n");
 }
 
-int
-hgd_acmd_user_add(char **args)
-{
-	unsigned char		 salt[HGD_SHA_SALT_SZ];
-	char			*salt_hex, *hash_hex;
-	char			*user = args[0], *pass = args[1];
-	int			 ret = HGD_OK;
-
-	char			salt_ascii[HGD_SHA_SALT_SZ * 2 + 1];
-	char			hash_ascii[HGD_SHA_SALT_SZ * 2 + 1];
-
-	db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
-
-	memset(salt, 0, HGD_SHA_SALT_SZ);
-	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
-		DPRINTF(HGD_D_ERROR, "can not generate salt");
-		return (HGD_FAIL);
-	}
-
-	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
-	hgd_bytes_to_hex_buf(salt_hex, salt_ascii, HGD_SHA_SALT_SZ);
-	DPRINTF(HGD_D_DEBUG, "new user's salt '%s'", salt_ascii);
-
-	hash_hex = hgd_sha1(pass, salt_hex);
-	memset(pass, 0, strlen(pass));
-	hgd_bytes_to_hex_buf(hash_hex, hash_ascii, HGD_SHA_SALT_SZ);
-	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_ascii);
-
-	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
-		ret = HGD_FAIL;
-
-	free(salt_hex);
-	free(hash_hex);
-
-	return (ret);
-}
-
-int
-hgd_acmd_user_add_prompt(char **args)
-{
-	char			 pass[HGD_MAX_PASS_SZ];
-	char			*new_args[2];
-
-	db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	if (hgd_readpassphrase_confirmed(pass) != HGD_OK)
-		return (HGD_FAIL);
-
-	new_args[0] = args[0];
-	new_args[1] = pass;
-
-	return (hgd_acmd_user_add(new_args));
-}
-
-int
-hgd_acmd_user_del(char **args)
-{
-	db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	if (hgd_delete_user(args[0]) != HGD_OK)
-		return (HGD_FAIL);
-
-	return (HGD_OK);
-}
-
-int
-hgd_acmd_user_list(char **args)
-{
-	struct hgd_user_list	*list;
-	int			 i;
-
-	(void) args;
-
-	db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	list = hgd_get_all_users();
-
-	for (i = 0; i < list->n_users; i++)
-		printf("%s\n", list->users[i]->name);
-
-	hgd_free_user_list(list);
-	free(list);
-
-	return (HGD_OK);
-
-}
-
-int
-hgd_acmd_pause(char **args)
-{
-	(void) args;
-
-	return (hgd_mplayer_pipe_send("pause\n"));
-}
-
-int
-hgd_acmd_skip(char **args)
-{
-	(void) args;
-
-	return (hgd_mplayer_pipe_send("stop\n"));
-}
 
 int
 hgd_acmd_init_db(char **args)
@@ -224,10 +115,12 @@ struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },
 	{ "user-del", 1, hgd_acmd_user_del },
-	{ "user-list", 0, hgd_acmd_user_list },
+	{ "user-list", 0, hgd_acmd_user_list_print },
 	{ "pause", 0, hgd_acmd_pause },
 	{ "skip", 0, hgd_acmd_skip },
 	{ "db-init", 0, hgd_acmd_init_db },
+	{ "admin-add", 1, hgd_acmd_make_admin},
+	{ "admin-rm", 1, hgd_acmd_rm_admin},
 #if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },

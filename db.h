@@ -53,5 +53,6 @@ int				 hgd_delete_user(char *user);
 struct hgd_user_list		*hgd_get_all_users(void);
 int				 hgd_num_tracks_user(char *username);
 int				 hgd_make_new_db(char *db_path);
+int				 hgd_update_user(struct hgd_user *user);
 
 #endif

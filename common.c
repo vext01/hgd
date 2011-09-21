@@ -295,17 +295,21 @@ hgd_free_user_list(struct hgd_user_list *ul)
 	free(ul->users);
 }
 
-/*
+/**
  * read a password twice and return if the same
+ * @param buf input buffer should be of size HGD_MAX_PASS_SZ
  */
 int
-hgd_readpassphrase_confirmed(char buf[HGD_MAX_PASS_SZ])
+hgd_readpassphrase_confirmed(char *buf, char *prompt)
 {
 	char			p1[HGD_MAX_PASS_SZ], p2[HGD_MAX_PASS_SZ];
 	uint8_t			again = 1;
+	
+	if (prompt == NULL)
+		prompt = "Password: ";
 
 	while (again) {
-		if (readpassphrase("Password: ", p1, HGD_MAX_PASS_SZ,
+		if (readpassphrase(prompt, p1, HGD_MAX_PASS_SZ,
 			    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
 			DPRINTF(HGD_D_ERROR, "Can't read password");
 			return (HGD_FAIL);

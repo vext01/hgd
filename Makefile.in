@@ -44,7 +44,7 @@ all: @ALL_TARGETS@
 
 .PHONY: clean
 clean:
-	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o cfg.o
+	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o net.o cfg.o admin.o
 
 .PHONY: analyze
 analyze:
@@ -68,6 +68,8 @@ analyze:
 		${BSD_CFLAGS} hgd-mk-pydoc
 	
 
+admin.o: admin.h admin.c mplayer.o
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o admin.o admin.c
 
 cfg.o: cfg.h cfg.c
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o cfg.o cfg.c
@@ -88,7 +90,7 @@ db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
 mplayer.o: mplayer.c mplayer.h py.o
-	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o mplayer.o py.o mplayer.c
+	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o mplayer.o mplayer.c
 
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
@@ -96,11 +98,11 @@ hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.
 		${CONFIG_LDFLAGS} \
 		-o hgd-playd db.o common.o crypto.o py.o mplayer.o cfg.o hgd-playd.c
 
-hgd-netd: cfg.o common.o net.o hgd-netd.c hgd.h db.o cfg.o crypto.o
+hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o admin.o
 	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
 		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
-		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
-		-o hgd-netd cfg.o common.o db.o net.o crypto.o hgd-netd.c
+		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} ${PY_LDFLAGS} ${PY_CFLAGS}\
+		-o hgd-netd py.o mplayer.o cfg.o common.o db.o net.o crypto.o admin.o hgd-netd.c
 
 hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
@@ -108,11 +110,11 @@ hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 		-o hgdc common.o net.o cfg.o hgdc.c
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
-	mplayer.o py.o cfg.o
+	mplayer.o py.o cfg.o admin.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CFLAGS} \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} ${PY_LDFLAGS} -o hgd-admin \
-		common.o net.o crypto.o db.o mplayer.o py.o cfg.o hgd-admin.c
+		common.o net.o admin.o crypto.o db.o mplayer.o py.o cfg.o hgd-admin.c
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \

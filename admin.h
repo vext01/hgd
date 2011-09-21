@@ -15,20 +15,18 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __MPLAYER_H
-#define __MPLAYER_H
-
-#include "hgd.h"
+#ifndef HGD_ADMIN_H
+#define HGD_ADMIN_H
 
 
-extern char		*mplayer_fifo_path;
-
-#define HGD_MPLAYER_PIPE_NAME	"mplayer.pipe"
-#define HGD_MPLAYER_PID_NAME	"mplayer.pid"
-
-int			 hgd_mplayer_pipe_send(char *what);
-int			 hgd_make_mplayer_input_fifo(void);
-int			 hgd_play_track(
-			     struct hgd_playlist_item *t, uint8_t, uint8_t);
+int hgd_acmd_user_add(char **args);
+int hgd_acmd_user_add_prompt(char **args);
+int hgd_acmd_user_del(char **args);
+struct hgd_user_list* hgd_acmd_user_list(char **args);
+int hgd_acmd_user_list_print(char **args);
+int hgd_acmd_pause(char **args);
+int hgd_acmd_skip(char **args);
+int hgd_acmd_make_admin(char **args);
+int hgd_acmd_rm_admin(char **args);
 
 #endif

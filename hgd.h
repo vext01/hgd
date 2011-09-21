@@ -79,6 +79,10 @@
 #define ANSII_GREEN		(colours_on ? "\033[32m" : "")
 #define ANSII_WHITE		(colours_on ? "\033[0m" : "")
 
+/* Authorisation levels */
+#define	HGD_AUTH_NONE			(0)
+#define HGD_AUTH_ADMIN			(1 << 0)
+
 #define HGD_TERM_WIDTH		78
 
 #include <sys/types.h>
@@ -169,6 +173,7 @@ struct hgd_cmd_despatch {
 	 * be used.
 	 */
 	uint8_t			 secure;
+	uint8_t			 authlevel;
 	int			(*handler)(struct hgd_session *, char **);
 };
 
@@ -259,8 +264,7 @@ void				 hgd_register_sig_handlers(void);
 char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
 void				 hgd_bytes_to_hex_buf(char*, char*, int len);
-int				 hgd_readpassphrase_confirmed(
-				     char buf[HGD_MAX_PASS_SZ]);
+int				 hgd_readpassphrase_confirmed(char *buf, char *prompt);
 int				 hgd_daemonise(void);
 void				 hgd_restart_myself(void);
 int				 hgd_cache_exec_context(char **args);
