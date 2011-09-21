@@ -68,8 +68,8 @@ analyze:
 		${BSD_CFLAGS} hgd-mk-pydoc
 	
 
-admin.o: admin.h admin.c mplayer.o
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o admin.o admin.c
+admin.o: db.h admin.h admin.c mplayer.o
+	${CC} ${SQL_CFLAGS} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o admin.o admin.c
 
 cfg.o: cfg.h cfg.c
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o cfg.o cfg.c
