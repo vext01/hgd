@@ -844,7 +844,7 @@ hgd_req_adduser(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		DPRINTF(HGD_D_ERROR, "Add user failed: \"%s\"");
+		DPRINTF(HGD_D_ERROR, "Add user failed");
 		free(resp);
 		return (HGD_FAIL);
 	}

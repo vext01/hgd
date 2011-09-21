@@ -209,7 +209,7 @@ hgd_cfg_netd_max_filesize(config_t *cf, long int *max_upload_size)
 	if (config_lookup_int64(cf,
 	    "netd.max_file_size", &tmp_max_upload_size)) {
 		if (tmp_max_upload_size >= INT_MAX) {
-			DPRINTF(HGD_D_WARN, "Value %ld is too large to store so ignoring",
+			DPRINTF(HGD_D_WARN, "Value %lld is too large to store so ignoring",
 			    tmp_max_upload_size);
 			return;
 		}
