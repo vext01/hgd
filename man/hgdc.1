@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd September 6, 2011
+.Dd September 21, 2011
 .Dt HGDC 1
 .Os
 .Sh NAME
@@ -85,6 +85,24 @@ Show the now playing track.
 Queue the given file(s) in the playlist.
 .It vo
 Vote-off the currently playing track.
+.El
+.Pp
+There are also the following admin commands:
+.Bl -tag -width Ds
+.It skip
+Skip the currently playing song.
+.It Pause
+Pause / un-pause the currently playing song.
+.It user-add <user> [password]
+Add a new user to the server.
+.It user-rm <user>
+Remove <user> from the server.
+.It users-list
+List all users registered on the server
+.It user-mk-admin <user>
+Make <user> and admin allowing them to use these admin commands.
+.It user-rm-admin <user>
+Remove <user>'s admin rights.
 .El
 .Sh A NOTE ABOUT ENCRYPTION
 NOTE: SSL support in HGD is fine as-is for encryption purposes, but host

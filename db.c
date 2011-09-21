@@ -688,6 +688,49 @@ clean:
 	return (ret);
 }
 
+int
+hgd_update_user(struct hgd_user *user)
+{
+	int			sql_res;
+	sqlite3_stmt		*stmt;
+	char			*sql = "UPDATE users SET perms=? WHERE username=?";
+	int			ret = HGD_OK;
+
+	DPRINTF(HGD_D_DEBUG, "Updating user info for %s", user->name);
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	sql_res = sqlite3_bind_int(stmt, 1, user->perms);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	sql_res = sqlite3_bind_text(stmt, 2, user->name, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res != SQLITE_DONE) {
+		DPRINTF(HGD_D_ERROR, "Failed to update user: %s", DERROR);
+		ret = HGD_FAIL;
+		goto clean;
+	}
+
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
+}
+
 struct hgd_user *
 hgd_authenticate_user(char *user, char *pass)
 {

@@ -18,7 +18,13 @@
 #include "config.h"
 #include "cfg.h"
 
-#define _GNU_SOURCE	/* linux */
+#ifdef HAVE_PYTHON
+#include <Python.h> /* defines _GNU_SOURCE */
+#include "py.h"
+#else
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,9 +51,10 @@
 #include <sys/wait.h>
 
 #include "hgd.h"
+#include "mplayer.h"
+#include "admin.h"
 #include "db.h"
 #include "net.h"
-#include "mplayer.h"
 
 #include <openssl/ssl.h>
 #ifdef HAVE_TAGLIB
@@ -770,21 +777,180 @@ clean:
 	return (ret);
 }
 
+int
+hgd_cmd_user_add(struct hgd_session *sess, char **params)
+{
+	int			ret;
+
+	(void) sess;
+	ret = hgd_acmd_user_add(params);
+	
+	if (ret == HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else {
+		/* XXX: correct error if user already exisits */
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
+	}
+
+	return (ret);
+
+}
+
+
+int
+hgd_cmd_user_del(struct hgd_session *sess, char **params)
+{
+	int			ret;
+
+	(void) sess;
+	ret = hgd_acmd_user_del(params);
+	
+	if (ret == HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else {
+		/* XXX: correct error if user already exisits */
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
+	}
+
+	return (ret);
+}
+
+int
+hgd_cmd_user_list(struct hgd_session *sess, char **args)
+{
+	struct hgd_user_list	*list;
+	int			 i;
+	char			*msg;
+
+	(void) sess;
+	
+	list = hgd_acmd_user_list(args);
+
+	if (list == NULL) {
+		DPRINTF(HGD_D_WARN, "List retuned NULL,"
+		    " there are either no users or"
+		    " an error occoured"); 
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			"err|list_null");
+		
+		goto clean;
+	}
+	xasprintf(&msg, "ok|%d", list->n_users);
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, msg); 
+	free(msg);
+
+	for (i = 0; i < list->n_users; i++) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, list->users[i]->name);
+	}
+
+clean:
+	if (list != NULL) {
+		hgd_free_user_list(list);
+		free(list);
+	}
+
+	return (HGD_OK);
+}
+
+int
+hgd_cmd_pause(struct hgd_session *sess, char **unused)
+{
+	int ret;
+
+	(void) sess;
+	(void) unused;
+
+	ret = hgd_acmd_pause(NULL);
+
+	if (ret == HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
+	}
+
+	return (ret);
+
+}
+
+int
+hgd_cmd_skip(struct hgd_session *sess, char **unused)
+{
+	int ret;
+
+	(void) sess;
+	(void) unused;
+
+	DPRINTF(HGD_D_DEBUG, "Calling into admin.c to skip");
+	
+	ret = hgd_acmd_skip(NULL);
+
+	if (ret == HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
+	}
+
+	return (ret);
+}
+
+int
+hgd_cmd_mk_admin(struct hgd_session *sess, char **args)
+{
+	int ret;
+
+	DPRINTF(HGD_D_DEBUG, "Calling into admin.c to skip");
+	
+	ret = hgd_acmd_make_admin(args);
+
+	if (ret == HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
+	}
+
+	return (ret);
+}
+
+int
+hgd_cmd_rm_admin(struct hgd_session *sess, char **args)
+{
+	int ret;
+
+	DPRINTF(HGD_D_DEBUG, "Calling into admin.c to skip");
+	
+	ret = hgd_acmd_rm_admin(args);
+
+	if (ret == HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
+	}
+
+	return (ret);
+}
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
-	/* cmd,		n_args,	secure,	handler_function */
-	{"bye",		0,	0,	NULL},	/* bye is special */
-	{"encrypt",	0,	0,	hgd_cmd_encrypt},
-	{"encrypt?",	0,	0,	hgd_cmd_encrypt_questionmark},
-	{"ls",		0,	1,	hgd_cmd_playlist},
-	{"pl",		0,	1,	hgd_cmd_playlist},
-	{"np",		0,	1,	hgd_cmd_now_playing},
-	{"proto",	0,	0,	hgd_cmd_proto},
-	{"q",		2,	1,	hgd_cmd_queue},
-	{"user",	2,	1,	hgd_cmd_user},
-	{"vo",		0,	1,	hgd_cmd_vote_off_noarg},
-	{"vo",		1,	1,	hgd_cmd_vote_off},
-	{NULL,		0,	0,	NULL}	/* terminate */
+	/* cmd,		n_args,	secure,	auth,		handler_function */
+	{"bye",		0,	0,	HGD_AUTH_NONE,	NULL},	/* bye is special */
+	{"encrypt",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt},
+	{"encrypt?",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt_questionmark},
+	{"ls",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_playlist},
+	{"pl",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_playlist},
+	{"np",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_now_playing},
+	{"proto",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_proto},
+	{"q",		2,	1,	HGD_AUTH_NONE,	hgd_cmd_queue},
+	{"user",	2,	1,	HGD_AUTH_NONE,	hgd_cmd_user},
+	{"vo",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off_noarg},
+	{"vo",		1,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off},
+	{"user-add",	2,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_add},
+	{"user-del",	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_del},
+	{"user-list",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_list},
+	{"user-mk-admin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_mk_admin},
+	{"user-rm-admin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_rm_admin},
+	{"pause",	0,	1,	HGD_AUTH_ADMIN,	hgd_cmd_pause},
+	{"skip",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_skip},	
+	{NULL,		0,	0,	HGD_AUTH_NONE,	NULL}	/* terminate */
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
@@ -859,6 +1025,20 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|ssl_only");
 		num_bad_commands++;
 		goto clean;
+	}
+
+	/* if admin command, check user is an admin */
+	if (correct_desp->authlevel != HGD_AUTH_NONE) {
+		DPRINTF(HGD_D_DEBUG, "checking authlevel, expecting %d, got %d",
+		    correct_desp->authlevel,sess->user->perms); 
+		if (!(sess->user->perms & correct_desp->authlevel)) {
+			DPRINTF(HGD_D_WARN, 
+			    "Client '%s' is trying to invoke admin  commands",
+			    sess->cli_str);
+			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|not_authed");
+			num_bad_commands++;
+			goto clean;
+		}
 	}
 
 	/* otherwise despatch */
@@ -960,7 +1140,7 @@ hgd_sigchld(int sig)
 
 /* main loop that deals with network requests */
 void
-hgd_listen_loop()
+hgd_listen_loop(void)
 {
 	struct sockaddr_in	addr, cli_addr;
 	int			cli_fd, child_pid = 0;
@@ -1122,7 +1302,7 @@ hgd_read_config(char **config_locations)
 }
 
 void
-hgd_usage()
+hgd_usage(void)
 {
 	printf("usage: hgd-netd <options>\n");
 	printf("    -B			Do not daemonise, run in foreground\n");
