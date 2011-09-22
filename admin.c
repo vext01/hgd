@@ -104,13 +104,12 @@ hgd_acmd_user_list_print(char **args)
 	list = hgd_acmd_user_list(args);
 
 	if (list == NULL) {
-		DPRINTF(HGD_D_WARN, "Get user list returned NULL,"
-		    " either there are no users or an error occoured");
+		DPRINTF(HGD_D_WARN, "Get user list returned NULL");
 		goto clean;
 	}
 
 	for (i = 0; i < list->n_users; i++)
-		printf("%s\n", list->users[i]->name);
+		printf("%s (admin=%d)\n", list->users[i]->name, list->users[i]->perms);
 
 clean:
 	if (list != NULL) {
@@ -154,13 +153,15 @@ hgd_acmd_skip(char **args)
 }
 
 int
-hgd_acmd_make_admin(char ** args)
+hgd_acmd_make_admin(char **args)
 {
-	struct hgd_user user;
+	struct hgd_user		user;
+
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
+
 	if (db == NULL)
-		return (NULL);
+		return (HGD_FAIL);
 
 	user.name = args[0];
 	user.perms = HGD_AUTH_ADMIN;
