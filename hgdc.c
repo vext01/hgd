@@ -407,11 +407,11 @@ hgd_usage()
 	printf("  Admin Commands include:\n");
 	printf("    skip\t\t\tSkip the current song\n");
 	printf("    pause\t\t\tPause the current song\n");
-	printf("    user-add <user>[password]\tAdd a user\n");
-	printf("    user-rm <user>\t\tRemove a user\n");
+	printf("    user-add <user> [password]\tAdd a user\n");
+	printf("    user-del <user>\t\tRemove a user\n");
 	printf("    users-list\t\t\tList Users\n");
 	printf("    user-mk-admin <user>\tMake user an admin\n");
-	printf("    user-rm-admin <user>\tRemove user's admin privs\n\n");
+	printf("    user-deadmin <user>\t\tRemove user's admin privs\n\n");
 	
 	printf("  Options include:\n");
 	printf("    -a\t\t\tColours on (only in hud mode)\n");
@@ -932,7 +932,7 @@ hgd_req_rm_user(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		DPRINTF(HGD_D_ERROR, "rm user failed");
+		DPRINTF(HGD_D_ERROR, "del user failed");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -959,7 +959,7 @@ hgd_req_mk_admin(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		DPRINTF(HGD_D_ERROR, "rm user failed");
+		DPRINTF(HGD_D_ERROR, "mk admin failed");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -969,7 +969,7 @@ hgd_req_mk_admin(int n_args, char **args)
 }
 
 int
-hgd_req_rm_admin(int n_args, char **args)
+hgd_req_deadmin(int n_args, char **args)
 {
 	char			*resp;
 	char			*msg;
@@ -977,7 +977,7 @@ hgd_req_rm_admin(int n_args, char **args)
 	(void) args;
 	(void) n_args;
 
-	xasprintf(&msg, "user-rm-admin|%s", args[0]);
+	xasprintf(&msg, "user-deadmin|%s", args[0]);
 
 	hgd_sock_send_line(sock_fd, ssl, msg);
 
@@ -985,7 +985,7 @@ hgd_req_rm_admin(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		DPRINTF(HGD_D_ERROR, "rm user failed");
+		DPRINTF(HGD_D_ERROR, "deadmin failed");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -1049,9 +1049,9 @@ struct hgd_req_despatch req_desps[] = {
 	{"user-add",	2,	1,		hgd_req_adduser,	0},
 	{"user-add",	1,	1,		hgd_req_adduser_pop,	0},
 	{"users-list",	0,	1,		hgd_req_list_users,	0},
-	{"user-rm",	1,	1,		hgd_req_rm_user,	0},
+	{"user-del",	1,	1,		hgd_req_rm_user,	0},
 	{"user-mk-admin",1,	1,		hgd_req_mk_admin,	0},
-	{"user-rm-admin",1,	1,		hgd_req_rm_admin,	0},
+	{"user-deadmin",1,	1,		hgd_req_deadmin,	0},
 	{NULL,		0,	0,		NULL,			0} /* end */
 };
 
