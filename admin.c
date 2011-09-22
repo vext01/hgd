@@ -157,6 +157,11 @@ int
 hgd_acmd_make_admin(char ** args)
 {
 	struct hgd_user user;
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (NULL);
+
 	user.name = args[0];
 	user.perms = HGD_AUTH_ADMIN;
 	return (hgd_update_user(&user));
@@ -166,6 +171,10 @@ int
 hgd_acmd_rm_admin(char **args)
 {
 	struct hgd_user user;
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (NULL);
 	user.name = args[0];
 	user.perms = HGD_AUTH_NONE;
 	return (hgd_update_user(&user));
