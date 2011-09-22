@@ -176,6 +176,7 @@ hgd_acmd_rm_admin(char **args)
 		db = hgd_open_db(db_path, 0);
 	if (db == NULL)
 		return (NULL);
+
 	user.name = args[0];
 	user.perms = HGD_AUTH_NONE;
 	return (hgd_update_user(&user));

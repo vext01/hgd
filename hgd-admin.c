@@ -134,6 +134,12 @@ hgd_parse_command(int argc, char **argv)
 {
 	struct hgd_admin_cmd	*acmd, *correct_acmd = NULL;
 
+	if (argc == 0) {
+		hgd_usage();
+		DPRINTF(HGD_D_ERROR, "bad usage");
+		return (HGD_FAIL);
+	}
+
 	DPRINTF(HGD_D_DEBUG, "Looking for command handler for '%s'", argv[0]);
 
 	for (acmd = admin_cmds; acmd->cmd != 0; acmd++) {
