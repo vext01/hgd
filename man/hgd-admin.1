@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd August 28, 2011
+.Dd September 22, 2011
 .Dt HGD-ADMIN 1
 .Os
 .Sh NAME
@@ -58,6 +58,10 @@ given,
 will prompt for one.
 .It user-del Ar user
 Delete a user from the system.
+.It user-mkadmin Ar user
+Set the admin flag on this user. This allows them to (for example) skip tracks.
+.It user-noadmin Ar user
+Revoke the admin flag on this user.
 .It user-list
 List users in the system.
 .It pause
