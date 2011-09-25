@@ -409,10 +409,10 @@ hgd_usage()
 	printf("    pause\t\t\tPause the current song\n");
 	printf("    user-add <user> [password]\tAdd a user\n");
 	printf("    user-del <user>\t\tRemove a user\n");
-	printf("    users-list\t\t\tList Users\n");
-	printf("    user-mk-admin <user>\tMake user an admin\n");
-	printf("    user-deadmin <user>\t\tRemove user's admin privs\n\n");
-	
+	printf("    user-list\t\t\tList Users\n");
+	printf("    user-mkadmin <user>\tGrant user admin rights\n");
+	printf("    user-noadmin <user>\t\tRevoke user admin rights\n\n");
+
 	printf("  Options include:\n");
 	printf("    -a\t\t\tColours on (only in hud mode)\n");
 	printf("    -A\t\t\tColours off (only in hud mode)\n");
@@ -828,7 +828,7 @@ hgd_req_pause(int n_args, char **args)
 }
 
 int
-hgd_req_adduser(int n_args, char **args)
+hgd_req_user_add(int n_args, char **args)
 {
 	char			*resp;
 	char			*msg;
@@ -854,7 +854,7 @@ hgd_req_adduser(int n_args, char **args)
 }
 
 int
-hgd_req_adduser_pop(int n_args, char **args)
+hgd_req_user_add_prompt(int n_args, char **args)
 {
 	char	*pass = calloc (HGD_MAX_PASS_SZ, sizeof(char));
 	char	*args2[2];
@@ -865,11 +865,11 @@ hgd_req_adduser_pop(int n_args, char **args)
 	args2[0] = args[0];
 	args2[1] = pass;
 
-	return hgd_req_adduser(2, args2);
+	return hgd_req_user_add(2, args2);
 }
 
 int
-hgd_req_list_users(int n_args, char **args)
+hgd_req_user_list(int n_args, char **args)
 {
 	char			*resp;
 	char			*msg, *p;
@@ -886,7 +886,7 @@ hgd_req_list_users(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		DPRINTF(HGD_D_ERROR, "Add user failed");
+		DPRINTF(HGD_D_ERROR, "list users failed");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -916,7 +916,7 @@ hgd_req_list_users(int n_args, char **args)
 }
 
 int
-hgd_req_rm_user(int n_args, char **args)
+hgd_req_user_del(int n_args, char **args)
 {
 	char			*resp;
 	char			*msg;
@@ -943,7 +943,7 @@ hgd_req_rm_user(int n_args, char **args)
 
 
 int
-hgd_req_mk_admin(int n_args, char **args)
+hgd_req_user_mkadmin(int n_args, char **args)
 {
 	char			*resp;
 	char			*msg;
@@ -951,7 +951,7 @@ hgd_req_mk_admin(int n_args, char **args)
 	(void) args;
 	(void) n_args;
 
-	xasprintf(&msg, "user-mk-admin|%s", args[0]);
+	xasprintf(&msg, "user-mkadmin|%s", args[0]);
 
 	hgd_sock_send_line(sock_fd, ssl, msg);
 
@@ -959,7 +959,7 @@ hgd_req_mk_admin(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		DPRINTF(HGD_D_ERROR, "mk admin failed");
+		DPRINTF(HGD_D_ERROR, "mkadmin failed");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -969,7 +969,7 @@ hgd_req_mk_admin(int n_args, char **args)
 }
 
 int
-hgd_req_deadmin(int n_args, char **args)
+hgd_req_user_noadmin(int n_args, char **args)
 {
 	char			*resp;
 	char			*msg;
@@ -977,7 +977,7 @@ hgd_req_deadmin(int n_args, char **args)
 	(void) args;
 	(void) n_args;
 
-	xasprintf(&msg, "user-deadmin|%s", args[0]);
+	xasprintf(&msg, "user-noadmin|%s", args[0]);
 
 	hgd_sock_send_line(sock_fd, ssl, msg);
 
@@ -985,7 +985,7 @@ hgd_req_deadmin(int n_args, char **args)
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
 	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		DPRINTF(HGD_D_ERROR, "deadmin failed");
+		DPRINTF(HGD_D_ERROR, "noadmin failed");
 		free(resp);
 		return (HGD_FAIL);
 	}
@@ -1044,14 +1044,16 @@ struct hgd_req_despatch req_desps[] = {
 	{"vo",		0,	1,		hgd_req_vote_off,	0},
 	{"np",		0,	0,		hgd_req_np,	  0},
 	{"q",		1,	1,		hgd_req_queue,		1},
+	/* play control */
 	{"skip",	0,	1,		hgd_req_skip,		0},
 	{"pause",	0,	1,		hgd_req_pause,		0},
-	{"user-add",	2,	1,		hgd_req_adduser,	0},
-	{"user-add",	1,	1,		hgd_req_adduser_pop,	0},
-	{"users-list",	0,	1,		hgd_req_list_users,	0},
-	{"user-del",	1,	1,		hgd_req_rm_user,	0},
-	{"user-mk-admin",1,	1,		hgd_req_mk_admin,	0},
-	{"user-deadmin",1,	1,		hgd_req_deadmin,	0},
+	/* users */
+	{"user-add",	2,	1,		hgd_req_user_add,	0},
+	{"user-add",	1,	1,		hgd_req_user_add_prompt,0},
+	{"user-list",	0,	1,		hgd_req_user_list,	0},
+	{"user-del",	1,	1,		hgd_req_user_del,	0},
+	{"user-mkadmin",1,	1,		hgd_req_user_mkadmin,	0},
+	{"user-noadmin",1,	1,		hgd_req_user_noadmin,	0},
 	{NULL,		0,	0,		NULL,			0} /* end */
 };
 

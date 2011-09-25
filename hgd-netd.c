@@ -804,7 +804,7 @@ hgd_cmd_user_del(struct hgd_session *sess, char **params)
 
 	(void) sess;
 	ret = hgd_acmd_user_del(params);
-	
+
 	if (ret == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 	} else {
@@ -823,24 +823,25 @@ hgd_cmd_user_list(struct hgd_session *sess, char **args)
 	char			*msg;
 
 	(void) sess;
-	
+
 	list = hgd_acmd_user_list(args);
 
 	if (list == NULL) {
 		DPRINTF(HGD_D_WARN, "List retuned NULL,"
 		    " there are either no users or"
-		    " an error occoured"); 
+		    " an error occoured");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 			"err|list_null");
-		
+
 		goto clean;
 	}
 	xasprintf(&msg, "ok|%d", list->n_users);
-	hgd_sock_send_line(sess->sock_fd, sess->ssl, msg); 
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, msg);
 	free(msg);
 
 	for (i = 0; i < list->n_users; i++) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, list->users[i]->name);
+		hgd_sock_send_line(
+		    sess->sock_fd, sess->ssl, list->users[i]->name);
 	}
 
 clean:
@@ -869,19 +870,16 @@ hgd_cmd_pause(struct hgd_session *sess, char **unused)
 	}
 
 	return (ret);
-
 }
 
 int
 hgd_cmd_skip(struct hgd_session *sess, char **unused)
 {
-	int ret;
+	int			ret;
 
 	(void) sess;
 	(void) unused;
 
-	DPRINTF(HGD_D_DEBUG, "Calling into admin.c to skip");
-	
 	ret = hgd_acmd_skip(NULL);
 
 	if (ret == HGD_OK) {
@@ -894,12 +892,10 @@ hgd_cmd_skip(struct hgd_session *sess, char **unused)
 }
 
 int
-hgd_cmd_mk_admin(struct hgd_session *sess, char **args)
+hgd_cmd_user_mkadmin(struct hgd_session *sess, char **args)
 {
-	int ret;
+	int			ret;
 
-	DPRINTF(HGD_D_DEBUG, "Calling into admin.c to skip");
-	
 	ret = hgd_acmd_make_admin(args);
 
 	if (ret == HGD_OK) {
@@ -912,12 +908,10 @@ hgd_cmd_mk_admin(struct hgd_session *sess, char **args)
 }
 
 int
-hgd_cmd_rm_admin(struct hgd_session *sess, char **args)
+hgd_cmd_user_noadmin(struct hgd_session *sess, char **args)
 {
-	int ret;
+	int			ret;
 
-	DPRINTF(HGD_D_DEBUG, "Calling into admin.c to skip");
-	
 	ret = hgd_acmd_rm_admin(args);
 
 	if (ret == HGD_OK) {
@@ -932,7 +926,8 @@ hgd_cmd_rm_admin(struct hgd_session *sess, char **args)
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	secure,	auth,		handler_function */
-	{"bye",		0,	0,	HGD_AUTH_NONE,	NULL},	/* bye is special */
+	/* bye is special */
+	{"bye",		0,	0,	HGD_AUTH_NONE,	NULL},
 	{"encrypt",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt},
 	{"encrypt?",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt_questionmark},
 	{"ls",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_playlist},
@@ -946,10 +941,10 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"user-add",	2,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_add},
 	{"user-del",	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_del},
 	{"user-list",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_list},
-	{"user-mk-admin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_mk_admin},
-	{"user-rm-admin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_rm_admin},
+	{"user-mkadmin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_user_mkadmin},
+	{"user-noadmin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_user_noadmin},
 	{"pause",	0,	1,	HGD_AUTH_ADMIN,	hgd_cmd_pause},
-	{"skip",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_skip},	
+	{"skip",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_skip},
 	{NULL,		0,	0,	HGD_AUTH_NONE,	NULL}	/* terminate */
 };
 

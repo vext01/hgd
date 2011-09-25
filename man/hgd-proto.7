@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd September 21, 2011
+.Dd September 25, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -314,7 +314,7 @@ Needs admin: Yes
 .El
 .Pp
 List all users on the system. XXX: finish this
-.It user-mk-admin
+.It user-mkadmin
 .Bl -dash
 .It
 Arguments: 1 <username>
@@ -328,8 +328,8 @@ Needs auth: Yes
 Needs admin: Yes
 .El
 .Pp
-Make a user an admin enable him/her to use the commands marked "Needs admin: Yes"
-.It user-rm-user
+Grant a user admin rights (commands marked "Needs admin: Yes").
+.It user-noadmin
 .Bl -dash
 .It
 Arguments: 0
@@ -343,7 +343,7 @@ Needs auth: Yes
 Needs admin: Yes
 .El
 .Pp
-Remove admin rights from a user.
+Revoke admin rights from a user.
 .It pause
 .Bl -dash
 .It
