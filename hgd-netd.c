@@ -342,13 +342,6 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	char			*filename;
 	struct hgd_media_tag	tags;
 
-	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "err|user_not_identified");
-		ret = HGD_FAIL;
-		goto clean;
-	}
-
 	if ((flood_limit >= 0) &&
 	    (hgd_num_tracks_user(sess->user->name) >= flood_limit)) {
 
@@ -548,12 +541,6 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 
 	DPRINTF(HGD_D_INFO, "%s wants to kill track", sess->user->name);
-
-	if (sess->user == NULL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "err|user_not_identified");
-		return (HGD_FAIL);
-	}
 
 	memset(&playing, 0, sizeof(playing));
 	if (hgd_get_playing_item(&playing) == HGD_FAIL) {
@@ -925,27 +912,27 @@ hgd_cmd_user_noadmin(struct hgd_session *sess, char **args)
 
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
-	/* cmd,		n_args,	secure,	auth,		handler_function */
+	/* cmd,		n_args,	secure,	auth,	auth_lvl,	handler_function */
 	/* bye is special */
-	{"bye",		0,	0,	HGD_AUTH_NONE,	NULL},
-	{"encrypt",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt},
-	{"encrypt?",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt_questionmark},
-	{"ls",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_playlist},
-	{"pl",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_playlist},
-	{"np",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_now_playing},
-	{"proto",	0,	0,	HGD_AUTH_NONE,	hgd_cmd_proto},
-	{"q",		2,	1,	HGD_AUTH_NONE,	hgd_cmd_queue},
-	{"user",	2,	1,	HGD_AUTH_NONE,	hgd_cmd_user},
-	{"vo",		0,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off_noarg},
-	{"vo",		1,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off},
-	{"user-add",	2,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_add},
-	{"user-del",	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_del},
-	{"user-list",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_list},
-	{"user-mkadmin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_user_mkadmin},
-	{"user-noadmin",1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_user_noadmin},
-	{"pause",	0,	1,	HGD_AUTH_ADMIN,	hgd_cmd_pause},
-	{"skip",	0,	1,	HGD_AUTH_ADMIN, hgd_cmd_skip},
-	{NULL,		0,	0,	HGD_AUTH_NONE,	NULL}	/* terminate */
+	{"bye",		0,	0,	0,	HGD_AUTH_NONE,	NULL},
+	{"encrypt",	0,	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt},
+	{"encrypt?",	0,	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt_questionmark},
+	{"ls",		0,	1,	0,	HGD_AUTH_NONE,	hgd_cmd_playlist},
+	{"pl",		0,	1,	0,	HGD_AUTH_NONE,	hgd_cmd_playlist},
+	{"np",		0,	1,	0,	HGD_AUTH_NONE,	hgd_cmd_now_playing},
+	{"proto",	0,	0,	0,	HGD_AUTH_NONE,	hgd_cmd_proto},
+	{"q",		2,	1,	1,	HGD_AUTH_NONE,	hgd_cmd_queue},
+	{"user",	2,	1,	0,	HGD_AUTH_NONE,	hgd_cmd_user},
+	{"vo",		0,	1,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off_noarg},
+	{"vo",		1,	1,	1,	HGD_AUTH_NONE,	hgd_cmd_vote_off},
+	{"user-add",	2,	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_add},
+	{"user-del",	1,	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_del},
+	{"user-list",	0,	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_user_list},
+	{"user-mkadmin",1,	1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_user_mkadmin},
+	{"user-noadmin",1,	1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_user_noadmin},
+	{"pause",	0,	1,	1,	HGD_AUTH_ADMIN,	hgd_cmd_pause},
+	{"skip",	0,	1,	1,	HGD_AUTH_ADMIN, hgd_cmd_skip},
+	{NULL,		0,	0,	0,	HGD_AUTH_NONE,	NULL}	/* terminate */
 };
 
 /* enusure atleast 1 more than the commamd with the most args */
@@ -1022,15 +1009,30 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		goto clean;
 	}
 
+	/* check to see if user is logged in for the commands that need a user
+	 *  to be logged in
+	 */
+	if (correct_desp->auth_needed && sess->user == NULL) {
+		DPRINTF(HGD_D_DEBUG, "Non logged in user trying to use command"
+		    " \"%s\"that they should be logged in to use",
+		    correct_desp->cmd);
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|user_not_identified");
+		num_bad_commands++;
+		goto clean;
+	}
+
 	/* if admin command, check user is an admin */
 	if (correct_desp->authlevel != HGD_AUTH_NONE) {
-		DPRINTF(HGD_D_DEBUG, "checking authlevel, expecting %d, got %d",
-		    correct_desp->authlevel,sess->user->perms); 
+		DPRINTF(HGD_D_DEBUG, "Checking authlevel..."
+		    "expecting %d, got %d",
+		    correct_desp->authlevel, sess->user->perms);
 		if (!(sess->user->perms & correct_desp->authlevel)) {
-			DPRINTF(HGD_D_WARN, 
+			DPRINTF(HGD_D_WARN,
 			    "Client '%s' is trying to invoke admin  commands",
 			    sess->cli_str);
-			hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|not_authed");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			    "err|not_authed");
 			num_bad_commands++;
 			goto clean;
 		}
