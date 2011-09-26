@@ -400,16 +400,16 @@ hgd_usage()
 {
 	printf("Usage: hgdc [opts] command [args]\n\n");
 	printf("  Commands include:\n");
-	printf("    id\t\t\tShow user account details and vote info\n");
 	printf("    hud\t\t\tHeads up display\n");
+	printf("    id\t\t\tShow user account details and vote info\n");
+	printf("    ls\t\t\tShow playlist\n\n");
 	printf("    np\t\t\tNow playing\n");
 	printf("    q <file1> [...]\tQueue a track\n");
 	printf("    vo\t\t\tVote-off current track\n");
-	printf("    ls\t\t\tShow playlist\n\n");
 
 	printf("  Admin Commands include:\n");
-	printf("    skip\t\t\tSkip the current song\n");
 	printf("    pause\t\t\tPause the current song\n");
+	printf("    skip\t\t\tSkip the current song\n");
 	printf("    user-add <user> [password]\tAdd a user\n");
 	printf("    user-del <user>\t\tRemove a user\n");
 	printf("    user-list\t\t\tList Users\n");
@@ -417,13 +417,14 @@ hgd_usage()
 	printf("    user-noadmin <user>\t\tRevoke user admin rights\n\n");
 
 	printf("  Options include:\n");
-	printf("    -a\t\t\tColours on (only in hud mode)\n");
 	printf("    -A\t\t\tColours off (only in hud mode)\n");
+	printf("    -a\t\t\tColours on (only in hud mode)\n");
 #ifdef HAVE_LIBCONFIG
 	printf("    -c\t\t\tSet config location\n");
 #endif
-	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -E\t\t\tRefuse to use encryption\n");
+	printf("    -e\t\t\tForce encryption\n");
+	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -m\t\t\tMax playlist items to show in hud mode\n");
 	printf("    -p <port>\t\tSet connection port\n");
@@ -432,7 +433,6 @@ hgd_usage()
 	printf("    -u <username>\tSet username\n");
 	printf("    -x <level>\t\tSet debug level (0-3)\n");
 	printf("    -v\t\t\tShow version and exit\n");
-	printf("    -e\t\t\tEnable encryption\n");
 }
 
 int
