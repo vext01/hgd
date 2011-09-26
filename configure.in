@@ -3,6 +3,10 @@
 AC_INIT([hgd], [0.5.0b], [vext01@gmail.com, me92@kent.ac.uk])
 AC_CONFIG_HEADERS([config.h])
 
+AC_LANG_C
+AC_PROG_MAKE_SET
+AC_HEADER_STDC
+
 ALL_TARGETS="hgdc"
 INSTALL_TARGETS="install-hgdc install-readme install-man-hgd-proto"
 
@@ -26,11 +30,18 @@ AC_ARG_WITH([taglib], AS_HELP_STRING([--without-taglib],
 
 # conditional compilation of server
 AC_ARG_ENABLE([server], AS_HELP_STRING([--disable-server],
-	    [Dont build server components (default)]))
+	    [Dont build server components]))
+AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug],
+	    [Enable debug sysmbols]))
 
-AC_LANG_C
-AC_PROG_MAKE_SET
-AC_HEADER_STDC
+# debug
+AS_IF([test "x${enable_debug}" = "xyes"], [
+	CFLAGS="${CFLAGS} -g"
+	SYMBOLS="Yes"
+], [
+	SYMBOLS="No"
+])
+
 
 AH_TEMPLATE(HAVE_LIBCONFIG, "defined if we are building with libconfig support")
 AH_TEMPLATE(HAVE_TAGLIB, "defined if we are building with taglib support")
@@ -188,6 +199,7 @@ Components to build   : ${ALL_TARGETS}
 Enabled optional deps : ${EXTERNAL_OPTIONALS_ENABLED}
 Disabled optional deps: ${EXTERNAL_OPTIONALS_DISABLED}
 Install targets       : ${INSTALL_TARGETS}
+Debug symbols         : ${SYMBOLS}
 =============================])
 
 AS_IF([test "x$have_python" != "xyes"],,
