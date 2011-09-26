@@ -883,7 +883,7 @@ hgd_cmd_user_mkadmin(struct hgd_session *sess, char **args)
 {
 	int			ret;
 
-	ret = hgd_acmd_make_admin(args);
+	ret = hgd_acmd_mkadmin(args);
 
 	if (ret == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
@@ -899,7 +899,7 @@ hgd_cmd_user_noadmin(struct hgd_session *sess, char **args)
 {
 	int			ret;
 
-	ret = hgd_acmd_rm_admin(args);
+	ret = hgd_acmd_noadmin(args);
 
 	if (ret == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
