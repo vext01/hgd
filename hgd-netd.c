@@ -910,6 +910,34 @@ hgd_cmd_user_noadmin(struct hgd_session *sess, char **args)
 	return (ret);
 }
 
+/*
+ * user|perms|has_vote?
+ *
+ * authentication has already been checked here
+ */
+int
+hgd_cmd_id(struct hgd_session *sess, char **args)
+{
+	int			 vote = -1;
+	char			*resp = NULL;
+
+	if (hgd_user_has_voted(sess->user->name, &vote) != HGD_OK) {
+		DPRINTF(HGD_D_WARN, "problem determining if voted: %s",
+		    sess->user->name);
+		return (HGD_FAIL);
+	}
+
+	xasprintf(&resp, "ok|%s|%u|%d", sess->user->name, sess->user->perms, vote);
+
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
+
+	free(resp);
+
+	return (HGD_OK);
+}
+
+
+
 /* lookup table for command handlers */
 struct hgd_cmd_despatch		cmd_despatches[] = {
 	/* cmd,		n_args,	secure,	auth,	auth_lvl,	handler_function */
@@ -917,6 +945,7 @@ struct hgd_cmd_despatch		cmd_despatches[] = {
 	{"bye",		0,	0,	0,	HGD_AUTH_NONE,	NULL},
 	{"encrypt",	0,	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt},
 	{"encrypt?",	0,	0,	0,	HGD_AUTH_NONE,	hgd_cmd_encrypt_questionmark},
+	{"id",		0,	0,	1,	HGD_AUTH_NONE,	hgd_cmd_id},
 	{"ls",		0,	1,	0,	HGD_AUTH_NONE,	hgd_cmd_playlist},
 	{"pl",		0,	1,	0,	HGD_AUTH_NONE,	hgd_cmd_playlist},
 	{"np",		0,	1,	0,	HGD_AUTH_NONE,	hgd_cmd_now_playing},
