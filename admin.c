@@ -36,6 +36,11 @@ hgd_acmd_user_add(char **args)
 
 	DPRINTF(HGD_D_INFO, "Adding user '%s'", user);
 
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
 	memset(salt, 0, HGD_SHA_SALT_SZ);
 	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
 		DPRINTF(HGD_D_ERROR, "can not generate salt");
@@ -101,10 +106,15 @@ hgd_acmd_user_list_print(char **args)
 	struct hgd_user_list *list;
 	int			 i;
 
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+	if (db == NULL)
+		return (HGD_FAIL);
+
 	list = hgd_acmd_user_list(args);
 
 	if (list == NULL) {
-		DPRINTF(HGD_D_WARN, "Get user list returned NULL");
+		/*DPRINTF(HGD_D_WARN, "Get user list returned NULL");*/
 		goto clean;
 	}
 
@@ -133,7 +143,10 @@ hgd_acmd_user_list(char **args)
 	if (db == NULL)
 		return (NULL);
 
-	return list = hgd_get_all_users();
+	if ((list = hgd_get_all_users()) == NULL) {
+		DPRINTF(HGD_D_WARN, "Failed to get userlist");
+	}
+	return list;
 }
 
 int

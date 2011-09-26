@@ -173,6 +173,7 @@ struct hgd_cmd_despatch {
 	 * be used.
 	 */
 	uint8_t			 secure;
+	uint8_t			 auth_needed;
 	uint8_t			 authlevel;
 	int			(*handler)(struct hgd_session *, char **);
 };

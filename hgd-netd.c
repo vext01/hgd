@@ -997,7 +997,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	/* if the server is *only* accepting SSL connections, a number
 	 * of commands will be out of bounds until encryption is
-	 * established.
+	 * estabished.
 	 */
 	if ((crypto_pref == HGD_CRYPTO_PREF_ALWAYS) &&
 	    (correct_desp->secure) &&
