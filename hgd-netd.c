@@ -1088,6 +1088,8 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		if (num_bad_commands >= HGD_MAX_BAD_COMMANDS) {
 			DPRINTF(HGD_D_WARN,"Client abused server, "
 			    "kicking '%s'", sess.cli_str);
+			/* laters */
+			hgd_sock_send_line(cli_fd, sess.ssl, HGD_BYE_KICK);
 			close(sess.sock_fd);
 			exit_ok = 1;
 			hgd_exit_nicely();
