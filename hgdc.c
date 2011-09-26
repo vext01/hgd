@@ -239,9 +239,9 @@ hgd_check_svr_response(char *resp, uint8_t x)
 	char			*trunc = NULL;
 
 	if (resp == NULL) {
-		DPRINTF(HGD_D_ERROR, "failed to read server response, "
-		    "did the server die?");
-		hgd_exit_nicely();
+		DPRINTF(HGD_D_ERROR, "failed to read server response");
+		err = HGD_FAIL;
+		goto clean;
 	}
 
 	len = strlen(resp);
@@ -264,6 +264,8 @@ hgd_check_svr_response(char *resp, uint8_t x)
 		err = HGD_FAIL;
 	}
 
+clean:
+	/* frees reposonse on error and exit */
 	if ((err == HGD_FAIL) && (x)) {
 		free(resp);
 		hgd_exit_nicely();
@@ -337,7 +339,7 @@ hgd_setup_socket()
 		free(host);
 		host = xstrdup(
 		    inet_ntoa( *(struct in_addr*)(he->h_addr_list[0])));
-		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
+ 		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Connecting to IP %s:%d", host, port);
@@ -398,6 +400,7 @@ hgd_usage()
 {
 	printf("Usage: hgdc [opts] command [args]\n\n");
 	printf("  Commands include:\n");
+	printf("    id\t\t\tShow user account details and vote info\n");
 	printf("    hud\t\t\tHeads up display\n");
 	printf("    np\t\t\tNow playing\n");
 	printf("    q <file1> [...]\tQueue a track\n");
@@ -1036,13 +1039,56 @@ fail:
 	return (ret);
 }
 
+int
+hgd_req_id(int n_args, char **args)
+{
+	char			*resp = NULL, *toks[4], *next, *perms_str = NULL;
+	int			 ret = HGD_FAIL, n_toks = 0;
+
+	(void) n_args;
+	(void) args;
+
+	hgd_sock_send_line(sock_fd, ssl, "id");
+	resp = next = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL)
+		goto fail;
+
+	do {
+		toks[n_toks] = xstrdup(strsep(&next, "|"));
+	} while ((n_toks++ < 4) && (next != NULL));
+
+	/* build permissions string, if we add more this changes */
+	if (atoi(toks[2]) & HGD_AUTH_ADMIN)
+		perms_str = "ADMIN";
+	else
+		perms_str = "NONE";
+
+	printf("  You are %s, permissions: %s, voted: %d\n",
+	    toks[1], perms_str, atoi(toks[3]));
+
+	while (n_toks) {
+		free(toks[n_toks - 1]);
+		n_toks--;
+	}
+
+	ret = HGD_OK;
+fail:
+	if (resp)
+		free(resp);
+
+	return (ret);
+}
+
+
+
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 /*	cmd,		n_args,	need_auth,	handler,		varargs */
+	{"id",		0,	1,		hgd_req_id,		0},
 	{"ls",		0,	0,		hgd_req_playlist,	0},
 	{"hud",		0,	0,		hgd_req_hud,		0},
 	{"vo",		0,	1,		hgd_req_vote_off,	0},
-	{"np",		0,	0,		hgd_req_np,	  0},
+	{"np",		0,	0,		hgd_req_np,		0},
 	{"q",		1,	1,		hgd_req_queue,		1},
 	/* play control */
 	{"skip",	0,	1,		hgd_req_skip,		0},
