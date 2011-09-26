@@ -68,7 +68,9 @@ respectively). If a command fails, then the
 second field indicates why. Failed commands always send a single-line reply.
 .Pp
 If the client sends three consecutive commands which all cause an error, the
-client connection is assumed to be malicious and is dropped.
+client connection is assumed to be malicious and is dropped, after sending
+an error reply
+.Sq err | Catch you later d00d!
 .Sh PROTOCOL COMMANDS
 All command arguments are separated by the pipe character,
 .Sq |
