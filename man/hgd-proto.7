@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd September 25, 2011
+.Dd September 26, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -135,6 +135,30 @@ Needs admin: No
 Asks the server if it supports encryption. A <crypto-method> of
 .Sq nocrypto
 indicates the server is incapable of supplying secure communications.
+.It id
+.Bl -dash
+.It
+Arguments: 0
+.It
+Reply type: single-line
+.It
+On success returns: ok | <username> | <permission_mask> | <voted?>
+.It
+Needs auth: Yes
+.It
+Needs admin: No
+.El
+.Pp
+Requests information about your user account.
+.Pp
+<username> is obvious.
+.Pp
+<permission_mask> is a 16-bit unsigned bit-field describing the user's
+permissions. Thus far only the low bit is used (0x1), which indicates admin
+rights. We reserve the remaining 15 bits for future use.
+.Pp
+<voted?> is a boolean field indicating whether the user has used their vote on
+the currently playing item.
 .It ls
 .Bl -dash
 .It
