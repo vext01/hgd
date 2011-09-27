@@ -211,9 +211,6 @@ main(int argc, char **argv)
 	}
 
 	hgd_register_sig_handlers();
-	state_path = xstrdup(HGD_DFL_DIR);
-	xasprintf(&mplayer_fifo_path, "%s/%s",
-	    state_path, HGD_MPLAYER_PIPE_NAME);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
 	while ((ch = getopt(argc, argv, "c:d:hvx:" "c:x:")) != -1) {
