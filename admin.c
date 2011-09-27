@@ -168,7 +168,8 @@ hgd_acmd_skip(char **args)
 int
 hgd_acmd_mkadmin(char **args)
 {
-	struct hgd_user		user;
+	struct hgd_user		user, old_user;
+	int			get_user_res;
 
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
@@ -178,6 +179,18 @@ hgd_acmd_mkadmin(char **args)
 
 	user.name = args[0];
 	user.perms = HGD_AUTH_ADMIN;
+
+	get_user_res = hgd_get_user(user.name, &old_user);
+
+	if (get_user_res == HGD_FAIL_NOUSER) {
+		DPRINTF(HGD_D_WARN, "User %s does not exist.", user.name);
+		return get_user_res;
+	} else if (old_user.perms == user.perms) {
+		printf("User %s perms not changed. Probably already an admin.\n", user.name);
+		return HGD_OK;
+	}
+
+
 	return (hgd_update_user(&user));
 }
 

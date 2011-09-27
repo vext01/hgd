@@ -31,6 +31,7 @@
 #include "hgd.h"
 #include "db.h"
 
+
 sqlite3				*db = NULL;
 char				*db_path = NULL;
 
@@ -769,6 +770,49 @@ hgd_update_user(struct hgd_user *user)
 clean:
 	sqlite3_finalize(stmt);
 	return (ret);
+}
+
+int
+hgd_get_user(char *user, struct hgd_user *result)
+{
+	int			 sql_res, res = HGD_OK;
+	sqlite3_stmt		*stmt;
+	char			*sql = "SELECT username, perms FROM users WHERE username=?";
+
+	DPRINTF(HGD_D_DEBUG, "Getting user info for '%s'", user);
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s", DERROR);
+		res = HGD_FAIL;
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		res = HGD_FAIL;
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res == SQLITE_DONE) {
+		DPRINTF(HGD_D_WARN, "User '%s', does not exist", user);
+		res = HGD_FAIL_NOUSER;
+		goto clean;
+	} else if (sql_res != SQLITE_ROW) { /* we expect exactly one row */
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		res = HGD_FAIL;
+		goto clean;
+	}
+
+	result->name = xstrdup((const char *) sqlite3_column_text(stmt, 0));
+	result->perms = sqlite3_column_int(stmt, 1);
+
+clean:
+	sqlite3_finalize(stmt);
+	return res;
 }
 
 struct hgd_user *

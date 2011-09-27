@@ -25,6 +25,9 @@
 
 #define	HGD_DB_SCHEMA_VERS	"1"
 
+#define	HGD_FAIL_NOUSER	(-2)
+#define HGD_OK_NOCHANGE (2)
+
 extern sqlite3			*db;
 extern char			*db_path;
 
@@ -55,5 +58,6 @@ int				 hgd_num_tracks_user(char *username);
 int				 hgd_make_new_db(char *db_path);
 int				 hgd_update_user(struct hgd_user *user);
 int				 hgd_user_has_voted(char *user, int *v);
+int				 hgd_get_user(char *user, struct hgd_user *result);
 
 #endif
