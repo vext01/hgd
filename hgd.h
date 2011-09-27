@@ -52,6 +52,7 @@
 #define	HGD_MAX_PROTO_TOKS	3
 #define HGD_GREET		"ok|HGD-" HGD_VERSION
 #define HGD_BYE			"ok|Catch you later d00d!"
+#define HGD_BYE_KICK		"err|Catch you later d00d!"
 
 /* SSL */
 #define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"
@@ -80,8 +81,8 @@
 #define ANSII_WHITE		(colours_on ? "\033[0m" : "")
 
 /* Authorisation levels */
-#define	HGD_AUTH_NONE			(0)
-#define HGD_AUTH_ADMIN			(1 << 0)
+#define	HGD_AUTH_NONE		(0)
+#define HGD_AUTH_ADMIN		(1 << 0)
 
 #define HGD_TERM_WIDTH		78
 

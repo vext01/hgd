@@ -303,6 +303,7 @@ hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
 	return (SQLITE_OK);
 }
 
+/* XXX make it return HGD_OK or HGD_FAIL */
 int
 hgd_get_num_votes()
 {
@@ -320,6 +321,45 @@ hgd_get_num_votes()
 
 	DPRINTF(HGD_D_DEBUG, "%d votes so far", num);
 	return (num);
+}
+
+int
+hgd_user_has_voted(char *user, int *v)
+{
+	int			 ret = HGD_FAIL;
+	int			 sql_res;
+	sqlite3_stmt		*stmt;
+	char			*sql = "SELECT user FROM votes WHERE user=?";
+
+	/* we start assuming they have not voted */
+	*v = 0;
+
+	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't prepare sql: %s",
+		    DERROR);
+		goto clean;
+	}
+
+	/* bind params */
+	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	if (sql_res != SQLITE_OK) {
+		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
+		goto clean;
+	}
+
+	sql_res = sqlite3_step(stmt);
+	if (sql_res == SQLITE_ROW) { /* if a row, they voted */
+		*v = 1;
+	} else if ((sql_res != SQLITE_ROW) && (sql_res != SQLITE_DONE)) {
+		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
+		goto clean;
+	}
+
+	ret = HGD_OK; /* everything went ok */
+clean:
+	sqlite3_finalize(stmt);
+	return (ret);
 }
 
 int

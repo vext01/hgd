@@ -119,8 +119,8 @@ struct hgd_admin_cmd admin_cmds[] = {
 	{ "pause", 0, hgd_acmd_pause },
 	{ "skip", 0, hgd_acmd_skip },
 	{ "db-init", 0, hgd_acmd_init_db },
-	{ "user-mkadmin", 1, hgd_acmd_make_admin},
-	{ "user-noadmin", 1, hgd_acmd_rm_admin},
+	{ "user-mkadmin", 1, hgd_acmd_mkadmin},
+	{ "user-noadmin", 1, hgd_acmd_noadmin},
 #if 0
 	{ "user-disable", 1, hgd_acmd_user_disable },
 	{ "user-chpw", 1, hgd_acmd_user_chpw },

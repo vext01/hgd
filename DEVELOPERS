@@ -14,19 +14,20 @@ Code Partitioning
 
 Each program has it's own source file.
 
-All database code should go in db.c. Be sure to protect these macros against SQL
-injection. This means doing sql queries the long way if the query is dynamic.
+All database code should go in db.c. Be sure to protect these macros
+against SQL injection. This means doing sql queries the long way if the
+query is dynamic.
 
 All of our macros are defined in .h files and are prefixed HGD_ other
 than in certain (generic) cases (SERROR for example).
 
-Any other common functionality should go in common.c.
-
 Debugging
 ---------
 
-Debugging is done via DPRINTF at the appropriate debug level. Generally
-speaking:
+Developer should configure with --enable-debug, so as to add debug symbols.
+
+You can print and log debug messages via DPRINTF at the appropriate
+debug level. Generally speaking:
 #define HGD_D_ERROR	- Failures which we can not recover from.
 #define HGD_D_WARN	- Warnings which we can be recovered from.
 #define HGD_D_INFO	- Info that might tbe useful at runtime.
@@ -98,19 +99,10 @@ Rolling a Release
  15. ??????
  16. PROFIT!
 
-Protocol Changes
-----------------
-
-Version 1 was never named really. At this stage HGD was small and backward
-compatibility was not being considered.
-
-Version 2 saw the addition of a password on the 'user' command.
-
-Version 3 saw a change in the response of 'q', from 'ok...' to 'ok|...'. Also
-artist and title tags are transmitted in responses to 'np' and 'ls'.
+Protocol
+--------
 
 For full protocol documentation, see the hgd-proto(1) manual page.
-
 
 Want To Contribute?
 -------------------

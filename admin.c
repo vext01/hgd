@@ -166,7 +166,7 @@ hgd_acmd_skip(char **args)
 }
 
 int
-hgd_acmd_make_admin(char **args)
+hgd_acmd_mkadmin(char **args)
 {
 	struct hgd_user		user;
 
@@ -182,13 +182,13 @@ hgd_acmd_make_admin(char **args)
 }
 
 int
-hgd_acmd_rm_admin(char **args)
+hgd_acmd_noadmin(char **args)
 {
 	struct hgd_user user;
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
 	if (db == NULL)
-		return (NULL);
+		return (HGD_FAIL);
 
 	user.name = args[0];
 	user.perms = HGD_AUTH_NONE;

@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd September 21, 2011
+.Dd September 26, 2011
 .Dt HGDC 1
 .Os
 .Sh NAME
@@ -77,6 +77,8 @@ The commands are as follows:
 .It hud
 Enter `heads up display mode'; shows the playlist updating every second.
 A persistent server connection is used.
+.It id
+Display information about your user account, including permissions and votes.
 .It ls
 Show playlist.
 .It np
@@ -99,9 +101,9 @@ Add a new user to the server.
 Remove <user> from the server.
 .It users-list
 List all users registered on the server
-.It user-mk-admin <user>
+.It user-mkadmin <user>
 Make <user> and admin allowing them to use these admin commands.
-.It user-rm-admin <user>
+.It user-noadmin <user>
 Remove <user>'s admin rights.
 .El
 .Sh A NOTE ABOUT ENCRYPTION
