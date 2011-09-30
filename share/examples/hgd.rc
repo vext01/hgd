@@ -35,7 +35,7 @@ netd : {
 		#cert = "/etc/hgd/certificate.crt";
 	};
 	
-	## Number of votes needed to vote of a song
+	## voteoff_count should be exceeded to vote a song off
 	#voteoff_count = 3L;
 	
 	## Port server should listen on
