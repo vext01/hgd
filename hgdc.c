@@ -1299,7 +1299,7 @@ main(int argc, char **argv)
 				num_config++;
 				DPRINTF(HGD_D_DEBUG, "added config %d %s",
 				    num_config, optarg);
-				config_path[num_config] = optarg;
+				config_path[num_config] = xstrdup(optarg);
 			} else {
 				DPRINTF(HGD_D_WARN,
 				    "Too many config files specified");
