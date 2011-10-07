@@ -852,6 +852,8 @@ hgd_cmd_pause(struct hgd_session *sess, char **unused)
 
 	if (ret == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	} else if (ret == HGD_ERR_MPLAYER_NOTPLAYING) {
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|not playing");
 	} else {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|credentials");
 	}

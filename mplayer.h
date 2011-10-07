@@ -20,6 +20,8 @@
 
 #include "hgd.h"
 
+#define HGD_ERR_MPLAYER_NOTPLAYING (-1)
+#define HGD_ERR_MPLAYER_PIPE (-2)
 
 extern char		*mplayer_fifo_path;
 
