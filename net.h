@@ -19,7 +19,7 @@
 #define __NET_H
 
 #define HGD_PROTO_VERSION_MAJOR	9
-#define HGD_PROTO_VERSION_MINOR 2
+#define HGD_PROTO_VERSION_MINOR 0 
 
 /* networking */
 #define HGD_DFL_PORT		6633
