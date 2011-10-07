@@ -256,6 +256,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 {
 	struct hgd_playlist_item	 playing;
 	char				*reply;
+	int				 num_votes;
 
 	(void) args; /* silence compiler */
 
@@ -269,14 +270,16 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	if (playing.filename == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|0");
 	} else {
+		num_votes = hgd_get_num_votes();
+
 		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s|"
-		    "%s|%s|%d|%d|%d|%d|%d", /* added in 0.5 */
+		    "%s|%s|%d|%d|%d|%d|%d|%d", /* added in 0.5 */
 		    playing.id, playing.filename + strlen(HGD_UNIQ_FILE_PFX),
 		    playing.tags.artist, playing.tags.title, playing.user,
 		    playing.tags.album, playing.tags.genre,
 		    playing.tags.duration, playing.tags.bitrate,
 		    playing.tags.samplerate, playing.tags.channels,
-		    playing.tags.year);
+		    playing.tags.year, (req_votes - num_votes));
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
 
 		free(reply);
@@ -483,7 +486,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 {
 	char			*resp;
 	struct hgd_playlist	 list;
-	unsigned int		 i;
+	unsigned int		 i, num_votes;
 
 	/* shhh */
 	args = args;
@@ -498,8 +501,11 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 	free(resp);
 
+	num_votes = hgd_get_num_votes();
+
+
 	for (i = 0; i < list.n_items; i++) {
-		xasprintf(&resp, "%d|%s|%s|%s|%s|%s|%s|%d|%d|%d|%d|%d",
+		xasprintf(&resp, "%d|%s|%s|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d",
 		    list.items[i]->id,
 		    list.items[i]->filename + strlen(HGD_UNIQ_FILE_PFX),
 		    list.items[i]->tags.artist,
@@ -511,7 +517,9 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 		    list.items[i]->tags.bitrate,
 		    list.items[i]->tags.samplerate,
 		    list.items[i]->tags.channels,
-		    list.items[i]->tags.year);
+		    list.items[i]->tags.year,
+		    (i == 0 ? (req_votes - num_votes) : req_votes)
+		);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 		DPRINTF(HGD_D_DEBUG, "%s\n", resp);
 		free(resp);

@@ -581,7 +581,7 @@ hgd_req_queue(int n_args, char **args)
 	return (ret);
 }
 
-#define HGD_NUM_TRACK_FIELDS		12
+#define HGD_NUM_TRACK_FIELDS		13
 void
 hgd_print_track(char *resp, uint8_t first)
 {
@@ -669,6 +669,10 @@ hgd_print_track(char *resp, uint8_t first)
 			printf("   %s channels\n", tokens[10]);
 		else
 			printf("   %s channels\n", "?");
+
+		/* vote off info */
+		printf("   Votes needed to skip:    %s\n", atoi(tokens[12]) == 0 ? "none" : tokens[12]);
+
 
 skip_full:
 		printf("%s", ANSII_WHITE);

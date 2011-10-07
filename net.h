@@ -18,7 +18,7 @@
 #ifndef __NET_H
 #define __NET_H
 
-#define HGD_PROTO_VERSION_MAJOR	8
+#define HGD_PROTO_VERSION_MAJOR	9
 #define HGD_PROTO_VERSION_MINOR 2
 
 /* networking */
