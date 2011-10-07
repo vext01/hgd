@@ -29,7 +29,6 @@ To build, you will need:
  * OpenSSL libs and headers.
  * LibBSD (linux only) libs and headers.
  * Mplayer (for the server)
- * autoconf (git checkouts only)
 
 And optionally:
 
@@ -40,6 +39,7 @@ And optionally:
 If you checked out from git, you will also need:
  * autoconf
  * automake (even though we don't use it)
+ * libtool (even though we don't use it)
 
 On ubuntu (and debian?) you can do something like:
 sudo apt-get install libbsd0 libbsd-dev mplayer python2.7 python2.7-dev	\
