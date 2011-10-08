@@ -178,8 +178,14 @@ from the server. Each line returned represents one track in the playlist; the
 line is of the form:
 .Pp
 <track-id> | <filename> | <artist> | <title> | <user> | <album> | <genre>
-| <duration> | <bitrate> | <samplerate> | <channels> | <year>
+| <duration> | <bitrate> | <samplerate> | <channels> | <year> | <votesneeded>
+| <voted?>
 .Pp
+<votesneed> is the number of votes now needed to skip the song.
+.Pp
+<voted> applies
+only to the currently playing song and is 1 if the currently logged in user
+has voted the song off. It is 0 if no user is authenticated.
 In the event of missing tag information, string fields (artist, title, ...)
 are blank and unknown integer fields (samplerate, duration, ...) are set to 0.
 .It np
@@ -191,7 +197,9 @@ Reply type: single-line
 .It
 On success returns:
 ok | <playing?> [| <track-id> | <filename> | <artist> | <title> | <user> |
-<album> | <genre> | <duration> | <bitrate> | <samplerate> | <channels> | <year>]
+<album> | <genre> | <duration> | <bitrate> | <samplerate> | <channels> | <year>
+| <votesneeded> | <voted?>]
+.Pp
 .It
 Needs auth: No
 .It
@@ -199,7 +207,15 @@ Needs admin: No
 .El
 .Pp
 Get the currently playing item, if any. If <playing?> = 0, then nothing
-is playing and therefore, no further information is available. In the
+is playing and therefore, no further information is available. 
+.Pp
+<votesneed> is the number of votes now needed to skip the song.
+.Pp
+<voted> is 1 if 
+the currently logged in user has voted the song off. It is 0 if no user is 
+authenticated.
+.Pp
+In the
 event of missing tag information, string fields (artist, title, ...) are
 blank and unknown integer fields (samplerate, duration, ...) are set to
 0.
