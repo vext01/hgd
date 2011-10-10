@@ -106,7 +106,6 @@ hgd_play_loop(void)
 			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
 			    track.filename);
 
-			hgd_clear_votes();
 			hgd_play_track(&track, purge_finished_fs, purge_finished_db);
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
@@ -116,6 +115,7 @@ hgd_play_loop(void)
 			sleep(1);
 		}
 		hgd_free_playlist_item(&track);
+                hgd_clear_votes();
 	}
 }
 
