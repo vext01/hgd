@@ -15,41 +15,38 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* Needed first so we can optionaly include libs */
-#include "config.h"
-
-#ifdef HAVE_LIBCONFIG
-#include "cfg.h"
-#endif /* HAVE_LIBCONFIG */
-
 #define _GNU_SOURCE	/* linux */
+
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <err.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
 #include <libgen.h>
-#ifdef HAVE_LIBCONFIG
-#include <libconfig.h>
-#endif
 
 #ifdef __linux__
 #include <bsd/readpassphrase.h>
 #else
 #include <readpassphrase.h>
 #endif
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
 
+#include "config.h"
 #include "hgd.h"
 #include "net.h"
+#ifdef HAVE_LIBCONFIG
+#include "cfg.h"
+#endif
 
 const char		*hgd_component = "hgdc";
 

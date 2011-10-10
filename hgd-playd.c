@@ -15,38 +15,35 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "config.h"
-#include "cfg.h"
+#include <sys/types.h>
+#include <sys/wait.h>
 
+#include "config.h"
 #ifdef HAVE_PYTHON
-#include <Python.h> /* defines _GNU_SOURCE */
+#include <Python.h> /* defines _GNU_SOURCE comes before stdio.h */
 #else
 #define _GNU_SOURCE
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
 #include <err.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
-
-#ifdef HAVE_LIBCONFIG
-#include <libconfig.h>
-#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <sqlite3.h>
 
+#ifdef HAVE_LIBCONFIG
+#include "cfg.h"
+#endif
 #ifdef HAVE_PYTHON
 #include "py.h"
 #endif
-
-#include "hgd.h"
 #include "db.h"
+#include "hgd.h"
 #include "mplayer.h"
 
 const char			*hgd_component = "hgd-playd";

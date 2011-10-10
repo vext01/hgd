@@ -15,25 +15,23 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "config.h"
-
 /* must be outside HAVE_PYTHON */
 const char			*hgd_component = "hgd-mk-pydoc";
 
-#include <Python.h> /* defines _GNU_SOURCE */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <err.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <err.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <Python.h> /* defines _GNU_SOURCE  comes before stdio.h */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
+#include "config.h"
 #include "py.h"
-
 #include "hgd.h"
 
 /*

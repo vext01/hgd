@@ -18,6 +18,8 @@
 #ifndef __PY_H
 #define __PY_H
 
+#include <Python.h>
+
 #include "hgd.h"
 
 #define PRINT_PY_ERROR()	do { \

@@ -17,12 +17,12 @@
 
 #include "config.h"
 
-#ifdef HAVE_LIBCONFIG
+#ifdef HAVE_LIBCONFIG /* entire file */
+
+#include <limits.h>
 
 #include "cfg.h"
 #include "hgd.h"
-
-#include <limits.h>
 
 int
 hgd_load_config(config_t *cf, char **config_locations)

@@ -15,10 +15,11 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "admin.h"
 
 #include <sqlite3.h>
 #include <openssl/rand.h>
+
+#include "admin.h"
 #include "hgd.h"
 #include "db.h"
 #include "mplayer.h"
