@@ -15,29 +15,26 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "config.h"
-#ifdef HAVE_PYTHON
-#include <Python.h> /* defines _GNU_SOURCE */
-#else
-#define _GNU_SOURCE
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <err.h>
-#include <errno.h>
-#include <signal.h>
-#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "config.h"
+#ifdef HAVE_PYTHON
+#include "py.h" /* defines _GNU_SOURCE comes before stdio.h */
+#else
+#define _GNU_SOURCE
+#endif
+
+#include <err.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "hgd.h"
 #include "mplayer.h"
-#ifdef HAVE_PYTHON
-#include "py.h"
-#endif
 #include "db.h"
 
 char			*mplayer_fifo_path = 0;

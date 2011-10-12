@@ -15,47 +15,43 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "config.h"
-#include "cfg.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/socket.h>
 
+
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#include "config.h"
 #ifdef HAVE_PYTHON
-#include <Python.h> /* defines _GNU_SOURCE */
+#include <Python.h> /* defines _GNU_SOURCE comes before stdio.h */
 #include "py.h"
 #else
 #define _GNU_SOURCE
 #endif
 
+#include <err.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <libgen.h>
+#include <netdb.h>
+#include <poll.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <err.h>
 #include <unistd.h>
-#include <signal.h>
-#include <libgen.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+
 #ifdef HAVE_LIBCONFIG
-#include <libconfig.h>
+#include "cfg.h"
 #endif
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <poll.h>
-#include <sys/wait.h>
-
-#include "hgd.h"
-#include "mplayer.h"
 #include "admin.h"
 #include "db.h"
+#include "hgd.h"
+#include "mplayer.h"
 #include "net.h"
-
 #include <openssl/ssl.h>
 #ifdef HAVE_TAGLIB
 #include <tag_c.h>

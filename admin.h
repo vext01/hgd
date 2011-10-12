@@ -18,15 +18,14 @@
 #ifndef HGD_ADMIN_H
 #define HGD_ADMIN_H
 
-
-int hgd_acmd_user_add(char **args);
-int hgd_acmd_user_add_prompt(char **args);
-int hgd_acmd_user_del(char **args);
-struct hgd_user_list* hgd_acmd_user_list(char **args);
-int hgd_acmd_user_list_print(char **args);
-int hgd_acmd_pause(char **args);
-int hgd_acmd_skip(char **args);
-int hgd_acmd_mkadmin(char **args);
-int hgd_acmd_noadmin(char **args);
+int			 hgd_acmd_user_add(char **args);
+int			 hgd_acmd_user_add_prompt(char **args);
+int			 hgd_acmd_user_del(char **args);
+struct hgd_user_list	*hgd_acmd_user_list(char **args);
+int			 hgd_acmd_user_list_print(char **args);
+int			 hgd_acmd_pause(char **args);
+int			 hgd_acmd_skip(char **args);
+int			 hgd_acmd_mkadmin(char **args);
+int			 hgd_acmd_noadmin(char **args);
 
 #endif

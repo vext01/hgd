@@ -16,25 +16,24 @@
  */
 
 #define _GNU_SOURCE	/* linux */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <err.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
-
 #include <sys/socket.h>
+
+#include <err.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <sqlite3.h>
 
 #include "hgd.h"
 #include "db.h"
 
-
 sqlite3				*db = NULL;
 char				*db_path = NULL;
-
 
 int
 hgd_get_db_vers_cb(void *arg, int argc, char **data, char **names)

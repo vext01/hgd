@@ -19,12 +19,14 @@
 
 #ifdef HAVE_PYTHON
 
-#include <Python.h> /* defines _GNU_SOURCE */
-#include <structmember.h>
+#include <sys/types.h>
+
+#include <Python.h> /* defines _GNU_SOURCE comes before stdio.h */
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <dirent.h>
+
+#include <structmember.h>
 
 #include "hgd.h"
 #include "py.h"

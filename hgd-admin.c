@@ -17,31 +17,27 @@
 
 #define _GNU_SOURCE	/* linux */
 
-#include "config.h"
-
-#ifdef HAVE_LIBCONFIG
-#include "cfg.h"
-#endif /* HAVE_LIBCONFIG */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <err.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_LIBCONFIG
-#include <libconfig.h>
-#endif
+#include <err.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include <sqlite3.h>
 #include <openssl/rand.h>
 
+#include "config.h"
 #include "hgd.h"
+#ifdef HAVE_LIBCONFIG
+#include "cfg.h"
+#endif
 #include "db.h"
-#include "mplayer.h"
 #include "admin.h"
+#include "mplayer.h"
 
 const char			*hgd_component = "hgd-admin";
 

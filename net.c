@@ -15,16 +15,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define _GNU_SOURCE	/* linux */
-
-#include <stdio.h>
-#include <errno.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <poll.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
+#define _GNU_SOURCE	/* linux */
+#include <errno.h>
+#include <poll.h>
+#include <stdio.h>
 
 #include <openssl/ssl.h>
 
