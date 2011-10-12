@@ -109,13 +109,14 @@ hgd_play_loop(void)
 			hgd_play_track(&track, purge_finished_fs, purge_finished_db);
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
+			hgd_clear_votes();
 #ifdef HAVE_PYTHON
 			hgd_execute_py_hook("nothing_to_play");
 #endif
 			sleep(1);
 		}
 		hgd_free_playlist_item(&track);
-                hgd_clear_votes();
+		hgd_clear_votes();
 	}
 }
 
