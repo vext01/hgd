@@ -18,8 +18,8 @@
 #ifndef __NET_H
 #define __NET_H
 
-#define HGD_PROTO_VERSION_MAJOR	11
-#define HGD_PROTO_VERSION_MINOR 0 
+#define HGD_PROTO_VERSION_MAJOR	12
+#define HGD_PROTO_VERSION_MINOR 0
 
 /* networking */
 #define HGD_DFL_PORT		6633
@@ -31,8 +31,27 @@
 #define HGD_BINARY_CHUNK	4096
 #define HGD_BINARY_RECV_SZ	16384
 #define	HGD_MAX_PROTO_TOKS	3
-#define HGD_GREET		"ok|HGD-" HGD_VERSION
-#define HGD_BYE			"ok|Catch you later d00d!"
+
+/*
+ * hgd-netd error, hello and goodbye responses.
+ * If these change, major bump the network protocol.
+ */
+#define HGD_RESP_O_GREET	"HGD-" HGD_VERSION
+#define HGD_RESP_O_BYE		"Catch you later d00d!"
+
+#define HGD_RESP_E_INT		"E_INT"		/* Internal error */
+#define HGD_RESP_E_DENY		"E_DENY"	/* Access denied */
+#define HGD_RESP_E_FLSIZE	"E_FLSIZE"	/* File size invalid */
+#define HGD_RESP_E_FLOOD	"E_FLOOD"	/* Flood protect triggered */
+#define HGD_RESP_E_NOPLAY	"E_NOPLAY"	/* No track is playing */
+#define HGD_RESP_E_WRTRK	"E_WRTRK"	/* Wrong track */
+#define HGD_RESP_E_DUPVOTE	"E_DUPVOTE"	/* Duplicate vote */
+#define HGD_RESP_E_SSLAGN	"E_SSLAGN"	/* Duplicate SSL negotiation */
+#define HGD_RESP_E_SSLNOAVAIL	"E_SSLNOAVAIL"	/* SSL not available */
+#define HGD_RESP_E_INVCMD	"E_INVCMD"	/* Invalid command */
+#define HGD_RESP_E_SSLREQ	"E_SSLREQ"	/* SSL required */
+#define HGD_RESP_E_SHTDWN	"E_SHTDWN"	/* Server is gong down */
+#define HGD_RESP_E_KICK		"E_KICK"	/* Client misbehaving */
 
 /* SSL */
 #define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"

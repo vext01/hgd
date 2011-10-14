@@ -47,9 +47,7 @@ Client sends a command and optionally arguments separated by pipe characters.
 Server sends either a single- or multi-line reply indicating
 success/failure and optionally some data.
 .It
-Goto 1 (unless the client sent a
-.Sq bye
-).
+Goto 1 (unless the connection is terminated for any reason)
 .El
 .Pp
 Clients must be aware which commands return which kind of reply.
@@ -64,13 +62,18 @@ succeeded or failed (
 .Sq ok
 and
 .Sq err
-respectively). If a command fails, then the
-second field indicates why. Failed commands always send a single-line reply.
+respectively). If a command fails, then the second field is an error
+code mnemonic which indicates the nature of the failure (for a list of
+error mnemonics, see net.h). Failed commands always send a single-line
+reply.
 .Pp
-If the client sends three consecutive commands which all cause an error, the
-client connection is assumed to be malicious and is dropped, after sending
-an error reply
-.Sq err | Catch you later d00d!
+If the client sends three consecutive commands which all return an error, the
+client connection is assumed to be malicious; an error is sent and the
+connection is dropped.
+.Pp
+Sometimes the server will send an shutdown error (E_SHTDWN) in response to a
+command; this happens for example, when the server is sent a SIGHUP. Clients
+should be aware that this response can happen in response to any command.
 .Sh PROTOCOL COMMANDS
 All command arguments are separated by the pipe character,
 .Sq |
