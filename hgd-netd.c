@@ -253,6 +253,7 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	struct hgd_playlist_item	 playing;
 	char				*reply;
 	int				 num_votes;
+	int				 voted;
 
 	(void) args; /* silence compiler */
 
@@ -268,14 +269,27 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	} else {
 		num_votes = hgd_get_num_votes();
 
+
+		if (sess->user != NULL) {
+			if (hgd_user_has_voted(sess->user->name, &voted) != HGD_OK) {
+				DPRINTF(HGD_D_WARN, "problem determining if voted: %s",
+				    sess->user->name);
+				return (HGD_FAIL);
+			}
+		}
+		else {
+			voted = 0;
+		}
+
 		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s|"
-		    "%s|%s|%d|%d|%d|%d|%d|%d", /* added in 0.5 */
+		    "%s|%s|%d|%d|%d|%d|%d|%d|%d", /* added in 0.5 */
 		    playing.id, playing.filename + strlen(HGD_UNIQ_FILE_PFX),
 		    playing.tags.artist, playing.tags.title, playing.user,
 		    playing.tags.album, playing.tags.genre,
 		    playing.tags.duration, playing.tags.bitrate,
 		    playing.tags.samplerate, playing.tags.channels,
-		    playing.tags.year, (req_votes - num_votes));
+		    playing.tags.year, (req_votes - num_votes),
+		    voted);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
 
 		free(reply);
@@ -483,6 +497,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	char			*resp;
 	struct hgd_playlist	 list;
 	unsigned int		 i, num_votes;
+	int			 voted = 0;
 
 	/* shhh */
 	args = args;
@@ -499,9 +514,19 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 
 	num_votes = hgd_get_num_votes();
 
+	if (sess->user != NULL) {
+		if (hgd_user_has_voted(sess->user->name, &voted) != HGD_OK) {
+			DPRINTF(HGD_D_WARN, "problem determining if voted: %s",
+			    sess->user->name);
+			return (HGD_FAIL);
+		}
+	}
+	else {
+		voted = 0;
+	}
 
 	for (i = 0; i < list.n_items; i++) {
-		xasprintf(&resp, "%d|%s|%s|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d",
+		xasprintf(&resp, "%d|%s|%s|%s|%s|%s|%s|%d|%d|%d|%d|%d|%d|%d",
 		    list.items[i]->id,
 		    list.items[i]->filename + strlen(HGD_UNIQ_FILE_PFX),
 		    list.items[i]->tags.artist,
@@ -514,7 +539,8 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 		    list.items[i]->tags.samplerate,
 		    list.items[i]->tags.channels,
 		    list.items[i]->tags.year,
-		    (i == 0 ? (req_votes - num_votes) : req_votes)
+		    (i == 0 ? (req_votes - num_votes) : req_votes),
+		    (i == 0 ? voted : 0)
 		);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 		DPRINTF(HGD_D_DEBUG, "%s\n", resp);
