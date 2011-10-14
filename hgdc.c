@@ -578,11 +578,11 @@ hgd_req_queue(int n_args, char **args)
 	return (ret);
 }
 
-#define HGD_NUM_TRACK_FIELDS		13
-void
+#define HGD_NUM_TRACK_FIELDS		14
+int
 hgd_print_track(char *resp, uint8_t first)
 {
-	int			n_toks = 0, i;
+	int			n_toks = 0, i, ret = HGD_OK;
 	char			*tokens[HGD_NUM_TRACK_FIELDS];
 
 	do {
@@ -668,17 +668,36 @@ hgd_print_track(char *resp, uint8_t first)
 			printf("   %s channels\n", "?");
 
 		/* vote off info */
-		printf("   Votes needed to skip:    %s\n", atoi(tokens[12]) == 0 ? "none" : tokens[12]);
+		printf("   Votes needed to skip:    %s\n",
+		    atoi(tokens[12]) == 0 ? "none" : tokens[12]);
+
+		switch (atoi(tokens[13])) {
+		case 0:
+			printf("   You may vote off this track.\n");
+			break;
+		case 1:
+			printf("   You HAVE voted-off this track.\n");
+			break;
+		case -1:
+			printf("   Could not auhtenticate. Log in to enable vote-off functionality.\n");
+			break;
+		default:
+			DPRINTF(HGD_D_ERROR, "Bogus 'has_voted' field");
+			ret = HGD_FAIL;
+		};
 
 
 skip_full:
 		printf("%s", ANSII_WHITE);
 	} else {
 		DPRINTF(HGD_D_ERROR, "Wrong number of tokens from server");
+		ret = HGD_FAIL;
 	}
 
 	for (i = 0; i < n_toks; i ++)
 		free(tokens[i]);
+
+	return (ret);
 }
 
 void
@@ -720,6 +739,13 @@ hgd_req_playlist(int n_args, char **args)
 
 	(void) args;
 	(void) n_args;
+
+	/*
+	 * we try to log in to get info about vote-off. If it fails,
+	 * so be it. We just won't show any vote info for the user.
+	 */
+	if (!authenticated)
+		hgd_client_login(sock_fd, ssl, user);
 
 	hgd_sock_send_line(sock_fd, ssl, "ls");
 	resp = hgd_sock_recv_line(sock_fd, ssl);
@@ -1006,6 +1032,13 @@ hgd_req_np(int n_args, char **args)
 
 	(void) n_args;
 	(void) args;
+
+	/*
+	 * we try to log in to get info about vote-off. If it fails,
+	 * so be it. We just won't show any vote info for the user.
+	 */
+	if (!authenticated)
+		hgd_client_login(sock_fd, ssl, user);
 
 	hgd_sock_send_line(sock_fd, ssl, "np");
 	resp = hgd_sock_recv_line(sock_fd, ssl);

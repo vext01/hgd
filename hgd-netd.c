@@ -269,17 +269,14 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	} else {
 		num_votes = hgd_get_num_votes();
 
-
 		if (sess->user != NULL) {
 			if (hgd_user_has_voted(sess->user->name, &voted) != HGD_OK) {
 				DPRINTF(HGD_D_WARN, "problem determining if voted: %s",
 				    sess->user->name);
 				return (HGD_FAIL);
 			}
-		}
-		else {
-			voted = 0;
-		}
+		} else
+			voted = -1;
 
 		xasprintf(&reply, "ok|1|%d|%s|%s|%s|%s|"
 		    "%s|%s|%d|%d|%d|%d|%d|%d|%d", /* added in 0.5 */
@@ -522,7 +519,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 		}
 	}
 	else {
-		voted = 0;
+		voted = -1;
 	}
 
 	for (i = 0; i < list.n_items; i++) {
