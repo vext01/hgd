@@ -66,11 +66,17 @@ When you add a command line switch, update the manual and don't forget to bump
 the .Dd line too. The format of .Dd is 'Month DD, YYYY'. If you are on OpenBSD,
 lint the manual using 'mandoc -Tlint'.
 
-Misc
-----
+Network and Database Bumps
+--------------------------
 
-If you break backward compatibility in the network protocol, then you must bump
-HGD_PROTO_VERSION in hgd.h.
+If you break backward compatibility in the network protocol, then you
+must bump HGD_PROTO_VERSION in hgd.h.  If you add a new command to the
+network protocol, bump the minor version instead.
+
+If for any reason you change the database schema, you must bump the
+HGD_DB_SCHEMA_VERS in db.h.
+
+For full protocol documentation, see the hgd-proto(1) manual page.
 
 Rolling a Release
 -----------------
@@ -93,16 +99,15 @@ Rolling a Release
  14.  Generate the configure script (autogen.sh)
  15.  Tar it up the whole dir as hgd-x.x.x.tar.gz (not .tgz)
  16.  Upload it to github.
+ 17.  Notify packagers:
+	* Edd Barrett	- OpenBSD (already knows, main hgd dev)
+	* Martin Ellis	- Arch Linux (Again, he knows)
+	* (We need to find a debian dev)
 
  Optionally:
  14. Send notification to reddit.com/r/software ;)
  15. ??????
  16. PROFIT!
-
-Protocol
---------
-
-For full protocol documentation, see the hgd-proto(1) manual page.
 
 Want To Contribute?
 -------------------
@@ -117,4 +122,3 @@ on source files you have changed and also add yourself to version() in
 common.c.
 
 Plain diffs can also be accepted via email (vext01 at gmail dot com).
-
