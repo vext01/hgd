@@ -641,7 +641,6 @@ hgd_clear_votes()
 	char			*query = "DELETE FROM votes;";
 	int			sql_res;
 
-	/* mark it as playing in the database */
 	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
@@ -675,13 +674,13 @@ hgd_clear_playlist()
 	char			*query = "DELETE FROM playlist;";
 	int			sql_res;
 
-	/* mark it as playing in the database */
 	sql_res = sqlite3_exec(db, query, NULL, NULL, NULL);
 
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't clear playlist");
 		return (HGD_FAIL);
 	}
+	hgd_clear_votes();
 
 	return (HGD_OK);
 }

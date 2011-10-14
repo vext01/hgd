@@ -105,6 +105,7 @@ hgd_play_loop(void)
 
 			hgd_clear_votes();
 			hgd_play_track(&track, purge_finished_fs, purge_finished_db);
+			hgd_clear_votes();
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
 #ifdef HAVE_PYTHON
