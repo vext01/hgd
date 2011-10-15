@@ -169,30 +169,41 @@ hgd_acmd_skip(char **args)
 int
 hgd_acmd_mkadmin(char **args)
 {
-	struct hgd_user		user, old_user;
-	int			get_user_res;
+	struct hgd_user		user;
+	int			ret = HGD_FAIL, new_perms = 0;
+
+	memset(&user, 0, sizeof(struct hgd_user));
 
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
 
 	if (db == NULL)
-		return (HGD_FAIL);
+		goto clean;
 
-	user.name = args[0];
-	user.perms = HGD_AUTH_ADMIN;
-
-	get_user_res = hgd_get_user(user.name, &old_user);
-
-	if (get_user_res == HGD_FAIL_NOUSER) {
-		DPRINTF(HGD_D_WARN, "User %s does not exist.", user.name);
-		return get_user_res;
-	} else if (old_user.perms == user.perms) {
-		printf("User %s perms not changed. Probably already an admin.\n", user.name);
-		return HGD_OK;
+	if (hgd_get_user(args[0], &user) == HGD_FAIL_NOUSER) {
+		DPRINTF(HGD_D_ERROR, "User %s does not exist.", user.name);
+		goto clean;
 	}
 
+	new_perms = user.perms | HGD_AUTH_ADMIN;
+	if (new_perms == user.perms) {
+		DPRINTF(HGD_D_WARN, "Permissions unchanged.");
+		ret = HGD_OK; /* but that is ok ;) */
+		goto clean;
+	}
 
-	return (hgd_update_user(&user));
+	if (hgd_update_user(&user) != HGD_OK)
+		goto clean;
+
+	ret = HGD_OK;
+
+clean:
+	if (user.name) {
+		printf("user = %s\n", user.name);
+		free(user.name);
+	}
+
+	return (ret);
 }
 
 int

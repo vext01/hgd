@@ -770,6 +770,11 @@ clean:
 	return (ret);
 }
 
+/*
+ * get a user account and return
+ *
+ * caller must free dynamic fields
+ */
 int
 hgd_get_user(char *user, struct hgd_user *result)
 {
