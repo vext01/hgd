@@ -247,6 +247,8 @@ hgd_cfg_debug(config_t *cf, char* service, int8_t *debug)
 		*debug = tmp_hgd_debug;
 		DPRINTF(HGD_D_DEBUG, "Set debug level to %d", *debug);
 	}
+
+	free(lookup);
 }
 
 void
