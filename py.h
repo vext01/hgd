@@ -18,6 +18,7 @@
 #ifndef __PY_H
 #define __PY_H
 
+#undef _POSIX_C_SOURCE /* crappy hack for debian python */
 #include <Python.h>
 
 #include "hgd.h"

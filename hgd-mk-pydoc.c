@@ -24,6 +24,7 @@ const char			*hgd_component = "hgd-mk-pydoc";
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#undef _POSIX_C_SOURCE /* crappy hack for debian python */
 #include <Python.h> /* defines _GNU_SOURCE  comes before stdio.h */
 #include <stdio.h>
 #include <stdlib.h>

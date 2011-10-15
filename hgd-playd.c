@@ -20,6 +20,7 @@
 
 #include "config.h"
 #ifdef HAVE_PYTHON
+#undef _POSIX_C_SOURCE /* crappy hack for debian python */
 #include <Python.h> /* defines _GNU_SOURCE comes before stdio.h */
 #else
 #define _GNU_SOURCE

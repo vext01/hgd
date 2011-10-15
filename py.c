@@ -21,6 +21,7 @@
 
 #include <sys/types.h>
 
+#undef _POSIX_C_SOURCE /* crappy hack for debian python */
 #include <Python.h> /* defines _GNU_SOURCE comes before stdio.h */
 #include <dirent.h>
 #include <stdio.h>
