@@ -198,10 +198,8 @@ hgd_acmd_mkadmin(char **args)
 	ret = HGD_OK;
 
 clean:
-	if (user.name) {
-		printf("user = %s\n", user.name);
+	if (user.name)
 		free(user.name);
-	}
 
 	return (ret);
 }
