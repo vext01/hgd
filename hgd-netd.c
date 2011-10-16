@@ -852,7 +852,7 @@ hgd_cmd_user_list(struct hgd_session *sess, char **args)
 {
 	struct hgd_user_list	*list;
 	int			 i, ret = HGD_FAIL;
-	char			*msg;
+	char			*msg, *msg1 = NULL;
 
 	(void) sess;
 
@@ -867,8 +867,11 @@ hgd_cmd_user_list(struct hgd_session *sess, char **args)
 	free(msg);
 
 	for (i = 0; i < list->n_users; i++) {
+		xasprintf(&msg1, "%s|%d",
+		    list->users[i]->name, list->users[i]->perms);
 		hgd_sock_send_line(
-		    sess->sock_fd, sess->ssl, list->users[i]->name);
+		    sess->sock_fd, sess->ssl, msg1);
+		free(msg1);
 	}
 
 	ret = HGD_OK;
