@@ -104,49 +104,51 @@ int
 hgd_acmd_user_list_print(char **args)
 {
 	struct hgd_user_list *list;
-	int			 i;
+	int			 i, ret = HGD_FAIL;
 
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
+
 	if (db == NULL)
-		return (HGD_FAIL);
-
-	list = hgd_acmd_user_list(args);
-
-	if (list == NULL) {
-		/*DPRINTF(HGD_D_WARN, "Get user list returned NULL");*/
 		goto clean;
+
+	if (hgd_user_list(&list) != HGD_OK)
+		goto clean;
+
+	for (i = 0; i < list->n_users; i++) {
+		printf("%s (admin=%d)\n",
+		    list->users[i]->name, list->users[i]->perms);
 	}
 
-	for (i = 0; i < list->n_users; i++)
-		printf("%s (admin=%d)\n", list->users[i]->name, list->users[i]->perms);
-
+	ret = HGD_OK;
 clean:
 	if (list != NULL) {
 		hgd_free_user_list(list);
 		free(list);
 	}
 
-	return (HGD_OK);
+	return (ret);
 }
 
-
-struct hgd_user_list*
-hgd_acmd_user_list(char **args)
+int
+hgd_user_list(struct hgd_user_list **list)
 {
-	struct hgd_user_list	*list;
-
-	(void) args;
+	int		ret = HGD_FAIL;
 
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (NULL);
 
-	if ((list = hgd_get_all_users()) == NULL) {
+	if (db == NULL)
+		goto clean;
+
+	if ((*list = hgd_get_all_users()) == NULL) {
 		DPRINTF(HGD_D_WARN, "Failed to get userlist");
+		goto clean;
 	}
-	return list;
+
+	ret = HGD_OK;
+clean:
+	return (ret);
 }
 
 /*
