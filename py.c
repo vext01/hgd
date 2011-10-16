@@ -237,7 +237,7 @@ clean:
 static int
 hgd_py_meth_Hgd_read_only_raise(Hgd self, PyObject *value, void *closure)
 {
-	(void)closure;
+	(void) closure;
 	(void)value;
 	(void)self;
 	(void) PyErr_Format(PyExc_AttributeError, "attribute is read-only");
@@ -247,7 +247,7 @@ hgd_py_meth_Hgd_read_only_raise(Hgd self, PyObject *value, void *closure)
 static PyObject *
 hgd_py_meth_Hgd_get_hgd_version(Hgd *self, void *closure)
 {
-	(void)closure;
+	(void) closure;
 	Py_INCREF(self->hgd_version);
 	return (self->hgd_version);
 }
@@ -255,28 +255,28 @@ hgd_py_meth_Hgd_get_hgd_version(Hgd *self, void *closure)
 static PyObject *
 hgd_py_meth_Hgd_get_proto_version_major(Hgd *self, void *closure)
 {
-	(void)closure;
+	(void) closure;
 	return (PyInt_FromLong(self->proto_version_major));
 }
 
 static PyObject *
 hgd_py_meth_Hgd_get_proto_version_minor(Hgd *self, void *closure)
 {
-	(void)closure;
+	(void) closure;
 	return (PyInt_FromLong(self->proto_version_minor));
 }
 
 static PyObject *
 hgd_py_meth_Hgd_get_debug_level(Hgd *self, void *closure)
 {
-	(void)closure;
+	(void) closure;
 	return (PyInt_FromLong(self->debug_level));
 }
 
 static PyObject *
 hgd_py_meth_Hgd_get_component(Hgd *self, void *closure)
 {
-	(void)closure;
+	(void) closure;
 	Py_INCREF(self->component);
 	return (self->component);
 }
