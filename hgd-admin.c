@@ -143,6 +143,19 @@ hgd_acmd_noadmin(char **args)
 	return (ret);
 }
 
+int
+hgd_acmd_skip(char **args)
+{
+	(void) args;
+	return(hgd_skip_track());
+}
+
+int
+hgd_acmd_pause(char **args)
+{
+	(void) args;
+	return (hgd_pause_track());
+}
 
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },

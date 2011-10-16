@@ -27,9 +27,9 @@ int			 hgd_acmd_user_add_prompt(char **args);
 int			 hgd_acmd_user_del(char **args);
 struct hgd_user_list	*hgd_acmd_user_list(char **args);
 int			 hgd_acmd_user_list_print(char **args);
-int			 hgd_acmd_pause(char **args);
-int			 hgd_acmd_skip(char **args);
 int			 hgd_change_user_perms(char *uname,
 			    int perm_mask, uint8_t set);
+int			 hgd_pause_track();
+int			 hgd_skip_track();
 
 #endif

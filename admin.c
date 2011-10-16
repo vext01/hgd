@@ -149,22 +149,6 @@ hgd_acmd_user_list(char **args)
 	return list;
 }
 
-int
-hgd_acmd_pause(char **args)
-{
-	(void) args;
-
-	return (hgd_mplayer_pipe_send("pause\n"));
-}
-
-int
-hgd_acmd_skip(char **args)
-{
-	(void) args;
-
-	return (hgd_mplayer_pipe_send("stop\n"));
-}
-
 /*
  * change 'user' permission, turn on/off (set=1, set=0), the permission
  * indicated by 'perm_mask'.
@@ -212,4 +196,16 @@ clean:
 		free(user.name);
 
 	return (ret);
+}
+
+int
+hgd_pause_track()
+{
+	return (hgd_mplayer_pipe_send("pause\n"));
+}
+
+int
+hgd_skip_track()
+{
+	return (hgd_mplayer_pipe_send("stop\n"));
 }

@@ -884,7 +884,7 @@ hgd_cmd_pause(struct hgd_session *sess, char **unused)
 	(void) sess;
 	(void) unused;
 
-	ret = hgd_acmd_pause(NULL);
+	ret = hgd_pause_track();
 
 	if (ret == HGD_OK)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
@@ -906,7 +906,7 @@ hgd_cmd_skip(struct hgd_session *sess, char **unused)
 	(void) sess;
 	(void) unused;
 
-	ret = hgd_acmd_skip(NULL);
+	ret = hgd_skip_track();
 
 	if (ret == HGD_OK)
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
