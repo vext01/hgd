@@ -159,7 +159,7 @@ hgd_acmd_user_list_print(char **args)
 		goto clean;
 
 	for (i = 0; i < list->n_users; i++) {
-		printf("%s (admin=%d)\n",
+		printf("%-20s (admin=%d)\n",
 		    list->users[i]->name, list->users[i]->perms);
 	}
 

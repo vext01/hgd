@@ -957,7 +957,7 @@ hgd_req_user_list(int n_args, char **args)
 {
 	char			*resp;
 	char			*msg, *p;
-	int			n_items, i;
+	int			n_items, i, perms;
 
 	(void) args;
 	(void) n_args;
@@ -988,7 +988,16 @@ hgd_req_user_list(int n_args, char **args)
 	for (i = 0; i < n_items; i++) {
 		DPRINTF(HGD_D_DEBUG, "getting user %d", i);
 		resp = hgd_sock_recv_line(sock_fd, ssl);
-		printf("%d:\t%s\n", i + 1, resp);
+
+		if ((p = strchr(resp, '|')) == NULL) {
+			DPRINTF(HGD_D_WARN, "could not find perms field");
+		} else {
+			*p = 0;
+			perms = atoi(++p);
+			printf("%-20s (admin=%d)\n",
+			    resp, perms & HGD_AUTH_ADMIN);
+		}
+
 		free(resp);
 	}
 
