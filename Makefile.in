@@ -86,7 +86,7 @@ py.o: py.c py.h config.h
 	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o py.c
 
 common.o: common.c hgd.h config.h
-	${CC} ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} -c -o common.o common.c
+	${CC} ${BSD_CFLAGS} ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} -c -o common.o common.c
 
 db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c

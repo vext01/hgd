@@ -312,7 +312,7 @@ hgd_readpassphrase_confirmed(char *buf, char *prompt)
 {
 	char			p1[HGD_MAX_PASS_SZ], p2[HGD_MAX_PASS_SZ];
 	uint8_t			again = 1;
-	
+
 	if (prompt == NULL)
 		prompt = "Password: ";
 
