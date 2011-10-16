@@ -48,6 +48,30 @@
 #include "cfg.h"
 #endif
 
+struct hgdc_resp_err {
+	char		*code;
+	char		*meaning;
+};
+
+struct hgdc_resp_err hgdc_resp_errs[] = {
+	{ "E_INT",		"Internal error" },
+	{ "E_DENY",		"Access denied" },
+	{ "E_FLSIZE",		"File size invalid" },
+	{ "E_FLOOD",		"Flood protect triggered" },
+	{ "E_NOPLAY",		"No track is playing" },
+	{ "E_WRTRK",		"Wrong track" },
+	{ "E_DUPVOTE",		"Duplicate vote" },
+	{ "E_SSLAGN",		"Duplicate SSL negotiation" },
+	{ "E_SSLNOAVAIL",	"SSL not available" },
+	{ "E_INVCMD",		"Invalid command" },
+	{ "E_SSLREQ",		"SSL required" },
+	{ "E_SHTDWN",		"Server is going down" },
+	{ "E_KICK",		"Client misbehaving" },
+	{ "E_PERMNOCHG",	"Perms did not change" },
+	{ "E_USREXIST",		"User already exists" },
+	{ "E_USRNOEXIST",	"User does not exist" }
+};
+
 const char		*hgd_component = "hgdc";
 
 char			*user = NULL, *host = NULL, *password = NULL;
@@ -336,7 +360,7 @@ hgd_setup_socket()
 		free(host);
 		host = xstrdup(
 		    inet_ntoa( *(struct in_addr*)(he->h_addr_list[0])));
- 		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
+		DPRINTF(HGD_D_DEBUG, "Found IP %s", host);
 	}
 
 	DPRINTF(HGD_D_DEBUG, "Connecting to IP %s:%d", host, port);
