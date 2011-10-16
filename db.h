@@ -52,7 +52,7 @@ int				 hgd_clear_playlist(void);
 int				 hgd_init_playstate(void);
 int				 hgd_user_add_db(char *usr, char *slt, char *hash);
 struct hgd_user			*hgd_authenticate_user(char *user, char *pass);
-int				 hgd_delete_user(char *user);
+int				 hgd_user_del(char *user);
 struct hgd_user_list		*hgd_get_all_users(void);
 int				 hgd_num_tracks_user(char *username);
 int				 hgd_make_new_db(char *db_path);

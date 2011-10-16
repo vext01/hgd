@@ -219,7 +219,7 @@ hgd_acmd_user_del(char **args)
 	if (db == NULL)
 		return (HGD_FAIL);
 
-	if (hgd_delete_user(args[0]) != HGD_OK)
+	if (hgd_user_del(args[0]) != HGD_OK)
 		return (HGD_FAIL);
 
 	return (HGD_OK);

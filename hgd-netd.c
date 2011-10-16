@@ -828,7 +828,7 @@ hgd_cmd_user_del(struct hgd_session *sess, char **params)
 
 	(void) sess;
 
-	if (hgd_delete_user(params[0]) == HGD_OK) {
+	if (hgd_user_del(params[0]) == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		ret = HGD_OK;
 	} else {
