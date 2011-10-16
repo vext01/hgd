@@ -15,7 +15,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
 #include <sqlite3.h>
 #include <openssl/rand.h>
 
@@ -192,6 +191,7 @@ hgd_acmd_mkadmin(char **args)
 		goto clean;
 	}
 
+	user.perms = new_perms;
 	if (hgd_update_user(&user) != HGD_OK)
 		goto clean;
 
