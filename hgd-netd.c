@@ -434,8 +434,18 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 		}
 		write_ret = write(f, payload, to_write);
 
-		/* XXX what if write returns less than the chunk? */
-		if (write_ret < 0) {
+		if (write_ret < to_write) {
+			/*
+			 * We are not sure if this is possible.
+			 * It has not *yet* happened.
+			 */
+			DPRINTF(HGD_D_ERROR,
+			    "Short write: %d vs %d",
+			    (int) write_ret, (int) to_write);
+			ret = HGD_FAIL;
+			goto clean;
+
+		} else if (write_ret < 0) {
 			DPRINTF(HGD_D_ERROR, "Failed to write %d bytes: %s",
 			    (int) to_write, SERROR);
 			hgd_sock_send_line(sess->sock_fd,
