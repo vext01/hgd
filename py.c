@@ -189,13 +189,19 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 	for (i = 0; i < list.n_items; i++) {
 		it = list.items[i];
 
-		rec = Py_BuildValue("{sissssssss}",
+		rec = Py_BuildValue("{sisssssssssssssisisisisi}",
 		    "tid", it->id,
 		    "filename", it->filename,
 		    "tag_artist", it->tags.artist,
 		    "tag_title", it->tags.title,
-		    /* XXX needs other tags here too */
-		    "user", it->user);
+		    "user", it->user,
+		    "album", it->tags.album,
+		    "genre", it->tags.genre,
+		    "duration", it->tags.duration,
+		    "bitrate", it->tags.bitrate,
+		    "samplerate", it->tags.samplerate,
+		    "channels", it->tags.channels,
+		    "year", it->tags.year);
 
 		if (rec == NULL) {
 			err = 1;

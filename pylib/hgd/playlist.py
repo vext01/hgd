@@ -44,6 +44,36 @@ class PlaylistItem(object):
         """ Return the name of the user who queued this track. """
         return self.__info["user"]
 
+
+
+    def get_album(self):
+        """ Return album metadata extracted by taglib """
+        return self.__info["album"]
+
+    def get_genre(self):
+        """ Return genre metadata extracted by taglib """
+        return self.__info["genre"]
+
+    def get_duration(self):
+        """ Return duration metadata extracted by taglib """
+        return self.__info["duration"]
+
+    def get_bitrate(self):
+        """ Return bitrate metadata extracted by taglib """
+        return self.__info["bitrate"]
+
+    def get_samplerate(self):
+        """ Return samplerate metadata extracted by taglib """
+        return self.__info["samplerate"]
+
+    def get_channels(self):
+        """ Return channels metadata extracted by taglib """
+        return self.__info["channels"]
+
+    def get_year(self):
+        """ Return year metadata extracted by taglib """
+        return self.__info["year"]
+
     def __ro_set(self, val):
         raise AttributeError("attribute is read-only")
 
@@ -52,11 +82,22 @@ class PlaylistItem(object):
     tag_artist = property(get_tag_artist, __ro_set)
     tag_title = property(get_tag_title, __ro_set)
     user = property(get_user, __ro_set)
+    album = property(get_album, __ro_set)
+    genre = property(get_genre, __ro_set)
+    duration = property(get_duration, __ro_set)
+    bitrate = property(get_bitrate, __ro_set)
+    samplerate = property(get_samplerate, __ro_set)
+    channels = property(get_channels, __ro_set)
+    year = property(get_year, __ro_set)
 
     def __str__(self):
-        return ("Hgd.PlayListItem: tid=%d, filename='%s', tag_artist='%s', " \
-                "tag_title='%s', user='%s'" % (self.tid, self.filename, \
-                self.tag_artist, self.tag_title, self.user))
+        return ("Hgd.PlayListItem: "
+                "tid=%d, filename='%s', tag_artist='%s', tag_title='%s', "
+                "user='%s', album='%s', genre='%s', duration=%d, "
+                "bitrate=%d, samplerate=%d, channels=%d, year=%d" %
+                (self.tid, self.filename, self.tag_artist, self.tag_title,
+                    self.user, self.album, self.genre, self.duration,
+                    self.bitrate, self.samplerate, self.channels, self.year))
 
 # quick test
 if (__name__ == "__main__"):
@@ -64,6 +105,13 @@ if (__name__ == "__main__"):
             "filename" : "test.ogg",
             "tag_artist" : "gunther",
             "tag_title" : "tralala",
-            "user" : "edd"}
+            "user" : "edd",
+            "album" : "pleasureman",
+            "genre" : "europop",
+            "duration" : 123,
+            "bitrate" : 128,
+            "samplerate" : 44100,
+            "channels" : 1,
+            "year" : 1968 }
     track = PlaylistItem(info)
     print(track)
