@@ -24,13 +24,12 @@
  * these should not be taking char **args as though they were dynamic despatch
  * targets. That should be pushed up to the consumer level. XXX
  */
-int			 hgd_acmd_user_add(char **args);
-int			 hgd_acmd_user_add_prompt(char **args);
 int			 hgd_acmd_user_del(char **args);
 int			 hgd_user_list(struct hgd_user_list **);
 int			 hgd_change_user_perms(char *uname,
 			    int perm_mask, uint8_t set);
 int			 hgd_pause_track(void);
 int			 hgd_skip_track(void);
+int			 hgd_user_add(char *user, char *pass);
 
 #endif

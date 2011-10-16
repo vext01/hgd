@@ -24,12 +24,11 @@
 #include "mplayer.h"
 
 int
-hgd_acmd_user_add(char **args)
+hgd_user_add(char *user, char *pass)
 {
 	unsigned char		 salt[HGD_SHA_SALT_SZ];
-	char			*salt_hex, *hash_hex;
-	char			*user = args[0], *pass = args[1];
-	int			 ret = HGD_OK;
+	char			*salt_hex = NULL, *hash_hex = NULL;
+	int			 ret = HGD_FAIL;
 
 	char			salt_ascii[HGD_SHA_SALT_SZ * 2 + 1];
 	char			hash_ascii[HGD_SHA_SALT_SZ * 2 + 1];
@@ -38,13 +37,14 @@ hgd_acmd_user_add(char **args)
 
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
+
 	if (db == NULL)
-		return (HGD_FAIL);
+		goto clean;
 
 	memset(salt, 0, HGD_SHA_SALT_SZ);
 	if (RAND_bytes(salt, HGD_SHA_SALT_SZ) != 1) {
 		DPRINTF(HGD_D_ERROR, "can not generate salt");
-		return (HGD_FAIL);
+		goto clean;
 	}
 
 	salt_hex = hgd_bytes_to_hex(salt, HGD_SHA_SALT_SZ);
@@ -56,34 +56,17 @@ hgd_acmd_user_add(char **args)
 	hgd_bytes_to_hex_buf(hash_hex, hash_ascii, HGD_SHA_SALT_SZ);
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_ascii);
 
-	if (hgd_add_user(args[0], salt_hex, hash_hex) != HGD_OK)
-		ret = HGD_FAIL;
+	if (hgd_add_user(user, salt_hex, hash_hex) != HGD_OK)
+		goto clean;
 
-	free(salt_hex);
-	free(hash_hex);
+	ret = HGD_OK;
+clean:
+	if (salt_hex)
+		free(salt_hex);
+	if (hash_hex)
+		free(hash_hex);
 
 	return (ret);
-}
-
-
-int
-hgd_acmd_user_add_prompt(char **args)
-{
-	char			 pass[HGD_MAX_PASS_SZ];
-	char			*new_args[2];
-
-	if (db == NULL)
-		db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	if (hgd_readpassphrase_confirmed(pass, NULL) != HGD_OK)
-		return (HGD_FAIL);
-
-	new_args[0] = args[0];
-	new_args[1] = pass;
-
-	return (hgd_acmd_user_add(new_args));
 }
 
 int

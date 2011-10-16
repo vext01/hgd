@@ -187,6 +187,29 @@ hgd_acmd_pause(char **args)
 	return (hgd_pause_track());
 }
 
+int
+hgd_acmd_user_add(char **args)
+{
+	return (hgd_user_add(args[0], args[1]));
+}
+
+int
+hgd_acmd_user_add_prompt(char **args)
+{
+	char			 pass[HGD_MAX_PASS_SZ];
+
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	if (hgd_readpassphrase_confirmed(pass, NULL) != HGD_OK)
+		return (HGD_FAIL);
+
+	return (hgd_user_add(args[0], pass));
+}
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },

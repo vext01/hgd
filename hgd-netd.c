@@ -805,7 +805,7 @@ hgd_cmd_user_add(struct hgd_session *sess, char **params)
 	int			ret;
 
 	(void) sess;
-	ret = hgd_acmd_user_add(params);
+	ret = hgd_user_add(params[0], params[1]);
 
 	if (ret == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
