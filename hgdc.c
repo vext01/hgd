@@ -289,7 +289,7 @@ hgd_print_pretty_server_response(char *resp_line)
 int
 hgd_check_svr_response(char *resp, uint8_t x)
 {
-	int			len, err = HGD_OK;
+	int			err = HGD_OK;
 	char			*trunc = NULL;
 
 	if (resp == NULL) {
@@ -297,8 +297,6 @@ hgd_check_svr_response(char *resp, uint8_t x)
 		err = HGD_FAIL;
 		goto clean;
 	}
-
-	len = strlen(resp);
 
 	if (hgd_debug) {
 		trunc = xstrdup(resp);
