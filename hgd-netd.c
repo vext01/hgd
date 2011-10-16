@@ -821,13 +821,12 @@ hgd_cmd_user_add(struct hgd_session *sess, char **params)
 int
 hgd_cmd_user_del(struct hgd_session *sess, char **params)
 {
-	int			ret;
+	int			ret = HGD_FAIL;
 
 	(void) sess;
-	ret = hgd_acmd_user_del(params);
-
-	if (ret == HGD_OK) {
+	if (hgd_delete_user(params[0]) == HGD_OK) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+		ret = HGD_OK;
 	} else {
 		/* XXX: correct error if user already exisits */
 		/* XXX: this is the wrong error response */

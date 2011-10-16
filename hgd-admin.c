@@ -210,6 +210,22 @@ hgd_acmd_user_add_prompt(char **args)
 	return (hgd_user_add(args[0], pass));
 }
 
+int
+hgd_acmd_user_del(char **args)
+{
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+
+	if (db == NULL)
+		return (HGD_FAIL);
+
+	if (hgd_delete_user(args[0]) != HGD_OK)
+		return (HGD_FAIL);
+
+	return (HGD_OK);
+}
+
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },

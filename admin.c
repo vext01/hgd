@@ -70,20 +70,6 @@ clean:
 }
 
 int
-hgd_acmd_user_del(char **args)
-{
-	if (db == NULL)
-		db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	if (hgd_delete_user(args[0]) != HGD_OK)
-		return (HGD_FAIL);
-
-	return (HGD_OK);
-}
-
-int
 hgd_user_list(struct hgd_user_list **list)
 {
 	int		ret = HGD_FAIL;
