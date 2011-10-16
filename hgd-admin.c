@@ -107,6 +107,43 @@ hgd_acmd_init_db(char **args)
 	return (hgd_make_new_db(db_path));
 }
 
+/* make a user an administrator */
+int
+hgd_acmd_mkadmin(char **args)
+{
+	int		ret = HGD_FAIL;
+
+	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 1)) {
+	case HGD_OK: /* FALLTHRU */
+	case HGD_FAIL_PERMNOCHG:
+		ret = HGD_OK;
+		break;
+	case HGD_FAIL:
+		break;
+	};
+
+	return (ret);
+}
+
+/* revoke admin rights from a user */
+int
+hgd_acmd_noadmin(char **args)
+{
+	int		ret = HGD_FAIL;
+
+	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 0)) {
+	case HGD_OK: /* FALLTHRU */
+	case HGD_FAIL_PERMNOCHG:
+		ret = HGD_OK;
+		break;
+	case HGD_FAIL:
+		break;
+	};
+
+	return (ret);
+}
+
+
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },

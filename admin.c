@@ -168,8 +168,6 @@ hgd_acmd_skip(char **args)
 /*
  * change 'user' permission, turn on/off (set=1, set=0), the permission
  * indicated by 'perm_mask'.
- *
- * (Not yet exported outside this file)
  */
 int
 hgd_change_user_perms(char *uname, int perm_mask, uint8_t set)
@@ -199,7 +197,7 @@ hgd_change_user_perms(char *uname, int perm_mask, uint8_t set)
 	/* if the perms didnt change, warn */
 	if (new_perms == user.perms) {
 		DPRINTF(HGD_D_WARN, "Permissions unchanged.");
-		ret = HGD_OK; /* but that is ok ;) */
+		ret = HGD_FAIL_PERMNOCHG;
 		goto clean;
 	}
 
@@ -215,19 +213,3 @@ clean:
 
 	return (ret);
 }
-
-
-/* make a user an administrator */
-int
-hgd_acmd_mkadmin(char **args)
-{
-	return (hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 1));
-}
-
-/* revoke admin rights from a user */
-int
-hgd_acmd_noadmin(char **args)
-{
-	return (hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 0));
-}
-

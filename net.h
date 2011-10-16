@@ -52,6 +52,7 @@
 #define HGD_RESP_E_SSLREQ	"E_SSLREQ"	/* SSL required */
 #define HGD_RESP_E_SHTDWN	"E_SHTDWN"	/* Server is gong down */
 #define HGD_RESP_E_KICK		"E_KICK"	/* Client misbehaving */
+#define HGD_RESP_E_PERMNOCHG	"E_PERMNOCHG"	/* Perms did not change */
 
 /* SSL */
 #define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"

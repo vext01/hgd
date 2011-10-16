@@ -920,15 +920,21 @@ hgd_cmd_skip(struct hgd_session *sess, char **unused)
 int
 hgd_cmd_user_mkadmin(struct hgd_session *sess, char **args)
 {
-	int			ret;
+	int		ret = HGD_FAIL;
 
-	ret = hgd_acmd_mkadmin(args);
-
-	if (ret == HGD_OK)
+	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 1)) {
+	case HGD_OK:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-	else
+		ret = HGD_OK;
+		break;
+	case HGD_FAIL: /* XXX */
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|" HGD_RESP_E_DENY);
+	case HGD_FAIL_PERMNOCHG:
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|" HGD_RESP_E_PERMNOCHG);
+		break;
+	};
 
 	return (ret);
 }
@@ -936,15 +942,21 @@ hgd_cmd_user_mkadmin(struct hgd_session *sess, char **args)
 int
 hgd_cmd_user_noadmin(struct hgd_session *sess, char **args)
 {
-	int			ret;
+	int		ret = HGD_FAIL;
 
-	ret = hgd_acmd_noadmin(args);
-
-	if (ret == HGD_OK)
+	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 1)) {
+	case HGD_OK:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-	else
-		hgd_sock_send_line(sess->sock_fd,
-		    sess->ssl, "err|" HGD_RESP_E_DENY);
+		ret = HGD_OK;
+		break;
+	case HGD_FAIL: /* XXX */
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|" HGD_RESP_E_DENY);
+	case HGD_FAIL_PERMNOCHG:
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|" HGD_RESP_E_PERMNOCHG);
+		break;
+	};
 
 	return (ret);
 }

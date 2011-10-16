@@ -68,8 +68,9 @@
 #define HGD_SERV_CFG		"/hgd.rc"
 
 /* Function return values */
-#define HGD_FAIL		(-1)
-#define HGD_OK			(0)
+#define HGD_FAIL		(-1)	/* generic fail */
+#define HGD_OK			(0)	/* OK */
+#define HGD_FAIL_PERMNOCHG	(1)	/* perms didn't change */
 
 /* ANSII colours */
 #define ANSII_YELLOW		(colours_on ? "\033[33m" : "")
