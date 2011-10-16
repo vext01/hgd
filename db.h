@@ -25,9 +25,6 @@
 
 #define	HGD_DB_SCHEMA_VERS	"1"
 
-#define	HGD_FAIL_NOUSER	(-2)
-#define HGD_OK_NOCHANGE (2)
-
 extern sqlite3			*db;
 extern char			*db_path;
 

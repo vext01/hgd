@@ -67,12 +67,16 @@
 #define HGD_CLI_CFG		"/hgdc.rc"
 #define HGD_SERV_CFG		"/hgd.rc"
 
-/* Function return values */
+/*
+ * Function return values.
+ *
+ * Please do not pluralise these.
+ */
 #define HGD_FAIL		(-1)	/* generic fail */
 #define HGD_OK			(0)	/* OK */
 #define HGD_FAIL_PERMNOCHG	(1)	/* perms didn't change */
-#define HGD_FAIL_USREXISTS	(2)	/* user already exists */
-#define HGD_FAIL_USRNOEXISTS	(3)	/* user nonexistent */
+#define HGD_FAIL_USREXIST	(2)	/* user already exists */
+#define HGD_FAIL_USRNOEXIST	(3)	/* user nonexistent */
 
 /* ANSII colours */
 #define ANSII_YELLOW		(colours_on ? "\033[33m" : "")

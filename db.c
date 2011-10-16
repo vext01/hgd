@@ -717,7 +717,7 @@ hgd_user_add_db(char *user, char *salt, char *hash)
 	sql_res = sqlite3_step(stmt);
 	if (sql_res == SQLITE_CONSTRAINT) {
 		DPRINTF(HGD_D_ERROR, "User '%s' already exists", user);
-		ret = HGD_FAIL_USREXISTS;
+		ret = HGD_FAIL_USREXIST;
 		goto clean;
 	} else if (sql_res != SQLITE_DONE) {
 		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
@@ -805,7 +805,7 @@ hgd_get_user(char *user, struct hgd_user *result)
 	sql_res = sqlite3_step(stmt);
 	if (sql_res == SQLITE_DONE) {
 		DPRINTF(HGD_D_WARN, "User '%s', does not exist", user);
-		res = HGD_FAIL_NOUSER;
+		res = HGD_FAIL_USRNOEXIST;
 		goto clean;
 	} else if (sql_res != SQLITE_ROW) { /* we expect exactly one row */
 		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
@@ -818,7 +818,7 @@ hgd_get_user(char *user, struct hgd_user *result)
 
 clean:
 	sqlite3_finalize(stmt);
-	return res;
+	return (res);
 }
 
 struct hgd_user *
@@ -882,11 +882,19 @@ clean:
  * remove user from db forever
  */
 int
-hgd_user_del(char *user)
+hgd_user_del(char *uname)
 {
-	int			 sql_res, ret = HGD_FAIL;
-	sqlite3_stmt		*stmt;
+	int			 sql_res, ret = HGD_FAIL, lookup_ret;
+	sqlite3_stmt		*stmt = NULL;
 	char			*sql = "DELETE FROM users WHERE username=?";
+	struct hgd_user		 user;
+
+	/* look up the user so that we can report non-existency */
+	if ((lookup_ret = hgd_get_user(uname, &user)) != HGD_OK) {
+		ret = lookup_ret;
+		goto clean;
+	}
+	free(user.name);
 
 	sql_res = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (sql_res != SQLITE_OK) {
@@ -895,7 +903,7 @@ hgd_user_del(char *user)
 	}
 
 	/* bind params */
-	sql_res = sqlite3_bind_text(stmt, 1, user, -1, SQLITE_TRANSIENT);
+	sql_res = sqlite3_bind_text(stmt, 1, uname, -1, SQLITE_TRANSIENT);
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_WARN, "Can't bind sql: %s", DERROR);
 		goto clean;
@@ -909,7 +917,9 @@ hgd_user_del(char *user)
 
 	ret = HGD_OK;
 clean:
-	sqlite3_finalize(stmt);
+	if (stmt)
+		sqlite3_finalize(stmt);
+
 	return (ret);
 }
 

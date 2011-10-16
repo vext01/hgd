@@ -806,16 +806,18 @@ hgd_cmd_user_add(struct hgd_session *sess, char **params)
 
 	(void) sess;
 
-	switch(hgd_user_add(params[0], params[1])) {
+	switch (hgd_user_add(params[0], params[1])) {
 	case HGD_OK:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		ret = HGD_OK;
 		break;
-	case HGD_FAIL_USREXISTS:
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|" HGD_RESP_E_USREXISTS);
+	case HGD_FAIL_USREXIST:
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|" HGD_RESP_E_USREXIST);
 		break;
 	default:
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|" HGD_RESP_E_INT);
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|" HGD_RESP_E_INT);
 	}
 
 	return (ret);
@@ -828,13 +830,18 @@ hgd_cmd_user_del(struct hgd_session *sess, char **params)
 
 	(void) sess;
 
-	if (hgd_user_del(params[0]) == HGD_OK) {
+	switch (hgd_user_del(params[0])) {
+	case HGD_OK:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		ret = HGD_OK;
-	} else {
-		/* XXX: correct error if user already exisits */
-		/* XXX: this is the wrong error response */
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "err|" HGD_RESP_E_INT);
+		break;
+	case HGD_FAIL_USRNOEXIST:
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|" HGD_RESP_E_USRNOEXIST);
+		break;
+	default:
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|" HGD_RESP_E_INT);
 	}
 
 	return (ret);
