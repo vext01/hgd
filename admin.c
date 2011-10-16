@@ -56,10 +56,7 @@ hgd_user_add(char *user, char *pass)
 	hgd_bytes_to_hex_buf(hash_hex, hash_ascii, HGD_SHA_SALT_SZ);
 	DPRINTF(HGD_D_DEBUG, "new_user's hash '%s'", hash_ascii);
 
-	if (hgd_user_add_db(user, salt_hex, hash_hex) != HGD_OK)
-		goto clean;
-
-	ret = HGD_OK;
+	ret = hgd_user_add_db(user, salt_hex, hash_hex);
 clean:
 	if (salt_hex)
 		free(salt_hex);

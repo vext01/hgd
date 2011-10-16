@@ -18,7 +18,7 @@
 #ifndef __NET_H
 #define __NET_H
 
-#define HGD_PROTO_VERSION_MAJOR	13
+#define HGD_PROTO_VERSION_MAJOR	14
 #define HGD_PROTO_VERSION_MINOR 0
 
 /* networking */
@@ -53,6 +53,8 @@
 #define HGD_RESP_E_SHTDWN	"E_SHTDWN"	/* Server is gong down */
 #define HGD_RESP_E_KICK		"E_KICK"	/* Client misbehaving */
 #define HGD_RESP_E_PERMNOCHG	"E_PERMNOCHG"	/* Perms did not change */
+#define HGD_RESP_E_USREXISTS	"E_USREXISTS"	/* User already exists */
+#define HGD_RESP_E_USRNOEXISTS	"E_USRNOEXISTS"	/* User already exists */
 
 /* SSL */
 #define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"

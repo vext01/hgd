@@ -717,6 +717,7 @@ hgd_user_add_db(char *user, char *salt, char *hash)
 	sql_res = sqlite3_step(stmt);
 	if (sql_res == SQLITE_CONSTRAINT) {
 		DPRINTF(HGD_D_ERROR, "User '%s' already exists", user);
+		ret = HGD_FAIL_USREXISTS;
 		goto clean;
 	} else if (sql_res != SQLITE_DONE) {
 		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);
