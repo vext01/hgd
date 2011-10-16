@@ -48,12 +48,12 @@
 #include "cfg.h"
 #endif
 
-struct hgdc_resp_err {
+struct hgd_resp_err {
 	char		*code;
 	char		*meaning;
 };
 
-struct hgdc_resp_err hgdc_resp_errs[] = {
+struct hgd_resp_err hgd_resp_errs[] = {
 	{ "E_INT",		"Internal error" },
 	{ "E_DENY",		"Access denied" },
 	{ "E_FLSIZE",		"File size invalid" },
@@ -69,7 +69,8 @@ struct hgdc_resp_err hgdc_resp_errs[] = {
 	{ "E_KICK",		"Client misbehaving" },
 	{ "E_PERMNOCHG",	"Perms did not change" },
 	{ "E_USREXIST",		"User already exists" },
-	{ "E_USRNOEXIST",	"User does not exist" }
+	{ "E_USRNOEXIST",	"User does not exist" },
+	{ 0,			0 }
 };
 
 const char		*hgd_component = "hgdc";
@@ -249,6 +250,37 @@ hgd_encrypt(int fd)
 	return (HGD_OK);
 }
 
+int
+hgd_print_pretty_server_response(char *resp_line)
+{
+	char			*p;
+	struct hgd_resp_err	*resp, *chosen = NULL;
+
+	p = strchr(resp_line, '|');
+	if (p == NULL) {
+		DPRINTF(HGD_D_ERROR, "Unspecified server error reponse");
+		return (HGD_FAIL);
+	}
+
+	p++;
+	for (resp = hgd_resp_errs; resp->code != 0; resp++) {
+		if (strcmp(p, resp->code) == 0) {
+			chosen = resp;
+			break;
+		}
+	}
+
+	if (chosen == NULL) {
+		DPRINTF(HGD_D_ERROR, "Unknown server error reponse");
+		return (HGD_FAIL);
+	}
+
+	DPRINTF(HGD_D_ERROR,
+	    "Server reponded with error '%s': %s", p, chosen->meaning);
+
+	return (HGD_OK);
+}
+
 /*
  * if x == 1 you do not need to check the return value of this method as
  * hgd will have exited before this returns.
@@ -271,17 +303,15 @@ hgd_check_svr_response(char *resp, uint8_t x)
 		trunc = xstrdup(resp);
 		DPRINTF(HGD_D_DEBUG, "Check reponse '%s'", trunc);
 		free(trunc);
-	} else
-		(void)trunc; /* silence compiler */
+	}
 
-	if (len < 2) {
+	if (strncmp(resp, "ok", 2) == 0) {
+		/* great */
+	} else if (strncmp(resp, "err", 3)) {
 		DPRINTF(HGD_D_ERROR, "Malformed server response");
-		err = HGD_FAIL;
-	} else if ((resp[0] != 'o') || (resp[1] != 'k')) {
-		if (len < 5)
-			DPRINTF(HGD_D_ERROR, "Malformed server response");
-		else
-			DPRINTF(HGD_D_ERROR, "Failure: %s", &resp[4]);
+	} else {
+		/* we got an 'err' */
+		hgd_print_pretty_server_response(resp);
 		err = HGD_FAIL;
 	}
 
