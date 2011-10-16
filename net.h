@@ -52,11 +52,11 @@
 #define HGD_RESP_E_SSLNOAVAIL	"E_SSLNOAVAIL"	/* SSL not available */
 #define HGD_RESP_E_INVCMD	"E_INVCMD"	/* Invalid command */
 #define HGD_RESP_E_SSLREQ	"E_SSLREQ"	/* SSL required */
-#define HGD_RESP_E_SHTDWN	"E_SHTDWN"	/* Server is gong down */
+#define HGD_RESP_E_SHTDWN	"E_SHTDWN"	/* Server is going down */
 #define HGD_RESP_E_KICK		"E_KICK"	/* Client misbehaving */
 #define HGD_RESP_E_PERMNOCHG	"E_PERMNOCHG"	/* Perms did not change */
 #define HGD_RESP_E_USREXIST	"E_USREXIST"	/* User already exists */
-#define HGD_RESP_E_USRNOEXIST	"E_USRNOEXIST"	/* User already exists */
+#define HGD_RESP_E_USRNOEXIST	"E_USRNOEXIST"	/* User does not exist */
 
 /* SSL */
 #define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"
