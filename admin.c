@@ -165,8 +165,14 @@ hgd_acmd_skip(char **args)
 	return (hgd_mplayer_pipe_send("stop\n"));
 }
 
+/*
+ * change 'user' permission, turn on/off (set=1, set=0), the permission
+ * indicated by 'perm_mask'.
+ *
+ * (Not yet exported outside this file)
+ */
 int
-hgd_acmd_mkadmin(char **args)
+hgd_change_user_perms(char *uname, int perm_mask, uint8_t set)
 {
 	struct hgd_user		user;
 	int			ret = HGD_FAIL, new_perms = 0;
@@ -179,24 +185,30 @@ hgd_acmd_mkadmin(char **args)
 	if (db == NULL)
 		goto clean;
 
-	if (hgd_get_user(args[0], &user) == HGD_FAIL_NOUSER) {
+	if (hgd_get_user(uname, &user) == HGD_FAIL_NOUSER) {
 		DPRINTF(HGD_D_ERROR, "User %s does not exist.", user.name);
 		goto clean;
 	}
 
-	new_perms = user.perms | HGD_AUTH_ADMIN;
+	/* turn on/off the correct bit */
+	if (set)
+		new_perms = user.perms | perm_mask;
+	else
+		new_perms = user.perms & (~perm_mask);
+
+	/* if the perms didnt change, warn */
 	if (new_perms == user.perms) {
 		DPRINTF(HGD_D_WARN, "Permissions unchanged.");
 		ret = HGD_OK; /* but that is ok ;) */
 		goto clean;
 	}
 
+	/* otherwise, update */
 	user.perms = new_perms;
 	if (hgd_update_user(&user) != HGD_OK)
 		goto clean;
 
 	ret = HGD_OK;
-
 clean:
 	if (user.name)
 		free(user.name);
@@ -204,17 +216,18 @@ clean:
 	return (ret);
 }
 
+
+/* make a user an administrator */
+int
+hgd_acmd_mkadmin(char **args)
+{
+	return (hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 1));
+}
+
+/* revoke admin rights from a user */
 int
 hgd_acmd_noadmin(char **args)
 {
-	struct hgd_user user;
-	if (db == NULL)
-		db = hgd_open_db(db_path, 0);
-	if (db == NULL)
-		return (HGD_FAIL);
-
-	user.name = args[0];
-	user.perms = HGD_AUTH_NONE;
-	return (hgd_update_user(&user));
+	return (hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 0));
 }
 
