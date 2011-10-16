@@ -84,7 +84,11 @@
 #define ANSII_GREEN		(colours_on ? "\033[32m" : "")
 #define ANSII_WHITE		(colours_on ? "\033[0m" : "")
 
-/* Authorisation levels */
+/*
+ * Authorisation levels
+ *
+ * Only admin for now, but who knows, more may come along
+ */
 #define	HGD_AUTH_NONE		(0)
 #define HGD_AUTH_ADMIN		(1 << 0)
 

@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd October 14, 2011
+.Dd October 16, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -156,9 +156,9 @@ Requests information about your user account.
 .Pp
 <username> is obvious.
 .Pp
-<permission_mask> is a 16-bit unsigned bit-field describing the user's
-permissions. Thus far only the low bit is used (0x1), which indicates admin
-rights. We reserve the remaining 15 bits for future use.
+<permission_mask> is a 16-bit bit-field describing the user's
+permissions. Please see hgd.h for a list of HGD authentication levels
+(HGD_AUTH_*).
 .Pp
 <voted?> is a boolean field indicating whether the user has used their vote on
 the currently playing item.
@@ -358,7 +358,14 @@ Needs auth: Yes
 Needs admin: Yes
 .El
 .Pp
-List all users on the system. XXX: finish this
+List all users on the system. A further <num-items> lines should be expected of
+the form:
+.Pp
+<user-name> | <permission_mask>
+.Pp
+Each line associates a user name with his/her permissions in the form of a
+16-bit bit field. Please see hgd.h for a list of HGD authorisation levels
+(HGD_AUTH_*).
 .It user-mkadmin
 .Bl -dash
 .It
