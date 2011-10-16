@@ -944,7 +944,7 @@ hgd_cmd_user_noadmin(struct hgd_session *sess, char **args)
 {
 	int		ret = HGD_FAIL;
 
-	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 1)) {
+	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 0)) {
 	case HGD_OK:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		ret = HGD_OK;
