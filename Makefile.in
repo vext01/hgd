@@ -109,7 +109,7 @@ hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o us
 		crypto.o user.o hgd-netd.c
 
 hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
-	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
+	${CC} ${CPPFLAGS} ${BSD_CFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
 		${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
 		-o hgdc common.o net.o cfg.o hgdc.c
 
