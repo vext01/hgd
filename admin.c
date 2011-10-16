@@ -125,7 +125,7 @@ hgd_change_user_perms(char *uname, int perm_mask, uint8_t set)
 
 	/* otherwise, update */
 	user.perms = new_perms;
-	if (hgd_update_user(&user) != HGD_OK)
+	if (hgd_user_mod(&user) != HGD_OK)
 		goto clean;
 
 	ret = HGD_OK;
