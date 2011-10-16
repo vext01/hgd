@@ -189,7 +189,7 @@ line is of the form:
 <voted?> applies only to the currently playing song (for now) and is 1 if
 the currently logged in user has voted, 0 if the user has not, or -1 if
 the user was not authenticated.
-
+.Pp
 In the event of missing tag information, string fields (artist, title, ...)
 are blank and unknown integer fields (samplerate, duration, ...) are set to 0.
 .It np
@@ -211,12 +211,12 @@ Needs admin: No
 .El
 .Pp
 Get the currently playing item, if any. If <playing?> = 0, then nothing
-is playing and therefore, no further information is available. 
+is playing and therefore, no further information is available.
 .Pp
 <votesneeded> is the number of votes now needed to skip the song.
 .Pp
-<voted?> is 1 if 
-the currently logged in user has voted, 0 if the user has not, or -1 if the user was not authenticated.
+<voted?> is 1 if the currently logged in user has voted, 0 if the user
+has not, or -1 if the user was not authenticated.
 .Pp
 In the
 event of missing tag information, string fields (artist, title, ...) are
