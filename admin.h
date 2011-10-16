@@ -21,7 +21,7 @@
 #include "hgd.h"
 
 int			 hgd_user_list(struct hgd_user_list **);
-int			 hgd_change_user_perms(char *uname,
+int			 hgd_user_mod_perms(char *uname,
 			    int perm_mask, uint8_t set);
 int			 hgd_pause_track(void);
 int			 hgd_skip_track(void);

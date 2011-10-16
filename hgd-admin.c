@@ -113,12 +113,12 @@ hgd_acmd_mkadmin(char **args)
 {
 	int		ret = HGD_FAIL;
 
-	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 1)) {
+	switch (hgd_user_mod_perms(args[0], HGD_AUTH_ADMIN, 1)) {
 	case HGD_OK: /* FALLTHRU */
 	case HGD_FAIL_PERMNOCHG:
 		ret = HGD_OK;
 		break;
-	case HGD_FAIL:
+	default: /* can also ret HGD_FAIL_USRNOEXIST */
 		break;
 	};
 
@@ -131,12 +131,12 @@ hgd_acmd_noadmin(char **args)
 {
 	int		ret = HGD_FAIL;
 
-	switch(hgd_change_user_perms(args[0], HGD_AUTH_ADMIN, 0)) {
+	switch (hgd_user_mod_perms(args[0], HGD_AUTH_ADMIN, 0)) {
 	case HGD_OK: /* FALLTHRU */
 	case HGD_FAIL_PERMNOCHG:
 		ret = HGD_OK;
 		break;
-	case HGD_FAIL:
+	default: /* can also ret HGD_FAIL_USRNOEXIST */
 		break;
 	};
 

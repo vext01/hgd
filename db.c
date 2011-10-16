@@ -731,7 +731,7 @@ clean:
 }
 
 int
-hgd_user_mod(struct hgd_user *user)
+hgd_user_mod_perms_db(struct hgd_user *user)
 {
 	int			sql_res;
 	sqlite3_stmt		*stmt;

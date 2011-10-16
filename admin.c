@@ -92,7 +92,7 @@ clean:
  * indicated by 'perm_mask'.
  */
 int
-hgd_change_user_perms(char *uname, int perm_mask, uint8_t set)
+hgd_user_mod_perms(char *uname, int perm_mask, uint8_t set)
 {
 	struct hgd_user		user;
 	int			ret = HGD_FAIL, new_perms = 0;
@@ -105,8 +105,9 @@ hgd_change_user_perms(char *uname, int perm_mask, uint8_t set)
 	if (db == NULL)
 		goto clean;
 
-	if (hgd_get_user(uname, &user) == HGD_FAIL_NOUSER) {
+	if (hgd_get_user(uname, &user) == HGD_FAIL_USRNOEXIST) {
 		DPRINTF(HGD_D_ERROR, "User %s does not exist.", user.name);
+		ret = HGD_FAIL_USRNOEXIST;
 		goto clean;
 	}
 
@@ -125,10 +126,7 @@ hgd_change_user_perms(char *uname, int perm_mask, uint8_t set)
 
 	/* otherwise, update */
 	user.perms = new_perms;
-	if (hgd_user_mod(&user) != HGD_OK)
-		goto clean;
-
-	ret = HGD_OK;
+	ret = hgd_user_mod_perms_db(&user);
 clean:
 	if (user.name)
 		free(user.name);
