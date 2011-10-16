@@ -253,10 +253,17 @@ hgd_py_meth_Hgd_get_hgd_version(Hgd *self, void *closure)
 }
 
 static PyObject *
-hgd_py_meth_Hgd_get_proto_version(Hgd *self, void *closure)
+hgd_py_meth_Hgd_get_proto_version_major(Hgd *self, void *closure)
 {
 	(void)closure;
-	return (PyInt_FromLong(self->proto_version));
+	return (PyInt_FromLong(self->proto_version_major));
+}
+
+static PyObject *
+hgd_py_meth_Hgd_get_proto_version_minor(Hgd *self, void *closure)
+{
+	(void)closure;
+	return (PyInt_FromLong(self->proto_version_minor));
 }
 
 static PyObject *
@@ -295,9 +302,12 @@ static PyGetSetDef hgd_py_Hgd_get_setters[] = {
 	{"hgd_version", (getter) hgd_py_meth_Hgd_get_hgd_version,
 		(setter) hgd_py_meth_Hgd_read_only_raise,
 		"hgd version", NULL},
-	{"proto_version", (getter) hgd_py_meth_Hgd_get_proto_version,
+	{"proto_version_minor", (getter) hgd_py_meth_Hgd_get_proto_version_minor,
 		(setter) hgd_py_meth_Hgd_read_only_raise,
-		"hgd protocol version", NULL},
+		"hgd protocol version (minor)", NULL},
+	{"proto_version_major", (getter) hgd_py_meth_Hgd_get_proto_version_major,
+		(setter) hgd_py_meth_Hgd_read_only_raise,
+		"hgd protocol version (major)", NULL},
 	{"debug_level", (getter) hgd_py_meth_Hgd_get_debug_level,
 		(setter) hgd_py_meth_Hgd_read_only_raise,
 		"hgd debug level", NULL},
@@ -337,8 +347,8 @@ hgd_py_meth_Hgd_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 		}
 	}
 
-	self->proto_version = HGD_PROTO_VERSION_MAJOR;
-	/* XXX minor version */
+	self->proto_version_major = HGD_PROTO_VERSION_MAJOR;
+	self->proto_version_minor = HGD_PROTO_VERSION_MINOR;
 	self->debug_level = hgd_debug;
 
 	return (PyObject *)self;
@@ -355,7 +365,8 @@ hgd_py_meth_Hgd_init(Hgd *self, PyObject *args, PyObject *kwds)
 	(void)args;
 	(void)kwds;
 
-	self->proto_version = 0;
+	self->proto_version_major = 0;
+	self->proto_version_minor = 0;
 	self->debug_level = 0;
 	self->component = Py_None;
 	self->hgd_version = Py_None;

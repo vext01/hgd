@@ -37,7 +37,8 @@ extern char			*hgd_py_plugin_dir;
 /* this describes the hgd object in python */
 typedef struct {
 	PyObject_HEAD
-	int			 proto_version;
+	int			 proto_version_major;
+	int			 proto_version_minor;
 	PyObject		*hgd_version;
 	int			 debug_level;
 	PyObject		*component;	/* "hgd-playd", "hgd-netd"... */
