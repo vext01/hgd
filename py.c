@@ -142,7 +142,7 @@ clean:
 /*
  * get the contents of the playlist
  *
- * XXX needs to lock database when we make
+ * needs to lock database when we make
  * the playlist re-orderable.
  *
  * args:
@@ -338,7 +338,7 @@ hgd_py_meth_Hgd_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 	}
 
 	self->proto_version = HGD_PROTO_VERSION_MAJOR;
-	/* XXX 0.5.0 minor version */
+	/* XXX minor version */
 	self->debug_level = hgd_debug;
 
 	return (PyObject *)self;

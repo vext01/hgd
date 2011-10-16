@@ -47,8 +47,8 @@ int
 hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
     int server, char *cert_path, char *key_path) {
 
-	/* XXX For semi-implemented certificate verification - FAO mex */
 #if 0
+	/* XXX For semi-implemented certificate verification - FAO mex */
 	char		*home;
 	char		*keystore_path = NULL;
 #endif
@@ -71,11 +71,13 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 			PRINT_SSL_ERR(HGD_D_ERROR, "TLSv1_client_method");
 			return (HGD_FAIL);
 		}
-/* XXX: if'd out because we won't get this finished before barcamp*/
+
 #if 0
+		/* XXX For semi-implemented certificate verification - FAO mex */
+
 		home = getenv("HOME");
 		if (!home) {
-			/* XXX: crapout? */
+			/* crapout? */
 			DPRINTF(HGD_D_ERROR, "Could not get home env value");
 			exit (HGD_FAIL);
 		}
@@ -94,8 +96,9 @@ hgd_setup_ssl_ctx(SSL_METHOD **method, SSL_CTX **ctx,
 	}
 
 	if (!server) {
-/* XXX: if'd out because we won't get this finished before barcamp*/
 #if 0
+		/* XXX For semi-implemented certificate verification - FAO mex */
+
 		if(! SSL_CTX_load_verify_locations(*ctx, NULL, keystore_path))
 		{
 			DPRINTF(HGD_D_ERROR,
