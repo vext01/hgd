@@ -146,8 +146,9 @@ hgd_acmd_noadmin(char **args)
 int
 hgd_acmd_user_list_print(char **args)
 {
-	struct hgd_user_list *list;
+	struct hgd_user_list	*list;
 	int			 i, ret = HGD_FAIL;
+	char			*permstr = NULL;
 
 	if (db == NULL)
 		db = hgd_open_db(db_path, 0);
@@ -159,8 +160,10 @@ hgd_acmd_user_list_print(char **args)
 		goto clean;
 
 	for (i = 0; i < list->n_users; i++) {
-		printf("%-20s (admin=%d)\n",
-		    list->users[i]->name, list->users[i]->perms);
+		hgd_gen_perms_str(list->users[i]->perms, &permstr);
+		printf("%-20s %s\n",
+		    list->users[i]->name, permstr);
+		free(permstr);
 	}
 
 	ret = HGD_OK;

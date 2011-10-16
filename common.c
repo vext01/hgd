@@ -56,6 +56,12 @@ int				 syslog_error_map[] = {
 				    LOG_ERR, LOG_WARNING, LOG_INFO, LOG_DEBUG
 				 };
 
+/* permission descriptions */
+struct hgd_user_perm hgd_user_perms[] = {
+	{ HGD_AUTH_ADMIN,	"ADMIN" },
+	{ -1,			0 },
+};
+
 /* these are unused in client */
 char				 *state_path = NULL;
 char				 *filestore_path = NULL;
@@ -411,4 +417,32 @@ hgd_truncate_string(char *in, size_t sz)
 		in[sz - i] = '.';
 
 	return (in);
+}
+
+/*
+ * generate a user readable permissions description from a bitfield
+ *
+ * not in user.c as that pulls in sqlite
+ */
+int
+hgd_gen_perms_str(int pfld, char **ret)
+{
+	struct hgd_user_perm	*perm;
+	size_t			 prev_len;
+
+	xasprintf(ret, "<perms:");
+	prev_len = strlen(*ret);
+
+	for (perm = hgd_user_perms; perm->bitval != -1; perm++) {
+		if (perm->bitval & pfld) {
+			xasprintf(ret, "%s %s", *ret, perm->descr);
+		}
+	}
+
+	if (strlen(*ret) == prev_len)
+		xasprintf(ret, "%s NONE>", *ret);
+	else
+		xasprintf(ret, "%s>", *ret);
+
+	return (HGD_OK);
 }

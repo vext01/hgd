@@ -139,3 +139,4 @@ hgd_user_del(char *uname)
 {
 	return (hgd_user_del_db(uname));
 }
+

@@ -197,6 +197,11 @@ struct hgd_req_despatch {
 	uint8_t			 varargs; /* if !0, n_args is the minimum */
 };
 
+struct hgd_user_perm {
+	int		 bitval;
+	char		*descr;
+};
+
 /* debug levels */
 #define HGD_D_ERROR		0
 #define HGD_D_WARN		1
@@ -281,5 +286,6 @@ void				 hgd_restart_myself(void);
 int				 hgd_cache_exec_context(char **args);
 void				 hgd_free_media_tags(struct hgd_media_tag *t);
 char				*hgd_truncate_string(char *in, size_t sz);
+int				 hgd_gen_perms_str(int pfld, char **p);
 
 #endif

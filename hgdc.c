@@ -44,6 +44,7 @@
 #include "config.h"
 #include "hgd.h"
 #include "net.h"
+#include "user.h"
 #ifdef HAVE_LIBCONFIG
 #include "cfg.h"
 #endif
@@ -955,9 +956,9 @@ hgd_req_user_add_prompt(int n_args, char **args)
 int
 hgd_req_user_list(int n_args, char **args)
 {
-	char			*resp;
+	char			*resp, *permstr;
 	char			*msg, *p;
-	int			n_items, i, perms;
+	int			n_items, i;
 
 	(void) args;
 	(void) n_args;
@@ -992,10 +993,10 @@ hgd_req_user_list(int n_args, char **args)
 		if ((p = strchr(resp, '|')) == NULL) {
 			DPRINTF(HGD_D_WARN, "could not find perms field");
 		} else {
-			*p = 0;
-			perms = atoi(++p);
-			printf("%-20s (admin=%d)\n",
-			    resp, perms & HGD_AUTH_ADMIN);
+			*p++ = 0;
+			hgd_gen_perms_str(atoi(p), &permstr);
+			printf("%-20s %s\n", resp, permstr);
+			free(permstr);
 		}
 
 		free(resp);
