@@ -909,9 +909,7 @@ hgd_req_user_list(int n_args, char **args)
 	(void) n_args;
 
 	xasprintf(&msg, "user-list");
-
 	hgd_sock_send_line(sock_fd, ssl, msg);
-
 	free(msg);
 
 	resp = hgd_sock_recv_line(sock_fd, ssl);
@@ -937,10 +935,8 @@ hgd_req_user_list(int n_args, char **args)
 		DPRINTF(HGD_D_DEBUG, "getting user %d", i);
 		resp = hgd_sock_recv_line(sock_fd, ssl);
 		printf("%d:\t%s\n", i + 1, resp);
-
 		free(resp);
 	}
-
 
 	return (HGD_OK);
 }
