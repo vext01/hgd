@@ -31,7 +31,7 @@ void	hgd_cfg_netd_flood_limit(config_t *cf, int *flood_limit);
 void	hgd_cf_netd_ssl_privkey(config_t *cf, char **ssl_key_path);
 void	hgd_cfg_netd_votesound(config_t *cf, int *req_votes);
 void	hgd_cfg_netd_port(config_t *cf, int *port);
-void	hgd_cfg_netd_max_filesize(config_t *cf, long int *max_upload_size);
+void	hgd_cfg_netd_max_filesize(config_t *cf, long long *max_upload_size);
 void	hgd_cfg_netd_sslcert(config_t *cf, char **ssl_cert_path);
 void	hgd_cfg_debug(config_t *cf, char* service, int8_t *hgd_debug);
 void	hgd_cfg_netd_voteoff_sound(config_t *cf, char **vote_sound);

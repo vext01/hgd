@@ -202,21 +202,13 @@ hgd_cfg_netd_port(config_t *cf, int *port)
 }
 
 void
-hgd_cfg_netd_max_filesize(config_t *cf, long int *max_upload_size)
+hgd_cfg_netd_max_filesize(config_t *cf, long long int *max_upload_size)
 {
 	/* -s */
-	long long int		tmp_max_upload_size;
-
 	if (config_lookup_int64(cf,
-	    "netd.max_file_size", &tmp_max_upload_size)) {
-		if (tmp_max_upload_size >= INT_MAX) {
-			DPRINTF(HGD_D_WARN, "Value %lld is too large to store so ignoring",
-			    tmp_max_upload_size);
-			return;
-		}
-		tmp_max_upload_size *= HGD_MB;
-		*max_upload_size = (long int) tmp_max_upload_size;
-		DPRINTF(HGD_D_DEBUG, "Set max upload size to %ld",
+	    "netd.max_file_size", max_upload_size)) {
+		*max_upload_size = (*max_upload_size) * HGD_MB;
+		DPRINTF(HGD_D_DEBUG, "Set max upload size to %lld",
 		    *max_upload_size);
 	}
 }

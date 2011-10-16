@@ -64,7 +64,7 @@ int				sock_backlog = HGD_DFL_BACKLOG;
 int				svr_fd = -1;
 int				flood_limit = HGD_MAX_USER_QUEUE;
 int				background = 1;
-long int			max_upload_size = HGD_DFL_MAX_UPLOAD;
+long long int			max_upload_size = HGD_DFL_MAX_UPLOAD;
 uint8_t				num_bad_commands = 0;
 uint8_t				lookup_client_dns = 1;
 
@@ -366,7 +366,7 @@ hgd_cmd_queue(struct hgd_session *sess, char **args)
 	/* strip path, we don't care about that */
 	filename = basename(filename_p);
 
-	if ((bytes == 0) || ((long int) bytes > max_upload_size)) {
+	if ((bytes == 0) || ((long long int) bytes > max_upload_size)) {
 		DPRINTF(HGD_D_WARN, "Incorrect file size");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|" HGD_RESP_E_FLSIZE);
@@ -1542,10 +1542,9 @@ main(int argc, char **argv)
 			DPRINTF(HGD_D_DEBUG, "Set port to %d", port);
 			break;
 		case 's':
-			/* XXX overflow? */
-			max_upload_size = atoi(optarg) * HGD_MB;
-			DPRINTF(HGD_D_DEBUG, "Set max upload size to %d",
-			    (int) max_upload_size);
+			max_upload_size = strtoll(optarg, NULL, 0) * HGD_MB;
+			DPRINTF(HGD_D_DEBUG, "Set max upload size to %lld",
+			    (long long int) max_upload_size);
 			break;
 		case 'S':
 			free(ssl_cert_path);
