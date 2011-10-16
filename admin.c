@@ -135,6 +135,12 @@ clean:
 }
 
 int
+hgd_user_del(char *uname)
+{
+	return (hgd_user_del_db(uname));
+}
+
+int
 hgd_pause_track()
 {
 	return (hgd_mplayer_pipe_send("pause\n"));

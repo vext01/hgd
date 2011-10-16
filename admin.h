@@ -23,8 +23,10 @@
 int			 hgd_user_list(struct hgd_user_list **);
 int			 hgd_user_mod_perms(char *uname,
 			    int perm_mask, uint8_t set);
+int			 hgd_user_del(char *uname);
+int			 hgd_user_add(char *user, char *pass);
+
 int			 hgd_pause_track(void);
 int			 hgd_skip_track(void);
-int			 hgd_user_add(char *user, char *pass);
 
 #endif

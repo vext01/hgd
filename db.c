@@ -882,7 +882,7 @@ clean:
  * remove user from db forever
  */
 int
-hgd_user_del(char *uname)
+hgd_user_del_db(char *uname)
 {
 	int			 sql_res, ret = HGD_FAIL, lookup_ret;
 	sqlite3_stmt		*stmt = NULL;
