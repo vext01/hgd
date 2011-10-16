@@ -686,10 +686,12 @@ hgd_clear_playlist()
 }
 
 /*
- * add a user to the database
+ * add a user to the database (pre salted and hashed)
+ *
+ * you probably want hgd_user_add() from admin.c
  */
 int
-hgd_add_user(char *user, char *salt, char *hash)
+hgd_user_add_db(char *user, char *salt, char *hash)
 {
 	int			 sql_res, ret = HGD_FAIL;
 	sqlite3_stmt		*stmt;

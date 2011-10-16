@@ -20,10 +20,6 @@
 
 #include "hgd.h"
 
-/*
- * these should not be taking char **args as though they were dynamic despatch
- * targets. That should be pushed up to the consumer level. XXX
- */
 int			 hgd_user_list(struct hgd_user_list **);
 int			 hgd_change_user_perms(char *uname,
 			    int perm_mask, uint8_t set);
