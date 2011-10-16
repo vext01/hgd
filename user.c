@@ -18,7 +18,7 @@
 #include <sqlite3.h>
 #include <openssl/rand.h>
 
-#include "admin.h"
+#include "user.h"
 #include "hgd.h"
 #include "db.h"
 #include "mplayer.h"
@@ -138,16 +138,4 @@ int
 hgd_user_del(char *uname)
 {
 	return (hgd_user_del_db(uname));
-}
-
-int
-hgd_pause_track()
-{
-	return (hgd_mplayer_pipe_send("pause\n"));
-}
-
-int
-hgd_skip_track()
-{
-	return (hgd_mplayer_pipe_send("stop\n"));
 }

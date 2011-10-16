@@ -222,3 +222,15 @@ clean:
 
 	return (ret);
 }
+
+int
+hgd_pause_track()
+{
+	return (hgd_mplayer_pipe_send("pause\n"));
+}
+
+int
+hgd_skip_track()
+{
+	return (hgd_mplayer_pipe_send("stop\n"));
+}

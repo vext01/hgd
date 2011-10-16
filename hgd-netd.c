@@ -47,7 +47,7 @@
 #ifdef HAVE_LIBCONFIG
 #include "cfg.h"
 #endif
-#include "admin.h"
+#include "user.h"
 #include "db.h"
 #include "hgd.h"
 #include "mplayer.h"

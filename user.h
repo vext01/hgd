@@ -26,7 +26,4 @@ int			 hgd_user_mod_perms(char *uname,
 int			 hgd_user_del(char *uname);
 int			 hgd_user_add(char *user, char *pass);
 
-int			 hgd_pause_track(void);
-int			 hgd_skip_track(void);
-
 #endif

@@ -36,7 +36,7 @@
 #include "cfg.h"
 #endif
 #include "db.h"
-#include "admin.h"
+#include "user.h"
 #include "mplayer.h"
 
 const char			*hgd_component = "hgd-admin";
