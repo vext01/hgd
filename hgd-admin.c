@@ -144,6 +144,36 @@ hgd_acmd_noadmin(char **args)
 }
 
 int
+hgd_acmd_user_list_print(char **args)
+{
+	struct hgd_user_list *list;
+	int			 i, ret = HGD_FAIL;
+
+	if (db == NULL)
+		db = hgd_open_db(db_path, 0);
+
+	if (db == NULL)
+		goto clean;
+
+	if (hgd_user_list(&list) != HGD_OK)
+		goto clean;
+
+	for (i = 0; i < list->n_users; i++) {
+		printf("%s (admin=%d)\n",
+		    list->users[i]->name, list->users[i]->perms);
+	}
+
+	ret = HGD_OK;
+clean:
+	if (list != NULL) {
+		hgd_free_user_list(list);
+		free(list);
+	}
+
+	return (ret);
+}
+
+int
 hgd_acmd_skip(char **args)
 {
 	(void) args;
