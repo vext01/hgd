@@ -82,6 +82,9 @@
 #define ANSII_YELLOW		(colours_on ? "\033[33m" : "")
 #define ANSII_RED		(colours_on ? "\033[31m" : "")
 #define ANSII_GREEN		(colours_on ? "\033[32m" : "")
+#define ANSII_BLUE		(colours_on ? "\033[34m" : "")
+#define ANSII_MAGENTA		(colours_on ? "\033[35m" : "")
+#define ANSII_CYAN		(colours_on ? "\033[36m" : "")
 #define ANSII_WHITE		(colours_on ? "\033[0m" : "")
 
 /*

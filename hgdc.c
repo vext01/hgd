@@ -674,7 +674,6 @@ hgd_print_track(char *resp, uint8_t first)
 		else
 			printf("<unknown>\n");
 
-
 		/* thats it for compact entries */
 		if (!first)
 			goto skip_full;
@@ -732,6 +731,7 @@ hgd_print_track(char *resp, uint8_t first)
 			printf("   You may vote off this track.\n");
 			break;
 		case 1:
+			printf("%s", ANSII_CYAN);
 			printf("   You HAVE voted-off this track.\n");
 			break;
 		case -1:
@@ -858,9 +858,9 @@ hgd_req_hud(int n_args, char **args)
 		if (status != 0)
 			DPRINTF(HGD_D_WARN, "clear screen failed");
 
-		printf("%sHGD Server @ %s -- Playlist:%s\n\n", 
-		    ANSII_YELLOW, host, ANSII_WHITE);
-
+		printf("%s", ANSII_YELLOW);
+		printf("HGD Server @ %s -- Playlist:\n\n", host);
+		printf("%s", ANSII_WHITE);
 
 		if (hgd_req_playlist(0, NULL) != HGD_OK)
 			return (HGD_FAIL);
