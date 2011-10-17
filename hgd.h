@@ -78,11 +78,14 @@
 #define HGD_FAIL_USREXIST	(2)	/* user already exists */
 #define HGD_FAIL_USRNOEXIST	(3)	/* user nonexistent */
 
-/* ANSII colours */
-#define ANSII_YELLOW		(colours_on ? "\033[33m" : "")
-#define ANSII_RED		(colours_on ? "\033[31m" : "")
-#define ANSII_GREEN		(colours_on ? "\033[32m" : "")
-#define ANSII_WHITE		(colours_on ? "\033[0m" : "")
+/* ANSI colours */
+#define ANSI_YELLOW		(colours_on ? "\033[33m" : "")
+#define ANSI_RED		(colours_on ? "\033[31m" : "")
+#define ANSI_GREEN		(colours_on ? "\033[32m" : "")
+#define ANSI_BLUE		(colours_on ? "\033[34m" : "")
+#define ANSI_MAGENTA		(colours_on ? "\033[35m" : "")
+#define ANSI_CYAN		(colours_on ? "\033[36m" : "")
+#define ANSI_WHITE		(colours_on ? "\033[0m" : "")
 
 /*
  * Authorisation levels

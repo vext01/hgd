@@ -289,7 +289,7 @@ hgd_print_pretty_server_response(char *resp_line)
 int
 hgd_check_svr_response(char *resp, uint8_t x)
 {
-	int			len, err = HGD_OK;
+	int			err = HGD_OK;
 	char			*trunc = NULL;
 
 	if (resp == NULL) {
@@ -297,8 +297,6 @@ hgd_check_svr_response(char *resp, uint8_t x)
 		err = HGD_FAIL;
 		goto clean;
 	}
-
-	len = strlen(resp);
 
 	if (hgd_debug) {
 		trunc = xstrdup(resp);
@@ -454,21 +452,21 @@ hgd_usage()
 	printf("  Commands include:\n");
 	printf("    hud\t\t\tHeads up display\n");
 	printf("    id\t\t\tShow user account details and vote info\n");
-	printf("    ls\t\t\tShow playlist\n\n");
+	printf("    ls\t\t\tShow playlist\n");
 	printf("    np\t\t\tNow playing\n");
-	printf("    q <file1> [...]\tQueue a track\n");
+	printf("    q <file1> [...]\tQueue track(s)\n");
 	printf("    vo\t\t\tVote-off current track\n");
 
-	printf("  Admin Commands include:\n");
+	printf("\n  Admin Commands include:\n");
 	printf("    pause\t\t\tPause the current song\n");
 	printf("    skip\t\t\tSkip the current song\n");
 	printf("    user-add <user> [password]\tAdd a user\n");
 	printf("    user-del <user>\t\tRemove a user\n");
 	printf("    user-list\t\t\tList Users\n");
 	printf("    user-mkadmin <user>\tGrant user admin rights\n");
-	printf("    user-noadmin <user>\t\tRevoke user admin rights\n\n");
+	printf("    user-noadmin <user>\t\tRevoke user admin rights\n");
 
-	printf("  Options include:\n");
+	printf("\n  Options include:\n");
 	printf("    -A\t\t\tColours off (only in hud mode)\n");
 	printf("    -a\t\t\tColours on (only in hud mode)\n");
 #ifdef HAVE_LIBCONFIG
@@ -478,7 +476,7 @@ hgd_usage()
 	printf("    -e\t\t\tForce encryption\n");
 	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
-	printf("    -m\t\t\tMax playlist items to show in hud mode\n");
+	printf("    -m <num>\t\tMax num items to show in playlist\n");
 	printf("    -p <port>\t\tSet connection port\n");
 	printf("    -r <secs>\t\trefresh rate (only in hud mode)\n");
 	printf("    -s <host/ip>\tSet connection address\n");
@@ -584,7 +582,10 @@ hgd_queue_track(char *filename)
 
 	if (hgd_debug <= 1) {
 		memset(stars_buf, ' ', HGD_TERM_WIDTH);
+
+		printf("%s", ANSI_GREEN);
 		printf("\r%s\r%s: OK\n", stars_buf, basename(trunc_filename));
+		printf("%s", ANSI_WHITE);
 	}
 
 	fclose(f);
@@ -647,9 +648,9 @@ hgd_print_track(char *resp, uint8_t first)
 	if (n_toks == HGD_NUM_TRACK_FIELDS) {
 
 		if (first)
-			printf("%s", ANSII_GREEN);
+			printf("%s", ANSI_GREEN);
 		else
-			printf("%s", ANSII_RED);
+			printf("%s", ANSI_RED);
 
 		printf(" [ #%04d queued by '%s' ]\n",
 		    atoi(tokens[0]), tokens[4]);
@@ -672,7 +673,6 @@ hgd_print_track(char *resp, uint8_t first)
 			    HGD_TERM_WIDTH - strlen("   Title:    ''")));
 		else
 			printf("<unknown>\n");
-
 
 		/* thats it for compact entries */
 		if (!first)
@@ -731,6 +731,7 @@ hgd_print_track(char *resp, uint8_t first)
 			printf("   You may vote off this track.\n");
 			break;
 		case 1:
+			printf("%s", ANSI_CYAN);
 			printf("   You HAVE voted-off this track.\n");
 			break;
 		case -1:
@@ -743,7 +744,7 @@ hgd_print_track(char *resp, uint8_t first)
 
 
 skip_full:
-		printf("%s", ANSII_WHITE);
+		printf("%s", ANSI_WHITE);
 	} else {
 		DPRINTF(HGD_D_ERROR, "Wrong number of tokens from server");
 		ret = HGD_FAIL;
@@ -857,9 +858,9 @@ hgd_req_hud(int n_args, char **args)
 		if (status != 0)
 			DPRINTF(HGD_D_WARN, "clear screen failed");
 
-		printf("%sHGD Server @ %s -- Playlist:%s\n\n", 
-		    ANSII_YELLOW, host, ANSII_WHITE);
-
+		printf("%s", ANSI_YELLOW);
+		printf("HGD Server @ %s -- Playlist:\n\n", host);
+		printf("%s", ANSI_WHITE);
 
 		if (hgd_req_playlist(0, NULL) != HGD_OK)
 			return (HGD_FAIL);

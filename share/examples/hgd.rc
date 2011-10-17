@@ -5,15 +5,12 @@
 #   (thanks to some major linux distros shipping old libconfig).
 # All lines should be terminated with a semi-colon.
 
-
 ## Location to store program state.
 #state_path = "/var/hgd";
 
 ## Set crypto/SSL options.
 ## Valid options are always/never/if_avaliable
 #crypto = "if_avaliable";
-
-
 
 ##netd specific options
 netd : {
@@ -52,7 +49,7 @@ netd : {
 	#daemonise = true;
 
 	## Flood limit (max number of songs a user can have in the queue)
-	## -1 = no limit, 0 means no once can queue!
+	## -1 = no limit, 0 means no one can queue!
 	#flood_limit = 5L;
 
 	## Location of voteoff sound
@@ -82,7 +79,7 @@ admin : {
 	## Debug level.  Controls logging. Always put first.
 	## 0 = ERROR, 1=WARNING, 2=INFO, 3=DEBUG
 	#debug = 1L;
-}
+};
 
 py_plugins : {
 	## Where to load Python plugin scripts from.
