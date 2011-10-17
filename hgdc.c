@@ -583,9 +583,9 @@ hgd_queue_track(char *filename)
 	if (hgd_debug <= 1) {
 		memset(stars_buf, ' ', HGD_TERM_WIDTH);
 
-		printf("%s", ANSII_GREEN);
+		printf("%s", ANSI_GREEN);
 		printf("\r%s\r%s: OK\n", stars_buf, basename(trunc_filename));
-		printf("%s", ANSII_WHITE);
+		printf("%s", ANSI_WHITE);
 	}
 
 	fclose(f);
@@ -648,9 +648,9 @@ hgd_print_track(char *resp, uint8_t first)
 	if (n_toks == HGD_NUM_TRACK_FIELDS) {
 
 		if (first)
-			printf("%s", ANSII_GREEN);
+			printf("%s", ANSI_GREEN);
 		else
-			printf("%s", ANSII_RED);
+			printf("%s", ANSI_RED);
 
 		printf(" [ #%04d queued by '%s' ]\n",
 		    atoi(tokens[0]), tokens[4]);
@@ -731,7 +731,7 @@ hgd_print_track(char *resp, uint8_t first)
 			printf("   You may vote off this track.\n");
 			break;
 		case 1:
-			printf("%s", ANSII_CYAN);
+			printf("%s", ANSI_CYAN);
 			printf("   You HAVE voted-off this track.\n");
 			break;
 		case -1:
@@ -744,7 +744,7 @@ hgd_print_track(char *resp, uint8_t first)
 
 
 skip_full:
-		printf("%s", ANSII_WHITE);
+		printf("%s", ANSI_WHITE);
 	} else {
 		DPRINTF(HGD_D_ERROR, "Wrong number of tokens from server");
 		ret = HGD_FAIL;
@@ -858,9 +858,9 @@ hgd_req_hud(int n_args, char **args)
 		if (status != 0)
 			DPRINTF(HGD_D_WARN, "clear screen failed");
 
-		printf("%s", ANSII_YELLOW);
+		printf("%s", ANSI_YELLOW);
 		printf("HGD Server @ %s -- Playlist:\n\n", host);
-		printf("%s", ANSII_WHITE);
+		printf("%s", ANSI_WHITE);
 
 		if (hgd_req_playlist(0, NULL) != HGD_OK)
 			return (HGD_FAIL);
