@@ -23,6 +23,8 @@
 
 #include <sqlite3.h>
 
+#include "hgd.h"
+
 #define	HGD_DB_SCHEMA_VERS	"1"
 
 extern sqlite3			*db;
