@@ -582,7 +582,10 @@ hgd_queue_track(char *filename)
 
 	if (hgd_debug <= 1) {
 		memset(stars_buf, ' ', HGD_TERM_WIDTH);
+
+		printf("%s", ANSII_GREEN);
 		printf("\r%s\r%s: OK\n", stars_buf, basename(trunc_filename));
+		printf("%s", ANSII_WHITE);
 	}
 
 	fclose(f);
