@@ -96,16 +96,23 @@ int			 hgd_check_svr_response(char *resp, uint8_t x);
 void
 hgd_exit_nicely()
 {
-	uint8_t			ssl_dead = 0;
+	uint8_t			ssl_ret = 0, i;
 
 	if (!exit_ok)
 		DPRINTF(HGD_D_INFO,
 		    "hgdc was interrupted or crashed - cleaning up");
 
 	if (ssl) {
-		/* clean up ssl structures */
-		while (!ssl_dead)
-			ssl_dead = SSL_shutdown(ssl);
+		/* as per SSL_shutdown() manual, we call at most twice */
+		for (i = 0; i < 2; i++) {
+			ssl_ret = SSL_shutdown(ssl);
+			if (ssl_ret == 1)
+				break;
+		}
+
+		if (ssl_ret != 1)
+			DPRINTF(HGD_D_WARN, "couldn't shutdown SSL");
+
 		SSL_free(ssl);
 	}
 

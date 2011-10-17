@@ -655,6 +655,11 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 
 	/* kill mplayer then */
 	/* XXX some of this needs to go in mplayer.c */
+	/*
+	 * XXX this seems dumb now that we have pipe control over
+	 * mplayer. Can we do locking/checking of playing file with
+	 * the db and skip track via pipe command?
+	 */
 	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
 
 	pid_file = fopen(pid_path, "r");
@@ -687,7 +692,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	read = fgets(id_str, HGD_ID_STR_SZ, pid_file);
 	if (read == NULL) {
 		if (!feof(pid_file)) {
-			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
+			DPRINTF(HGD_D_WARN, "Can't find track id in pid file");
 			fclose(pid_file);
 			return (HGD_FAIL);
 		}
