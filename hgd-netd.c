@@ -1168,7 +1168,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 {
 	struct hgd_session	 sess;
 	char			*recv_line;
-	uint8_t			 exit, ssl_dead = 0;
+	uint8_t			 exit, ssl_ret = 0, i;
 
 	sess.cli_str = hgd_identify_client(cli_addr);
 	sess.sock_fd = cli_fd;
@@ -1227,8 +1227,15 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		free(sess.cli_str);
 
 	if (sess.ssl != NULL) {
-		while (!ssl_dead)
-			ssl_dead = SSL_shutdown(sess.ssl);
+		/* as per SSL_shutdown() manual, we call at most twice */
+		for (i = 0; i < 2; i++) {
+			ssl_ret = SSL_shutdown(sess.ssl);
+			if (ssl_ret == 1)
+				break;
+		}
+
+		if (ssl_ret != 1)
+			DPRINTF(HGD_D_WARN, "couldn't shutdown SSL");
 
 		SSL_free(sess.ssl);
 	}
