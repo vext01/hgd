@@ -82,7 +82,7 @@ admin : {
 	## Debug level.  Controls logging. Always put first.
 	## 0 = ERROR, 1=WARNING, 2=INFO, 3=DEBUG
 	#debug = 1L;
-}
+};
 
 py_plugins : {
 	## Where to load Python plugin scripts from.
