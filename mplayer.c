@@ -17,6 +17,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include "config.h"
 #ifdef HAVE_PYTHON
@@ -105,36 +106,53 @@ int
 hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 {
 	int			status = 0, pid, ret = HGD_FAIL;
-	char			*pid_path = 0, *pipe_arg = 0;
-	FILE			*pid_file;
-	struct flock		fl;
-
-	fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-	fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-	fl.l_start  = 0;        /* Offset from l_whence         */
-	fl.l_len    = 0;        /* length, 0 = to EOF           */
-	fl.l_pid    = getpid(); /* our PID                      */
+	char			*ipc_path = 0, *pipe_arg = 0;
+	FILE			*ipc_file;
+	struct stat		st;
 
 	DPRINTF(HGD_D_INFO, "Playing '%s' for '%s'", t->filename, t->user);
 	if (hgd_mark_playing(t->id) == HGD_FAIL)
 		goto clean;
 
-	/* we will write away child pid */
-	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
+	/*
+	 * We will write away the tid of the playing file
+	 * hgd-netd uses this to check the user is voting off the track
+	 * they think they are.
+	 */
+	xasprintf(&ipc_path, "%s/%s", state_path, HGD_PLAYING_FILE);
 
-	pid_file = fopen(pid_path, "w");
-	if (pid_file == NULL) {
-		DPRINTF(HGD_D_ERROR, "Can't open '%s'", pid_path);
+	/* first check the file is non-existent */
+	if (stat(ipc_path, &st) < 0) {
+		if (errno != ENOENT) {
+			DPRINTF(HGD_D_ERROR,
+			    "stale tid file: %s: %s", ipc_path, SERROR);
+			goto clean;
+		}
+	} else {
+		DPRINTF(HGD_D_ERROR, "stale tid file: %s" , ipc_path);
 		goto clean;
 	}
 
-	if (fcntl(fileno(pid_file), F_SETLKW, &fl) == -1) {
-		DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
+	if (hgd_open_and_exclusive_file_lock(ipc_path, &ipc_file) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't open+lock '%s'", ipc_path);
 		goto clean;
 	}
 
-	if (chmod(pid_path, S_IRUSR | S_IWUSR) != 0)
-		DPRINTF(HGD_D_WARN, "Can't secure mplayer pid file");
+	/* try to be secure */
+	if (chmod(ipc_path, S_IRUSR | S_IWUSR) != 0)
+		DPRINTF(HGD_D_WARN, "Can't secure ipc file: %s", SERROR);
+
+	/* write away tid of current track to a file for hgd-netd */
+	if (fprintf(ipc_file, "%d", t->id) < 0) {
+		DPRINTF(HGD_D_ERROR, "Failed to write out tid: %s", SERROR);
+		goto clean;
+	}
+
+	/* unlock */
+	if (hgd_exclusive_file_unlock_and_close(ipc_file) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "failed to unlock");
+		goto clean;
+	}
 
 #ifdef HAVE_PYTHON
 	hgd_execute_py_hook("pre_play");
@@ -160,18 +178,9 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 		DPRINTF(HGD_D_ERROR, "execlp() failed");
 		hgd_exit_nicely(); /* child should always exit */
 	} else {
-		DPRINTF(HGD_D_INFO, "Mplayer spawned: pid=%d", pid);
-		fprintf(pid_file, "%d\n%d", pid, t->id);
+		DPRINTF(HGD_D_INFO,
+		    "Mplayer spawned, waiting to finish: pid=%d", pid);
 
-		fl.l_type = F_UNLCK;  /* set to unlock same region */
-
-		if (fcntl(fileno(pid_file), F_SETLK, &fl) == -1) {
-			DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
-			goto clean;
-		}
-
-		fclose(pid_file);
-		DPRINTF(HGD_D_INFO, "Waiting for mplayer to finish: pid=%d", pid);
 		if (waitpid(pid, &status, 0) < 0) {
 			/* it is ok for this to fail if we are restarting */
 			if (restarting || dying) {
@@ -180,24 +189,35 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 			DPRINTF(HGD_D_WARN, "Could not wait(): %s", SERROR);
 		}
 
-		/* unlink mplayer pid path */
-		DPRINTF(HGD_D_DEBUG, "Deleting mplayer pid file");
-		if (unlink(pid_path) < 0) {
-			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
+		/* unlink ipc file */
+		if (hgd_open_and_exclusive_file_lock(
+		    ipc_path, &ipc_file) != HGD_OK) {
+			DPRINTF(HGD_D_ERROR, "Can't open+lock '%s'", ipc_path);
+			goto clean;
+		}
+
+		if (unlink(ipc_path) < 0) {
+			DPRINTF(HGD_D_ERROR, "can't unlink ipc file %s: %s",
+			    ipc_path, SERROR);
+			goto clean;
+		}
+
+		if (hgd_exclusive_file_unlock_and_close(ipc_file) != HGD_OK) {
+			DPRINTF(HGD_D_ERROR, "failed to unlock+close %s: %s",
+			    ipc_path, SERROR);
 		}
 
 		/* unlink input pipe */
-		if (unlink(mplayer_fifo_path) < 0) {
+		if (unlink(mplayer_fifo_path) < 0)
 			DPRINTF(HGD_D_WARN,
-			    "Could not unlink mplayer input fifo: %s", SERROR);
-		}
+			    "Could not unlink mplayer input fifo %s", SERROR);
 
 		/* unlink media (but not if restarting, we replay the track) */
 		if ((!restarting) && (!dying)
 		    && (purge_fs) && (unlink(t->filename) < 0)) {
 			DPRINTF(HGD_D_DEBUG,
 			    "Deleting finished: %s", t->filename);
-			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", pid_path);
+			DPRINTF(HGD_D_WARN, "Can't unlink '%s'", ipc_path);
 		}
 	}
 #ifdef HAVE_PYTHON
@@ -217,8 +237,8 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 clean:
 	if (pipe_arg)
 		free(pipe_arg);
-	if (pid_path)
-		free(pid_path);
+	if (ipc_path)
+		free(ipc_path);
 
 	return (ret);
 }

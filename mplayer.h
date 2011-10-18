@@ -20,13 +20,14 @@
 
 #include "hgd.h"
 
+/* XXX unify */
 #define HGD_ERR_MPLAYER_NOTPLAYING (-1)
 #define HGD_ERR_MPLAYER_PIPE (-2)
 
 extern char		*mplayer_fifo_path;
 
 #define HGD_MPLAYER_PIPE_NAME	"mplayer.pipe"
-#define HGD_MPLAYER_PID_NAME	"mplayer.pid"
+#define HGD_PLAYING_FILE	"hgd.playing"
 
 int			 hgd_mplayer_pipe_send(char *what);
 int			 hgd_make_mplayer_input_fifo(void);

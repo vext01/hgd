@@ -87,9 +87,10 @@ hgd_exit_nicely()
 	exit (!exit_ok);
 }
 
-void
+int
 hgd_play_loop(void)
 {
+	int				 ret = HGD_OK;
 	struct hgd_playlist_item	 track;
 
 	/* forever play songs */
@@ -105,7 +106,11 @@ hgd_play_loop(void)
 			    track.filename);
 
 			hgd_clear_votes();
-			hgd_play_track(&track, purge_finished_fs, purge_finished_db);
+			if (hgd_play_track(&track,
+			    purge_finished_fs, purge_finished_db) != HGD_OK) {
+				ret = HGD_FAIL;
+				break;
+			}
 			hgd_clear_votes();
 		} else {
 			DPRINTF(HGD_D_DEBUG, "no tracks to play");
@@ -116,6 +121,8 @@ hgd_play_loop(void)
 		}
 		hgd_free_playlist_item(&track);
 	}
+
+	return (ret);
 }
 
 int
@@ -325,9 +332,10 @@ main(int argc, char **argv)
 
 	/* start */
 	if (background) hgd_daemonise();
-	hgd_play_loop();
 
-	exit_ok = 1;
+	if (hgd_play_loop() == HGD_OK)
+		exit_ok = 1;
+
 	hgd_exit_nicely();
 	_exit (EXIT_SUCCESS); /* NOREACH */
 }

@@ -660,7 +660,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	 * mplayer. Can we do locking/checking of playing file with
 	 * the db and skip track via pipe command?
 	 */
-	xasprintf(&pid_path, "%s/%s", state_path, HGD_MPLAYER_PID_NAME);
+	xasprintf(&pid_path, "%s/%s", state_path, HGD_PLAYING_FILE);
 
 	pid_file = fopen(pid_path, "r");
 	if (pid_file == NULL) {

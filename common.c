@@ -25,6 +25,7 @@
 
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -445,4 +446,95 @@ hgd_gen_perms_str(int pfld, char **ret)
 		xasprintf(ret, "%s>", *ret);
 
 	return (HGD_OK);
+}
+
+int
+hgd_exclusive_file_lock(FILE *file)
+{
+	int			ret = HGD_FAIL;
+	struct flock		fl;
+
+	fl.l_type = F_WRLCK;	/* write locks are exclusive */
+	fl.l_whence = SEEK_SET;
+	fl.l_start = 0;
+	fl.l_len = 0;		/* to EOF */
+	fl.l_pid = getpid();
+
+	DPRINTF(HGD_D_INFO, "Excusive lock: fd=%d", fileno(file));
+
+	if (fcntl(fileno(file), F_SETLKW, &fl) == -1) {
+		DPRINTF(HGD_D_ERROR,
+		    "failed lock: fd=%d: %s", fileno(file), SERROR);
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	return (ret);
+}
+
+int
+hgd_exclusive_file_unlock(FILE *file)
+{
+	int			ret = HGD_FAIL;
+	struct flock		fl;
+
+	fl.l_type = F_UNLCK;
+	fl.l_whence = SEEK_SET;
+	fl.l_start = 0;
+	fl.l_len = 0;		/* to EOF */
+	fl.l_pid = getpid();
+
+	if (fcntl(fileno(file), F_SETLK, &fl) == -1) {
+		DPRINTF(HGD_D_ERROR,
+		    "fcntl failed: fd=%d: %s", fileno(file), SERROR);
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	return (ret);
+}
+
+int
+hgd_open_and_exclusive_file_lock(char *fname, FILE **file)
+{
+	int			ret = HGD_FAIL;
+
+	DPRINTF(HGD_D_INFO, "open and lock: %s", fname);
+
+	*file = fopen(fname, "w");
+	if (*file == NULL) {
+		DPRINTF(HGD_D_ERROR, "Can't open '%s': %s", fname, SERROR);
+		goto clean;
+	}
+
+	if (hgd_exclusive_file_lock(*file) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "couldn't lock: %s", fname);
+		fclose(*file);
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	return (ret);
+}
+
+int
+hgd_exclusive_file_unlock_and_close(FILE *file)
+{
+	int			ret = HGD_FAIL;
+
+	DPRINTF(HGD_D_INFO, "unlock and close: fd=%d", fileno(file));
+
+	if (hgd_exclusive_file_unlock(file) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "falied to unlock: fd=%d", fileno(file));
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	fclose(file);
+
+	return (ret);
 }

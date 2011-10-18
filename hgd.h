@@ -283,12 +283,19 @@ void				 hgd_register_sig_handlers(void);
 char				*hgd_sha1(const char *msg, const char *salt);
 char				*hgd_bytes_to_hex(unsigned char *bs, int len);
 void				 hgd_bytes_to_hex_buf(char*, char*, int len);
-int				 hgd_readpassphrase_confirmed(char *buf, char *prompt);
+int				 hgd_readpassphrase_confirmed(
+				     char *buf, char *prompt);
 int				 hgd_daemonise(void);
 void				 hgd_restart_myself(void);
 int				 hgd_cache_exec_context(char **args);
 void				 hgd_free_media_tags(struct hgd_media_tag *t);
 char				*hgd_truncate_string(char *in, size_t sz);
 int				 hgd_gen_perms_str(int pfld, char **p);
+int				 hgd_exclusive_file_unlock(FILE *file);
+int				 hgd_exclusive_file_lock(FILE *file);
+int				 hgd_exclusive_file_unlock_and_close(
+				     FILE *file);
+int				 hgd_open_and_exclusive_file_lock(
+				     char *fname, FILE **file);
 
 #endif
