@@ -435,7 +435,7 @@ hgd_insert_vote(char *user)
 
 	sql_res = sqlite3_step(stmt);
 	if (sql_res == SQLITE_CONSTRAINT) {
-		ret = 1; /* indicates duplicat vote */
+		ret = HGD_FAIL_DUPVOTE;
 		goto clean;
 	} else if (sql_res != SQLITE_DONE) {
 		DPRINTF(HGD_D_WARN, "Can't step sql: %s", DERROR);

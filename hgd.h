@@ -78,6 +78,7 @@
 #define HGD_FAIL_USREXIST	(2)	/* user already exists */
 #define HGD_FAIL_USRNOEXIST	(3)	/* user nonexistent */
 #define HGD_FAIL_ENOENT		(4)	/* file non-existent */
+#define HGD_FAIL_DUPVOTE	(5)	/* duplicate vote */
 
 /* ANSI colours */
 #define ANSI_YELLOW		(colours_on ? "\033[33m" : "")
