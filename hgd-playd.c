@@ -94,7 +94,7 @@ hgd_play_loop(void)
 	struct hgd_playlist_item	 track;
 
 	/* forever play songs */
-	DPRINTF(HGD_D_INFO "Starting play loop");
+	DPRINTF(HGD_D_INFO, "Starting play loop");
 	while ((!dying) && (!restarting)) {
 		memset(&track, 0, sizeof(track));
 
