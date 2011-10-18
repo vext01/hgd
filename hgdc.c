@@ -1428,11 +1428,11 @@ main(int argc, char **argv)
 	while ((ch = getopt(argc, argv, "aAc:Eehm:p:r:s:u:vx:")) != -1) {
 		switch (ch) {
 		case 'a':
-			DPRINTF(HGD_D_DEBUG, "Colour hud on");
+			DPRINTF(HGD_D_DEBUG, "ANSI colours on");
 			colours_on = 1;
 			break;
 		case 'A':
-			DPRINTF(HGD_D_DEBUG, "Colour hud off");
+			DPRINTF(HGD_D_DEBUG, "ANSI colours off");
 			colours_on = 0;
 			break;
 		case 'c':
@@ -1448,7 +1448,7 @@ main(int argc, char **argv)
 			break;
 		case 'm':
 			hud_max_items = atoi(optarg);
-			DPRINTF(HGD_D_DEBUG, "Set max hud items to %d",
+			DPRINTF(HGD_D_DEBUG, "Set max playlist items to %d",
 			    hud_max_items);
 			break;
 		case 's':
