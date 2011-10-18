@@ -55,10 +55,10 @@ hgd_mplayer_pipe_send(char *what)
 		if (errno == ENOENT) { 
 			/* no pipe = not playing */
 			DPRINTF(HGD_D_ERROR, "No track is playing");
-			ret = HGD_ERR_MPLAYER_NOTPLAYING;
+			ret = HGD_FAIL_NOPLAY;
 		} else {
 			DPRINTF(HGD_D_ERROR, "Pipe failure: %s", SERROR);
-			ret = HGD_ERR_MPLAYER_PIPE;
+			ret = HGD_FAIL;
 		}
 		goto clean;
 	}

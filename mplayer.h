@@ -20,10 +20,6 @@
 
 #include "hgd.h"
 
-/* XXX unify */
-#define HGD_ERR_MPLAYER_NOTPLAYING (-1)
-#define HGD_ERR_MPLAYER_PIPE (-2)
-
 extern char		*mplayer_fifo_path;
 
 #define HGD_MPLAYER_PIPE_NAME	"mplayer.pipe"

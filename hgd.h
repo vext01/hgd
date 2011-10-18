@@ -79,6 +79,7 @@
 #define HGD_FAIL_USRNOEXIST	(3)	/* user nonexistent */
 #define HGD_FAIL_ENOENT		(4)	/* file non-existent */
 #define HGD_FAIL_DUPVOTE	(5)	/* duplicate vote */
+#define HGD_FAIL_NOPLAY		(6)	/* nothing is playing */
 
 /* ANSI colours */
 #define ANSI_YELLOW		(colours_on ? "\033[33m" : "")
