@@ -19,6 +19,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -558,4 +559,30 @@ hgd_set_line_colour(char *ansi_code)
 {
 	printf("%s", ansi_code);
 	fflush(stdout);
+}
+
+int
+hgd_write_pid_file()
+{
+	char			*path;
+	int			 ret = HGD_FAIL, sr;
+	struct stat		 st;
+
+	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
+
+	/* if the pid file exists, something is wrong */
+	sr = stat(path, &st);
+	if ((sr != -1) || (errno != ENOENT)) {
+		DPRINTF(HGD_D_ERROR, "Stale pid file: %s: is another instance of %s running?",
+		    path, hgd_component);
+		goto clean;
+	}
+
+	/* XXX open file with locking, write pid */
+
+	ret = HGD_OK;
+clean:
+	free(path);
+
+	return (ret);
 }
