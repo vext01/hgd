@@ -581,7 +581,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	 * We use this file with locks to avoid race conditions.
 	 */
 	xasprintf(&ipc_path, "%s/%s", state_path, HGD_PLAYING_FILE);
-	open_ret = hgd_open_and_file_lock(ipc_path, F_RDLCK, &ipc_file);
+	open_ret = hgd_file_open_and_lock(ipc_path, F_RDLCK, &ipc_file);
 	switch (open_ret) {
 		case HGD_OK:
 			break; /* good */

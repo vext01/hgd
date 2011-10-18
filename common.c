@@ -502,7 +502,7 @@ clean:
 
 /* type is F_WRLOCK (exclusive write), or F_RDLCK (read) */
 int
-hgd_open_and_file_lock(char *fname, int type, FILE **file)
+hgd_file_open_and_lock(char *fname, int type, FILE **file)
 {
 	int			ret = HGD_FAIL;
 

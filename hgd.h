@@ -295,9 +295,8 @@ char				*hgd_truncate_string(char *in, size_t sz);
 int				 hgd_gen_perms_str(int pfld, char **p);
 int				 hgd_file_unlock(FILE *file);
 int				 hgd_file_lock(FILE *file, int type);
-int				 hgd_file_unlock_and_close(
-				     FILE *file);
-int				 hgd_open_and_file_lock(
+int				 hgd_file_unlock_and_close( FILE *file);
+int				 hgd_file_open_and_lock(
 				     char *fname, int type, FILE **file);
 
 #endif
