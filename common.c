@@ -552,3 +552,10 @@ clean:
 
 	return (ret);
 }
+
+void
+hgd_set_line_colour(char *ansi_code)
+{
+	printf("%s", ansi_code);
+	fflush(stdout);
+}

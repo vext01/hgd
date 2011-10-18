@@ -298,5 +298,6 @@ int				 hgd_file_lock(FILE *file, int type);
 int				 hgd_file_unlock_and_close( FILE *file);
 int				 hgd_file_open_and_lock(
 				     char *fname, int type, FILE **file);
+void				 hgd_set_line_colour(char *ansi_code);
 
 #endif
