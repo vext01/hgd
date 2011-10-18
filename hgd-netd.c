@@ -565,56 +565,65 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 int
 hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 {
-	struct hgd_playlist_item	 playing;
-	char				*pid_path, pid_str[HGD_PID_STR_SZ];
+	char				*ipc_path = NULL;
 	char				*scmd, id_str[HGD_ID_STR_SZ], *read;
-	pid_t				 pid;
-	FILE				*pid_file;
-	int				 tid = -1, scmd_ret;
-	struct flock			 fl;
+	FILE				*ipc_file;
+	int				 open_ret;
+	int				 ret = HGD_FAIL;
 
-	fl.l_type   = F_RDLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-	fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-	fl.l_start  = 0;        /* Offset from l_whence         */
-	fl.l_len    = 0;        /* length, 0 = to EOF           */
-	fl.l_pid    = getpid(); /* our PID                      */
+	DPRINTF(HGD_D_INFO, "%s wants to skip track", sess->user->name);
 
-
-	DPRINTF(HGD_D_INFO, "%s wants to kill track", sess->user->name);
-
-	memset(&playing, 0, sizeof(playing));
-	if (hgd_get_playing_item(&playing) == HGD_FAIL) {
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "err|" HGD_RESP_E_INT);
-		return (HGD_FAIL);
-	}
-
-	/* is *anything* playing? */
-	if (playing.filename == NULL) {
-		DPRINTF(HGD_D_INFO, "No track is playing, can't vote off");
-		hgd_sock_send_line(sess->sock_fd, sess->ssl,
-		    "err|" HGD_RESP_E_NOPLAY);
-		return (HGD_FAIL);
-	}
-
-	/* is the file they are voting off playing? */
-	if (args != NULL) { /* null if call from hgd_cmd_vote_off_noargs */
-		tid = atoi(args[0]);
-		if (playing.id != tid) {
-			DPRINTF(HGD_D_INFO, "Track to voteoff isn't playing");
+	/*
+	 * Is the file they are voting off playing?
+	 * We check this using the ipc file playd writes for us. This
+	 * contains (if existent), the tid of the currently playing file.
+	 *
+	 * We use this file with locks to avoid race conditions.
+	 */
+	xasprintf(&ipc_path, "%s/%s", state_path, HGD_PLAYING_FILE);
+	open_ret = hgd_open_and_file_lock(ipc_path, F_RDLCK, &ipc_file);
+	switch (open_ret) {
+		case HGD_OK:
+			break; /* good */
+		case HGD_FAIL_ENOENT:
+			DPRINTF(HGD_D_WARN, "nothing playing to vote off");
 			hgd_sock_send_line(sess->sock_fd, sess->ssl,
-			    "err|" HGD_RESP_E_WRTRK);
-			hgd_free_playlist_item(&playing);
-			return (HGD_FAIL);
+			    "err|" HGD_RESP_E_NOPLAY);
+			goto clean;
+			break;
+		default:
+			DPRINTF(HGD_D_ERROR, "failed to open ipc file");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			    "err|" HGD_RESP_E_INT);
+			goto clean;
+			break;
+	};
+
+	/* Read the track id from the ipc file */
+	read = fgets(id_str, HGD_ID_STR_SZ, ipc_file);
+	hgd_file_unlock_and_close(ipc_file);
+	if (read == NULL) {
+		if (!feof(ipc_file)) {
+			DPRINTF(HGD_D_WARN, "Can't find track id in ipc file");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			    "err|" HGD_RESP_E_INT);
+			goto clean;
 		}
 	}
-	hgd_free_playlist_item(&playing);
+
+	/* this check only happens for the "safe" varient for vo */
+	if ((args != NULL) && (atoi(id_str) != atoi(args[0]))) {
+		DPRINTF(HGD_D_INFO, "Track to voteoff isn't playing");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|" HGD_RESP_E_WRTRK);
+		goto clean;
+	}
 
 	/* insert vote */
 	switch (hgd_insert_vote(sess->user->name)) {
 	case HGD_OK:
 		break; /* good */
-	case 1:
+	case 1: /* XXX */
 		/* duplicate vote */
 		DPRINTF(HGD_D_INFO, "User '%s' already voted",
 		    sess->user->name);
@@ -622,24 +631,21 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		    "err|" HGD_RESP_E_DUPVOTE);
 		return (HGD_OK);
 		break;
-	case HGD_FAIL:
 	default:
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|" HGD_RESP_E_INT);
 		return (HGD_FAIL);
 	};
 
-	/* play a sound on skipping? */
+	/* play a sound on voting */
 	if (vote_sound != NULL) {
 		DPRINTF(HGD_D_DEBUG, "Play voteoff sound: '%s'", vote_sound);
 		xasprintf(&scmd, "mplayer -really-quiet %s", vote_sound);
-		scmd_ret = system(scmd);
 
-		/* unreachable as mplayer doesn't return non-zero :\ */
-		if (scmd_ret != 0) {
+		if (system(scmd) != 0) {
+			/* unreachable as mplayer doesn't return non-zero :\ */
 			DPRINTF(HGD_D_WARN,
-			    "Vote-off noise failed to play (ret %d): %s",
-			    scmd_ret, vote_sound);
+			    "Vote-off noise failed to play: %s", vote_sound);
 		}
 
 		free(scmd);
@@ -651,73 +657,21 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 		return (HGD_OK);
 	}
 
-	DPRINTF(HGD_D_INFO, "Vote limit exceeded - kill track");
-
-	/* kill mplayer then */
-	/* XXX some of this needs to go in mplayer.c */
-	/*
-	 * XXX this seems dumb now that we have pipe control over
-	 * mplayer. Can we do locking/checking of playing file with
-	 * the db and skip track via pipe command?
-	 */
-	xasprintf(&pid_path, "%s/%s", state_path, HGD_PLAYING_FILE);
-
-	pid_file = fopen(pid_path, "r");
-	if (pid_file == NULL) {
-		DPRINTF(HGD_D_WARN,
-		    "Can't find mplayer pid file: %s: %s", pid_path, SERROR);
-		free(pid_path);
-		return (HGD_FAIL);
+	DPRINTF(HGD_D_INFO, "Vote limit exceeded - skip track");
+	if (hgd_skip_track() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Failed to skip track");
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|" HGD_RESP_E_INT);
+		goto clean;
 	}
 
-	if (fcntl(fileno(pid_file), F_SETLKW, &fl) == -1) {
-		DPRINTF(HGD_D_ERROR, "failed to get lock on pid file");
-		fclose(pid_file);
-		return (HGD_FAIL);
-	}
+	hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+	ret = HGD_OK;
+clean:
+	if (ipc_path)
+		free(ipc_path);
 
-	free(pid_path);
-
-	/* Read the pid from the pidfile */
-	read = fgets(pid_str, HGD_PID_STR_SZ, pid_file);
-	if (read == NULL) {
-		if (!feof(pid_file)) {
-			DPRINTF(HGD_D_WARN, "Can't find pid in pid file");
-			fclose(pid_file);
-			return (HGD_FAIL);
-		}
-	}
-
-	/* Read the track id from the pid file */
-	read = fgets(id_str, HGD_ID_STR_SZ, pid_file);
-	if (read == NULL) {
-		if (!feof(pid_file)) {
-			DPRINTF(HGD_D_WARN, "Can't find track id in pid file");
-			fclose(pid_file);
-			return (HGD_FAIL);
-		}
-	}
-
-	fl.l_type = F_UNLCK;
-	fcntl(fileno(pid_file), F_SETLK, &fl);  /* F_GETLK, F_SETLK, F_SETLKW */
-
-	fclose(pid_file);
-
-	if (atoi(id_str) == playing.id) {
-		pid = atoi(pid_str);
-		DPRINTF(HGD_D_DEBUG, "Killing mplayer");
-		if (kill(pid, SIGINT) < 0)
-			DPRINTF(HGD_D_WARN, "Can't kill mplayer: %s", SERROR);
-
-		/* Note: player daemon will empty the votes table */
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-		return (HGD_OK);
-	} else {
-		DPRINTF(HGD_D_WARN,
-		    "Hmm that was racey! wanted to kill %d but %s was playing",
-		    playing.id, id_str);
-		return(HGD_FAIL);
-	}
+	return (ret);
 }
 
 int

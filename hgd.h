@@ -77,6 +77,7 @@
 #define HGD_FAIL_PERMNOCHG	(1)	/* perms didn't change */
 #define HGD_FAIL_USREXIST	(2)	/* user already exists */
 #define HGD_FAIL_USRNOEXIST	(3)	/* user nonexistent */
+#define HGD_FAIL_ENOENT		(4)	/* file non-existent */
 
 /* ANSI colours */
 #define ANSI_YELLOW		(colours_on ? "\033[33m" : "")
@@ -291,11 +292,11 @@ int				 hgd_cache_exec_context(char **args);
 void				 hgd_free_media_tags(struct hgd_media_tag *t);
 char				*hgd_truncate_string(char *in, size_t sz);
 int				 hgd_gen_perms_str(int pfld, char **p);
-int				 hgd_exclusive_file_unlock(FILE *file);
-int				 hgd_exclusive_file_lock(FILE *file);
-int				 hgd_exclusive_file_unlock_and_close(
+int				 hgd_file_unlock(FILE *file);
+int				 hgd_file_lock(FILE *file, int type);
+int				 hgd_file_unlock_and_close(
 				     FILE *file);
-int				 hgd_open_and_exclusive_file_lock(
-				     char *fname, FILE **file);
+int				 hgd_open_and_file_lock(
+				     char *fname, int type, FILE **file);
 
 #endif

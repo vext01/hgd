@@ -133,7 +133,7 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 		goto clean;
 	}
 
-	if (hgd_open_and_exclusive_file_lock(ipc_path, &ipc_file) != HGD_OK) {
+	if (hgd_open_and_file_lock(ipc_path, F_WRLCK, &ipc_file) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't open+lock '%s'", ipc_path);
 		goto clean;
 	}
@@ -149,7 +149,7 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 	}
 
 	/* unlock */
-	if (hgd_exclusive_file_unlock_and_close(ipc_file) != HGD_OK) {
+	if (hgd_file_unlock_and_close(ipc_file) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "failed to unlock");
 		goto clean;
 	}
@@ -190,8 +190,8 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 		}
 
 		/* unlink ipc file */
-		if (hgd_open_and_exclusive_file_lock(
-		    ipc_path, &ipc_file) != HGD_OK) {
+		if (hgd_open_and_file_lock(
+		    ipc_path, F_WRLCK, &ipc_file) != HGD_OK) {
 			DPRINTF(HGD_D_ERROR, "Can't open+lock '%s'", ipc_path);
 			goto clean;
 		}
@@ -202,7 +202,7 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 			goto clean;
 		}
 
-		if (hgd_exclusive_file_unlock_and_close(ipc_file) != HGD_OK) {
+		if (hgd_file_unlock_and_close(ipc_file) != HGD_OK) {
 			DPRINTF(HGD_D_ERROR, "failed to unlock+close %s: %s",
 			    ipc_path, SERROR);
 		}

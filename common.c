@@ -448,19 +448,23 @@ hgd_gen_perms_str(int pfld, char **ret)
 	return (HGD_OK);
 }
 
+/* type is F_WRLCK (exclusive write), or F_RDLCK (read) */
 int
-hgd_exclusive_file_lock(FILE *file)
+hgd_file_lock(FILE *file, int type)
 {
 	int			ret = HGD_FAIL;
 	struct flock		fl;
 
-	fl.l_type = F_WRLCK;	/* write locks are exclusive */
+	fl.l_type = type;
 	fl.l_whence = SEEK_SET;
 	fl.l_start = 0;
 	fl.l_len = 0;		/* to EOF */
 	fl.l_pid = getpid();
 
-	DPRINTF(HGD_D_INFO, "Excusive lock: fd=%d", fileno(file));
+	if (type == F_WRLCK)
+		DPRINTF(HGD_D_INFO, "WRLCK");
+	else
+		DPRINTF(HGD_D_INFO, "RDLCK");
 
 	if (fcntl(fileno(file), F_SETLKW, &fl) == -1) {
 		DPRINTF(HGD_D_ERROR,
@@ -474,7 +478,7 @@ clean:
 }
 
 int
-hgd_exclusive_file_unlock(FILE *file)
+hgd_file_unlock(FILE *file)
 {
 	int			ret = HGD_FAIL;
 	struct flock		fl;
@@ -496,20 +500,30 @@ clean:
 	return (ret);
 }
 
+/* type is F_WRLOCK (exclusive write), or F_RDLCK (read) */
 int
-hgd_open_and_exclusive_file_lock(char *fname, FILE **file)
+hgd_open_and_file_lock(char *fname, int type, FILE **file)
 {
 	int			ret = HGD_FAIL;
 
-	DPRINTF(HGD_D_INFO, "open and lock: %s", fname);
+	if (type == F_WRLCK)
+		DPRINTF(HGD_D_INFO, "open and WRLCK: %s", fname);
+	else
+		DPRINTF(HGD_D_INFO, "open and RDLCK: %s", fname);
 
-	*file = fopen(fname, "w");
+	if (type == F_WRLCK)
+		*file = fopen(fname, "w");
+	else
+		*file = fopen(fname, "r");
+
 	if (*file == NULL) {
 		DPRINTF(HGD_D_ERROR, "Can't open '%s': %s", fname, SERROR);
+		if (errno == ENOENT)
+			ret = HGD_FAIL_ENOENT;
 		goto clean;
 	}
 
-	if (hgd_exclusive_file_lock(*file) != HGD_OK) {
+	if (hgd_file_lock(*file, type) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "couldn't lock: %s", fname);
 		fclose(*file);
 		goto clean;
@@ -521,13 +535,13 @@ clean:
 }
 
 int
-hgd_exclusive_file_unlock_and_close(FILE *file)
+hgd_file_unlock_and_close(FILE *file)
 {
 	int			ret = HGD_FAIL;
 
 	DPRINTF(HGD_D_INFO, "unlock and close: fd=%d", fileno(file));
 
-	if (hgd_exclusive_file_unlock(file) != HGD_OK) {
+	if (hgd_file_unlock(file) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "falied to unlock: fd=%d", fileno(file));
 		goto clean;
 	}
