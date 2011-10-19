@@ -104,14 +104,20 @@ You will be asked to type a password twice. Do this for all users.
 
 Then you can run the hgd daemons:
 
- % hgd-netd
- % hgd-play
+ % /absolute/path/to/hgd-netd
+ % /absolute/path/to/hgd-playd
 
-Examine the system 'daemon' log and look for errors. For debugging, you
+Check the daemons came up properly:
+
+ % hgd-admin status
+
+If either daemons did not come up, then examine the system's 'daemon'
+log (usually /avr/log/daemon) and look for errors. For debugging, you
 can run the daemons in the foreground -B and turn up debugging with -x
 <level> (0-3).
 
 Then you can queue tracks:
+
  % hgdc q <some media file>
 
 Each command has a manual page for detailed usage instructions. Also,
