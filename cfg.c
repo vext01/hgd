@@ -23,6 +23,7 @@
 
 #include "cfg.h"
 #include "hgd.h"
+#include "net.h"
 
 int
 hgd_load_config(config_t *cf, char **config_locations)
