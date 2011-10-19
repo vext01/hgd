@@ -74,7 +74,7 @@ struct hgd_resp_err hgd_resp_errs[] = {
 	{ 0,			0 }
 };
 
-const char		*hgd_component = "hgdc";
+const char		*hgd_component = HGD_COMPONENT_HGDC;
 
 char			*user = NULL, *host = NULL, *password = NULL;
 int			 port = HGD_DFL_PORT;

@@ -39,7 +39,7 @@
 #include "user.h"
 #include "mplayer.h"
 
-const char			*hgd_component = "hgd-admin";
+const char			*hgd_component = HGD_COMPONENT_HGD_ADMIN;
 
 uint8_t				 purge_finished_db = 1;
 uint8_t				 purge_finished_fs = 1;

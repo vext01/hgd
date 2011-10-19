@@ -24,6 +24,13 @@
 
 #define HGD_VERSION		PACKAGE_VERSION
 
+/* components */
+#define HGD_COMPONENT_HGD_NETD		"hgd-netd"
+#define HGD_COMPONENT_HGD_PLAYD		"hgd-playd"
+#define HGD_COMPONENT_HGDC		"hgdc"
+#define HGD_COMPONENT_HGD_MK_PYDOC	"hgd-mk-pydoc"
+#define HGD_COMPONENT_HGD_ADMIN		"hgd-admin"
+
 /* misc */
 #define HGD_DFL_REQ_VOTES	3
 #define HGD_PID_STR_SZ		10

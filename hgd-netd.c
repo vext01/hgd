@@ -57,7 +57,7 @@
 #include <tag_c.h>
 #endif
 
-const char			*hgd_component = "hgd-netd";
+const char			*hgd_component = HGD_COMPONENT_HGD_NETD;
 
 int				port = HGD_DFL_PORT;
 int				sock_backlog = HGD_DFL_BACKLOG;

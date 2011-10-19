@@ -15,8 +15,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/* must be outside HAVE_PYTHON */
-const char			*hgd_component = "hgd-mk-pydoc";
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -34,6 +32,9 @@ const char			*hgd_component = "hgd-mk-pydoc";
 #include "config.h"
 #include "py.h"
 #include "hgd.h"
+
+/* must be outside HAVE_PYTHON */
+const char			*hgd_component = HGD_COMPONENT_HGD_MK_PYDOC;
 
 /*
  * clean up, exit. if exit_ok = 0, an error (signal/error)
