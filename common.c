@@ -632,3 +632,67 @@ clean:
 
 	return (ret);
 }
+
+/*
+ * checks to see if a component is running.
+ *
+ * if success is returned, then you trust *running, else
+ * you can not be sure.
+ */
+int
+hgd_check_component_status(char *component, int *running)
+{
+	char			*path = NULL, pid_str[HGD_PID_STR_SZ];
+	int			 ret = HGD_FAIL;
+	FILE			*pidfile = NULL;
+	pid_t			 cpid;
+
+	*running = 0;
+
+	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
+
+	if ((pidfile = fopen(path, "r")) == NULL) {
+		/* thats fine, means the component isnt running */
+		ret = HGD_OK;
+		goto clean;
+	}
+
+	if (fgets(pid_str, HGD_PID_STR_SZ, pidfile) != 0) {
+		DPRINTF(HGD_D_ERROR, "Can't read pid: %s", SERROR);
+		goto clean;
+	}
+
+	cpid = atoi(pid_str);
+	if (cpid == 0) {
+		DPRINTF(HGD_D_ERROR, "pid not found in pid file");
+		goto clean;
+	}
+
+	/* funky hack to decide if a process is running */
+	switch (kill(cpid, 0)) {
+	case 0:
+		*running = 1;
+		break;
+	case ESRCH:
+		/* stale pid file */
+		DPRINTF(HGD_D_ERROR, "stale PID file");
+		goto clean;
+		break;
+	default:
+		DPRINTF(HGD_D_ERROR, "Can't determine if %s is running: %s",
+		    hgd_component, SERROR);
+		goto clean;
+		break;
+	};
+
+	ret = HGD_OK;
+clean:
+	free(path);
+
+	if (pidfile == NULL)
+		fclose(pidfile);
+
+	return (ret);
+
+	
+}
