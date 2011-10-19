@@ -77,12 +77,13 @@ hgd_usage()
 {
         printf("Usage: hgdc [opts] command [args]\n\n");
         printf("Commands include:\n");
+        printf("    db-init				Initialise database.\n");
+        printf("    pause				Pause MPlayer.\n");
+        printf("    skip				Next track.\n");
+        printf("    status				Show daemon status'.\n");
         printf("    user-add <username> [password]	Add a user.\n");
         printf("    user-del <username>			Delete a user.\n");
         printf("    user-list				List users.\n");
-        printf("    pause				Pause MPlayer.\n");
-        printf("    skip				Next track.\n");
-        printf("    db-init				Initialise database.\n");
 	printf("    user-mkadmin <username>		Make a user an admin.\n");
 	printf("    user-noadmin <username>		Revoke admin rights from user.\n");
 	/*
@@ -230,13 +231,13 @@ hgd_acmd_user_del(char **args)
 
 
 struct hgd_admin_cmd admin_cmds[] = {
+	{ "db-init", 0, hgd_acmd_init_db },
+	{ "pause", 0, hgd_acmd_pause },
+	{ "skip", 0, hgd_acmd_skip },
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },
 	{ "user-del", 1, hgd_acmd_user_del },
 	{ "user-list", 0, hgd_acmd_user_list_print },
-	{ "pause", 0, hgd_acmd_pause },
-	{ "skip", 0, hgd_acmd_skip },
-	{ "db-init", 0, hgd_acmd_init_db },
 	{ "user-mkadmin", 1, hgd_acmd_mkadmin},
 	{ "user-noadmin", 1, hgd_acmd_noadmin},
 #if 0
