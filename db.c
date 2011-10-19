@@ -303,15 +303,14 @@ hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
 	return (SQLITE_OK);
 }
 
-/* XXX make it return HGD_OK or HGD_FAIL */
 int
-hgd_get_num_votes()
+hgd_get_num_votes(int *nvotes)
 {
-	int			sql_res, num = -1;
+	int			sql_res;
 	char			*sql;
 
 	xasprintf(&sql, "SELECT COUNT (*) FROM votes;");
-	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, &num, NULL);
+	sql_res = sqlite3_exec(db, sql, hgd_get_num_votes_cb, nvotes, NULL);
 	if (sql_res != SQLITE_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't get votes: %s", DERROR);
 		free(sql);
@@ -319,8 +318,8 @@ hgd_get_num_votes()
 	}
 	free(sql);
 
-	DPRINTF(HGD_D_DEBUG, "%d votes so far", num);
-	return (num);
+	DPRINTF(HGD_D_DEBUG, "%d votes so far", *nvotes);
+	return (HGD_OK);
 }
 
 int

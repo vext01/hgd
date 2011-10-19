@@ -268,7 +268,10 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	if (playing.filename == NULL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|0");
 	} else {
-		num_votes = hgd_get_num_votes();
+		if ((hgd_get_num_votes(&num_votes)) != HGD_OK) {
+			DPRINTF(HGD_D_ERROR, "can't get votes");
+			return (HGD_FAIL);
+		}
 
 		if (sess->user != NULL) {
 			if (hgd_user_has_voted(sess->user->name, &voted) != HGD_OK) {
@@ -522,7 +525,10 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, resp);
 	free(resp);
 
-	num_votes = hgd_get_num_votes();
+	if ((hgd_get_num_votes(&num_votes)) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "can't get votes");
+		return (HGD_FAIL);
+	}
 
 	if (sess->user != NULL) {
 		if (hgd_user_has_voted(sess->user->name, &voted) != HGD_OK) {
@@ -568,7 +574,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	char				*ipc_path = NULL;
 	char				*scmd, id_str[HGD_ID_STR_SZ], *read;
 	FILE				*ipc_file;
-	int				 open_ret;
+	int				 open_ret, num_votes;
 	int				 ret = HGD_FAIL;
 
 	DPRINTF(HGD_D_INFO, "%s wants to skip track", sess->user->name);
@@ -652,7 +658,13 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	}
 
 	/* are we at the vote limit yet? */
-	if (hgd_get_num_votes() < req_votes) {
+	if ((hgd_get_num_votes(&num_votes)) != HGD_OK) {
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|" HGD_RESP_E_INT);
+		return (HGD_FAIL);
+	}
+
+	if (num_votes < req_votes) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
 		return (HGD_OK);
 	}

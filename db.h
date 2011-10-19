@@ -37,7 +37,7 @@ int				 hgd_get_playing_item(
 				     struct hgd_playlist_item *playing);
 int				 hgd_get_num_votes_cb(void *arg,
 				     int argc, char **data, char **names);
-int				 hgd_get_num_votes(void);
+int				 hgd_get_num_votes(int *nv);
 int				 hgd_insert_track(char *filename,
 				     struct hgd_media_tag *, char *user);
 int				 hgd_insert_vote(char *user);
