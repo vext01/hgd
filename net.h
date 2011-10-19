@@ -18,7 +18,7 @@
 #ifndef __NET_H
 #define __NET_H
 
-#define HGD_PROTO_VERSION_MAJOR	16
+#define HGD_PROTO_VERSION_MAJOR	17
 #define HGD_PROTO_VERSION_MINOR 0
 
 /* networking */
@@ -26,7 +26,7 @@
 #define HGD_DFL_HOST		"127.0.0.1"
 #define HGD_DFL_BACKLOG		10
 #define HGD_DFL_MAX_UPLOAD	(HGD_MB * 100L)
-#define HGD_MAX_LINE		256
+#define HGD_MAX_LINE		512
 #define HGD_MAX_BAD_COMMANDS	3
 #define HGD_BINARY_CHUNK	4096
 #define HGD_BINARY_RECV_SZ	16384
