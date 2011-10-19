@@ -623,7 +623,7 @@ hgd_cmd_vote_off(struct hgd_session *sess, char **args)
 	switch (hgd_insert_vote(sess->user->name)) {
 	case HGD_OK:
 		break; /* good */
-	case 1: /* XXX */
+	case HGD_FAIL_DUPVOTE:
 		/* duplicate vote */
 		DPRINTF(HGD_D_INFO, "User '%s' already voted",
 		    sess->user->name);
