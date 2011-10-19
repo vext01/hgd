@@ -40,25 +40,6 @@
 #define HGD_FILESTORE_NAME	"files"
 #define HGD_DFL_SVR_CONF_DIR	"/etc/hgd"
 
-/* networking */
-#define HGD_DFL_PORT		6633
-#define HGD_DFL_HOST		"127.0.0.1"
-#define HGD_DFL_BACKLOG		10
-#define HGD_DFL_MAX_UPLOAD	(HGD_MB * 100L)
-#define HGD_MAX_LINE		256
-#define HGD_MAX_BAD_COMMANDS	3
-#define HGD_BINARY_CHUNK	4096
-#define HGD_BINARY_RECV_SZ	16384
-#define	HGD_MAX_PROTO_TOKS	3
-
-/* SSL */
-#define HGD_DFL_CERT_FILE	HGD_DFL_SVR_CONF_DIR "/certificate.crt"
-#define HGD_DFL_KEY_FILE	HGD_DFL_SVR_CONF_DIR "/privkey.key"
-
-#define	HGD_CRYPTO_PREF_ALWAYS	0
-#define HGD_CRYPTO_PREF_IF_POSS	1
-#define HGD_CRYPTO_PREF_NEVER	2
-
 /* Config files */
 #define HGD_GLOBAL_CFG_DIR	HGD_DFL_SVR_CONF_DIR
 #define HGD_USR_CFG_ENV		"XDG_CONFIG_HOME"
