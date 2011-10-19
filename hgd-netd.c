@@ -516,8 +516,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 	unsigned int		 i, num_votes;
 	int			 voted = 0;
 
-	/* shhh */
-	args = args;
+	(void) args;
 
 	if (hgd_get_playlist(&list) == HGD_FAIL) {
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
@@ -532,6 +531,8 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 
 	if ((hgd_get_num_votes(&num_votes)) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "can't get votes");
+		hgd_sock_send_line(sess->sock_fd, sess->ssl,
+		    "err|" HGD_RESP_E_INT);
 		return (HGD_FAIL);
 	}
 
@@ -539,6 +540,8 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 		if (hgd_user_has_voted(sess->user->name, &voted) != HGD_OK) {
 			DPRINTF(HGD_D_WARN, "problem determining if voted: %s",
 			    sess->user->name);
+			hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			    "err|" HGD_RESP_E_INT);
 			return (HGD_FAIL);
 		}
 	}
