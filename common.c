@@ -569,15 +569,23 @@ hgd_write_pid_file()
 	struct stat		 st;
 	FILE			*pidfile;
 
+	DPRINTF(HGD_D_INFO, "Write away pid file for %s", hgd_component);
+
 	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
 
 	/* if the pid file exists, something is wrong */
 	sr = stat(path, &st);
 	if ((sr != -1) || (errno != ENOENT)) {
 		DPRINTF(HGD_D_ERROR,
-		    "Stale pid file: %s: is another instance of %s running?",
+		    "Stale pid file (%s) or another instance of %s is running.",
 		    path, hgd_component);
 		goto clean;
+		/* otherwise, good */
+	} else {
+		DPRINTF(HGD_D_DEBUG, "OTHER ERROR");
+		DPRINTF(HGD_D_ERROR,
+		    "Stale pid file: %s: is another instance of %s running?",
+		    path, hgd_component);
 	}
 
 	if (hgd_file_open_and_lock(path, F_WRLCK, &pidfile)) {
@@ -608,6 +616,8 @@ hgd_unlink_pid_file()
 	char			*path;
 	int			 ret = HGD_FAIL;
 	FILE			*pidfile;
+
+	DPRINTF(HGD_D_INFO, "Unlink pid file for %s", hgd_component);
 
 	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
 
@@ -649,15 +659,17 @@ hgd_check_component_status(char *component, int *running)
 
 	*running = 0;
 
-	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
+	xasprintf(&path, "%s/%s.pid", state_path, component);
 
 	if ((pidfile = fopen(path, "r")) == NULL) {
 		/* thats fine, means the component isnt running */
+		DPRINTF(HGD_D_INFO, "pidfile %s missing, not running",
+		    path);
 		ret = HGD_OK;
 		goto clean;
 	}
 
-	if (fgets(pid_str, HGD_PID_STR_SZ, pidfile) != 0) {
+	if (fgets(pid_str, HGD_PID_STR_SZ, pidfile) == 0) {
 		DPRINTF(HGD_D_ERROR, "Can't read pid: %s", SERROR);
 		goto clean;
 	}
@@ -689,7 +701,7 @@ hgd_check_component_status(char *component, int *running)
 clean:
 	free(path);
 
-	if (pidfile == NULL)
+	if (pidfile != NULL)
 		fclose(pidfile);
 
 	return (ret);

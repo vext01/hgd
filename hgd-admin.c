@@ -229,11 +229,42 @@ hgd_acmd_user_del(char **args)
 	return (HGD_OK);
 }
 
+int
+hgd_acmd_status(char **args)
+{
+	(void) args;
+
+	char		*descrs[2] = {
+			"Network listener daemon (hgd-netd)",
+			"MPlayer overseer daemon (hgd-playd)" };
+	char 		*comps[2] = {
+			HGD_COMPONENT_HGD_NETD,
+			HGD_COMPONENT_HGD_PLAYD };
+	char		*states[3] = { "Absent", "Running", "Unknown" };
+	char		*cur_state;
+	int	 	 i, run;
+
+	printf("\n  HGD subsystems status:\n\n");
+
+	for (i = 0; i < 2; i++) {
+		if (hgd_check_component_status(comps[i], &run) == HGD_OK)
+			cur_state = states[run];
+		else
+			cur_state = states[2];
+
+		printf("    %-40s: %s\n", descrs[i], cur_state);
+
+	}
+	printf("\n");
+
+	return (HGD_OK);
+}
 
 struct hgd_admin_cmd admin_cmds[] = {
 	{ "db-init", 0, hgd_acmd_init_db },
 	{ "pause", 0, hgd_acmd_pause },
 	{ "skip", 0, hgd_acmd_skip },
+	{ "status", 0, hgd_acmd_status },
 	{ "user-add", 2, hgd_acmd_user_add },
 	{ "user-add", 1, hgd_acmd_user_add_prompt },
 	{ "user-del", 1, hgd_acmd_user_del },

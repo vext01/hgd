@@ -91,9 +91,6 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-netd was interrupted or crashed");
 
-	if (hgd_unlink_pid_file() != HGD_OK)
-		DPRINTF(HGD_D_ERROR, "Can't unlink pidfile");
-
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
 			DPRINTF(HGD_D_WARN,
@@ -1219,7 +1216,7 @@ hgd_sigchld(int sig)
 }
 
 /* main loop that deals with network requests */
-void
+int
 hgd_listen_loop(void)
 {
 	struct sockaddr_in	addr, cli_addr;
@@ -1234,7 +1231,7 @@ start:
 
 	if ((svr_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		DPRINTF(HGD_D_ERROR, "socket(): %s", SERROR);
-		hgd_exit_nicely();
+		return (HGD_FAIL);
 	}
 
 	/* allow socket to be re-used right away after we exit */
@@ -1251,12 +1248,12 @@ start:
 
 	if (bind(svr_fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		DPRINTF(HGD_D_ERROR, "Bind to port %d: %s", port, SERROR);
-		hgd_exit_nicely();
+		return (HGD_FAIL);
 	}
 
 	if (listen(svr_fd, sock_backlog) < 0) {
 		DPRINTF(HGD_D_ERROR, "Listen: %s", SERROR);
-		hgd_exit_nicely();
+		return (HGD_FAIL);
 	}
 
 	DPRINTF(HGD_D_INFO, "Socket ready and listening on port %d", port);
@@ -1286,7 +1283,7 @@ start:
 		if (dying || restarting) {
 			if (restarting)
 				exit_ok = 1;
-			hgd_exit_nicely();
+			return (HGD_FAIL);
 		}
 
 		cli_addr_len = sizeof(cli_addr);
@@ -1312,6 +1309,10 @@ start:
 		if (!single_client)
 			child_pid = fork();
 
+		/*
+		 * remember child pid can not return or
+		 * the pid file will be removed.
+		 */
 		if (!child_pid) {
 
 			/* turn off HUP handler */
@@ -1339,7 +1340,6 @@ start:
 		DPRINTF(HGD_D_DEBUG, "client servicer PID = '%d'", child_pid);
 		/* otherwise, back round for the next client */
 	}
-	/* NOREACH */
 }
 
 int
@@ -1604,6 +1604,9 @@ main(int argc, char **argv)
 	}
 
 	hgd_listen_loop();
+
+	if (hgd_unlink_pid_file() != HGD_OK)
+		DPRINTF(HGD_D_ERROR, "Can't unlink pidfile");
 
 	exit_ok = 1;
 	hgd_exit_nicely();
