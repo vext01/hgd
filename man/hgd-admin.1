@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd September 22, 2011
+.Dd October 19, 2011
 .Dt HGD-ADMIN 1
 .Os
 .Sh NAME
@@ -51,6 +51,10 @@ The commands are as follows:
 .Bl -tag -width Ds
 .It db-init
 Delete any existing database and make a fresh one.
+.It pause
+Toggle pause.
+.It skip
+Skip current track.
 .It user-add Ar user [pass]
 Add a user to the system. The password parameter is optional; if no password is
 given,
@@ -58,16 +62,12 @@ given,
 will prompt for one.
 .It user-del Ar user
 Delete a user from the system.
+.It user-list
+List users in the system.
 .It user-mkadmin Ar user
 Set the admin flag on this user. This allows them to (for example) skip tracks.
 .It user-noadmin Ar user
 Revoke the admin flag on this user.
-.It user-list
-List users in the system.
-.It pause
-Toggle pause.
-.It skip
-Skip current track.
 .El
 .Sh FILES
 .Nm
