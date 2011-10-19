@@ -1229,7 +1229,6 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 void
 hgd_sigchld(int sig)
 {
-	/* XXX is this safe? */
 	sig = sig; /* quiet */
 	waitpid(-1, NULL, 0); /* clear up exit status from proc table */
 	signal(SIGCHLD, hgd_sigchld);
