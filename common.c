@@ -580,12 +580,6 @@ hgd_write_pid_file()
 		    "Stale pid file (%s) or another instance of %s is running.",
 		    path, hgd_component);
 		goto clean;
-		/* otherwise, good */
-	} else {
-		DPRINTF(HGD_D_DEBUG, "OTHER ERROR");
-		DPRINTF(HGD_D_ERROR,
-		    "Stale pid file: %s: is another instance of %s running?",
-		    path, hgd_component);
 	}
 
 	if (hgd_file_open_and_lock(path, F_WRLCK, &pidfile)) {

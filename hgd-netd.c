@@ -270,13 +270,18 @@ hgd_cmd_now_playing(struct hgd_session *sess, char **args)
 	} else {
 		if ((hgd_get_num_votes(&num_votes)) != HGD_OK) {
 			DPRINTF(HGD_D_ERROR, "can't get votes");
+			hgd_sock_send_line(sess->sock_fd, sess->ssl,
+			    "err|" HGD_RESP_E_INT);
 			return (HGD_FAIL);
 		}
 
 		if (sess->user != NULL) {
-			if (hgd_user_has_voted(sess->user->name, &voted) != HGD_OK) {
-				DPRINTF(HGD_D_WARN, "problem determining if voted: %s",
+			if (hgd_user_has_voted(
+			    sess->user->name, &voted) != HGD_OK) {
+				DPRINTF(HGD_D_WARN, "cant decide if voted: %s",
 				    sess->user->name);
+				hgd_sock_send_line(sess->sock_fd, sess->ssl,
+				    "err|" HGD_RESP_E_INT);
 				return (HGD_FAIL);
 			}
 		} else
