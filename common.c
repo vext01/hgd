@@ -567,18 +567,64 @@ hgd_write_pid_file()
 	char			*path;
 	int			 ret = HGD_FAIL, sr;
 	struct stat		 st;
+	FILE			*pidfile;
 
 	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
 
 	/* if the pid file exists, something is wrong */
 	sr = stat(path, &st);
 	if ((sr != -1) || (errno != ENOENT)) {
-		DPRINTF(HGD_D_ERROR, "Stale pid file: %s: is another instance of %s running?",
+		DPRINTF(HGD_D_ERROR,
+		    "Stale pid file: %s: is another instance of %s running?",
 		    path, hgd_component);
 		goto clean;
 	}
 
-	/* XXX open file with locking, write pid */
+	if (hgd_file_open_and_lock(path, F_WRLCK, &pidfile)) {
+		DPRINTF(HGD_D_ERROR, "Cannot lock pid file");
+		goto clean;
+	}
+
+	if (fprintf(pidfile, "%d", getpid()) < 0) {
+		DPRINTF(HGD_D_ERROR, "Can't write out pid: %s", SERROR);
+		goto clean;
+	}
+
+	if (hgd_file_unlock_and_close(pidfile) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't close/unlock pid file");
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
+	free(path);
+
+	return (ret);
+}
+
+int
+hgd_unlink_pid_file()
+{
+	char			*path;
+	int			 ret = HGD_FAIL;
+	FILE			*pidfile;
+
+	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
+
+	if (hgd_file_open_and_lock(path, F_WRLCK, &pidfile)) {
+		DPRINTF(HGD_D_ERROR, "Cannot lock pid file");
+		goto clean;
+	}
+
+	if (unlink(path) < 0) {
+		DPRINTF(HGD_D_ERROR, "Can't unlink pidfile: %s", SERROR);
+		goto clean;
+	}
+
+	if (hgd_file_unlock_and_close(pidfile) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't close/unlock pid file");
+		goto clean;
+	}
 
 	ret = HGD_OK;
 clean:

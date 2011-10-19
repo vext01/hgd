@@ -63,6 +63,9 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-playd was interrupted or crashed\n");
 
+	if (hgd_unlink_pid_file() != HGD_OK)
+		DPRINTF(HGD_D_ERROR, "Could not unlink pidfile");
+
 	if (mplayer_fifo_path)
 		free(mplayer_fifo_path);
 	if (db)
@@ -331,7 +334,13 @@ main(int argc, char **argv)
 #endif
 
 	/* start */
-	if (background) hgd_daemonise();
+	if (background)
+		hgd_daemonise();
+
+	if (hgd_write_pid_file() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't write PID away");
+		return (HGD_FAIL);
+	}
 
 	if (hgd_play_loop() == HGD_OK)
 		exit_ok = 1;

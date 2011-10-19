@@ -91,6 +91,9 @@ hgd_exit_nicely()
 	if (!exit_ok)
 		DPRINTF(HGD_D_ERROR, "hgd-netd was interrupted or crashed");
 
+	if (hgd_unlink_pid_file() != HGD_OK)
+		DPRINTF(HGD_D_ERROR, "Can't unlink pidfile");
+
 	if (svr_fd >= 0) {
 		if (shutdown(svr_fd, SHUT_RDWR) == -1)
 			DPRINTF(HGD_D_WARN,
@@ -1592,7 +1595,13 @@ main(int argc, char **argv)
 	}
 
 	/* alright, everything looks good, lets be a daemon and background */
-	if (background) hgd_daemonise();
+	if (background)
+		hgd_daemonise();
+
+	if (hgd_write_pid_file() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't write PID away");
+		return (HGD_FAIL);
+	}
 
 	hgd_listen_loop();
 
