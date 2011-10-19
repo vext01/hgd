@@ -15,7 +15,7 @@
 .\"
 .\" [[[[[ DONT FORGET TO BUMP THE DATE WHEN YOU MAKE AMMENDMENTS ]]]]]
 .\"
-.Dd October 16, 2011
+.Dd October 19, 2011
 .Dt HGD-PROTO 7
 .Os
 .Sh NAME
@@ -74,6 +74,8 @@ connection is dropped.
 Sometimes the server will send an shutdown error (E_SHTDWN) in response to a
 command; this happens for example, when the server is sent a SIGHUP. Clients
 should be aware that this response can happen in response to any command.
+.Pp
+The maximum size of any line transmitted on the network is 512 bytes.
 .Sh PROTOCOL COMMANDS
 All command arguments are separated by the pipe character,
 .Sq |
@@ -473,8 +475,7 @@ A typical SSL session should go:
 < ...
 .Ed
 .Pp
-SSL messages should all be 256 chars long (if message is shorter it should be
-padded with nulls).
+SSL messages should be 512 bytes long (padded with NULL if the message is shorter).
 .Pp
 If 'encrypt?' returns 'ok|nocrypto', the server does not support SSL.
 If the server has encryption set to "forced", most commands will not work until
