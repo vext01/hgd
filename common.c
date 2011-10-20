@@ -699,6 +699,4 @@ clean:
 		fclose(pidfile);
 
 	return (ret);
-
-	
 }
