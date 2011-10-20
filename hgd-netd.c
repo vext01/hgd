@@ -905,11 +905,19 @@ hgd_cmd_skip(struct hgd_session *sess, char **unused)
 
 	ret = hgd_skip_track();
 
-	if (ret == HGD_OK)
-		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
-	else
+	switch (ret) {
+	case HGD_FAIL_NOPLAY:
 		hgd_sock_send_line(sess->sock_fd,
-		    sess->ssl, "err|" HGD_RESP_E_DENY);
+		    sess->ssl, "err|" HGD_RESP_E_NOPLAY);
+		break;
+	case HGD_OK:
+		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok");
+		break;
+	default:
+		hgd_sock_send_line(sess->sock_fd,
+		    sess->ssl, "err|" HGD_RESP_E_INT);
+		break;
+	};
 
 	return (ret);
 }
