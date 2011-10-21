@@ -474,8 +474,8 @@ hgd_usage()
 	printf("    user-noadmin <user>\t\tRevoke user admin rights\n");
 
 	printf("\n  Options include:\n");
-	printf("    -A\t\t\tColours off (only in hud mode)\n");
-	printf("    -a\t\t\tColours on (only in hud mode)\n");
+	printf("    -A\t\t\tColours off\n");
+	printf("    -a\t\t\tColours on\n");
 #ifdef HAVE_LIBCONFIG
 	printf("    -c\t\t\tSet config location\n");
 #endif
