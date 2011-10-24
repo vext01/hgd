@@ -697,15 +697,14 @@ clean:
 int
 hgd_cmd_vote_off_noarg(struct hgd_session *sess, char **unused)
 {
-	unused = unused;
+	(void) unused;
 	return (hgd_cmd_vote_off(sess, NULL));
 }
 
 int
 hgd_cmd_encrypt_questionmark(struct hgd_session *sess, char **unused)
 {
-
-	unused = unused; /* lalalala */
+	(void) unused;
 
 	if ((crypto_pref != HGD_CRYPTO_PREF_NEVER) && (ssl_capable))
 		hgd_sock_send_line(sess->sock_fd, sess->ssl, "ok|tlsv1");
@@ -720,7 +719,8 @@ hgd_cmd_proto(struct hgd_session *sess, char **unused)
 {
 	char			*reply;
 
-	unused = unused; /* lalalala */
+	(void) unused;
+
 	xasprintf(&reply, "ok|%d|%d", HGD_PROTO_VERSION_MAJOR,
 	    HGD_PROTO_VERSION_MINOR);
 	hgd_sock_send_line(sess->sock_fd, sess->ssl, reply);
@@ -734,7 +734,7 @@ hgd_cmd_encrypt(struct hgd_session *sess, char **unused)
 {
 	int			ssl_err = 0, ret = -1;
 
-	unused = unused;
+	(void) unused;
 
 	if (sess->ssl != NULL) {
 		DPRINTF(HGD_D_WARN, "User tried to enable encyption twice");
