@@ -1074,7 +1074,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	if (correct_desp == NULL) {
 		DPRINTF(HGD_D_DEBUG, "Despatching '%s' handler", tokens[0]);
 
-		DPRINTF(HGD_D_WARN, "Invalid command");
+		DPRINTF(HGD_D_INFO, "Invalid command");
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|" HGD_RESP_E_INVCMD);
 		num_bad_commands++;
@@ -1095,7 +1095,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 	if ((crypto_pref == HGD_CRYPTO_PREF_ALWAYS) &&
 	    (correct_desp->secure) &&
 	    (sess->ssl == NULL)) {
-		DPRINTF(HGD_D_WARN, "Client '%s' is trying to bypass SSL",
+		DPRINTF(HGD_D_INFO, "Client '%s' is trying to bypass SSL",
 		    sess->cli_str);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|" HGD_RESP_E_SSLREQ);
@@ -1105,7 +1105,7 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 
 	/* user should be authenticated for some comands */
 	if (correct_desp->auth_needed && sess->user == NULL) {
-		DPRINTF(HGD_D_DEBUG, "User not authenticated to use '%s'",
+		DPRINTF(HGD_D_INFO, "User not authenticated to use '%s'",
 		    correct_desp->cmd);
 		hgd_sock_send_line(sess->sock_fd, sess->ssl,
 		    "err|" HGD_RESP_E_DENY);
@@ -1119,8 +1119,8 @@ hgd_parse_line(struct hgd_session *sess, char *line)
 		    "expecting %d, got %d",
 		    correct_desp->authlevel, sess->user->perms);
 		if (!(sess->user->perms & correct_desp->authlevel)) {
-			DPRINTF(HGD_D_WARN,
-			    "Client '%s' is trying to invoke admin  commands",
+			DPRINTF(HGD_D_INFO,
+			    "'%s': unauthorised use of admin command",
 			    sess->cli_str);
 			hgd_sock_send_line(sess->sock_fd, sess->ssl,
 			    "err|" HGD_RESP_E_DENY);
@@ -1177,7 +1177,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 		exit = hgd_parse_line(&sess, recv_line);
 		free(recv_line);
 		if (num_bad_commands >= HGD_MAX_BAD_COMMANDS) {
-			DPRINTF(HGD_D_WARN,"Client abused server, "
+			DPRINTF(HGD_D_INFO,"Client abused server, "
 			    "kicking '%s'", sess.cli_str);
 			/* laters */
 			hgd_sock_send_line(cli_fd, sess.ssl,
