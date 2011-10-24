@@ -141,7 +141,7 @@ hgd_read_config(char **config_locations)
 	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
 		return (HGD_OK);
 	}
-	
+
 	hgd_cfg_daemonise(cf, "playd", &background);
 	hgd_cfg_statepath(cf, &state_path);
 	hgd_cfg_playd_purgefs(cf, &purge_finished_fs);
