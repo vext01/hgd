@@ -513,7 +513,7 @@ hgd_cmd_playlist(struct hgd_session *sess, char **args)
 {
 	char			*resp;
 	struct hgd_playlist	 list;
-	unsigned int		 i, num_votes;
+	int			 i, num_votes;
 	int			 voted = 0;
 
 	(void) args;
