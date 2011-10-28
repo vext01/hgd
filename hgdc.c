@@ -99,7 +99,7 @@ hgd_exit_nicely()
 	uint8_t			ssl_ret = 0, i;
 
 	if (!exit_ok)
-		DPRINTF(HGD_D_INFO,
+		DPRINTF(HGD_D_ERROR,
 		    "hgdc was interrupted or crashed - cleaning up");
 
 	if (ssl) {
@@ -372,13 +372,13 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 	return (login_ok);
 }
 
-void
+int
 hgd_setup_socket()
 {
 	struct sockaddr_in	addr;
 	char*			resp;
 	struct hostent		*he;
-	int			sockopt = 1;
+	int			sockopt = 1, ret = HGD_OK;
 
 	DPRINTF(HGD_D_DEBUG, "Connecting to %s", host);
 
@@ -388,8 +388,9 @@ hgd_setup_socket()
 		he = gethostbyname(host);
 		if (he == NULL) {
 			DPRINTF(HGD_D_ERROR,
-			    "Failiure in hostname resolution: '%s'", host);
-			hgd_exit_nicely();
+			    "Failure in hostname resolution: '%s'", host);
+			ret = HGD_FAIL;
+			goto clean;
 		}
 
 		free(host);
@@ -409,7 +410,8 @@ hgd_setup_socket()
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd < 0) {
 		DPRINTF(HGD_D_ERROR, "can't make socket: %s", SERROR);
-		hgd_exit_nicely();
+		ret = HGD_FAIL;
+		goto clean;
 	}
 
 	if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR,
@@ -420,7 +422,8 @@ hgd_setup_socket()
 	if (connect(sock_fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		close(sock_fd);
 		DPRINTF(HGD_D_ERROR, "Can't connect to %s", host);
-		hgd_exit_nicely();
+		ret = HGD_FAIL;
+		goto clean;
 	}
 
 	/* expect a hello message */
@@ -437,18 +440,24 @@ hgd_setup_socket()
 	}
 	if (user == NULL) {
 		DPRINTF(HGD_D_ERROR, "can't get username");
-		hgd_exit_nicely();
+		ret = HGD_FAIL;
+		goto clean;
 	}
 
 	hgd_negotiate_crypto();
 	if ((server_ssl_capable) && (crypto_pref != HGD_CRYPTO_PREF_NEVER)) {
-		if (hgd_encrypt(sock_fd) != HGD_OK)
-			hgd_exit_nicely();
+		if (hgd_encrypt(sock_fd) != HGD_OK) {
+			ret = HGD_FAIL;
+			goto clean;
+		}
 	}
 
 	/* annoying error message for those too lazy to set up crypto */
 	if (ssl == NULL)
 		DPRINTF(HGD_D_WARN, "Connection is not encrypted");
+
+clean:
+	return (ret);
 }
 
 void
@@ -1304,7 +1313,10 @@ hgd_exec_req(int argc, char **argv)
 	}
 
 	/* once we know that the hgdc is used properly, open connection */
-	hgd_setup_socket();
+	if (hgd_setup_socket() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Cannot setup socket");
+		return (HGD_FAIL);
+	}
 
 	/* check protocol matches the server before we continue */
 	if (hgd_check_svr_proto() != HGD_OK)
@@ -1497,6 +1509,10 @@ main(int argc, char **argv)
 	/* do whatever the user wants */
 	if (hgd_exec_req(argc, argv) == HGD_OK)
 		exit_ok = 1;
+	else {
+		exit_ok = 0;
+		goto kthxbye;
+	}
 
 	/* try to sign off */
 	hgd_sock_send_line(sock_fd, ssl, "bye");
@@ -1505,6 +1521,8 @@ main(int argc, char **argv)
 	free(resp);
 
 	exit_ok = 1;
+
+kthxbye:
 	hgd_exit_nicely();
 	_exit (EXIT_SUCCESS); /* NOREACH */
 }
