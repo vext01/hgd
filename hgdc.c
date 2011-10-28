@@ -154,7 +154,7 @@ hgd_exit_nicely()
 int
 hgd_negotiate_crypto()
 {
-	int			n_toks = 0;
+	int			n_toks = 0, ret = HGD_OK;
 	char			*first, *next;
 	char			*ok_tokens[2];
 
@@ -167,9 +167,9 @@ hgd_negotiate_crypto()
 	hgd_check_svr_response(next, 1);
 
 	do {
-		ok_tokens[n_toks] = xstrdup(strsep(&next, "|"));
-	} while ((n_toks++ < 2) && (next != NULL));
-	free(first);
+		ok_tokens[n_toks] = strsep(&next, "|");
+		n_toks++;
+	} while ((n_toks < 2) && (next != NULL));
 
 	if (strcmp(ok_tokens[1], "tlsv1") == 0) {
 		server_ssl_capable = 1;
@@ -179,13 +179,12 @@ hgd_negotiate_crypto()
 	if ((!server_ssl_capable) && (crypto_pref == HGD_CRYPTO_PREF_ALWAYS)) {
 		DPRINTF(HGD_D_ERROR,
 		    "User forced crypto, but server is incapable");
-		hgd_exit_nicely();
+		ret = HGD_FAIL;
 	}
 
-	while (n_toks > 0)
-		free(ok_tokens[--n_toks]);
+	free(first);
 
-	return (0);
+	return (ret);
 }
 
 int
