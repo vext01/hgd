@@ -1227,6 +1227,7 @@ hgd_check_svr_proto()
 	}
 
 	v = strtok_r(resp, split, &saveptr1);
+	(void) v;
 
 	/* major */
 	v = strtok_r(NULL, split, &saveptr1);
@@ -1247,7 +1248,6 @@ hgd_check_svr_proto()
 	}
 
 	minor = atoi(v);
-
 
 	if (major == HGD_PROTO_VERSION_MAJOR && minor >= HGD_PROTO_VERSION_MINOR) {
 		if (minor > HGD_PROTO_VERSION_MINOR) {
