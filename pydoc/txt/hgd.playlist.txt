@@ -14,8 +14,26 @@ CCLLAASSSSEESS
      |  
      |  ____ssttrr____(self)
      |  
+     |  ggeett__aallbbuumm(self)
+     |      Return album metadata extracted by taglib
+     |  
+     |  ggeett__bbiittrraattee(self)
+     |      Return bitrate metadata extracted by taglib
+     |  
+     |  ggeett__cchhaannnneellss(self)
+     |      Return channels metadata extracted by taglib
+     |  
+     |  ggeett__dduurraattiioonn(self)
+     |      Return duration metadata extracted by taglib
+     |  
      |  ggeett__ffiilleennaammee(self)
      |      Return the track's filename.
+     |  
+     |  ggeett__ggeennrree(self)
+     |      Return genre metadata extracted by taglib
+     |  
+     |  ggeett__ssaammpplleerraattee(self)
+     |      Return samplerate metadata extracted by taglib
      |  
      |  ggeett__ttaagg__aarrttiisstt(self)
      |      Return artist metadata extracted by taglib.
@@ -29,6 +47,9 @@ CCLLAASSSSEESS
      |  ggeett__uusseerr(self)
      |      Return the name of the user who queued this track.
      |  
+     |  ggeett__yyeeaarr(self)
+     |      Return year metadata extracted by taglib
+     |  
      |  ----------------------------------------------------------------------
      |  Data descriptors defined here:
      |  
@@ -38,8 +59,26 @@ CCLLAASSSSEESS
      |  ____wweeaakkrreeff____
      |      list of weak references to the object (if defined)
      |  
+     |  aallbbuumm
+     |      Return album metadata extracted by taglib
+     |  
+     |  bbiittrraattee
+     |      Return bitrate metadata extracted by taglib
+     |  
+     |  cchhaannnneellss
+     |      Return channels metadata extracted by taglib
+     |  
+     |  dduurraattiioonn
+     |      Return duration metadata extracted by taglib
+     |  
      |  ffiilleennaammee
      |      Return the track's filename.
+     |  
+     |  ggeennrree
+     |      Return genre metadata extracted by taglib
+     |  
+     |  ssaammpplleerraattee
+     |      Return samplerate metadata extracted by taglib
      |  
      |  ttaagg__aarrttiisstt
      |      Return artist metadata extracted by taglib.
@@ -52,6 +91,9 @@ CCLLAASSSSEESS
      |  
      |  uusseerr
      |      Return the name of the user who queued this track.
+     |  
+     |  yyeeaarr
+     |      Return year metadata extracted by taglib
 
 DDAATTAA
     ____aauutthhoorr____ = 'Edd Barrett'
