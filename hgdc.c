@@ -767,7 +767,7 @@ hgd_hline()
 {
 	int			i;
 
-	for (i = 0; i < HGD_TERM_WIDTH; i ++)
+	for (i = 0; i < HGD_TERM_WIDTH; i++)
 		printf("-");
 	printf("\n");
 }
