@@ -32,8 +32,11 @@ CCLLAASSSSEESS
      |  hhggdd__vveerrssiioonn
      |      hgd version
      |  
-     |  pprroottoo__vveerrssiioonn
-     |      hgd protocol version
+     |  pprroottoo__vveerrssiioonn__mmaajjoorr
+     |      hgd protocol version (major)
+     |  
+     |  pprroottoo__vveerrssiioonn__mmiinnoorr
+     |      hgd protocol version (minor)
      |  
      |  ----------------------------------------------------------------------
      |  Data and other attributes defined here:

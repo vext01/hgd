@@ -136,15 +136,23 @@ identity.
 History
 -------
 
+(Only functional changes are shown)
+
  * 0.1   - basic functionality.
  * 0.2   - SSL crypto support and user authentication.
  * 0.3   - Config file support.
  * 0.4   - Autoconf, taglib, Python scripting.
  * 0.4.1 - Properly daemonise, log to syslog, honor SIGHUP.
- * 0.5   - Database schema check, add more tag support,
-           network protocol minor version, skip+pause commands in hgd-admin,
-           client can queue more than a single track at a time, overhaul build
-           system so that you can build just the client if that is all you need.
+ * 0.5.0 - Database schema check.
+	 - Add more tag support.
+	 - Network protocol minor version.
+	 - Skip+pause commands (remote and local).
+	 - Client can queue more than a single track at a time.
+	 - Overhaul build system so that you can build just the client
+	   if that is all you need. 
+	 - Ability to know if you have voted.
+	 - Ability to know how many votes are needed to vote-off a track.
+	 - PowerPC support.
 
 Roadmap
 -------

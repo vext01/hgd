@@ -84,22 +84,20 @@ Rolling a Release
  1.   You have already valgrinded and tested with various modules enabled ;)
       You have also stress tested any Python/C extension functions which have
       been added or changed since the last release.
- 2.   Turn off debug flag (-g in CFLAGS).
- 3.   Bump version macro.
- 4.   Check README has history updated.
- 5.   Run "make pydoc" and remove the FILE sections from the output (sigh).
- 6.   Run (on an OpenBSD host) 'make lint-mans'. Fix any man bugs.
- 7.   Commit and push to git.
- 8.   If this is a major version, make a branch in git. Eg. "0.4.x". Push it.
- 9.   Tag the version in git. It should be tagged as 'x.x.x', eg '0.2.1'. Push.
- 10.  Turn debug flag back on. Push.
- 11.  Get a tarball of tag off github.
- 12.  Untar it.
- 13.  Rename the directory hgd-x.x.x
- 14.  Generate the configure script (autogen.sh)
- 15.  Tar it up the whole dir as hgd-x.x.x.tar.gz (not .tgz)
- 16.  Upload it to github.
- 17.  Notify packagers:
+ 2.   Bump version macro.
+ 3.   Check README has history updated.
+ 4.   Run "make pydoc" and remove the FILE sections from the output (sigh).
+ 5.   Run (on an OpenBSD host) 'make lint-mans'. Fix any man bugs.
+ 6.   Commit and push to git.
+ 7.   If this is a major version, make a branch in git. Eg. "0.4.x". Push it.
+ 8.   Tag the version in git. It should be tagged as 'x.x.x', eg '0.2.1'. Push.
+ 9.   Get a tarball of tag off github.
+ 10.  Untar it.
+ 11.  Rename the directory hgd-x.x.x
+ 12.  Generate the configure script (autogen.sh)
+ 13.  Tar it up the whole dir as hgd-x.x.x.tar.gz (not .tgz)
+ 14.  Upload it to github.
+ 15.  Notify packagers:
 	* Edd Barrett	- OpenBSD (already knows, main hgd dev)
 	* Martin Ellis	- Arch Linux (Again, he knows)
 	* (We need to find a debian dev)
