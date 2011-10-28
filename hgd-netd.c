@@ -186,7 +186,7 @@ hgd_get_tag_metadata(char *filename, struct hgd_media_tag *meta)
 	    filename, meta->title, meta->artist, meta->album, meta->year,
 	    meta->genre, meta->duration, meta->channels, meta->samplerate,
 	    meta->bitrate);
-
+	taglib_file_free(file);
 	taglib_tag_free_strings();
 #else
 	DPRINTF(HGD_D_DEBUG, "No taglib support, skipping tag retrieval");
