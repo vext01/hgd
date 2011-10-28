@@ -91,14 +91,13 @@ Rolling a Release
  6.   Commit and push to git.
  7.   If this is a major version, make a branch in git. Eg. "0.4.x". Push it.
  8.   Tag the version in git. It should be tagged as 'x.x.x', eg '0.2.1'. Push.
- 9.  Turn debug flag back on. Push.
- 10.  Get a tarball of tag off github.
- 11.  Untar it.
- 12.  Rename the directory hgd-x.x.x
- 13.  Generate the configure script (autogen.sh)
- 14.  Tar it up the whole dir as hgd-x.x.x.tar.gz (not .tgz)
- 15.  Upload it to github.
- 16.  Notify packagers:
+ 9.   Get a tarball of tag off github.
+ 10.  Untar it.
+ 11.  Rename the directory hgd-x.x.x
+ 12.  Generate the configure script (autogen.sh)
+ 13.  Tar it up the whole dir as hgd-x.x.x.tar.gz (not .tgz)
+ 14.  Upload it to github.
+ 15.  Notify packagers:
 	* Edd Barrett	- OpenBSD (already knows, main hgd dev)
 	* Martin Ellis	- Arch Linux (Again, he knows)
 	* (We need to find a debian dev)
