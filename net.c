@@ -152,7 +152,6 @@ hgd_sock_send_bin_nossl(int fd, char *msg, ssize_t sz)
 
 		if (sent < 0) {
 			DPRINTF(HGD_D_WARN, "Send failed");
-			sent = 0;
 			continue;
 		} else
 			DPRINTF(HGD_D_DEBUG, "Sent %d bytes", (int) sent);
@@ -338,7 +337,6 @@ hgd_sock_recv_bin_ssl(SSL *ssl, ssize_t len)
 
 		if (recvd <= 0) {
 			PRINT_SSL_ERR(HGD_D_ERROR, __func__);
-			recvd = 0;
 			return (NULL);
 		}
 
