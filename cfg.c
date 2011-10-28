@@ -79,6 +79,8 @@ hgd_cfg_daemonise(config_t *cf, char* service, int* background)
 		    *background ? "Going" : "Not going");
 	}
 
+	free(lookup);
+
 }
 
 void
@@ -148,6 +150,8 @@ hgd_cfg_fork(config_t *cf, char *service, uint8_t *single_client)
 		DPRINTF(HGD_D_DEBUG,
 		    "Chose to %sfork", *single_client ? "not " : "");
 	}
+
+	free (&lookup);
 }
 
 void
