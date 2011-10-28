@@ -117,7 +117,7 @@ hgd_exit_nicely()
 	}
 
 	if (ctx)
-		SSL_CTX_free(ctx);
+		hgd_cleanup_ssl(&ctx);
 
 	if (host)
 		free(host);
