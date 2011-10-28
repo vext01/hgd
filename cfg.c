@@ -151,7 +151,7 @@ hgd_cfg_fork(config_t *cf, char *service, uint8_t *single_client)
 		    "Chose to %sfork", *single_client ? "not " : "");
 	}
 
-	free (&lookup);
+	free (lookup);
 }
 
 void
