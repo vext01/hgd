@@ -1282,10 +1282,11 @@ hgd_exec_req(int argc, char **argv)
 	DPRINTF(HGD_D_DEBUG, "Try to execute a '%s' command with %d args",
 	    argv[0], argc - 1);
 
-	if (argc == 0) {
+	if (argc == 1) {
 		hgd_usage();
 		exit_ok = 1;
 		hgd_exit_nicely();
+		return (HGD_FAIL); /* UNREACH, to keep clang-sa happy */
 	}
 
 	for (desp = req_desps; desp->req != NULL; desp++) {
@@ -1305,6 +1306,7 @@ hgd_exec_req(int argc, char **argv)
 		hgd_usage();
 		exit_ok = 1;
 		hgd_exit_nicely();
+		return (HGD_FAIL); /* UNREACH, to keep clang-sa happy */
 	}
 
 	/* once we know that the hgdc is used properly, open connection */
