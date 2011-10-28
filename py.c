@@ -158,7 +158,7 @@ hgd_py_meth_Hgd_get_playlist(Hgd *self)
 	PyObject		 *plist_item = NULL;
 	PyObject		 *ctor = NULL, *args = NULL;
 
-	self = self;
+	(void) self;
 
 	if (hgd_get_playlist(&list) == HGD_FAIL) {
 		(void) PyErr_Format(PyExc_RuntimeError,
@@ -331,9 +331,8 @@ hgd_py_meth_Hgd_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
 	DPRINTF(HGD_D_DEBUG, "__new__ hgd object");
 
-	/* quiet */
-	args = args;
-	kwds = kwds;
+	(void) args;
+	(void) kwds;
 
 	self = (Hgd *)type->tp_alloc(type, 0);
 
