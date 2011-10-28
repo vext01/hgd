@@ -1150,7 +1150,8 @@ fail:
 int
 hgd_req_id(int n_args, char **args)
 {
-	char			*resp = NULL, *toks[4], *next, *perms_str = NULL;
+	char			*resp = NULL, *toks[4] = {"", "", "", ""};
+	char			*next, *perms_str = NULL;
 	int			 ret = HGD_FAIL, n_toks = 0;
 
 	(void) n_args;
@@ -1162,8 +1163,9 @@ hgd_req_id(int n_args, char **args)
 		goto fail;
 
 	do {
-		toks[n_toks] = xstrdup(strsep(&next, "|"));
-	} while ((n_toks++ < 4) && (next != NULL));
+		toks[n_toks] = strsep(&next, "|");
+		n_toks++;
+	} while ((n_toks < 4) && (next != NULL));
 
 	/* build permissions string, if we add more this changes */
 	if (atoi(toks[2]) & HGD_AUTH_ADMIN)
@@ -1174,11 +1176,6 @@ hgd_req_id(int n_args, char **args)
 	printf("  You are %s, permissions: %s, voted: %d\n",
 	    toks[1], perms_str, atoi(toks[3]));
 
-	while (n_toks) {
-		free(toks[n_toks - 1]);
-		n_toks--;
-	}
-
 	ret = HGD_OK;
 fail:
 	if (resp)
@@ -1186,8 +1183,6 @@ fail:
 
 	return (ret);
 }
-
-
 
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
