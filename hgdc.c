@@ -1282,7 +1282,7 @@ hgd_exec_req(int argc, char **argv)
 	DPRINTF(HGD_D_DEBUG, "Try to execute a '%s' command with %d args",
 	    argv[0], argc - 1);
 
-	if (argc == 1) {
+	if (argc == 0) {
 		hgd_usage();
 		exit_ok = 1;
 		hgd_exit_nicely();
