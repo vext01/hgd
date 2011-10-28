@@ -249,8 +249,8 @@ hgd_get_playing_item_cb(void *arg, int argc, char **data, char **names)
 	DPRINTF(HGD_D_DEBUG, "A track is playing");
 
 	/* silence compiler */
-	argc = argc;
-	names = names;
+	(void) argc;
+	(void) names;
 
 	t = (struct hgd_playlist_item *) arg;
 
@@ -295,9 +295,8 @@ hgd_get_num_votes_cb(void *arg, int argc, char **data, char **names)
 {
 	int			*num = (int *) arg;
 
-	/* quiet */
-	argc = argc;
-	names = names;
+	(void) argc;
+	(void) names;
 
 	*num = atoi(data[0]);
 	return (SQLITE_OK);
@@ -517,9 +516,8 @@ hgd_get_next_track_cb(void *item, int argc, char **data, char **names)
 {
 	struct hgd_playlist_item	*item_t;
 
-	/* silence compiler */
-	argc = argc;
-	names = names;
+	(void) argc;
+	(void) names;
 
 	DPRINTF(HGD_D_DEBUG, "track found");
 
@@ -928,8 +926,7 @@ hgd_get_all_users_cb(void *arg, int argc, char **data, char **names)
 	struct hgd_user		*user;
 	struct hgd_user_list	*list = (struct hgd_user_list *) arg;
 
-	/* ssh */
-	names = names;
+	(void) names;
 
 	if (argc != 2)
 		DPRINTF(HGD_D_WARN, "incorrect param count");
