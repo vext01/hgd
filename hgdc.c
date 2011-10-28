@@ -156,7 +156,7 @@ hgd_negotiate_crypto()
 {
 	int			n_toks = 0, ret = HGD_OK;
 	char			*first, *next;
-	char			*ok_tokens[2];
+	char			*ok_tokens[2] = {"", ""};
 
 	if (crypto_pref == HGD_CRYPTO_PREF_NEVER)
 		return (0);	/* fine, no crypto then */
@@ -480,7 +480,6 @@ hgd_usage()
 #endif
 	printf("    -E\t\t\tRefuse to use encryption\n");
 	printf("    -e\t\t\tForce encryption\n");
-	printf("    -e\t\t\tAlways require encryption\n");
 	printf("    -h\t\t\tShow this message and exit\n");
 	printf("    -m <num>\t\tMax num items to show in playlist\n");
 	printf("    -p <port>\t\tSet connection port\n");
