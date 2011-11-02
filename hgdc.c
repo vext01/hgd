@@ -478,7 +478,7 @@ hgd_usage()
 	printf("    user-add <user> [password]\tAdd a user\n");
 	printf("    user-del <user>\t\tRemove a user\n");
 	printf("    user-list\t\t\tList Users\n");
-	printf("    user-mkadmin <user>\tGrant user admin rights\n");
+	printf("    user-mkadmin <user>\t\tGrant user admin rights\n");
 	printf("    user-noadmin <user>\t\tRevoke user admin rights\n");
 
 	printf("\n  Options include:\n");
