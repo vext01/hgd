@@ -1,5 +1,5 @@
 # HGD Autogunk
-AC_INIT([hgd], [0.5.0], [vext01@gmail.com, me92@kent.ac.uk])
+AC_INIT([hgd], [0.6-current], [vext01@gmail.com, me92@kent.ac.uk])
 : ${CFLAGS="-O2"}
 AC_CONFIG_HEADERS([config.h])
 
