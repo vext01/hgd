@@ -364,9 +364,10 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 
 	free(resp);
 
-	if (login_ok == HGD_OK)
+	if (login_ok == HGD_OK) {
+		authenticated = 1;
 		DPRINTF(HGD_D_DEBUG, "Identified as %s", user);
-	else
+	} else
 		DPRINTF(HGD_D_WARN, "Login as %s failed", user);
 
 	return (login_ok);
