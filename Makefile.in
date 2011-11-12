@@ -74,36 +74,39 @@ mplayer.o: mplayer.c mplayer.h py.o
 		-c -o mplayer.o mplayer.c
 
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
-	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} ${SQL_LDFLAGS} \
-		${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} -o hgd-playd db.o common.o \
-		crypto.o py.o mplayer.o cfg.o hgd-playd.c
+	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} \
+		db.o common.o crypto.o py.o mplayer.o cfg.o \
+		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
+		${CONFIG_LDFLAGS} \
+		hgd-playd.c -o hgd-playd 
 
 hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o user.o
-	${CC} ${TAG_CFLAGS} ${TAG_LDFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} \
-		${CFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
-		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} ${PY_LDFLAGS} ${PY_CFLAGS}\
-		-o hgd-netd py.o mplayer.o cfg.o common.o db.o net.o \
-		crypto.o user.o hgd-netd.c
+	${CC} ${TAG_CFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${PY_CFLAGS} \
+		py.o mplayer.o cfg.o common.o db.o net.o crypto.o user.o \
+		${TAG_LDFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
+		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
+		hgd-netd.c -o hgd-netd
 
 hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
-	${CC} ${CPPFLAGS} ${BSD_CFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${LDFLAGS} \
-		${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS}  \
-		-o hgdc common.o net.o cfg.o hgdc.c
+	${CC} ${CPPFLAGS} ${BSD_CFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} \
+		common.o net.o cfg.o \
+		${LDFLAGS} ${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
+		hgdc.c -o hgdc 
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 	mplayer.o py.o cfg.o user.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CFLAGS} \
+		common.o net.o user.o crypto.o db.o mplayer.o py.o cfg.o \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} ${PY_LDFLAGS} -o hgd-admin \
-		common.o net.o user.o crypto.o db.o mplayer.o py.o \
-		cfg.o hgd-admin.c
+		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
+		hgd-admin.c -o hgd-admin 
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
-	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${PY_LDFLAGS} \
-		${LDFLAGS} ${SSL_LDFLAGS} ${SSL_CFLAGS} ${SQL_CFLAGS} \
-		${SQL_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} db.o \
-		common.o py.o crypto.o hgd-mk-pydoc.c -o hgd-mk-pydoc
+	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${SSL_CFLAGS} ${SQL_CFLAGS} \
+		db.o common.o py.o crypto.o \
+		${PY_LDFLAGS} ${LDFLAGS} ${SSL_LDFLAGS} ${SQL_LDFLAGS} \
+		${BSD_CFLAGS} ${BSD_LDFLAGS} \
+		hgd-mk-pydoc.c -o hgd-mk-pydoc
 
 # Generates python documentation
 .PHONY: pydoc
