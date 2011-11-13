@@ -329,15 +329,16 @@ main(int argc, char **argv)
 		hgd_exit_nicely();
 	}
 #endif
+	/* Do this before daemonising so we can see the output */
+	if (hgd_write_pid_file() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't write PID away");
+		return (HGD_FAIL);
+	}
 
 	/* start */
 	if (background)
 		hgd_daemonise();
 
-	if (hgd_write_pid_file() != HGD_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't write PID away");
-		return (HGD_FAIL);
-	}
 
 	if (hgd_play_loop() == HGD_OK)
 		exit_ok = 1;
