@@ -203,5 +203,6 @@ Install targets       : ${INSTALL_TARGETS}
 Debug symbols         : ${SYMBOLS}
 =============================])
 
-AS_IF([test "x$have_python" != "xyes"],,
-      AC_MSG_NOTICE([NOTE: Python scripting backend is EXPERIMENTAL!]))
+AS_IF([test "x$have_python" != "xyes"],
+	[], #true
+      	AC_MSG_NOTICE([NOTE: Python scripting backend is EXPERIMENTAL!]))
