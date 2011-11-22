@@ -41,7 +41,6 @@ AS_IF([test "x$enable_nchgdc" = "xyes"], [
     ALL_TARGETS="${ALL_TARGETS} nchgdc",
     []
 ])
-       
 
 # debug
 AS_IF([test "x${enable_debug}" = "xyes"], [
@@ -50,7 +49,6 @@ AS_IF([test "x${enable_debug}" = "xyes"], [
 ], [
 	SYMBOLS="No"
 ])
-
 
 AH_TEMPLATE(HAVE_LIBCONFIG, "defined if we are building with libconfig support")
 AH_TEMPLATE(HAVE_TAGLIB, "defined if we are building with taglib support")
