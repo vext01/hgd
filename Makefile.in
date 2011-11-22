@@ -18,6 +18,8 @@ BSD_LDFLAGS=@BSD_LIBS@
 TAG_CFLAGS=@TAGLIB_CFLAGS@
 TAG_LDFLAGS=@TAGLIB_LIBS@
 
+CURSES_LDFLAGS=-lcurses -lmenu
+
 CFLAGS=@CFLAGS@
 LDFLAGS=@LIBS@
 CPPFLAGS=@CPPFLAGS@
@@ -99,7 +101,12 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 		common.o net.o user.o crypto.o db.o mplayer.o py.o cfg.o \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
-		hgd-admin.c -o hgd-admin 
+		hgd-admin.c -o hgd-admin.c
+
+# XXX configure check for curses and ability to disable the build of this.
+# XXX link to the build when in some useful state
+nchgdc: common.o config.h nchgdc.h nchgdc.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CURSES_LDFLAGS} nchgdc.c -o nchgdc
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${SSL_CFLAGS} ${SQL_CFLAGS} \
