@@ -27,22 +27,12 @@
 #include "config.h"
 #include "cfg.h"
 #include "client.h"
+#include "nchgdc.h"
 
 #define HGD_CPAIR_BARS		1
 #define HGD_CPAIR_SELECTED	2
 
 const char		*hgd_component = "nchgdc";
-
-struct ui {
-	WINDOW		*title;		/* title bar */
-	WINDOW		*content;	/* main pane in the middle */
-	WINDOW		*status;	/* status bar */
-	MENU		*menu;
-	int		 active_win;
-#define	HGD_WIN_PLAYLIST		0
-#define HGD_WIN_FILES			1
-#define HGD_WIN_CONSOLE			2
-};
 
 const char *window_names[] = {
 	"Playlist",
@@ -81,11 +71,14 @@ void
 hgd_refresh_ui(struct ui *u)
 {
 	refresh();
+
 	post_menu(u->menu);
 	wrefresh(u->content);
-	wrefresh(u->title);
-	wrefresh(u->status);
 
+	hgd_update_titlebar(u);
+	wrefresh(u->title);
+
+	wrefresh(u->status);
 }
 
 void
@@ -121,22 +114,26 @@ fail(char *msg)
 }
 
 void
-hgd_init_titlebar(struct ui *u)
+hgd_update_titlebar(struct ui *u)
 {
 	char			*fmt = NULL, *title_str = NULL;
-
-	if ((u->title = newwin(1, COLS, 0, 0)) == NULL)
-		fail("cant make win");
 
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
 	asprintf(&fmt, "%%-%ds%%s", COLS);
 	asprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION, 
 	    window_names[u->active_win]);
 
-	wprintw(u->title, fmt, title_str);
+	mvwprintw(u->title, 0, 0, fmt, title_str);
 
 	free(title_str);
-	free (fmt);
+	free(fmt);
+}
+
+void
+hgd_init_titlebar(struct ui *u)
+{
+	if ((u->title = newwin(1, COLS, 0, 0)) == NULL)
+		fail("cant make win");
 }
 
 void
@@ -224,7 +221,7 @@ main(int argc, char **argv)
 				u.active_win = HGD_WIN_FILES;
 			break;
 		case '`':
-			/* XXX console */
+			u.active_win = HGD_WIN_CONSOLE;
 			break;
 		}
 	}
