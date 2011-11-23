@@ -73,7 +73,7 @@ hgd_refresh_ui(struct ui *u)
 	refresh();
 
 	post_menu(u->menu);
-	wrefresh(u->content);
+	wrefresh(u->content_wins[HGD_WIN_PLAYLIST]);
 
 	hgd_update_titlebar(u);
 	wrefresh(u->title);
@@ -120,8 +120,8 @@ hgd_update_titlebar(struct ui *u)
 
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
 	asprintf(&fmt, "%%-%ds%%s", COLS);
-	asprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION, 
-	    window_names[u->active_win]);
+	asprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION,
+	    window_names[u->active_content_win]);
 
 	mvwprintw(u->title, 0, 0, fmt, title_str);
 
@@ -164,9 +164,9 @@ hgd_init_content_win(struct ui *u)
 		items[i] = new_item(test_playlist[i], NULL);
 
 	u->menu = new_menu(items);
-	u->content = newwin(LINES - 2, COLS, 1, 1);
-	keypad(u->content, TRUE);
-	set_menu_win(u->menu, u->content);
+	u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 1);
+	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
+	set_menu_win(u->menu, u->content_wins[HGD_WIN_PLAYLIST]);
 	set_menu_mark(u->menu, "");
 	set_menu_format(u->menu, LINES - 2, 1);
 	set_menu_fore(u->menu, COLOR_PAIR(HGD_CPAIR_SELECTED));
@@ -177,8 +177,6 @@ main(int argc, char **argv)
 {
 	struct ui	u;
 	int		c;
-
-	u.active_win = HGD_WIN_PLAYLIST;
 
 	init_log();
 
@@ -197,6 +195,8 @@ main(int argc, char **argv)
 	init_pair(HGD_CPAIR_BARS, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(HGD_CPAIR_SELECTED, COLOR_BLACK, COLOR_WHITE);
 
+	u.active_content_win = HGD_WIN_PLAYLIST;
+
 	hgd_init_titlebar(&u);
 	hgd_init_statusbar(&u);
 	hgd_init_content_win(&u);
@@ -205,7 +205,7 @@ main(int argc, char **argv)
 	while (1) {
 		hgd_refresh_ui(&u);
 
-		c = wgetch(u.content);
+		c = wgetch(u.content_wins[HGD_WIN_PLAYLIST]);
 		switch(c) {
 		case KEY_DOWN:
 			menu_driver(u.menu, REQ_DOWN_ITEM);
@@ -215,13 +215,13 @@ main(int argc, char **argv)
 			break;
 		case '\t':
 			/* tab toggles toggle between files and playlist */
-			if (u.active_win != HGD_WIN_PLAYLIST)
-				u.active_win = HGD_WIN_PLAYLIST;
+			if (u.active_content_win != HGD_WIN_PLAYLIST)
+				u.active_content_win = HGD_WIN_PLAYLIST;
 			else
-				u.active_win = HGD_WIN_FILES;
+				u.active_content_win = HGD_WIN_FILES;
 			break;
 		case '`':
-			u.active_win = HGD_WIN_CONSOLE;
+			u.active_content_win = HGD_WIN_CONSOLE;
 			break;
 		}
 	}

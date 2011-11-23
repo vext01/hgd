@@ -18,12 +18,19 @@
 #ifndef __NCHGDC_H
 #define __NCHGDC_H
 
+#define HGD_MAX_CONTENT_WINS		3
+
 struct ui {
 	WINDOW		*title;		/* title bar */
-	WINDOW		*content;	/* main pane in the middle */
+	/*
+	 * main pane in the middle.
+	 * This is just a pointer to the playlist/files/console win.
+	 */
 	WINDOW		*status;	/* status bar */
 	MENU		*menu;
-	int		 active_win;
+	/* possible "active" windows */
+	WINDOW			*content_wins[HGD_MAX_CONTENT_WINS];
+	int			 active_content_win;
 #define	HGD_WIN_PLAYLIST		0
 #define HGD_WIN_FILES			1
 #define HGD_WIN_CONSOLE			2
