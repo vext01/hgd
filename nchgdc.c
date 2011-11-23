@@ -152,7 +152,7 @@ hgd_init_statusbar(struct ui *u)
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 void
-hgd_init_content_win(struct ui *u)
+hgd_init_playlist_win(struct ui *u)
 {
 	ITEM			**items;
 	int			  num, i;
@@ -199,7 +199,7 @@ main(int argc, char **argv)
 
 	hgd_init_titlebar(&u);
 	hgd_init_statusbar(&u);
-	hgd_init_content_win(&u);
+	hgd_init_playlist_win(&u);
 
 	/* main event loop */
 	while (1) {
