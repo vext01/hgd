@@ -75,6 +75,9 @@ mplayer.o: mplayer.c mplayer.h py.o
 	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} \
 		-c -o mplayer.o mplayer.c
 
+client.o: client.c client.h hgd.h
+	${CC} ${CONFIG_CFLAGS} ${SSL_CFLAGS} -c -o client.o client.c
+
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} \
 		db.o common.o crypto.o py.o mplayer.o cfg.o \
@@ -89,9 +92,9 @@ hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o us
 		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
 		hgd-netd.c -o hgd-netd
 
-hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
+hgdc: client.o common.o net.o cfg.o hgdc.c hgd.h config.h
 	${CC} ${CPPFLAGS} ${BSD_CFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} \
-		common.o net.o cfg.o \
+		client.o common.o net.o cfg.o \
 		${LDFLAGS} ${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
 		hgdc.c -o hgdc 
 
@@ -105,9 +108,10 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 
 # XXX configure check for curses and ability to disable the build of this.
 # XXX link to the build when in some useful state
-nchgdc: common.o config.h nchgdc.h nchgdc.c
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CURSES_LDFLAGS} \
-		common.o \
+nchgdc: client.o common.o cfg.o config.h nchgdc.h nchgdc.c
+	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CONFIG_LDFLAGS} ${CFLAGS} \
+		${CURSES_LDFLAGS} \
+		common.o cfg.o client.o \
 		nchgdc.c -o nchgdc
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o

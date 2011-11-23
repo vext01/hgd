@@ -42,6 +42,7 @@
 #endif
 
 #include "config.h"
+#include "client.h"
 #include "hgd.h"
 #include "net.h"
 #include "user.h"
@@ -75,19 +76,6 @@ struct hgd_resp_err hgd_resp_errs[] = {
 };
 
 const char		*hgd_component = HGD_COMPONENT_HGDC;
-
-char			*user = NULL, *host = NULL, *password = NULL;
-int			 port = HGD_DFL_PORT;
-int			 sock_fd = -1;
-
-SSL			*ssl = NULL;
-SSL_METHOD		*method;
-SSL_CTX			*ctx;
-uint8_t			 crypto_pref = HGD_CRYPTO_PREF_IF_POSS;
-uint8_t			 server_ssl_capable = 0;
-uint8_t			 authenticated = 0;
-uint8_t			 hud_refresh_speed = 5;
-uint8_t			 colours_on = 1;
 uint8_t			 hud_max_items = 0;
 
 /* protos */

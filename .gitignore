@@ -15,6 +15,7 @@ hgd-mk-pydoc
 hgd-netd
 hgd-playd
 hgdc
+nchgdc
 plugins/*.pyc
 pylib/hgd/*.pyc
 tags

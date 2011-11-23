@@ -25,6 +25,8 @@
 
 #include "hgd.h"
 #include "config.h"
+#include "cfg.h"
+#include "client.h"
 
 #define HGD_CPAIR_BARS		1
 #define HGD_CPAIR_SELECTED	2
@@ -208,3 +210,39 @@ main(int argc, char **argv)
 
 	return 0;
 }
+
+int
+hgd_read_config(char **config_locations)
+{
+#ifdef HAVE_LIBCONFIG
+	/*
+	 * config_lookup_int64 is used because lib_config changed
+	 * config_lookup_int from returning a long int, to a int, and debian
+	 * still uses the old version.
+	 * see hgd-playd.c for how to remove need for stat.
+	 */
+	config_t		 cfg, *cf;
+	int			 ret = HGD_OK;
+
+	cf = &cfg;
+
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL)
+		return (HGD_OK);
+
+	/* hgd_cfg_c_colours(cf, &colours_on); */
+	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);
+	hgd_cfg_c_hostname(cf, &host);
+	hgd_cfg_c_port(cf, &port);
+	hgd_cfg_c_password(cf, &password, *config_locations);
+	/* hgd_cfg_c_refreshrate(cf, &hud_refresh_speed); */
+	hgd_cfg_c_username(cf, &user);
+	hgd_cfg_c_debug(cf, &hgd_debug);
+
+	config_destroy(cf);
+	return (ret);
+#else
+	return (HGD_OK);
+#endif
+}
+
+
