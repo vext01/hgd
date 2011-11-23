@@ -57,3 +57,6 @@ extern SSL_METHOD	*method;
 extern SSL_CTX		*ctx;
 extern uint8_t		 crypto_pref, server_ssl_capable, authenticated;
 extern uint8_t		 hud_refresh_speed, colours_on;
+
+
+int			 hgd_client_edit_config();

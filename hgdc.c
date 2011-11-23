@@ -454,6 +454,7 @@ hgd_usage()
 {
 	printf("Usage: hgdc [opts] command [args]\n\n");
 	printf("  Commands include:\n");
+	printf("    cfg\t\t\tEdit config file with ${EDITOR}\n");
 	printf("    hud\t\t\tHeads up display\n");
 	printf("    id\t\t\tShow user account details and vote info\n");
 	printf("    ls\t\t\tShow playlist\n");
@@ -738,7 +739,8 @@ hgd_print_track(char *resp, uint8_t first)
 			printf("   You HAVE voted-off this track.\n");
 			break;
 		case -1:
-			printf("   Could not auhtenticate. Log in to enable vote-off functionality.\n");
+			printf("   Could not auhtenticate. "
+			    "Log in to enable vote-off functionality.\n");
 			break;
 		default:
 			DPRINTF(HGD_D_ERROR, "Bogus 'has_voted' field");
@@ -1173,9 +1175,16 @@ fail:
 	return (ret);
 }
 
+int
+hgd_req_edit_config(char **args)
+{
+	return (hgd_client_edit_config());
+}
+
 /* lookup for request despatch */
 struct hgd_req_despatch req_desps[] = {
 /*	cmd,		n_args,	need_auth,	handler,		varargs */
+	{"cfg",		0,	0,		hgd_req_edit_config,	0},
 	{"id",		0,	1,		hgd_req_id,		0},
 	{"ls",		0,	0,		hgd_req_playlist,	0},
 	{"hud",		0,	0,		hgd_req_hud,		0},

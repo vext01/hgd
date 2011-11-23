@@ -87,6 +87,7 @@
 #define HGD_AUTH_ADMIN		(1 << 0)
 
 #define HGD_TERM_WIDTH		78
+#define HGD_DFL_EDITOR		"vi"
 
 #include <sys/types.h>
 #include <sys/stat.h>

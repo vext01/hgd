@@ -61,3 +61,29 @@ uint8_t			 server_ssl_capable = 0;
 uint8_t			 authenticated = 0;
 uint8_t			 hud_refresh_speed = 5;
 uint8_t			 colours_on = 1;
+
+int
+hgd_client_edit_config()
+{
+	char			*path = NULL, *edit_cmd = NULL;
+	char			*editor = getenv("EDITOR");
+	int			 ret = HGD_FAIL;
+
+	if (editor == NULL)
+		editor = HGD_DFL_EDITOR;
+
+	xasprintf(&path, "%s/%s/%s", getenv("HOME"),
+	    HGD_USR_CFG_DIR, HGD_CLI_CFG);
+
+	xasprintf(&edit_cmd, "%s %s", editor, path);
+
+	if (system(edit_cmd) != 0)
+		goto clean;
+
+	ret = HGD_OK;
+clean:
+	free(edit_cmd);
+	free(path);
+
+	return (ret);
+}
