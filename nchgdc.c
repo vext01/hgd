@@ -38,6 +38,16 @@ struct ui {
 	WINDOW		*content;	/* main pane in the middle */
 	WINDOW		*status;	/* status bar */
 	MENU		*menu;
+	int		 active_win;
+#define	HGD_WIN_PLAYLIST		0
+#define HGD_WIN_FILES			1
+#define HGD_WIN_CONSOLE			2
+};
+
+const char *window_names[] = {
+	"Playlist",
+	"File Browser",
+	"Console"
 };
 
 const char *test_playlist[] = {
@@ -113,15 +123,19 @@ fail(char *msg)
 void
 hgd_init_titlebar(struct ui *u)
 {
-	char			*fmt = NULL;
+	char			*fmt = NULL, *title_str = NULL;
 
 	if ((u->title = newwin(1, COLS, 0, 0)) == NULL)
 		fail("cant make win");
 
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
 	asprintf(&fmt, "%%-%ds%%s", COLS);
-	wprintw(u->title, fmt, "nchgdc-" HGD_VERSION, " :: Playlist");
+	asprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION, 
+	    window_names[u->active_win]);
 
+	wprintw(u->title, fmt, title_str);
+
+	free(title_str);
 	free (fmt);
 }
 
@@ -167,6 +181,8 @@ main(int argc, char **argv)
 	struct ui	u;
 	int		c;
 
+	u.active_win = HGD_WIN_PLAYLIST;
+
 	init_log();
 
 	initscr();
@@ -200,10 +216,14 @@ main(int argc, char **argv)
 		case KEY_UP:
 			menu_driver(u.menu, REQ_UP_ITEM);
 			break;
+		case '`':
+			endwin();
+			exit (32);
+			break;
 		}
 	}
 
-    	getch();
+	getch();
 	endwin();
 
 	/* XXX close log */
