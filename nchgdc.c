@@ -216,9 +216,15 @@ main(int argc, char **argv)
 		case KEY_UP:
 			menu_driver(u.menu, REQ_UP_ITEM);
 			break;
+		case '\t':
+			/* tab toggles toggle between files and playlist */
+			if (u.active_win != HGD_WIN_PLAYLIST)
+				u.active_win = HGD_WIN_PLAYLIST;
+			else
+				u.active_win = HGD_WIN_FILES;
+			break;
 		case '`':
-			endwin();
-			exit (32);
+			/* XXX console */
 			break;
 		}
 	}
