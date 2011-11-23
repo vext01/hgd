@@ -106,7 +106,9 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 # XXX configure check for curses and ability to disable the build of this.
 # XXX link to the build when in some useful state
 nchgdc: common.o config.h nchgdc.h nchgdc.c
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CURSES_LDFLAGS} nchgdc.c -o nchgdc
+	${CC} ${CPPFLAGS} ${CFLAGS} ${CURSES_LDFLAGS} \
+		common.o \
+		nchgdc.c -o nchgdc
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${SSL_CFLAGS} ${SQL_CFLAGS} \

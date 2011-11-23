@@ -23,10 +23,13 @@
 #include <menu.h>
 #include <err.h>
 
-#define HGD_VERSION		"x.xx"
+#include "hgd.h"
+#include "config.h"
 
 #define HGD_CPAIR_BARS		1
 #define HGD_CPAIR_SELECTED	2
+
+const char		*hgd_component = "nchgdc";
 
 struct ui {
 	WINDOW		*title;		/* title bar */
@@ -57,6 +60,12 @@ const char *test_playlist[] = {
 FILE			*hlog;
 
 void
+hgd_exit_nicely()
+{
+	_exit(!exit_ok);
+}
+
+void
 hgd_refresh_ui(struct ui *u)
 {
 	refresh();
@@ -67,12 +76,19 @@ hgd_refresh_ui(struct ui *u)
 
 }
 
-#define LOGFILE		"tutti.log"
 void
 init_log()
 {
-	if ((hlog = fopen(LOGFILE, "w")) == NULL)
-		err(1, "init logfile");
+	char *logfile = NULL;
+
+	xasprintf(&logfile, "%s/%s/nchgdc.log",
+	    getenv("HOME"), HGD_USR_CFG_DIR);
+
+	DPRINTF(HGD_D_INFO, "UI logging to '%s'", logfile);
+	if ((hlog = fopen(logfile, "w")) == NULL)
+		DPRINTF(HGD_D_WARN, "%s", SERROR);
+
+	free(logfile);
 }
 
 void
@@ -102,7 +118,7 @@ hgd_init_titlebar(struct ui *u)
 
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
 	asprintf(&fmt, "%%-%ds%%s", COLS);
-	wprintw(u->title, fmt,  "Tutti-"HGD_VERSION, " :: Playlist");
+	wprintw(u->title, fmt, "nchgdc-" HGD_VERSION, " :: Playlist");
 
 	free (fmt);
 }
