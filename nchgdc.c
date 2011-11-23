@@ -1,3 +1,7 @@
+
+#define _GNU_SOURCE	/* linux */
+
+#include <stdio.h>
 #include <curses.h>
 #include <stdlib.h>
 #include <menu.h>
