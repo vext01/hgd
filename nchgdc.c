@@ -83,8 +83,11 @@ hgd_refresh_ui(struct ui *u)
 	if (u->active_content_win == HGD_WIN_PLAYLIST)
 		post_menu(u->menu);
 
-	redrawwin(u->content_wins[u->active_content_win]);
-	wrefresh(u->content_wins[u->active_content_win]);
+	if (u->refresh_content) {
+		redrawwin(u->content_wins[u->active_content_win]);
+		wrefresh(u->content_wins[u->active_content_win]);
+		u->refresh_content = 0;
+	}
 
 	hgd_update_titlebar(u);
 	wrefresh(u->title);
@@ -239,6 +242,7 @@ main(int argc, char **argv)
 	init_pair(HGD_CPAIR_BARS, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(HGD_CPAIR_SELECTED, COLOR_BLACK, COLOR_WHITE);
 
+	u.refresh_content = 1;
 	u.active_content_win = HGD_WIN_PLAYLIST;
 
 	/* initialise top and bottom bars */
@@ -276,9 +280,11 @@ main(int argc, char **argv)
 				u.active_content_win = HGD_WIN_PLAYLIST;
 			else
 				u.active_content_win = HGD_WIN_FILES;
+			u.refresh_content = 1;
 			break;
 		case '`':
 			u.active_content_win = HGD_WIN_CONSOLE;
+			u.refresh_content = 1;
 			break;
 		}
 	}

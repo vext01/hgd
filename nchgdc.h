@@ -34,6 +34,7 @@ struct ui {
 #define	HGD_WIN_PLAYLIST		0
 #define HGD_WIN_FILES			1
 #define HGD_WIN_CONSOLE			2
+	int		 refresh_content;
 };
 
 void			hgd_update_titlebar(struct ui *u);
