@@ -197,6 +197,13 @@ struct hgd_user_perm {
 	char		*descr;
 };
 
+enum SERVICE {
+	netd,
+	playd,
+	hgdc,
+	admin
+};
+
 /* debug levels */
 #define HGD_D_ERROR		0
 #define HGD_D_WARN		1
@@ -293,5 +300,6 @@ int				 hgd_unlink_pid_file(void);
 int				 hgd_write_pid_file(void);
 int				 hgd_check_component_status(
 				     char *component, int *running);
+
 
 #endif

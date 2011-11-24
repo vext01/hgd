@@ -1345,6 +1345,7 @@ hgd_read_config(char **config_locations)
 	cf = &cfg;
 
 	if (hgd_load_config(cf, config_locations) == HGD_FAIL) {
+		DPRINTF(HGD_D_WARN, "Failed to load config files");
 		return (HGD_OK);
 	}
 
@@ -1368,7 +1369,7 @@ hgd_read_config(char **config_locations)
 int
 main(int argc, char **argv)
 {
-	char			*resp, *xdg_config_home;
+	char			*resp;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2, ch;
 
@@ -1376,17 +1377,11 @@ main(int argc, char **argv)
 	HGD_INIT_SYSLOG();
 
 	host = xstrdup(HGD_DFL_HOST);
+#ifdef HAVE_LIBCONFIG
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
-
-	xdg_config_home =  getenv("XDG_CONFIG_HOME");
-	if (xdg_config_home == NULL) {
-		xasprintf(&config_path[2], "%s%s", getenv("HOME"),
-		    HGD_USR_CFG_DIR HGD_CLI_CFG);
-	} else {
-		xasprintf(&config_path[2], "%s%s",
-		    xdg_config_home , "/hgd" HGD_CLI_CFG);
-	}
+	config_path[2] = hgd_get_XDG_userprefs_location(hgdc);
+#endif
 
 	/*
 	 * Need to do getopt twice because x and c need to be done before
