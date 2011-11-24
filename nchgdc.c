@@ -122,14 +122,23 @@ hgd_update_titlebar(struct ui *u)
 	char			*fmt = NULL, *title_str = NULL;
 
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
-	asprintf(&fmt, "%%-%ds%%s", COLS);
-	asprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION,
+
+	xasprintf(&fmt, "%%-%ds%%s", COLS);
+	DPRINTF(HGD_D_DEBUG, "format='%s'", fmt);
+	xasprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION,
 	    window_names[u->active_content_win]);
+	DPRINTF(HGD_D_DEBUG, "title_str='%s'", title_str);
 
 	mvwprintw(u->title, 0, 0, fmt, title_str);
 
 	free(title_str);
 	free(fmt);
+}
+
+void
+hgd_update_console_win(struct ui *u)
+{
+	wprintw(u->content_wins[HGD_WIN_CONSOLE], "UPDATE CONSOLE WIN\n");
 }
 
 int
@@ -287,6 +296,9 @@ main(int argc, char **argv)
 			u.refresh_content = 1;
 			break;
 		}
+
+		if (u.active_content_win == HGD_WIN_CONSOLE)
+			hgd_update_console_win(&u);
 	}
 
 	exit_ok = 1;
