@@ -72,8 +72,12 @@ hgd_refresh_ui(struct ui *u)
 {
 	refresh();
 
-	post_menu(u->menu);
-	wrefresh(u->content_wins[HGD_WIN_PLAYLIST]);
+	/* XXX */
+	if (u->active_content_win == HGD_WIN_PLAYLIST)
+		post_menu(u->menu);
+
+	redrawwin(u->content_wins[u->active_content_win]);
+	wrefresh(u->content_wins[u->active_content_win]);
 
 	hgd_update_titlebar(u);
 	wrefresh(u->title);
@@ -172,6 +176,23 @@ hgd_init_playlist_win(struct ui *u)
 	set_menu_fore(u->menu, COLOR_PAIR(HGD_CPAIR_SELECTED));
 }
 
+/* initialise the file browser content pane */
+void
+hgd_init_files_win(struct ui *u)
+{
+	u->content_wins[HGD_WIN_FILES] = newwin(LINES - 2, COLS, 1, 1);
+	keypad(u->content_wins[HGD_WIN_FILES], TRUE);
+	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
+}
+
+void
+hgd_init_console_win(struct ui *u)
+{
+	u->content_wins[HGD_WIN_CONSOLE] = newwin(LINES - 2, COLS, 1, 1);
+	keypad(u->content_wins[HGD_WIN_CONSOLE], TRUE);
+	mvwprintw(u->content_wins[HGD_WIN_CONSOLE], 0, 0, "Insert console here");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -197,15 +218,20 @@ main(int argc, char **argv)
 
 	u.active_content_win = HGD_WIN_PLAYLIST;
 
+	/* initialise top and bottom bars */
 	hgd_init_titlebar(&u);
 	hgd_init_statusbar(&u);
+
+	/* and all content windows */
 	hgd_init_playlist_win(&u);
+	hgd_init_files_win(&u);
+	hgd_init_console_win(&u);
 
 	/* main event loop */
 	while (1) {
 		hgd_refresh_ui(&u);
 
-		c = wgetch(u.content_wins[HGD_WIN_PLAYLIST]);
+		c = wgetch(u.content_wins[u.active_content_win]);
 		switch(c) {
 		case KEY_DOWN:
 			menu_driver(u.menu, REQ_DOWN_ITEM);
