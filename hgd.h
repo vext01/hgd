@@ -55,6 +55,8 @@
 #define HGD_CLI_CFG		"/hgdc.rc"
 #define HGD_SERV_CFG		"/hgd.rc"
 
+#define ARRAY_SIZE(a)		(sizeof(a) / sizeof(a[0]))
+
 /*
  * Function return values.
  *
