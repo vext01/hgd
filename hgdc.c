@@ -1176,7 +1176,7 @@ fail:
 }
 
 int
-hgd_req_edit_config(char **args)
+hgd_req_edit_config(int n_args, char **args)
 {
 	return (hgd_client_edit_config());
 }
