@@ -33,7 +33,7 @@ AC_ARG_ENABLE([server], AS_HELP_STRING([--disable-server],
 	    [Dont build server components]))
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug],
 	    [Enable debug sysmbols]))
-AC_ARG_ENABLE([nchgdc], AS_HELP_STRING([--enable-nhgdc],
+AC_ARG_ENABLE([nchgdc], AS_HELP_STRING([--enable-nchgdc],
 	    [Enable EXPERIMENTAL and INCOMPLETE curses client]))
 
 # experimental nchgdc
