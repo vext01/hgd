@@ -64,6 +64,13 @@ FILE			*hlog;
 void
 hgd_exit_nicely()
 {
+	endwin();
+
+	if (!exit_ok) {
+		DPRINTF(HGD_D_ERROR, "nchgdc crashed or was interrupted");
+		printf("ERROR: nchgdc crashed or was interrupted! Please examine the log file\n");
+	}
+
 	_exit(!exit_ok);
 }
 
@@ -94,27 +101,16 @@ init_log()
 	    getenv("HOME"), HGD_USR_CFG_DIR);
 
 	DPRINTF(HGD_D_INFO, "UI logging to '%s'", logfile);
-	if ((hlog = fopen(logfile, "w")) == NULL)
-		DPRINTF(HGD_D_WARN, "%s", SERROR);
+	if ((hlog = fopen(logfile, "w")) == NULL) {
+		DPRINTF(HGD_D_ERROR, "%s", SERROR);
+		exit (1); /* XXX */
+	}
 
 	free(logfile);
-}
 
-void
-dolog(char *msg)
-{
-	if (fprintf(hlog, "%s\n", msg) == -1) {
-		endwin();
-		err(1, "failed to log");
-	}
-}
-
-void
-fail(char *msg)
-{
-	endwin();
-	fprintf(stderr, "%s\n", msg);
-	exit (1);
+	/* Redirect stderr here, so that DPRINTF can still work */
+	close(fileno(stderr));
+	dup(fileno(hlog));
 }
 
 void
@@ -133,29 +129,36 @@ hgd_update_titlebar(struct ui *u)
 	free(fmt);
 }
 
-void
+int
 hgd_init_titlebar(struct ui *u)
 {
-	if ((u->title = newwin(1, COLS, 0, 0)) == NULL)
-		fail("cant make win");
+	if ((u->title = newwin(1, COLS, 0, 0)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not initialise titlebar");
+		return (HGD_FAIL);
+	}
+
+	return (HGD_OK);
 }
 
-void
+int
 hgd_init_statusbar(struct ui *u)
 {
 	char			*fmt = NULL;
 
-	if ((u->status = newwin(1, COLS, LINES - 1, 0)) == NULL)
-		fail("cant make win");
+	if ((u->status = newwin(1, COLS, LINES - 1, 0)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not initialise statusbar");
+		return (HGD_FAIL);
+	}
 
 	wattron(u->status, COLOR_PAIR(HGD_CPAIR_BARS));
-	asprintf(&fmt, "%%-%ds", COLS);
+	xasprintf(&fmt, "%%-%ds", COLS);
 	wprintw(u->status, fmt,  "User: edd\tHasVote: Yes");
 	free (fmt);
+
+	return (HGD_OK);
 }
 
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-void
+int
 hgd_init_playlist_win(struct ui *u)
 {
 	ITEM			**items;
@@ -168,29 +171,47 @@ hgd_init_playlist_win(struct ui *u)
 		items[i] = new_item(test_playlist[i], NULL);
 
 	u->menu = new_menu(items);
-	u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 1);
+	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 1)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Failed to playlist content window");
+		return (HGD_FAIL);
+	}
+
 	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
 	set_menu_win(u->menu, u->content_wins[HGD_WIN_PLAYLIST]);
 	set_menu_mark(u->menu, "");
 	set_menu_format(u->menu, LINES - 2, 1);
 	set_menu_fore(u->menu, COLOR_PAIR(HGD_CPAIR_SELECTED));
+
+	return (HGD_OK);
 }
 
 /* initialise the file browser content pane */
-void
+int
 hgd_init_files_win(struct ui *u)
 {
-	u->content_wins[HGD_WIN_FILES] = newwin(LINES - 2, COLS, 1, 1);
+	if ((u->content_wins[HGD_WIN_FILES] = newwin(LINES - 2, COLS, 1, 1)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Failed to initialise file browser content window");
+		return (HGD_FAIL);
+	}
+
 	keypad(u->content_wins[HGD_WIN_FILES], TRUE);
 	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
+
+	return (HGD_OK);
 }
 
-void
+int
 hgd_init_console_win(struct ui *u)
 {
-	u->content_wins[HGD_WIN_CONSOLE] = newwin(LINES - 2, COLS, 1, 1);
+	if ((u->content_wins[HGD_WIN_CONSOLE] = newwin(LINES - 2, COLS, 1, 1)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Failed to initialise file browser content window");
+		return (HGD_FAIL);
+	}
+
 	keypad(u->content_wins[HGD_WIN_CONSOLE], TRUE);
 	mvwprintw(u->content_wins[HGD_WIN_CONSOLE], 0, 0, "Insert console here");
+
+	return (HGD_OK);
 }
 
 int
@@ -198,6 +219,8 @@ main(int argc, char **argv)
 {
 	struct ui	u;
 	int		c;
+
+	hgd_debug = 3; /* XXX config file or getopt */
 
 	init_log();
 
@@ -207,27 +230,35 @@ main(int argc, char **argv)
 	keypad(stdscr, TRUE);
 	noecho();
 
-	if (!has_colors())
-		fail("no colors");
+	if (has_colors()) {
+		if (start_color() == ERR)
+			DPRINTF(HGD_D_WARN, "Could not initialise colour terminal");
+	}
 
-	if (start_color() == ERR)
-		fail("cant start colours");
-
+	/* XXX fall back implementations for B+W terms? */
 	init_pair(HGD_CPAIR_BARS, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(HGD_CPAIR_SELECTED, COLOR_BLACK, COLOR_WHITE);
 
 	u.active_content_win = HGD_WIN_PLAYLIST;
 
 	/* initialise top and bottom bars */
-	hgd_init_titlebar(&u);
-	hgd_init_statusbar(&u);
+	if (hgd_init_titlebar(&u) != HGD_OK)
+		hgd_exit_nicely();
+	if (hgd_init_statusbar(&u) != HGD_OK)
+		hgd_exit_nicely();
 
 	/* and all content windows */
-	hgd_init_playlist_win(&u);
-	hgd_init_files_win(&u);
-	hgd_init_console_win(&u);
+	if (hgd_init_playlist_win(&u) != HGD_OK)
+		hgd_exit_nicely();
+	if (hgd_init_files_win(&u) != HGD_OK)
+		hgd_exit_nicely();
+	if (hgd_init_console_win(&u) != HGD_OK)
+		hgd_exit_nicely();
+
+	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
 
 	/* main event loop */
+	/* XXX catch C^c */
 	while (1) {
 		hgd_refresh_ui(&u);
 
@@ -252,10 +283,8 @@ main(int argc, char **argv)
 		}
 	}
 
-	getch();
-	endwin();
-
-	/* XXX close log */
+	exit_ok = 1;
+	hgd_exit_nicely();
 
 	return 0;
 }
