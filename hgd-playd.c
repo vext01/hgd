@@ -179,25 +179,17 @@ hgd_usage(void)
 int
 main(int argc, char **argv)
 {
-	char			*xdg_config_home;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2, ch;
 
 	/* early as possible */
 	HGD_INIT_SYSLOG_DAEMON();
 
+#ifdef HAVE_LIBCONFIG
 	config_path[0] = NULL;
-
 	xasprintf(&config_path[1], "%s", HGD_GLOBAL_CFG_DIR HGD_SERV_CFG);
-
-	xdg_config_home =  getenv("XDG_CONFIG_HOME");
-	if (xdg_config_home == NULL) {
-		xasprintf(&config_path[2], "%s%s", getenv("HOME"),
-		    HGD_USR_CFG_DIR HGD_SERV_CFG );
-	} else {
-		xasprintf(&config_path[2],
-		    "%s%s", xdg_config_home , "/hgd" HGD_SERV_CFG);
-	}
+	config_path[2] = hgd_get_XDG_userprefs_location(playd);
+#endif
 
 	hgd_register_sig_handlers();
 	state_path = xstrdup(HGD_DFL_DIR);

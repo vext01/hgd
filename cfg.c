@@ -418,6 +418,38 @@ hgd_cfg_c_debug(config_t *cf, int8_t *debug)
 	}
 }
 
+char*
+hgd_get_XDG_userprefs_location(enum SERVICE service)
+{
+	char *xdg_config_home =  getenv(HGD_USR_CFG_ENV);
+	char *config_path;
+	char *serv_str = NULL;
+
+	switch (service) {
+	case netd:
+	case playd:
+		serv_str = HGD_SERV_CFG;
+		break;
+	case hgdc:
+		serv_str = HGD_CLI_CFG;
+		break;
+	default:
+		/*progammer error*/
+		printf("Invalid option in hgd_get_XDG_userprefs_location");
+		exit(-1);
+	}
+
+	if (xdg_config_home == NULL) {
+		xasprintf(&config_path, "%s%s%s", getenv("HOME"),
+		    HGD_USR_CFG_DIR, serv_str );
+	} else {
+		xasprintf(&config_path, "%s%s%s",
+		    xdg_config_home , "/hgd", serv_str);
+	}
+
+	return config_path;
+
+}
 #if 0 /* lets not forget the lessons of our past */
 
 	while (*config_locations != NULL) {
