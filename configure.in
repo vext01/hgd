@@ -135,7 +135,7 @@ AC_CHECK_FUNC([readpassphrase],,
 	      [PKG_CHECK_MODULES([BSD], [libbsd >= 0.2.0])])
 
 # ssl always needed, hashing / crypto
-PKG_CHECK_MODULES([SSL], [libssl >= 0.9.8])
+PKG_CHECK_MODULES([SSL], [openssl >= 0.9.8])
 
 # libconfig
 AS_IF([test "x$with_libconfig" != "xno"], 
