@@ -157,6 +157,7 @@ History
 	 - Better error messages about lock files.
 	 - Fixed bug where hud mode kept asking for password.
 	 - Configure CC variable now honored.
+ * 0.5.2 - Fix compile issue ubuntu.
 
 Roadmap
 -------
