@@ -59,7 +59,7 @@ const char *test_playlist[] = {
 	NULL
 };
 
-FILE			*hlog;
+struct hgd_ui_log			logs;
 
 void
 hgd_exit_nicely()
@@ -104,8 +104,13 @@ init_log()
 	    getenv("HOME"), HGD_USR_CFG_DIR);
 
 	DPRINTF(HGD_D_INFO, "UI logging to '%s'", logfile);
-	if ((hlog = fopen(logfile, "w")) == NULL) {
-		DPRINTF(HGD_D_ERROR, "%s", SERROR);
+	if ((logs.wr = fopen(logfile, "w")) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not open write log: %s", SERROR);
+		exit (1); /* XXX */
+	}
+
+	if ((logs.rd = fopen(logfile, "r")) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not open read log: %s", SERROR);
 		exit (1); /* XXX */
 	}
 
@@ -113,7 +118,7 @@ init_log()
 
 	/* Redirect stderr here, so that DPRINTF can still work */
 	close(fileno(stderr));
-	dup(fileno(hlog));
+	dup(fileno(logs.wr));
 }
 
 void
@@ -121,13 +126,13 @@ hgd_update_titlebar(struct ui *u)
 {
 	char			*fmt = NULL, *title_str = NULL;
 
+	DPRINTF(HGD_D_INFO, "Update titlebar window");
+
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
 
 	xasprintf(&fmt, "%%-%ds%%s", COLS);
-	DPRINTF(HGD_D_DEBUG, "format='%s'", fmt);
 	xasprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION,
 	    window_names[u->active_content_win]);
-	DPRINTF(HGD_D_DEBUG, "title_str='%s'", title_str);
 
 	mvwprintw(u->title, 0, 0, fmt, title_str);
 
@@ -135,15 +140,55 @@ hgd_update_titlebar(struct ui *u)
 	free(fmt);
 }
 
+#define HGD_LOG_BACKBUFFER			1024
 void
 hgd_update_console_win(struct ui *u)
 {
-	wprintw(u->content_wins[HGD_WIN_CONSOLE], "UPDATE CONSOLE WIN\n");
+	char		buf[HGD_LOG_BACKBUFFER + 1], *p = buf;
+	long		pos, endpos, read;
+	long		toread = HGD_LOG_BACKBUFFER;
+
+	DPRINTF(HGD_D_INFO, "Update console window");
+
+	memset(buf, 0, HGD_LOG_BACKBUFFER + 1);
+
+	/* find how long the log is */
+	if ((fseek(logs.rd, 0, SEEK_END)) != 0)
+		DPRINTF(HGD_D_WARN, "fseek: %s", SERROR);
+
+	endpos = ftell(logs.rd);
+
+	if (endpos < HGD_LOG_BACKBUFFER)
+		toread = endpos;
+
+	/* rewind at most HGD_LOG_BACKBUFFER and read into buffer */
+	if ((fseek(logs.rd, -toread, SEEK_END)) != 0)
+		DPRINTF(HGD_D_WARN, "fseek: %s", SERROR);
+
+	pos = ftell(logs.rd);
+	if ((read = fread(buf, toread, 1, logs.rd)) == 0) {
+		if (ferror(logs.rd))
+		    DPRINTF(HGD_D_WARN, "Failed to read console log: %s", SERROR);
+	}
+
+	/* ensure we dont start printing the middle of a line */
+	if (pos < 0)
+		DPRINTF(HGD_D_WARN, "ftell failed: %s", SERROR);
+	else if (pos != 0) {
+		/* if not at the start of file, find a \n */
+		while (*p != '\n')
+			p++;
+	}
+
+	wclear(u->content_wins[HGD_WIN_CONSOLE]);
+	mvwprintw(u->content_wins[HGD_WIN_CONSOLE], 0, 0, "%s", p);
 }
 
 int
 hgd_init_titlebar(struct ui *u)
 {
+	DPRINTF(HGD_D_INFO, "Initialise titlebar");
+
 	if ((u->title = newwin(1, COLS, 0, 0)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not initialise titlebar");
 		return (HGD_FAIL);
@@ -156,6 +201,8 @@ int
 hgd_init_statusbar(struct ui *u)
 {
 	char			*fmt = NULL;
+
+	DPRINTF(HGD_D_INFO, "Initialise statusbar");
 
 	if ((u->status = newwin(1, COLS, LINES - 1, 0)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not initialise statusbar");
@@ -175,6 +222,8 @@ hgd_init_playlist_win(struct ui *u)
 {
 	ITEM			**items;
 	int			  num, i;
+
+	DPRINTF(HGD_D_INFO, "Initialise playlist window");
 
 	num = ARRAY_SIZE(test_playlist);
 
@@ -201,6 +250,8 @@ hgd_init_playlist_win(struct ui *u)
 int
 hgd_init_files_win(struct ui *u)
 {
+	DPRINTF(HGD_D_INFO, "Initialise file browser window");
+
 	if ((u->content_wins[HGD_WIN_FILES] = newwin(LINES - 2, COLS, 1, 1)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Failed to initialise file browser content window");
 		return (HGD_FAIL);
@@ -208,6 +259,7 @@ hgd_init_files_win(struct ui *u)
 
 	keypad(u->content_wins[HGD_WIN_FILES], TRUE);
 	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
+	mvwprintw(u->content_wins[HGD_WIN_FILES], 10, 0, "Ooooh - you touch my tralala");
 
 	return (HGD_OK);
 }
@@ -215,6 +267,8 @@ hgd_init_files_win(struct ui *u)
 int
 hgd_init_console_win(struct ui *u)
 {
+	DPRINTF(HGD_D_INFO, "Initialise console window");
+
 	if ((u->content_wins[HGD_WIN_CONSOLE] = newwin(LINES - 2, COLS, 1, 1)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Failed to initialise file browser content window");
 		return (HGD_FAIL);

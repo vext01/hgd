@@ -37,6 +37,12 @@ struct ui {
 	int		 refresh_content;
 };
 
+/* We have 2 handles on the UI log, read/write */
+struct hgd_ui_log {
+	FILE		*rd;
+	FILE		*wr;
+};
+
 void			hgd_update_titlebar(struct ui *u);
 
 #endif /* __NCHGDC_H */
