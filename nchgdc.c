@@ -80,8 +80,10 @@ hgd_refresh_ui(struct ui *u)
 	refresh();
 
 	/* XXX */
-	if (u->active_content_win == HGD_WIN_PLAYLIST)
-		post_menu(u->menu);
+	if (u->content_menus[u->active_content_win] != NULL) {
+		if ((post_menu(u->content_menus[u->active_content_win])) != E_OK)
+			DPRINTF(HGD_D_ERROR, "Could not post menu");
+	}
 
 	if (u->refresh_content) {
 		redrawwin(u->content_wins[u->active_content_win]);
@@ -231,17 +233,17 @@ hgd_init_playlist_win(struct ui *u)
 	for (i = 0; i < num; i++)
 		items[i] = new_item(test_playlist[i], NULL);
 
-	u->menu = new_menu(items);
+	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
 	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 1)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Failed to playlist content window");
 		return (HGD_FAIL);
 	}
 
 	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
-	set_menu_win(u->menu, u->content_wins[HGD_WIN_PLAYLIST]);
-	set_menu_mark(u->menu, "");
-	set_menu_format(u->menu, LINES - 2, 1);
-	set_menu_fore(u->menu, COLOR_PAIR(HGD_CPAIR_SELECTED));
+	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST], u->content_wins[HGD_WIN_PLAYLIST]);
+	set_menu_mark(u->content_menus[HGD_WIN_PLAYLIST], "");
+	set_menu_format(u->content_menus[HGD_WIN_PLAYLIST], LINES - 2, 1);
+	set_menu_fore(u->content_menus[HGD_WIN_PLAYLIST], COLOR_PAIR(HGD_CPAIR_SELECTED));
 
 	return (HGD_OK);
 }
@@ -261,6 +263,8 @@ hgd_init_files_win(struct ui *u)
 	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
 	mvwprintw(u->content_wins[HGD_WIN_FILES], 10, 0, "Ooooh - you touch my tralala");
 
+	u->content_menus[HGD_WIN_FILES] = NULL; /* no menu */
+
 	return (HGD_OK);
 }
 
@@ -276,6 +280,8 @@ hgd_init_console_win(struct ui *u)
 
 	keypad(u->content_wins[HGD_WIN_CONSOLE], TRUE);
 	mvwprintw(u->content_wins[HGD_WIN_CONSOLE], 0, 0, "Insert console here");
+
+	u->content_menus[HGD_WIN_CONSOLE] = NULL; /* no menu */
 
 	return (HGD_OK);
 }
@@ -332,10 +338,10 @@ main(int argc, char **argv)
 		c = wgetch(u.content_wins[u.active_content_win]);
 		switch(c) {
 		case KEY_DOWN:
-			menu_driver(u.menu, REQ_DOWN_ITEM);
+			menu_driver(u.content_menus[u.active_content_win], REQ_DOWN_ITEM);
 			break;
 		case KEY_UP:
-			menu_driver(u.menu, REQ_UP_ITEM);
+			menu_driver(u.content_menus[u.active_content_win], REQ_UP_ITEM);
 			break;
 		case '\t':
 			/* tab toggles toggle between files and playlist */

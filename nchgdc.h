@@ -27,14 +27,15 @@ struct ui {
 	 * This is just a pointer to the playlist/files/console win.
 	 */
 	WINDOW		*status;	/* status bar */
-	MENU		*menu;
 	/* possible "active" windows */
 	WINDOW			*content_wins[HGD_MAX_CONTENT_WINS];
 	int			 active_content_win;
 #define	HGD_WIN_PLAYLIST		0
 #define HGD_WIN_FILES			1
 #define HGD_WIN_CONSOLE			2
-	int		 refresh_content;
+	/* there is at most one menu per content window */
+	MENU			*content_menus[HGD_MAX_CONTENT_WINS];
+	int		 	 refresh_content;
 };
 
 /* We have 2 handles on the UI log, read/write */
