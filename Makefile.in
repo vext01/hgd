@@ -124,7 +124,7 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 nchgdc: client.o common.o cfg.o config.h nchgdc.h nchgdc.c
 	@echo "\n--> Building: \"nhgdc\""
 	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CONFIG_LDFLAGS} ${CFLAGS} \
-		${CURSES_LDFLAGS} \
+		${CURSES_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} \
 		common.o cfg.o client.o \
 		nchgdc.c -o nchgdc
 
