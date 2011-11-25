@@ -122,7 +122,7 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 # XXX configure check for curses and ability to disable the build of this.
 # XXX link to the build when in some useful state
 nchgdc: client.o common.o cfg.o config.h nchgdc.h nchgdc.c
-	@echo "\n--> Building: \"nhgdc\""
+	@echo "\n--> Building: \"nchgdc\""
 	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CONFIG_LDFLAGS} ${CFLAGS} \
 		${CURSES_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} \
 		common.o cfg.o client.o \
