@@ -130,7 +130,7 @@ hgd_update_titlebar(struct ui *u)
 
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
 
-	xasprintf(&fmt, "%%-%ds%%s", COLS);
+	xasprintf(&fmt, "%%-%ds", COLS);
 	xasprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION,
 	    window_names[u->active_content_win]);
 
