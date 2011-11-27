@@ -145,9 +145,11 @@ hgd_update_titlebar(struct ui *u)
 void
 hgd_update_console_win(struct ui *u)
 {
-	char		buf[HGD_LOG_BACKBUFFER + 1], *p = buf;
-	long		pos, endpos, read;
-	long		toread = HGD_LOG_BACKBUFFER;
+	char		  buf[HGD_LOG_BACKBUFFER + 1], *start = buf, *end;
+	long		  pos, endpos, read;
+	long		  toread = HGD_LOG_BACKBUFFER;
+	ITEM		**items = xcalloc(sizeof(ITEM*), 1);
+	int		  cur_index = 0;
 
 	DPRINTF(HGD_D_INFO, "Update console window");
 
@@ -168,8 +170,10 @@ hgd_update_console_win(struct ui *u)
 
 	pos = ftell(logs.rd);
 	if ((read = fread(buf, toread, 1, logs.rd)) == 0) {
-		if (ferror(logs.rd))
-		    DPRINTF(HGD_D_WARN, "Failed to read console log: %s", SERROR);
+		if (ferror(logs.rd)) {
+		    DPRINTF(HGD_D_WARN,
+			"Failed to read console log: %s", SERROR);
+		}
 	}
 
 	/* ensure we dont start printing the middle of a line */
@@ -177,12 +181,62 @@ hgd_update_console_win(struct ui *u)
 		DPRINTF(HGD_D_WARN, "ftell failed: %s", SERROR);
 	else if (pos != 0) {
 		/* if not at the start of file, find a \n */
-		while (*p != '\n')
-			p++;
+		while (*start != '\n')
+			start++;
 	}
 
-	wclear(u->content_wins[HGD_WIN_CONSOLE]);
-	mvwprintw(u->content_wins[HGD_WIN_CONSOLE], 0, 0, "%s", p);
+	/* scan for lines and add them as menu items */
+	end = start;
+	while (*start != 0) {
+		while (*start == '\t') start++;
+		DPRINTF(HGD_D_DEBUG, "start = %x", *start);
+		while ((*end != 0) && (*end != '\n'))
+			end++;
+
+		if (*end == 0) {
+			DPRINTF(HGD_D_WARN, "Unexpected end of log");
+			break;
+		}
+		*end = 0;
+
+		/* could be more efficient */
+		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
+		items[cur_index + 1] = NULL;
+
+		DPRINTF(HGD_D_DEBUG, "ITEM====: \"%s\"", start);
+		items[cur_index] = new_item(xstrdup(start), NULL);
+		if (items[cur_index] == NULL)
+			DPRINTF(HGD_D_WARN, "Could not make new menu item: %s", SERROR);
+		end++;
+		start = end;
+		if (items[cur_index] == NULL) continue;
+		cur_index++;
+	}
+
+	DPRINTF(HGD_D_DEBUG, "NO ITEMS: %d", cur_index + 1);
+#if 0
+	items = xrealloc(items, sizeof(ITEM *) * (n_items + 1));
+	DPRINTF(HGD_D_DEBUG, "ITEMS SIZE: %lu", sizeof(ITEM *) * (n_items + 1));
+	items[n_items] = new_item(NULL, NULL);
+#endif
+	/* now we have our items, make the menu */
+	if (u->content_menus[HGD_WIN_CONSOLE] != NULL) {
+		/* XXX clean up old menu */
+	}
+
+	u->content_menus[HGD_WIN_CONSOLE] = new_menu(items);
+
+	keypad(u->content_wins[HGD_WIN_CONSOLE], TRUE);
+	set_menu_win(u->content_menus[HGD_WIN_CONSOLE],
+	    u->content_wins[HGD_WIN_CONSOLE]);
+	set_menu_mark(u->content_menus[HGD_WIN_CONSOLE], "");
+	set_menu_format(u->content_menus[HGD_WIN_CONSOLE],
+	    LINES - 2, 1);
+	set_menu_fore(u->content_menus[HGD_WIN_CONSOLE],
+	    COLOR_PAIR(HGD_CPAIR_SELECTED));
+
+	if ((post_menu(u->content_menus[HGD_WIN_CONSOLE])) != E_OK)
+		DPRINTF(HGD_D_WARN, "Could not post menu");
 }
 
 int
@@ -229,8 +283,12 @@ hgd_init_playlist_win(struct ui *u)
 	num = ARRAY_SIZE(test_playlist);
 
 	items = calloc(num, sizeof(ITEM *));
-	for (i = 0; i < num; i++)
+	for (i = 0; i < num - 1; i++) {
+		DPRINTF(HGD_D_DEBUG, "Adding item \"%s\"", test_playlist[i]);
 		items[i] = new_item(test_playlist[i], NULL);
+		if (items[i] == NULL)
+			DPRINTF(HGD_D_WARN, "Could not make new item: %s", SERROR);
+	}
 
 	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
 	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 0)) == NULL) {
