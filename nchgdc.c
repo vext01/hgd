@@ -74,6 +74,51 @@ hgd_exit_nicely()
 	_exit(!exit_ok);
 }
 
+int
+hgd_prepare_item_string(char **ret_p, char *str)
+{
+	int			sz = 0, written = 0, i;
+	char			*p = str, *c, *ret;
+
+	/* We will be padding this up to UI width */
+	*ret_p = xmalloc(COLS + 1);
+	ret = *ret_p;
+
+	memset(ret, ' ', COLS);
+	ret[COLS] = 0;
+
+	/* count how large the string should be */
+	p = str;
+	c = ret;
+	while (written <= COLS) {
+
+		if (*p == '\0')
+			break; /* done */
+
+		if (*p == '\t')
+			sz = 4;
+		else
+			sz = 1;
+
+		if (written + sz > COLS)
+			break; /* that is all we would be able to cram in */
+
+		if (sz == 1) { /* thus a non-tab */
+			*c++ = *p;
+			written++;
+		} else { /* thus a tab, which expands to 4 spaces */
+			for (i = 0; i < 4; i++) {
+				*c = ' ';
+				c++;
+				written++;
+			}
+		}
+		p++;
+	}
+
+	return (HGD_OK);
+}
+
 void
 hgd_refresh_ui(struct ui *u)
 {
@@ -193,11 +238,8 @@ hgd_update_console_win(struct ui *u)
 	/* scan for lines and add them as menu items */
 	end = start;
 	while (*start != 0) {
-		while ((*end != 0) && (*end != '\n')) {
-			if (*end == '\t')
-				*end = ' ';
+		while ((*end != 0) && (*end != '\n'))
 			end++;
-		}
 
 		if (*end == 0) {
 			DPRINTF(HGD_D_WARN, "Unexpected end of log");
@@ -209,7 +251,7 @@ hgd_update_console_win(struct ui *u)
 		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
 		items[cur_index + 1] = NULL;
 
-		copy = xstrdup(start);
+		hgd_prepare_item_string(&copy, start);
 		items[cur_index] = new_item(copy, NULL);
 
 		if (items[cur_index] == NULL) {
@@ -287,6 +329,7 @@ hgd_init_playlist_win(struct ui *u)
 {
 	ITEM			**items;
 	int			  num, i;
+	char			 *item_str;
 
 	DPRINTF(HGD_D_INFO, "Initialise playlist window");
 
@@ -295,7 +338,10 @@ hgd_init_playlist_win(struct ui *u)
 	items = calloc(num, sizeof(ITEM *));
 	for (i = 0; i < num - 1; i++) {
 		DPRINTF(HGD_D_DEBUG, "Adding item \"%s\"", test_playlist[i]);
-		items[i] = new_item(test_playlist[i], NULL);
+
+		hgd_prepare_item_string(&item_str, (char *) test_playlist[i]);
+
+		items[i] = new_item(item_str, NULL);
 		if (items[i] == NULL)
 			DPRINTF(HGD_D_WARN, "Could not make new item: %s", SERROR);
 	}
