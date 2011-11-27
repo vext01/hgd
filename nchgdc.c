@@ -189,7 +189,6 @@ hgd_update_console_win(struct ui *u)
 	end = start;
 	while (*start != 0) {
 		while (*start == '\t') start++;
-		DPRINTF(HGD_D_DEBUG, "start = %x", *start);
 		while ((*end != 0) && (*end != '\n'))
 			end++;
 
@@ -203,22 +202,18 @@ hgd_update_console_win(struct ui *u)
 		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
 		items[cur_index + 1] = NULL;
 
-		DPRINTF(HGD_D_DEBUG, "ITEM====: \"%s\"", start);
 		items[cur_index] = new_item(xstrdup(start), NULL);
-		if (items[cur_index] == NULL)
-			DPRINTF(HGD_D_WARN, "Could not make new menu item: %s", SERROR);
+		if (items[cur_index] == NULL) {
+			DPRINTF(HGD_D_WARN,
+			    "Could not make new menu item: %s", SERROR);
+		}
+
 		end++;
 		start = end;
 		if (items[cur_index] == NULL) continue;
 		cur_index++;
 	}
 
-	DPRINTF(HGD_D_DEBUG, "NO ITEMS: %d", cur_index + 1);
-#if 0
-	items = xrealloc(items, sizeof(ITEM *) * (n_items + 1));
-	DPRINTF(HGD_D_DEBUG, "ITEMS SIZE: %lu", sizeof(ITEM *) * (n_items + 1));
-	items[n_items] = new_item(NULL, NULL);
-#endif
 	/* now we have our items, make the menu */
 	if (u->content_menus[HGD_WIN_CONSOLE] != NULL) {
 		/* XXX clean up old menu */
@@ -395,10 +390,12 @@ main(int argc, char **argv)
 		c = wgetch(u.content_wins[u.active_content_win]);
 		switch(c) {
 		case KEY_DOWN:
-			menu_driver(u.content_menus[u.active_content_win], REQ_DOWN_ITEM);
+			menu_driver(u.content_menus[u.active_content_win],
+			    REQ_DOWN_ITEM);
 			break;
 		case KEY_UP:
-			menu_driver(u.content_menus[u.active_content_win], REQ_UP_ITEM);
+			menu_driver(u.content_menus[u.active_content_win],
+			    REQ_UP_ITEM);
 			break;
 		case '\t':
 			/* tab toggles toggle between files and playlist */
@@ -410,12 +407,11 @@ main(int argc, char **argv)
 			break;
 		case '`':
 			u.active_content_win = HGD_WIN_CONSOLE;
+			hgd_update_console_win(&u);
 			u.refresh_content = 1;
 			break;
 		}
 
-		if (u.active_content_win == HGD_WIN_CONSOLE)
-			hgd_update_console_win(&u);
 	}
 
 	exit_ok = 1;
