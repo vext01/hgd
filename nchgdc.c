@@ -70,7 +70,8 @@ hgd_exit_nicely()
 
 	if (!exit_ok) {
 		DPRINTF(HGD_D_ERROR, "nchgdc crashed or was interrupted");
-		printf("ERROR: nchgdc crashed or was interrupted! Please examine the log file\n");
+		printf("ERROR: nchgdc crashed or was interrupted!"
+		    " Please examine the log file\n");
 	}
 
 	_exit(!exit_ok);
