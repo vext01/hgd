@@ -141,14 +141,14 @@ hgd_update_titlebar(struct ui *u)
 	free(fmt);
 }
 
-#define HGD_LOG_BACKBUFFER			1024
+#define HGD_LOG_BACKBUFFER			4096
 void
 hgd_update_console_win(struct ui *u)
 {
-	char		  buf[HGD_LOG_BACKBUFFER + 1], *start = buf, *end;
+	char		  buf[HGD_LOG_BACKBUFFER + 1], *start = buf, *end, *copy;
 	long		  pos, endpos, read;
 	long		  toread = HGD_LOG_BACKBUFFER;
-	ITEM		**items = xcalloc(sizeof(ITEM*), 1);
+	ITEM		**items = NULL;
 	int		  cur_index = 0;
 
 	DPRINTF(HGD_D_INFO, "Update console window");
@@ -160,7 +160,6 @@ hgd_update_console_win(struct ui *u)
 		DPRINTF(HGD_D_WARN, "fseek: %s", SERROR);
 
 	endpos = ftell(logs.rd);
-
 	if (endpos < HGD_LOG_BACKBUFFER)
 		toread = endpos;
 
@@ -181,16 +180,24 @@ hgd_update_console_win(struct ui *u)
 		DPRINTF(HGD_D_WARN, "ftell failed: %s", SERROR);
 	else if (pos != 0) {
 		/* if not at the start of file, find a \n */
-		while (*start != '\n')
+		while ((*start != '\n') && (*start != '\0'))
 			start++;
 	}
+
+	/* this SHOULD happen, but not guaraunteed */
+	if (*start == '\n')
+		start++;
+
+	items = xcalloc(sizeof(ITEM*), 1);
 
 	/* scan for lines and add them as menu items */
 	end = start;
 	while (*start != 0) {
-		while (*start == '\t') start++;
-		while ((*end != 0) && (*end != '\n'))
+		while ((*end != 0) && (*end != '\n')) {
+			if (*end == '\t')
+				*end = ' ';
 			end++;
+		}
 
 		if (*end == 0) {
 			DPRINTF(HGD_D_WARN, "Unexpected end of log");
@@ -202,15 +209,21 @@ hgd_update_console_win(struct ui *u)
 		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
 		items[cur_index + 1] = NULL;
 
-		items[cur_index] = new_item(xstrdup(start), NULL);
+		copy = xstrdup(start);
+		items[cur_index] = new_item(copy, NULL);
+
 		if (items[cur_index] == NULL) {
 			DPRINTF(HGD_D_WARN,
-			    "Could not make new menu item: %s", SERROR);
+			    "Could not make new menu item (%s): %s", start, SERROR);
+			free(copy);
 		}
 
 		end++;
 		start = end;
-		if (items[cur_index] == NULL) continue;
+
+		if (items[cur_index] == NULL)
+			continue;
+
 		cur_index++;
 	}
 
@@ -232,6 +245,8 @@ hgd_update_console_win(struct ui *u)
 
 	if ((post_menu(u->content_menus[HGD_WIN_CONSOLE])) != E_OK)
 		DPRINTF(HGD_D_WARN, "Could not post menu");
+
+	menu_driver(u->content_menus[HGD_WIN_CONSOLE], REQ_LAST_ITEM);
 }
 
 int
