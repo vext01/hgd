@@ -141,20 +141,30 @@ hgd_refresh_ui(struct ui *u)
 {
 	refresh();
 
+#if 0
 	if (u->content_menus[u->active_content_win] != NULL) {
 		if ((post_menu(u->content_menus[u->active_content_win])) != E_OK)
 			DPRINTF(HGD_D_ERROR, "Could not post menu");
 	}
+#endif
 
 	if (u->refresh_content) {
+
 		redrawwin(u->content_wins[u->active_content_win]);
 		wrefresh(u->content_wins[u->active_content_win]);
+
+		/*
+		redrawwin(menu_win(u->content_menus[u->active_content_win]));
+		wrefresh(menu_win(u->content_menus[u->active_content_win]));
+		*/
+
 		u->refresh_content = 0;
 	}
 
 	hgd_update_titlebar(u);
 	wrefresh(u->title);
 
+	redrawwin(u->status);
 	wrefresh(u->status);
 }
 
@@ -363,10 +373,18 @@ hgd_init_playlist_win(struct ui *u)
 			DPRINTF(HGD_D_WARN, "Could not make new item: %s", SERROR);
 	}
 
-	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
 	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 0)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Failed to playlist content window");
 		return (HGD_FAIL);
+	}
+
+	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
+	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL)
+			DPRINTF(HGD_D_ERROR, "Could not make menu");
+
+	if (u->content_menus[HGD_WIN_PLAYLIST] != NULL) {
+		if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
+			DPRINTF(HGD_D_ERROR, "Could not post menu");
 	}
 
 	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
@@ -511,9 +529,6 @@ main(int argc, char **argv)
 	init_pair(HGD_CPAIR_BARS, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(HGD_CPAIR_SELECTED, COLOR_BLACK, COLOR_WHITE);
 
-	u.refresh_content = 1;
-	u.active_content_win = HGD_WIN_PLAYLIST;
-
 	/* initialise top and bottom bars */
 	if (hgd_init_titlebar(&u) != HGD_OK)
 		hgd_exit_nicely();
@@ -521,16 +536,20 @@ main(int argc, char **argv)
 		hgd_exit_nicely();
 
 	/* and all content windows */
-	if (hgd_init_playlist_win(&u) != HGD_OK)
-		hgd_exit_nicely();
 	if (hgd_init_files_win(&u) != HGD_OK)
 		hgd_exit_nicely();
 	if (hgd_init_console_win(&u) != HGD_OK)
 		hgd_exit_nicely();
+	if (hgd_init_playlist_win(&u) != HGD_OK)
+		hgd_exit_nicely();
 
+	u.refresh_content = 1;
+	/* XXX make update func and call */
+	u.active_content_win = HGD_WIN_PLAYLIST;
 
 	/* main event loop */
 	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
+	//hgd_refresh_ui(&u);
 	while (1)
 		hgd_event_loop(&u);
 
