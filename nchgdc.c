@@ -75,6 +75,23 @@ hgd_exit_nicely()
 }
 
 int
+hgd_empty_menu(MENU *m)
+{
+	ITEM			**items;
+	int			  n_items, i;
+
+	items = menu_items(m);
+	n_items = item_count(m);
+
+	for (i = 0; i < n_items; i++) {
+		free((char *) item_name(items[i]));
+		free_item(items[i]);
+	}
+
+	return (HGD_OK);
+}
+
+int
 hgd_prepare_item_string(char **ret_p, char *str)
 {
 	int			sz = 0, written = 0, i;
