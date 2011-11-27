@@ -35,7 +35,8 @@ struct ui {
 #define HGD_WIN_CONSOLE			2
 	/* there is at most one menu per content window */
 	MENU			*content_menus[HGD_MAX_CONTENT_WINS];
-	int		 	 refresh_content;
+	int			 (*content_refresh_handler[HGD_MAX_CONTENT_WINS])(struct ui *);
+	int			 refresh_content;
 };
 
 /* We have 2 handles on the UI log, read/write */

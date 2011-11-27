@@ -216,7 +216,21 @@ hgd_update_titlebar(struct ui *u)
 	free(fmt);
 }
 
-void
+int
+hgd_update_playlist_win(struct ui *u)
+{
+	/* XXX */
+	return (HGD_OK);
+}
+
+int
+hgd_update_files_win(struct ui *u)
+{
+	/* XXX */
+	return (HGD_OK);
+}
+
+int
 hgd_update_console_win(struct ui *u)
 {
 	char		  buf[HGD_LOG_BACKBUFFER + 1], *start = buf, *end, *copy;
@@ -318,6 +332,33 @@ hgd_update_console_win(struct ui *u)
 		DPRINTF(HGD_D_WARN, "Could not post menu");
 
 	menu_driver(u->content_menus[HGD_WIN_CONSOLE], REQ_LAST_ITEM);
+
+	return (HGD_OK);
+}
+
+/*
+ * switches the content window and marks it for refresh
+ */
+int
+hgd_switch_content(struct ui *u, int w)
+{
+	int			ret = HGD_FAIL;
+
+	if (u->content_refresh_handler[w] == NULL) {
+		DPRINTF(HGD_D_WARN, "No content refresh handler defined");
+		goto clean;
+	}
+
+	if (u->content_refresh_handler[w](u) != HGD_OK)
+		goto clean;
+
+	u->refresh_content = 1;
+	u->active_content_win = w;
+	hgd_refresh_ui(u);
+
+	ret = HGD_OK;
+clean:
+	return (ret);
 }
 
 int
@@ -396,6 +437,10 @@ hgd_init_playlist_win(struct ui *u)
 	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
 		DPRINTF(HGD_D_ERROR, "Could not post menu");
 
+
+	/* refresh handler */
+	u->content_refresh_handler[HGD_WIN_PLAYLIST] = hgd_update_console_win;
+
 	return (HGD_OK);
 }
 
@@ -415,6 +460,7 @@ hgd_init_files_win(struct ui *u)
 	mvwprintw(u->content_wins[HGD_WIN_FILES], 10, 0, "Ooooh - you touch my tralala");
 
 	u->content_menus[HGD_WIN_FILES] = NULL; /* no menu */
+	u->content_refresh_handler[HGD_WIN_FILES] = hgd_update_files_win;
 
 	return (HGD_OK);
 }
@@ -433,6 +479,7 @@ hgd_init_console_win(struct ui *u)
 	mvwprintw(u->content_wins[HGD_WIN_CONSOLE], 0, 0, "Insert console here");
 
 	u->content_menus[HGD_WIN_CONSOLE] = NULL; /* no menu */
+	u->content_refresh_handler[HGD_WIN_CONSOLE] = hgd_update_console_win;
 
 	return (HGD_OK);
 }
@@ -546,13 +593,11 @@ main(int argc, char **argv)
 	if (hgd_init_playlist_win(&u) != HGD_OK)
 		hgd_exit_nicely();
 
-	u.refresh_content = 1;
-	/* XXX make update func and call */
-	u.active_content_win = HGD_WIN_PLAYLIST;
+	/* start on the playlist */
+	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
 
 	/* main event loop */
 	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
-	//hgd_refresh_ui(&u);
 	while (1)
 		hgd_event_loop(&u);
 
