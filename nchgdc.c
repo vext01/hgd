@@ -29,10 +29,12 @@
 #include "client.h"
 #include "nchgdc.h"
 
-#define HGD_CPAIR_BARS		1
-#define HGD_CPAIR_SELECTED	2
+#define	HGD_CPAIR_BARS				1
+#define HGD_CPAIR_SELECTED			2
 
-const char		*hgd_component = "nchgdc";
+#define HGD_LOG_BACKBUFFER			4096
+
+const char					*hgd_component = "nchgdc";
 
 const char *window_names[] = {
 	"Playlist",
@@ -213,7 +215,6 @@ hgd_update_titlebar(struct ui *u)
 	free(fmt);
 }
 
-#define HGD_LOG_BACKBUFFER			4096
 void
 hgd_update_console_win(struct ui *u)
 {
