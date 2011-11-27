@@ -354,10 +354,80 @@ hgd_init_console_win(struct ui *u)
 }
 
 int
+hgd_event_loop(struct ui *u)
+{
+	int			c;
+
+	/* XXX catch C^c */
+	while (1) {
+		hgd_refresh_ui(u);
+
+		c = wgetch(u->content_wins[u->active_content_win]);
+		switch(c) {
+		case KEY_DOWN:
+			menu_driver(u->content_menus[u->active_content_win],
+			    REQ_DOWN_ITEM);
+			break;
+		case KEY_UP:
+			menu_driver(u->content_menus[u->active_content_win],
+			    REQ_UP_ITEM);
+			break;
+		case '\t':
+			/* tab toggles toggle between files and playlist */
+			if (u->active_content_win != HGD_WIN_PLAYLIST)
+				u->active_content_win = HGD_WIN_PLAYLIST;
+			else
+				u->active_content_win = HGD_WIN_FILES;
+			u->refresh_content = 1;
+			break;
+		case '`':
+			u->active_content_win = HGD_WIN_CONSOLE;
+			hgd_update_console_win(u);
+			u->refresh_content = 1;
+			break;
+		}
+
+	}
+}
+
+int
+hgd_read_config(char **config_locations)
+{
+#ifdef HAVE_LIBCONFIG
+	/*
+	 * config_lookup_int64 is used because lib_config changed
+	 * config_lookup_int from returning a long int, to a int, and debian
+	 * still uses the old version.
+	 * see hgd-playd.c for how to remove need for stat.
+	 */
+	config_t		 cfg, *cf;
+	int			 ret = HGD_OK;
+
+	cf = &cfg;
+
+	if (hgd_load_config(cf, config_locations) == HGD_FAIL)
+		return (HGD_OK);
+
+	/* hgd_cfg_c_colours(cf, &colours_on); */
+	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);
+	hgd_cfg_c_hostname(cf, &host);
+	hgd_cfg_c_port(cf, &port);
+	hgd_cfg_c_password(cf, &password, *config_locations);
+	/* hgd_cfg_c_refreshrate(cf, &hud_refresh_speed); */
+	hgd_cfg_c_username(cf, &user);
+	hgd_cfg_c_debug(cf, &hgd_debug);
+
+	config_destroy(cf);
+	return (ret);
+#else
+	return (HGD_OK);
+#endif
+}
+
+int
 main(int argc, char **argv)
 {
 	struct ui	u;
-	int		c;
 
 	hgd_debug = 3; /* XXX config file or getopt */
 
@@ -395,78 +465,15 @@ main(int argc, char **argv)
 	if (hgd_init_console_win(&u) != HGD_OK)
 		hgd_exit_nicely();
 
-	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
 
 	/* main event loop */
-	/* XXX catch C^c */
-	while (1) {
-		hgd_refresh_ui(&u);
-
-		c = wgetch(u.content_wins[u.active_content_win]);
-		switch(c) {
-		case KEY_DOWN:
-			menu_driver(u.content_menus[u.active_content_win],
-			    REQ_DOWN_ITEM);
-			break;
-		case KEY_UP:
-			menu_driver(u.content_menus[u.active_content_win],
-			    REQ_UP_ITEM);
-			break;
-		case '\t':
-			/* tab toggles toggle between files and playlist */
-			if (u.active_content_win != HGD_WIN_PLAYLIST)
-				u.active_content_win = HGD_WIN_PLAYLIST;
-			else
-				u.active_content_win = HGD_WIN_FILES;
-			u.refresh_content = 1;
-			break;
-		case '`':
-			u.active_content_win = HGD_WIN_CONSOLE;
-			hgd_update_console_win(&u);
-			u.refresh_content = 1;
-			break;
-		}
-
-	}
+	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
+	while (1)
+		hgd_event_loop(&u);
 
 	exit_ok = 1;
 	hgd_exit_nicely();
 
 	return 0;
 }
-
-int
-hgd_read_config(char **config_locations)
-{
-#ifdef HAVE_LIBCONFIG
-	/*
-	 * config_lookup_int64 is used because lib_config changed
-	 * config_lookup_int from returning a long int, to a int, and debian
-	 * still uses the old version.
-	 * see hgd-playd.c for how to remove need for stat.
-	 */
-	config_t		 cfg, *cf;
-	int			 ret = HGD_OK;
-
-	cf = &cfg;
-
-	if (hgd_load_config(cf, config_locations) == HGD_FAIL)
-		return (HGD_OK);
-
-	/* hgd_cfg_c_colours(cf, &colours_on); */
-	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);
-	hgd_cfg_c_hostname(cf, &host);
-	hgd_cfg_c_port(cf, &port);
-	hgd_cfg_c_password(cf, &password, *config_locations);
-	/* hgd_cfg_c_refreshrate(cf, &hud_refresh_speed); */
-	hgd_cfg_c_username(cf, &user);
-	hgd_cfg_c_debug(cf, &hgd_debug);
-
-	config_destroy(cf);
-	return (ret);
-#else
-	return (HGD_OK);
-#endif
-}
-
 
