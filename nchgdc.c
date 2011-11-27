@@ -355,15 +355,24 @@ int
 hgd_init_playlist_win(struct ui *u)
 {
 	ITEM			**items;
-	int			  num, i;
+	int			  n_items, i;
 	char			 *item_str;
 
 	DPRINTF(HGD_D_INFO, "Initialise playlist window");
 
-	num = ARRAY_SIZE(test_playlist);
+	/* make window */
+	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 0)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Failed to playlist content window");
+		return (HGD_FAIL);
+	}
 
-	items = calloc(num, sizeof(ITEM *));
-	for (i = 0; i < num - 1; i++) {
+	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
+
+	/* and now populate the menu */
+	n_items = ARRAY_SIZE(test_playlist);
+
+	items = xcalloc(n_items, sizeof(ITEM *));
+	for (i = 0; i < n_items - 1; i++) {
 		DPRINTF(HGD_D_DEBUG, "Adding item \"%s\"", test_playlist[i]);
 
 		hgd_prepare_item_string(&item_str, (char *) test_playlist[i]);
@@ -373,25 +382,17 @@ hgd_init_playlist_win(struct ui *u)
 			DPRINTF(HGD_D_WARN, "Could not make new item: %s", SERROR);
 	}
 
-	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 0)) == NULL) {
-		DPRINTF(HGD_D_ERROR, "Failed to playlist content window");
-		return (HGD_FAIL);
-	}
-
 	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
 	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL)
 			DPRINTF(HGD_D_ERROR, "Could not make menu");
 
-	if (u->content_menus[HGD_WIN_PLAYLIST] != NULL) {
-		if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
-			DPRINTF(HGD_D_ERROR, "Could not post menu");
-	}
-
-	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
 	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST], u->content_wins[HGD_WIN_PLAYLIST]);
 	set_menu_mark(u->content_menus[HGD_WIN_PLAYLIST], "");
 	set_menu_format(u->content_menus[HGD_WIN_PLAYLIST], LINES - 2, 1);
 	set_menu_fore(u->content_menus[HGD_WIN_PLAYLIST], COLOR_PAIR(HGD_CPAIR_SELECTED));
+
+	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
+		DPRINTF(HGD_D_ERROR, "Could not post menu");
 
 	return (HGD_OK);
 }
