@@ -144,25 +144,8 @@ hgd_refresh_ui(struct ui *u)
 {
 	refresh();
 
-#if 0
-	if (u->content_menus[u->active_content_win] != NULL) {
-		if ((post_menu(u->content_menus[u->active_content_win])) != E_OK)
-			DPRINTF(HGD_D_ERROR, "Could not post menu");
-	}
-#endif
-
-	if (u->refresh_content) {
-
-		redrawwin(u->content_wins[u->active_content_win]);
-		wrefresh(u->content_wins[u->active_content_win]);
-
-		/*
-		redrawwin(menu_win(u->content_menus[u->active_content_win]));
-		wrefresh(menu_win(u->content_menus[u->active_content_win]));
-		*/
-
-		u->refresh_content = 0;
-	}
+	redrawwin(u->content_wins[u->active_content_win]);
+	wrefresh(u->content_wins[u->active_content_win]);
 
 	hgd_update_titlebar(u);
 	wrefresh(u->title);
@@ -352,7 +335,6 @@ hgd_switch_content(struct ui *u, int w)
 	if (u->content_refresh_handler[w](u) != HGD_OK)
 		goto clean;
 
-	u->refresh_content = 1;
 	u->active_content_win = w;
 	hgd_refresh_ui(u);
 
@@ -491,7 +473,7 @@ hgd_event_loop(struct ui *u)
 
 	/* XXX catch C^c */
 	while (1) {
-		hgd_refresh_ui(u);
+		//hgd_refresh_ui(u);
 
 		c = wgetch(u->content_wins[u->active_content_win]);
 		switch(c) {
@@ -506,15 +488,12 @@ hgd_event_loop(struct ui *u)
 		case '\t':
 			/* tab toggles toggle between files and playlist */
 			if (u->active_content_win != HGD_WIN_PLAYLIST)
-				u->active_content_win = HGD_WIN_PLAYLIST;
+				hgd_switch_content(u, HGD_WIN_PLAYLIST);
 			else
-				u->active_content_win = HGD_WIN_FILES;
-			u->refresh_content = 1;
+				hgd_switch_content(u, HGD_WIN_FILES);
 			break;
 		case '`':
-			u->active_content_win = HGD_WIN_CONSOLE;
-			hgd_update_console_win(u);
-			u->refresh_content = 1;
+			hgd_switch_content(u, HGD_WIN_CONSOLE);
 			break;
 		}
 
