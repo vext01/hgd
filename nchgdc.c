@@ -173,8 +173,6 @@ hgd_update_statusbar(struct ui *u)
 void
 hgd_refresh_ui(struct ui *u)
 {
-	refresh();
-
 	redrawwin(u->content_wins[u->active_content_win]);
 	wrefresh(u->content_wins[u->active_content_win]);
 
@@ -502,7 +500,7 @@ hgd_init_console_win(struct ui *u)
 int
 hgd_resize_app(struct ui *u)
 {
-	DPRINTF(HGD_D_INFO, "Resize application: active=%d :: %dx%d", u->active_content_win, COLS, LINES);
+	DPRINTF(HGD_D_INFO, "Resize application: %dx%d", COLS, LINES);
 	
 	/* update geometry of titlebar - no need to move, always (0,0)  */
 	if (wresize(u->title, HGD_POS_TITLE_H, HGD_POS_TITLE_W) != OK)
