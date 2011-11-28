@@ -241,6 +241,9 @@ int
 hgd_update_files_win(struct ui *u)
 {
 	/* XXX */
+	wclear(u->content_wins[HGD_WIN_FILES]);
+	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
+	mvwprintw(u->content_wins[HGD_WIN_FILES], 10, 0, "Ooooh - you touch my tralala");
 	return (HGD_OK);
 }
 
@@ -465,8 +468,6 @@ hgd_init_files_win(struct ui *u)
 	}
 
 	keypad(u->content_wins[HGD_WIN_FILES], TRUE);
-	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
-	mvwprintw(u->content_wins[HGD_WIN_FILES], 10, 0, "Ooooh - you touch my tralala");
 
 	u->content_menus[HGD_WIN_FILES] = NULL; /* no menu */
 	u->content_refresh_handler[HGD_WIN_FILES] = hgd_update_files_win;
@@ -514,7 +515,7 @@ hgd_resize_app(struct ui *u)
 		DPRINTF(HGD_D_WARN, "Could not resize window: %s", SERROR);
 
 	/* update geometry of files window - no need to move, always (1,0) */
-	if (wresize(u->content_wins[HGD_WIN_FILES], HGD_POS_TITLE_H, HGD_POS_CONT_W) != OK)
+	if (wresize(u->content_wins[HGD_WIN_FILES], HGD_POS_CONT_H, HGD_POS_CONT_W) != OK)
 		DPRINTF(HGD_D_WARN, "Could not resize window: %s", SERROR);
 
 	/* update geometry of console window - no need to move, always (1,0) */
