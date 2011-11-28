@@ -34,6 +34,12 @@
 
 #define HGD_LOG_BACKBUFFER			4096
 
+/* status bar positioning */
+#define HGD_POS_STATUS_X			0
+#define HGD_POS_STATUS_Y			LINES - 1
+#define HGD_POS_STATUS_W			COLS
+#define HGD_POS_STATUS_H			1
+
 const char					*hgd_component = "nchgdc";
 
 const char *window_names[] = {
@@ -140,6 +146,19 @@ hgd_prepare_item_string(char **ret_p, char *str)
 }
 
 void
+hgd_update_statusbar(struct ui *u)
+{
+	char			*fmt;
+
+	wclear(u->status);
+	wattron(u->status, COLOR_PAIR(HGD_CPAIR_BARS));
+
+	xasprintf(&fmt, "%%-%ds", COLS);
+	wprintw(u->status, fmt,  "User: edd\tHasVote: Yes");
+	free (fmt);
+}
+
+void
 hgd_refresh_ui(struct ui *u)
 {
 	refresh();
@@ -150,7 +169,7 @@ hgd_refresh_ui(struct ui *u)
 	hgd_update_titlebar(u);
 	wrefresh(u->title);
 
-	redrawwin(u->status);
+	hgd_update_statusbar(u);
 	wrefresh(u->status);
 }
 
@@ -359,19 +378,13 @@ hgd_init_titlebar(struct ui *u)
 int
 hgd_init_statusbar(struct ui *u)
 {
-	char			*fmt = NULL;
-
 	DPRINTF(HGD_D_INFO, "Initialise statusbar");
 
-	if ((u->status = newwin(1, COLS, LINES - 1, 0)) == NULL) {
+	if ((u->status = newwin(HGD_POS_STATUS_H, HGD_POS_STATUS_W,
+	    HGD_POS_STATUS_Y, HGD_POS_STATUS_X)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not initialise statusbar");
 		return (HGD_FAIL);
 	}
-
-	wattron(u->status, COLOR_PAIR(HGD_CPAIR_BARS));
-	xasprintf(&fmt, "%%-%ds", COLS);
-	wprintw(u->status, fmt,  "User: edd\tHasVote: Yes");
-	free (fmt);
 
 	return (HGD_OK);
 }
@@ -467,13 +480,21 @@ hgd_init_console_win(struct ui *u)
 }
 
 int
+hgd_resize_app(struct ui *u)
+{
+	DPRINTF(HGD_D_INFO, "Resize application: %dx%d", COLS, LINES);
+
+	/* use wresize/wmove XXX */
+	return (hgd_switch_content(u, u->active_content_win));
+}
+
+int
 hgd_event_loop(struct ui *u)
 {
 	int			c;
 
 	/* XXX catch C^c */
 	while (1) {
-		//hgd_refresh_ui(u);
 
 		c = wgetch(u->content_wins[u->active_content_win]);
 		switch(c) {
@@ -494,6 +515,10 @@ hgd_event_loop(struct ui *u)
 			break;
 		case '`':
 			hgd_switch_content(u, HGD_WIN_CONSOLE);
+			break;
+		case 'l':
+			/* fires magically when terminal is resized */
+			hgd_resize_app(u);
 			break;
 		}
 
