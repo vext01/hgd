@@ -57,7 +57,7 @@ const char					*hgd_component = "nchgdc";
 const char *window_names[] = {
 	"Playlist",
 	"File Browser",
-	"Console"
+	"Debug Console"
 };
 
 const char *test_playlist[] = {
