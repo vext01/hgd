@@ -233,6 +233,7 @@ hgd_update_titlebar(struct ui *u)
 int
 hgd_update_playlist_win(struct ui *u)
 {
+	DPRINTF(HGD_D_INFO, "Update playlist window");
 	/* XXX */
 	return (HGD_OK);
 }
@@ -240,6 +241,7 @@ hgd_update_playlist_win(struct ui *u)
 int
 hgd_update_files_win(struct ui *u)
 {
+	DPRINTF(HGD_D_INFO, "Update files window");
 	/* XXX */
 	wclear(u->content_wins[HGD_WIN_FILES]);
 	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
@@ -450,7 +452,7 @@ hgd_init_playlist_win(struct ui *u)
 
 
 	/* refresh handler */
-	u->content_refresh_handler[HGD_WIN_PLAYLIST] = hgd_update_console_win;
+	u->content_refresh_handler[HGD_WIN_PLAYLIST] = hgd_update_playlist_win;
 
 	return (HGD_OK);
 }
@@ -498,7 +500,7 @@ hgd_init_console_win(struct ui *u)
 int
 hgd_resize_app(struct ui *u)
 {
-	DPRINTF(HGD_D_INFO, "Resize application: %dx%d", COLS, LINES);
+	DPRINTF(HGD_D_INFO, "Resize application: active=%d :: %dx%d", u->active_content_win, COLS, LINES);
 	
 	/* update geometry of titlebar - no need to move, always (0,0)  */
 	if (wresize(u->title, HGD_POS_TITLE_H, HGD_POS_TITLE_W) != OK)
