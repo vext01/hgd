@@ -411,7 +411,8 @@ hgd_init_playlist_win(struct ui *u)
 	DPRINTF(HGD_D_INFO, "Initialise playlist window");
 
 	/* make window */
-	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(LINES - 2, COLS, 1, 0)) == NULL) {
+	if ((u->content_wins[HGD_WIN_PLAYLIST] = newwin(HGD_POS_CONT_H, HGD_POS_CONT_W,
+	    HGD_POS_CONT_Y, HGD_POS_CONT_X)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Failed to playlist content window");
 		return (HGD_FAIL);
 	}
@@ -457,7 +458,8 @@ hgd_init_files_win(struct ui *u)
 {
 	DPRINTF(HGD_D_INFO, "Initialise file browser window");
 
-	if ((u->content_wins[HGD_WIN_FILES] = newwin(LINES - 2, COLS, 1, 0)) == NULL) {
+	if ((u->content_wins[HGD_WIN_FILES] = newwin(HGD_POS_CONT_H, HGD_POS_CONT_W,
+	    HGD_POS_CONT_Y, HGD_POS_CONT_X)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Failed to initialise file browser content window");
 		return (HGD_FAIL);
 	}
@@ -477,7 +479,8 @@ hgd_init_console_win(struct ui *u)
 {
 	DPRINTF(HGD_D_INFO, "Initialise console window");
 
-	if ((u->content_wins[HGD_WIN_CONSOLE] = newwin(LINES - 2, COLS, 1, 0)) == NULL) {
+	if ((u->content_wins[HGD_WIN_CONSOLE] = newwin(HGD_POS_CONT_H, HGD_POS_CONT_W,
+	    HGD_POS_CONT_Y, HGD_POS_CONT_X)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Failed to initialise file browser content window");
 		return (HGD_FAIL);
 	}
