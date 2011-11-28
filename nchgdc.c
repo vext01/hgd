@@ -363,6 +363,8 @@ hgd_switch_content(struct ui *u, int w)
 {
 	int			ret = HGD_FAIL;
 
+	DPRINTF(HGD_D_INFO, "Switch to window: %s", window_names[w]);
+
 	if (u->content_refresh_handler[w] == NULL) {
 		DPRINTF(HGD_D_WARN, "No content refresh handler defined");
 		goto clean;
