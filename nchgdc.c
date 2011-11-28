@@ -40,6 +40,18 @@
 #define HGD_POS_STATUS_W			COLS
 #define HGD_POS_STATUS_H			1
 
+/* title bar positioning */
+#define HGD_POS_TITLE_X				0
+#define HGD_POS_TITLE_Y				0
+#define HGD_POS_TITLE_W				COLS
+#define HGD_POS_TITLE_H				1
+
+/* content windows positioning */
+#define HGD_POS_CONT_X				0
+#define HGD_POS_CONT_Y				1
+#define HGD_POS_CONT_W				COLS
+#define HGD_POS_CONT_H				LINES - 2
+
 const char					*hgd_component = "nchgdc";
 
 const char *window_names[] = {
@@ -483,8 +495,29 @@ int
 hgd_resize_app(struct ui *u)
 {
 	DPRINTF(HGD_D_INFO, "Resize application: %dx%d", COLS, LINES);
+	
+	/* update geometry of titlebar - no need to move, always (0,0)  */
+	if (wresize(u->title, HGD_POS_TITLE_H, HGD_POS_TITLE_W) != OK)
+		DPRINTF(HGD_D_WARN, "Could not resize window: %s", SERROR);
 
-	/* use wresize/wmove XXX */
+	/* update geometry of statusbar */
+	if (mvwin(u->status, HGD_POS_STATUS_Y, HGD_POS_STATUS_X) == ERR)
+		DPRINTF(HGD_D_WARN, "Could not move window: %s", SERROR);
+	if (wresize(u->status, HGD_POS_STATUS_H, HGD_POS_STATUS_W) != OK)
+		DPRINTF(HGD_D_WARN, "Could not resize window: %s", SERROR);
+
+	/* update geometry of playlist window - no need to move, always (1,0) */
+	if (wresize(u->content_wins[HGD_WIN_PLAYLIST], HGD_POS_CONT_H, HGD_POS_CONT_W) != OK)
+		DPRINTF(HGD_D_WARN, "Could not resize window: %s", SERROR);
+
+	/* update geometry of files window - no need to move, always (1,0) */
+	if (wresize(u->content_wins[HGD_WIN_FILES], HGD_POS_TITLE_H, HGD_POS_CONT_W) != OK)
+		DPRINTF(HGD_D_WARN, "Could not resize window: %s", SERROR);
+
+	/* update geometry of console window - no need to move, always (1,0) */
+	if (wresize(u->content_wins[HGD_WIN_CONSOLE], HGD_POS_CONT_H, HGD_POS_CONT_W) != OK)
+		DPRINTF(HGD_D_WARN, "Could not resize window: %s", SERROR);
+
 	return (hgd_switch_content(u, u->active_content_win));
 }
 
@@ -516,7 +549,7 @@ hgd_event_loop(struct ui *u)
 		case '`':
 			hgd_switch_content(u, HGD_WIN_CONSOLE);
 			break;
-		case 'l':
+		case KEY_RESIZE:
 			/* fires magically when terminal is resized */
 			hgd_resize_app(u);
 			break;
