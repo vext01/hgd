@@ -153,6 +153,11 @@ History
 	 - Ability to know if you have voted.
 	 - Ability to know how many votes are needed to vote-off a track.
 	 - PowerPC support.
+ * 0.5.1 - Fixed build on systems that force --as-needed.
+	 - Better error messages about lock files.
+	 - Fixed bug where hud mode kept asking for password.
+	 - Configure CC variable now honored.
+ * 0.5.2 - Fix compile issue ubuntu.
 
 Roadmap
 -------
