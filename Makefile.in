@@ -69,7 +69,8 @@ common.o: common.c hgd.h config.h
 db.o: db.c hgd.h config.h db.h
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
-mplayer.o: mplayer.c mplayer.h py.o
+mplayer.o: mplayer.c mplayer.h
+	@echo "\n--> Building: \"mplayer.o\""
 	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} \
 		-c -o mplayer.o mplayer.c
 
@@ -82,9 +83,9 @@ hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.
 
 hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o user.o
 	${CC} ${TAG_CFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${PY_CFLAGS} \
-		py.o mplayer.o cfg.o common.o db.o net.o crypto.o user.o \
+		mplayer.o cfg.o common.o db.o net.o crypto.o user.o \
 		${TAG_LDFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
+		${CONFIG_LDFLAGS} \
 		hgd-netd.c -o hgd-netd
 
 hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
@@ -94,12 +95,22 @@ hgdc: common.o net.o cfg.o hgdc.c hgd.h config.h
 		hgdc.c -o hgdc 
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
-	mplayer.o py.o cfg.o user.o
+	mplayer.o cfg.o user.o
+	@echo "\n--> Building: \"hgd-admin\""
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CFLAGS} \
-		common.o net.o user.o crypto.o db.o mplayer.o py.o cfg.o \
+		common.o net.o user.o crypto.o db.o mplayer.o cfg.o \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
-		hgd-admin.c -o hgd-admin 
+		${CONFIG_LDFLAGS} \
+		hgd-admin.c -o hgd-admin
+
+# XXX configure check for curses and ability to disable the build of this.
+# XXX link to the build when in some useful state
+nchgdc: client.o common.o cfg.o config.h nchgdc.h nchgdc.c
+	@echo "\n--> Building: \"nchgdc\""
+	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CONFIG_LDFLAGS} ${CFLAGS} \
+		${CURSES_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} \
+		common.o cfg.o client.o \
+		nchgdc.c -o nchgdc
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${SSL_CFLAGS} ${SQL_CFLAGS} \
