@@ -78,7 +78,7 @@ db.o: db.c hgd.h config.h db.h
 	@echo "\n--> Building: \"db.o\""
 	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
 
-mplayer.o: mplayer.c mplayer.h py.o
+mplayer.o: mplayer.c mplayer.h
 	@echo "\n--> Building: \"mplayer.o\""
 	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} \
 		-c -o mplayer.o mplayer.c
@@ -98,9 +98,9 @@ hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.
 hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o user.o
 	@echo "\n--> Building: \"hgd-netd\""
 	${CC} ${TAG_CFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${PY_CFLAGS} \
-		py.o mplayer.o cfg.o common.o db.o net.o crypto.o user.o \
+		mplayer.o cfg.o common.o db.o net.o crypto.o user.o \
 		${TAG_LDFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
+		${CONFIG_LDFLAGS} \
 		hgd-netd.c -o hgd-netd
 
 hgdc: client.o common.o net.o cfg.o hgdc.c hgd.h config.h
@@ -111,12 +111,12 @@ hgdc: client.o common.o net.o cfg.o hgdc.c hgd.h config.h
 		hgdc.c -o hgdc 
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
-	mplayer.o py.o cfg.o user.o
+	mplayer.o cfg.o user.o
 	@echo "\n--> Building: \"hgd-admin\""
 	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CFLAGS} \
-		common.o net.o user.o crypto.o db.o mplayer.o py.o cfg.o \
+		common.o net.o user.o crypto.o db.o mplayer.o cfg.o \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} ${PY_LDFLAGS} \
+		${CONFIG_LDFLAGS} \
 		hgd-admin.c -o hgd-admin
 
 # XXX configure check for curses and ability to disable the build of this.
