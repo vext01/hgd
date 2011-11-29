@@ -158,6 +158,7 @@ History
 	 - Fixed bug where hud mode kept asking for password.
 	 - Configure CC variable now honored.
  * 0.5.2 - Fix compile issue ubuntu.
+ * 0.5.3 - Prevent hgd-admin and hgd-netd from linking Python
 
 Roadmap
 -------
