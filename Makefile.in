@@ -46,8 +46,8 @@ all: @ALL_TARGETS@
 
 .PHONY: clean
 clean:
-	rm -f hgd-playd hgd-netd hgdc common.o db.o py.o crypto.o \
-		net.o cfg.o user.o
+	rm -f hgd-playd hgd-netd hgdc hgd-mk-pydoc \
+		common.o db.o py.o crypto.o net.o cfg.o user.o mplayer.o
 
 user.o: db.h user.h user.c mplayer.o
 	@echo "\n--> Building: \"user.o\""
