@@ -51,90 +51,92 @@ clean:
 
 user.o: db.h user.h user.c mplayer.o
 	@echo "\n--> Building: \"user.o\""
-	${CC} ${SQL_CFLAGS} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} \
-		-c -o user.o user.c
+	${CC} user.c ${SQL_CFLAGS} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} \
+		-c -o user.o
 
 cfg.o: cfg.h cfg.c
 	@echo "\n--> Building: \"cfg.o\""
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o cfg.o cfg.c
+	${CC} cfg.c ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} -c -o cfg.o
 
 crypto.o: crypto.h crypto.c hgd.h config.h
 	@echo "\n--> Building: \"crypto.o\""
-	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o crypto.c
+	${CC} crypto.c ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o crypto.o
 
 net.o: net.h net.c hgd.h config.h
 	@echo "\n--> Building: \"user.o\""
-	${CC} ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o net.o net.c
+	${CC} net.c ${SSL_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o net.o
 
 py.o: py.c py.h config.h
 	@echo "\n--> Building: \"py.o\""
-	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o py.c
+	${CC} py.c ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} -c -o py.o 
 
 common.o: common.c hgd.h config.h
 	@echo "\n--> Building: \"common.o\""
-	${CC} ${BSD_CFLAGS} ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} -c -o common.o common.c
+	${CC} common.c ${BSD_CFLAGS} ${CPPFLAGS} ${CFLAGS} ${SSL_CFLAGS} \
+		-c -o common.o
 
 db.o: db.c hgd.h config.h db.h
 	@echo "\n--> Building: \"db.o\""
-	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o db.c
+	${CC} db.c ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} -c -o db.o
 
 mplayer.o: mplayer.c mplayer.h
 	@echo "\n--> Building: \"mplayer.o\""
-	${CC} ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} \
-		-c -o mplayer.o mplayer.c
+	${CC} mplayer.c ${SQL_CFLAGS} ${PY_CFLAGS} ${CPPFLAGS} ${CFLAGS} \
+		-c -o mplayer.o
 
 client.o: client.c client.h hgd.h
 	@echo "\n--> Building: \"client.o\""
-	${CC} ${CONFIG_CFLAGS} ${SSL_CFLAGS} -c -o client.o client.c
+	${CC} client.c ${CONFIG_CFLAGS} ${SSL_CFLAGS} -c -o client.o
 
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
 	@echo "\n--> Building: \"hgd-playd\""
-	${CC} ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} \
+	${CC} hgd-playd.c ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} \
 		db.o common.o crypto.o py.o mplayer.o cfg.o \
-		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} \
-		hgd-playd.c -o hgd-playd 
+		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} \
+		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
+		-o hgd-playd 
 
 hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o user.o
 	@echo "\n--> Building: \"hgd-netd\""
-	${CC} ${TAG_CFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${PY_CFLAGS} \
+	${CC} hgd-netd.c ${TAG_CFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${PY_CFLAGS} \
 		mplayer.o cfg.o common.o db.o net.o crypto.o user.o \
-		${TAG_LDFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
-		${CONFIG_LDFLAGS} \
-		hgd-netd.c -o hgd-netd
+		${TAG_LDFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
+		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
+		-o hgd-netd
 
 hgdc: client.o common.o net.o cfg.o hgdc.c hgd.h config.h
 	@echo "\n--> Building: \"hgdc\""
-	${CC} ${CPPFLAGS} ${BSD_CFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} \
+	${CC} hgdc.c ${CPPFLAGS} ${BSD_CFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} \
 		client.o common.o net.o cfg.o \
 		${LDFLAGS} ${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
-		hgdc.c -o hgdc 
+		-o hgdc 
 
 hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 	mplayer.o cfg.o user.o
 	@echo "\n--> Building: \"hgd-admin\""
-	${CC} ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CFLAGS} \
+	${CC} hgd-admin.c ${CPPFLAGS} ${CFLAGS} ${CONFIG_CFLAGS} ${SQL_CFLAGS} \
 		common.o net.o user.o crypto.o db.o mplayer.o cfg.o \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${BSD_LDFLAGS} \
 		${CONFIG_LDFLAGS} \
-		hgd-admin.c -o hgd-admin
+		-o hgd-admin
 
 # XXX configure check for curses and ability to disable the build of this.
 # XXX link to the build when in some useful state
 nchgdc: client.o common.o cfg.o config.h nchgdc.h nchgdc.c
 	@echo "\n--> Building: \"nchgdc\""
-	${CC} ${CPPFLAGS} ${CONFIG_CFLAGS} ${CONFIG_LDFLAGS} ${CFLAGS} \
-		${CURSES_LDFLAGS} ${BSD_CFLAGS} ${BSD_LDFLAGS} \
+	${CC} nchgdc.c ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${BSD_CFLAGS} \
 		common.o cfg.o client.o \
-		nchgdc.c -o nchgdc
+		 ${CONFIG_LDFLAGS} ${CURSES_LDFLAGS} ${BSD_LDFLAGS} \
+		-o nchgdc
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
 	@echo "\n--> Building: \"hgd-mk-pydoc\""
-	${CC} ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${SSL_CFLAGS} ${SQL_CFLAGS} \
+	${CC} hgd-mk-pydoc.c ${CPPFLAGS} ${CFLAGS} ${PY_CFLAGS} ${SSL_CFLAGS} \
+		${SQL_CFLAGS} \
 		db.o common.o py.o crypto.o \
 		${PY_LDFLAGS} ${LDFLAGS} ${SSL_LDFLAGS} ${SQL_LDFLAGS} \
 		${BSD_CFLAGS} ${BSD_LDFLAGS} \
-		hgd-mk-pydoc.c -o hgd-mk-pydoc
+		-o hgd-mk-pydoc
 
 # Generates python documentation
 .PHONY: pydoc
