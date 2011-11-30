@@ -36,13 +36,21 @@ debug level. Generally speaking:
 When debugging netd, there is the -f flag which causes netd to not fork; this
 can be useful for valgrinding a single run.
 
-Debugging - Build System
------------------------
-Is the build failing to link even though all the libraries are listed?
-Then you have probably been bitten by the dreaded --as-needed.
+The -Wl,--as-needed Quirk
+-------------------------
 
-Order of linker flags is important:
-${CC} XXX.c ${CFLAGS} XXX.o ${LD_FLAGS} -o XXX
+Is the build failing to link even though all the libraries are listed?
+Then you have probably been bitten by the dreaded -Wl,--as-needed.
+
+The intention of -Wl,--as-needed is to strip linkage that is never used from
+a binary, thus resulting in a smaller and faster loading binary. Some linux
+has this on by default (even if you don't see it on the build line).
+
+To prevent linkage crapouts due to this, you must make sure that the
+ordering of sources, objects and linker flags in the compile line is
+correct:
+
+${CC} XXX.c ${CFLAGS} XXX.o ${LDFLAGS} -o XXX
 
 Cleaning Up On Exit
 -------------------
