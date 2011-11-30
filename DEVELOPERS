@@ -36,14 +36,13 @@ debug level. Generally speaking:
 When debugging netd, there is the -f flag which causes netd to not fork; this
 can be useful for valgrinding a single run.
 
-Debuggin - Build System
+Debugging - Build System
 -----------------------
-Is the build not linking even though all the libraries are listed?  Then you
-have probably been bitten by the dreaded --as-needed.
+Is the build failing to link even though all the libraries are listed?
+Then you have probably been bitten by the dreaded --as-needed.
 
 Order of linker flags is important:
 ${CC} XXX.c ${CFLAGS} XXX.o ${LD_FLAGS} -o XXX
-
 
 Cleaning Up On Exit
 -------------------
