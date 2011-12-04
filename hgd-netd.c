@@ -1389,9 +1389,9 @@ hgd_read_config(char **config_locations)
 	}
 
 	hgd_cfg_daemonise(cf, "netd", &background);
-	hgd_cfg_netd_rdns(cf, &lookup_client_dns);
+	hgd_cfg_netd_rdns(cf, &lookup_client_dns); 
 	hgd_cfg_statepath(cf, &state_path);
-	hgd_cfg_crypto(cf, "netd", &crypto_pref);
+	hgd_cfg_crypto(cf, "netd", &crypto_pref);	
 	hgd_cfg_fork(cf, "netd", &single_client);
 	hgd_cfg_netd_flood_limit(cf, &flood_limit);
 	hgd_cf_netd_ssl_privkey(cf, &ssl_key_path);
@@ -1622,16 +1622,14 @@ main(int argc, char **argv)
 		hgd_exit_nicely();
 	}
 
-	/* Do this before daemonising so we can see its output if it fails. */
-	if (hgd_write_pid_file() != HGD_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't write PID away");
-		return (HGD_FAIL);
-	}
-
 	/* alright, everything looks good, lets be a daemon and background */
 	if (background)
 		hgd_daemonise();
 
+	if (hgd_write_pid_file() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't write PID away");
+		return (HGD_FAIL);
+	}
 
 	hgd_listen_loop();
 
