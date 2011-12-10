@@ -243,8 +243,10 @@ hgd_play_loop(void)
 	while ((!dying) && (!restarting)) {
 		memset(&track, 0, sizeof(track));
 
-		if (hgd_get_next_track(&track) == HGD_FAIL)
-			hgd_exit_nicely();
+		if (hgd_get_next_track(&track) == HGD_FAIL) {
+			ret = HGD_FAIL;
+			break;
+		}
 
 		if (track.filename != NULL) {
 			DPRINTF(HGD_D_DEBUG, "next track is: '%s'",
