@@ -352,6 +352,7 @@ hgd_daemonise()
 	 * then fclose(stdout) & fclose(stderr) will close what ever happens to be
 	 * open on FD 1&2 (usually the database).
          */
+	DPRINTF(HGD_D_INFO, "%d vs %d", getpid(), getsid(0));
 	if (getsid(0) == getpid()) {
 		DPRINTF(HGD_D_DEBUG, "I think I am already a daemon! Not re-daemonising");
 		return (HGD_OK);

@@ -539,7 +539,7 @@ hgd_embed_py(uint8_t enable_user_scripts)
 	}
 	free(search_path);
 
-	Py_Initialize();
+	Py_InitializeEx(0); /* 0, no sighandlers thanks */
 	memset(&hgd_py_mods, 0, sizeof(hgd_py_mods));
 
 	/* import inspect for hgd.dprint */
