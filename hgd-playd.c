@@ -153,10 +153,9 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 	xasprintf(&pipe_arg, "file=%s", mplayer_fifo_path);
 
 	pid = fork();
-	if (!pid) {
-
-		/* close stdin, or mplayer catches keyboard shortcuts */
-		fclose(stdin);
+	if (pid < 0) {
+		DPRINTF(HGD_D_ERROR, "Could not fork: %s", SERROR);
+	} else if (!pid) {
 
 		/* child - your the d00d who will play this track */
 		execlp("mplayer", "mplayer", "-really-quiet", "-slave",
@@ -172,10 +171,15 @@ hgd_play_track(struct hgd_playlist_item *t, uint8_t purge_fs, uint8_t purge_db)
 
 		if (waitpid(pid, &status, 0) < 0) {
 			/* it is ok for this to fail if we are restarting */
+			if (errno != EINTR)
+				DPRINTF(HGD_D_WARN, "Could not wait(): %s", SERROR);
+
 			if (restarting || dying) {
 				kill(pid, SIGINT);
+				if (waitpid(pid, &status, 0) < 0) {
+					DPRINTF(HGD_D_WARN, "Could not wait(): %s", SERROR);
+				}
 			}
-			DPRINTF(HGD_D_WARN, "Could not wait(): %s", SERROR);
 		}
 
 		/* unlink ipc file */
@@ -338,7 +342,6 @@ main(int argc, char **argv)
 	config_path[2] = hgd_get_XDG_userprefs_location(playd);
 #endif
 
-	hgd_register_sig_handlers();
 	state_path = xstrdup(HGD_DFL_DIR);
 
 	DPRINTF(HGD_D_DEBUG, "Parsing options:1");
@@ -461,6 +464,12 @@ main(int argc, char **argv)
 			hgd_exit_nicely();
 	}
 
+	/* start */
+	if (background)
+		hgd_daemonise();
+
+	hgd_register_sig_handlers();
+
 	/* do the Python dance */
 #ifdef HAVE_PYTHON
 	if (hgd_embed_py(1) != HGD_OK) {
@@ -468,10 +477,6 @@ main(int argc, char **argv)
 		hgd_exit_nicely();
 	}
 #endif
-
-	/* start */
-	if (background)
-		hgd_daemonise();
 
 	if (hgd_write_pid_file() != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't write PID away");
