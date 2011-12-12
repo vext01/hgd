@@ -1441,6 +1441,7 @@ main(int argc, char **argv)
 	int			 num_config = 2, ch;
 
 	/* as early as possible */
+	hgd_register_sig_handlers();
 	HGD_INIT_SYSLOG_DAEMON();
 
 #ifdef HAVE_LIBCONFIG
@@ -1448,9 +1449,6 @@ main(int argc, char **argv)
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
 	config_path[2] = hgd_get_XDG_userprefs_location(netd);
 #endif
-	/* if killed, die nicely */
-	hgd_register_sig_handlers();
-
 	state_path = xstrdup(HGD_DFL_DIR);
 	ssl_key_path = xstrdup(HGD_DFL_KEY_FILE);
 	ssl_cert_path = xstrdup(HGD_DFL_CERT_FILE);
