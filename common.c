@@ -346,6 +346,17 @@ int
 hgd_daemonise()
 {
 	pid_t			pid;
+
+	/*
+	 * When we daemonise we close FD 1 and two.  If we have daemonised previously
+	 * then fclose(stdout) & fclose(stderr) will close what ever happens to be
+	 * open on FD 1&2 (usually the database).
+         */
+	if (getsid(0) == getpid()) {
+		DPRINTF(HGD_D_DEBUG, "I think I am already a daemon! Not re-daemonising");
+		return (HGD_OK);
+	}
+
 	pid = fork();
 	if (pid) {
 		/* parent */
