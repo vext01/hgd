@@ -1442,11 +1442,11 @@ main(int argc, char **argv)
 	int			 num_config = 2, ch;
 
 	/* as early as possible */
+	hgd_register_sig_handlers();
 	HGD_INIT_SYSLOG_DAEMON();
 
 	config_path[0] = NULL;
 	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_SERV_CFG );
-
 	xdg_config_home =  getenv("XDG_CONFIG_HOME");
 	if (xdg_config_home == NULL) {
 		xasprintf(&config_path[2], "%s%s", getenv("HOME"),

@@ -335,6 +335,7 @@ main(int argc, char **argv)
 	int			 num_config = 2, ch;
 
 	/* early as possible */
+	hgd_register_sig_handlers();
 	HGD_INIT_SYSLOG_DAEMON();
 
 	config_path[0] = NULL;
@@ -475,8 +476,6 @@ main(int argc, char **argv)
 	/* start */
 	if (background)
 		hgd_daemonise();
-
-	hgd_register_sig_handlers();
 
 	/* do the Python dance */
 #ifdef HAVE_PYTHON

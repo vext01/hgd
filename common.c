@@ -345,35 +345,11 @@ hgd_readpassphrase_confirmed(char *buf, char *prompt)
 int
 hgd_daemonise()
 {
-	pid_t			pid;
-
-	/*
-	 * When we daemonise we close FD 1 and two.  If we have daemonised previously
-	 * then fclose(stdout) & fclose(stderr) will close what ever happens to be
-	 * open on FD 1&2 (usually the database).
-         */
-	DPRINTF(HGD_D_INFO, "%d vs %d", getpid(), getsid(0));
-	if (getsid(0) == getpid()) {
-		DPRINTF(HGD_D_DEBUG, "I think I am already a daemon! Not re-daemonising");
-		return (HGD_OK);
-	}
-
-	pid = fork();
-	if (pid) {
-		/* parent */
-		DPRINTF(HGD_D_INFO, "Daemonising. PID=%d", pid);
-		exit_ok = 1;
-		hgd_exit_nicely();
-	}
-
-	/* child */
-	if (setsid() != getpid()) {
-		DPRINTF(HGD_D_ERROR, "failed to setsid: %s", SERROR);
+	DPRINTF(HGD_D_INFO, "Daemonising...");
+	if (daemon(0, 0) < 0) {
+		DPRINTF(HGD_D_WARN, "Failed to daemonise: %s", SERROR);
 		return (HGD_FAIL);
 	}
-
-	fclose(stdout);
-	fclose(stderr);
 
 	return (HGD_OK);
 }
