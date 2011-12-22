@@ -268,6 +268,11 @@ hgd_update_files_win(struct ui *u)
 	/* loop over directory adding items for files */
 	while ((dirent = readdir(dir)) != NULL) {
 
+		if (dirent < 0) {
+			DPRINTF(HGD_D_WARN, "readdir failed: %s", SERROR);
+			return (HGD_FAIL);
+		}
+
 		/* could be more efficient */
 		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
 		items[cur_index + 1] = NULL;
