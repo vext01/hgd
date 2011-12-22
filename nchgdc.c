@@ -252,8 +252,10 @@ hgd_update_files_win(struct ui *u)
 	ITEM			**items = NULL;
 	DIR			 *dir = NULL;
 	int			  cur_index = 0, pass = 0;
-	struct dirent		 *dirent;
+	struct dirent		 *dirent, *dirent_copy = NULL;
 	char			 *copy, *slash_append;
+
+	wclear(u->content_wins[HGD_WIN_FILES]);
 
 	DPRINTF(HGD_D_INFO, "Update files window");
 
@@ -310,6 +312,13 @@ hgd_update_files_win(struct ui *u)
 				    "Could not make new menu item: %s", SERROR);
 				free(copy);
 			}
+
+			/* jam away the dirent for later use */
+			dirent_copy = xcalloc(1, sizeof(struct dirent));
+			DPRINTF(HGD_D_INFO, "TEST TEST TEST1: %s", dirent->d_name);
+			memcpy(dirent_copy, dirent, sizeof(struct dirent));
+			DPRINTF(HGD_D_INFO, "TEST TEST TEST: %s", dirent_copy->d_name);
+			set_item_userptr(items[cur_index], dirent_copy);
 
 			if (items[cur_index] == NULL)
 				continue;
@@ -623,6 +632,40 @@ hgd_resize_app(struct ui *u)
 	return (hgd_switch_content(u, u->active_content_win));
 }
 
+/* uh oh, someone hit enter on the files menu! */
+int
+hgd_enter_on_files_menu(struct ui *u)
+{
+	DPRINTF(HGD_D_INFO, "Selected item on files menu");
+
+	char			*new_cwd = NULL;
+	ITEM			*item;
+	struct dirent		*dirent;
+
+	if ((item = current_item(u->content_menus[HGD_WIN_FILES])) == NULL) {
+	    DPRINTF(HGD_D_WARN, "Could not get current item");
+	    return (HGD_FAIL);
+	}
+
+	dirent = (struct dirent *) item_userptr(item);
+
+	DPRINTF(HGD_D_INFO, "dirent: %s", dirent->d_name);
+
+	switch (dirent->d_type) {
+	case DT_DIR:
+		DPRINTF(HGD_D_INFO, "switch cwd: dirent->d_name");
+		xasprintf(&new_cwd, "%s/%s", u->cwd, dirent->d_name);
+		free(u->cwd);
+		u->cwd = new_cwd;
+		break;
+	default:
+		/* XXX queue */
+		break;
+	};
+
+	return (HGD_OK);
+}
+
 int
 hgd_event_loop(struct ui *u)
 {
@@ -655,6 +698,11 @@ hgd_event_loop(struct ui *u)
 			/* fires magically when terminal is resized */
 			hgd_resize_app(u);
 			break;
+		case '\n':
+			if (u->active_content_win == HGD_WIN_FILES) {
+				hgd_enter_on_files_menu(u);
+				hgd_switch_content(u, HGD_WIN_FILES);
+			}
 		}
 
 	}
