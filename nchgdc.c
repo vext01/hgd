@@ -253,7 +253,7 @@ hgd_update_files_win(struct ui *u)
 	DIR			 *dir = NULL;
 	int			  cur_index = 0;
 	struct dirent		 *dirent;
-	char			 *copy;
+	char			 *copy, *slash_append;
 
 	DPRINTF(HGD_D_INFO, "Update files window");
 
@@ -277,7 +277,15 @@ hgd_update_files_win(struct ui *u)
 		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
 		items[cur_index + 1] = NULL;
 
-		hgd_prepare_item_string(&copy, dirent->d_name);
+		/* pretty it up a bit */
+		if (dirent->d_type == DT_DIR) {
+			xasprintf(&slash_append, "%s/", dirent->d_name);
+			hgd_prepare_item_string(&copy, slash_append);
+			free(slash_append);
+		} else {
+			hgd_prepare_item_string(&copy, dirent->d_name);
+		}
+
 		items[cur_index] = new_item(copy, NULL);
 
 		if (items[cur_index] == NULL) {
