@@ -36,6 +36,8 @@ struct ui {
 	/* there is at most one menu per content window */
 	MENU			*content_menus[HGD_MAX_CONTENT_WINS];
 	int			 (*content_refresh_handler[HGD_MAX_CONTENT_WINS])(struct ui *);
+	/* current directory in browser */
+	char			*cwd;
 };
 
 /* We have 2 handles on the UI log, read/write */

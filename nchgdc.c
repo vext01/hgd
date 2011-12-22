@@ -17,8 +17,11 @@
 
 #define _GNU_SOURCE	/* linux */
 
+#include <sys/types.h>
+
 #include <stdio.h>
 #include <curses.h>
+#include <dirent.h>
 #include <stdlib.h>
 #include <menu.h>
 #include <err.h>
@@ -219,8 +222,15 @@ hgd_update_titlebar(struct ui *u)
 	wattron(u->title, COLOR_PAIR(HGD_CPAIR_BARS));
 
 	xasprintf(&fmt, "%%-%ds", COLS);
-	xasprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION,
-	    window_names[u->active_content_win]);
+
+	/* browser win shows path next to title */
+	if (u->active_content_win == HGD_WIN_FILES) {
+		xasprintf(&title_str, "nchgdc-%s :: %s :: %s", HGD_VERSION,
+		    window_names[u->active_content_win], u->cwd);
+	} else {
+		xasprintf(&title_str, "nchgdc-%s :: %s", HGD_VERSION,
+		    window_names[u->active_content_win]);
+	}
 
 	mvwprintw(u->title, 0, 0, fmt, title_str);
 
@@ -239,12 +249,65 @@ hgd_update_playlist_win(struct ui *u)
 int
 hgd_update_files_win(struct ui *u)
 {
+	ITEM			**items = NULL;
+	DIR			 *dir = NULL;
+	int			  cur_index = 0;
+	struct dirent		 *dirent;
+	char			 *copy;
+
 	DPRINTF(HGD_D_INFO, "Update files window");
-	/* XXX */
-	wclear(u->content_wins[HGD_WIN_FILES]);
-	mvwprintw(u->content_wins[HGD_WIN_FILES], 0, 0, "Insert file browser here");
-	mvwprintw(u->content_wins[HGD_WIN_FILES], 10, 0, "Ooooh - you touch my tralala");
+
+	if ((dir = opendir(u->cwd)) == NULL) {
+		DPRINTF(HGD_D_WARN, "Could not read dir: '%s'", u->cwd);
+		return (HGD_FAIL);
+	}
+
+	/* make our menu items */
+	items = xcalloc(sizeof(ITEM *), cur_index + 1);
+
+	/* loop over directory adding items for files */
+	while ((dirent = readdir(dir)) != NULL) {
+
+		/* could be more efficient */
+		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
+		items[cur_index + 1] = NULL;
+
+		hgd_prepare_item_string(&copy, dirent->d_name);
+		items[cur_index] = new_item(copy, NULL);
+
+		if (items[cur_index] == NULL) {
+			DPRINTF(HGD_D_WARN,
+			    "Could not make new menu item: %s", SERROR);
+			free(copy);
+		}
+
+		if (items[cur_index] == NULL)
+			continue;
+
+		cur_index++;
+	}
+
+	/* make the menu */
+	if (u->content_menus[HGD_WIN_FILES] != NULL) {
+		/* XXX clean up old menu */
+	}
+
+	u->content_menus[HGD_WIN_FILES] = new_menu(items);
+
+	keypad(u->content_wins[HGD_WIN_FILES], TRUE);
+	set_menu_win(u->content_menus[HGD_WIN_FILES],
+	    u->content_wins[HGD_WIN_FILES]);
+	set_menu_mark(u->content_menus[HGD_WIN_FILES], "");
+	set_menu_format(u->content_menus[HGD_WIN_FILES],
+	    LINES - 2, 1);
+	set_menu_fore(u->content_menus[HGD_WIN_FILES],
+	    COLOR_PAIR(HGD_CPAIR_SELECTED));
+
+	if ((post_menu(u->content_menus[HGD_WIN_FILES])) != E_OK)
+		DPRINTF(HGD_D_WARN, "Could not post menu");
+
 	return (HGD_OK);
+
 }
 
 int
@@ -473,6 +536,8 @@ hgd_init_files_win(struct ui *u)
 
 	u->content_menus[HGD_WIN_FILES] = NULL; /* no menu */
 	u->content_refresh_handler[HGD_WIN_FILES] = hgd_update_files_win;
+
+	u->cwd = xstrdup(getenv("PWD"));
 
 	return (HGD_OK);
 }
