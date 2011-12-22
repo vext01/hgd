@@ -251,7 +251,7 @@ hgd_update_files_win(struct ui *u)
 {
 	ITEM			**items = NULL;
 	DIR			 *dir = NULL;
-	int			  cur_index = 0;
+	int			  cur_index = 0, pass = 0;
 	struct dirent		 *dirent;
 	char			 *copy, *slash_append;
 
@@ -265,39 +265,57 @@ hgd_update_files_win(struct ui *u)
 	/* make our menu items */
 	items = xcalloc(sizeof(ITEM *), cur_index + 1);
 
-	/* loop over directory adding items for files */
-	while ((dirent = readdir(dir)) != NULL) {
+	/*
+	 * 2 passes over directory:
+	 *   1 - directories
+	 *   2 - standard files
+	 */
+	for (pass = 0; pass < 2; pass++) {
 
-		if (dirent < 0) {
-			DPRINTF(HGD_D_WARN, "readdir failed: %s", SERROR);
-			return (HGD_FAIL);
+		rewinddir(dir);
+
+		/* loop over directory adding items for files */
+		while ((dirent = readdir(dir)) != NULL) {
+
+			if (dirent < 0) {
+				DPRINTF(HGD_D_WARN,
+				    "readdir failed: %s", SERROR);
+				return (HGD_FAIL);
+			}
+
+			/* skip entries not for this pass */
+			if ((pass == 0) && (dirent->d_type != DT_DIR))
+				continue;
+			else if ((pass == 1) && (dirent->d_type == DT_DIR))
+				continue;
+
+			/* could be more efficient */
+			items = xrealloc(
+			    items, sizeof(ITEM *) * (cur_index + 2));
+			items[cur_index + 1] = NULL;
+
+			/* pretty it up a bit */
+			if (dirent->d_type == DT_DIR) {
+				xasprintf(&slash_append, "%s/", dirent->d_name);
+				hgd_prepare_item_string(&copy, slash_append);
+				free(slash_append);
+			} else {
+				hgd_prepare_item_string(&copy, dirent->d_name);
+			}
+
+			items[cur_index] = new_item(copy, NULL);
+
+			if (items[cur_index] == NULL) {
+				DPRINTF(HGD_D_WARN,
+				    "Could not make new menu item: %s", SERROR);
+				free(copy);
+			}
+
+			if (items[cur_index] == NULL)
+				continue;
+
+			cur_index++;
 		}
-
-		/* could be more efficient */
-		items = xrealloc(items, sizeof(ITEM *) * (cur_index + 2));
-		items[cur_index + 1] = NULL;
-
-		/* pretty it up a bit */
-		if (dirent->d_type == DT_DIR) {
-			xasprintf(&slash_append, "%s/", dirent->d_name);
-			hgd_prepare_item_string(&copy, slash_append);
-			free(slash_append);
-		} else {
-			hgd_prepare_item_string(&copy, dirent->d_name);
-		}
-
-		items[cur_index] = new_item(copy, NULL);
-
-		if (items[cur_index] == NULL) {
-			DPRINTF(HGD_D_WARN,
-			    "Could not make new menu item: %s", SERROR);
-			free(copy);
-		}
-
-		if (items[cur_index] == NULL)
-			continue;
-
-		cur_index++;
 	}
 
 	/* make the menu */
