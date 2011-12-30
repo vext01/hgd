@@ -678,6 +678,7 @@ hgd_centre_dialog_text(char **dest, const char *src_const)
 
 	free(centre_line);
 	free(orig_copy);
+	(*dest)++;
 
 	return (HGD_OK);
 }
@@ -889,7 +890,7 @@ hgd_show_splash(struct ui *u)
 	char			*msg;
 
 	xasprintf(&msg, "Welcome to nchgdc version %s!\n\n"
-	    "http://hgd.theunixzoo.co.uk    http://github.com/vext01/hgd", HGD_VERSION);
+	    "http://hgd.theunixzoo.co.uk", HGD_VERSION);
 
 	hgd_show_dialog(u, "[ Welcome to the Land of Forbidden Fruit! ]", msg, 0);
 	free(msg);
