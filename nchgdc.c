@@ -291,6 +291,9 @@ hgd_update_files_win(struct ui *u)
 			else if ((pass == 1) && (dirent->d_type == DT_DIR))
 				continue;
 
+			if (strcmp(dirent->d_name, ".") == 0)
+				continue;
+
 			/* could be more efficient */
 			items = xrealloc(
 			    items, sizeof(ITEM *) * (cur_index + 2));
@@ -654,9 +657,15 @@ hgd_enter_on_files_menu(struct ui *u)
 	switch (dirent->d_type) {
 	case DT_DIR:
 		DPRINTF(HGD_D_INFO, "switch cwd: dirent->d_name");
-		xasprintf(&new_cwd, "%s/%s", u->cwd, dirent->d_name);
+
+		if (strcmp(dirent->d_name, "..") == 0)
+			new_cwd = xstrdup(dirname(u->cwd));
+		else
+			xasprintf(&new_cwd, "%s/%s", u->cwd, dirent->d_name);
+
 		free(u->cwd);
 		u->cwd = new_cwd;
+
 		break;
 	default:
 		/* XXX queue */
