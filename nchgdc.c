@@ -34,6 +34,7 @@
 
 #define	HGD_CPAIR_BARS				1
 #define HGD_CPAIR_SELECTED			2
+#define HGD_CPAIR_DIALOG			3
 
 #define HGD_LOG_BACKBUFFER			4096
 
@@ -635,6 +636,86 @@ hgd_resize_app(struct ui *u)
 	return (hgd_switch_content(u, u->active_content_win));
 }
 
+/*
+ * calculate dimensions of a centred, usefully sized dialog win
+ */
+#define				HGD_DIALOG_WIN_HRATIO		0.2
+#define				HGD_DIALOG_WIN_WRATIO		0.7
+int
+hgd_calc_dialog_win_dims(int *y, int *x, int *h, int *w)
+{
+	*h = LINES * HGD_DIALOG_WIN_HRATIO;
+	*w = COLS * HGD_DIALOG_WIN_WRATIO;
+	*y = (LINES - *h) / 2;
+	*x = (COLS - *w) / 2;
+
+	return (HGD_OK);
+}
+
+int
+hgd_show_dialog(struct ui *u, const char *title, const char *msg)
+{
+	WINDOW			*borderwin, *win;
+	int			 x, y, h, w;
+
+	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
+
+	DPRINTF(HGD_D_INFO, "Queue a track");
+
+	if ((win = newwin(h, w, y, x)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
+		return (HGD_FAIL);
+	}
+
+	wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+	wclear(win);
+	wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+
+	mvwprintw(win, 0, w / 2 - (strlen(title) / 2), title);
+	mvwprintw(win, 2, 0, msg);
+
+	redrawwin(win);
+	wrefresh(win);
+
+	sleep(5);
+	delwin(win);
+
+	return (HGD_OK);
+}
+
+
+
+int
+hgd_ui_queue_track(struct ui *u)
+{
+	WINDOW			*win;
+	int			 x, y, h, w;
+
+	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
+
+	DPRINTF(HGD_D_INFO, "Queue a track");
+
+	if ((win = newwin(h, w, y, x)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
+		return (HGD_FAIL);
+	}
+
+	wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+	wclear(win);
+	wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+	box(win, '|', '-');
+
+	/* XXX progress logic here */
+
+	redrawwin(win);
+	wrefresh(win);
+
+	sleep(5);
+	delwin(win);
+
+	return (HGD_OK);
+}
+
 /* uh oh, someone hit enter on the files menu! */
 int
 hgd_enter_on_files_menu(struct ui *u)
@@ -668,7 +749,7 @@ hgd_enter_on_files_menu(struct ui *u)
 
 		break;
 	default:
-		/* XXX queue */
+		hgd_ui_queue_track(u);
 		break;
 	};
 
@@ -774,6 +855,7 @@ main(int argc, char **argv)
 	/* XXX fall back implementations for B+W terms? */
 	init_pair(HGD_CPAIR_BARS, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(HGD_CPAIR_SELECTED, COLOR_BLACK, COLOR_WHITE);
+	init_pair(HGD_CPAIR_DIALOG, COLOR_BLACK, COLOR_CYAN);
 
 	/* initialise top and bottom bars */
 	if (hgd_init_titlebar(&u) != HGD_OK)
@@ -790,6 +872,8 @@ main(int argc, char **argv)
 		hgd_exit_nicely();
 
 	/* start on the playlist */
+	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
+	hgd_show_dialog(&u, "[ Title ]", "A message here\nnewline");
 	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
 
 	/* main event loop */
