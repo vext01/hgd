@@ -653,14 +653,51 @@ hgd_calc_dialog_win_dims(int *y, int *x, int *h, int *w)
 }
 
 int
-hgd_show_dialog(struct ui *u, const char *title, const char *msg)
+hgd_centre_dialog_text(char **dest, const char *src_const)
 {
-	WINDOW			*borderwin, *win;
+	char			*next = xstrdup(src_const), *orig_copy = next;
+	char			*centre_line, *tok;
+	int			 centre_start;
+	int			 dwidth = COLS * HGD_DIALOG_WIN_WRATIO;
+
+	*dest = xstrdup("");
+
+	centre_line = malloc(dwidth + 1);
+
+	while ((tok = strsep(&next, "\n")) != NULL) {
+
+		/* blank out and terminate */
+		memset(centre_line, ' ', dwidth);
+		centre_line[dwidth] = '\0';
+
+		/* calculate start point and copy in */
+		centre_start = dwidth / 2 - (strlen(tok) / 2);
+		strncpy(&(centre_line[centre_start]), tok, dwidth);
+		xasprintf(dest, "%s\n%s", *dest, centre_line);
+	}
+
+	free(centre_line);
+	free(orig_copy);
+
+	return (HGD_OK);
+}
+
+int
+hgd_show_dialog(struct ui *u, const char *title, const char *msg, int secs)
+{
+	WINDOW			*bwin, *win;
 	int			 x, y, h, w;
+	char			*msg_centre;
 
 	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
+	hgd_centre_dialog_text(&msg_centre, msg);
 
 	DPRINTF(HGD_D_INFO, "Queue a track");
+
+	if ((bwin = newwin(h + 2, w + 2, y - 1, x - 1)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
+		return (HGD_FAIL);
+	}
 
 	if ((win = newwin(h, w, y, x)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
@@ -668,17 +705,31 @@ hgd_show_dialog(struct ui *u, const char *title, const char *msg)
 	}
 
 	wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+	wattron(bwin, COLOR_PAIR(HGD_CPAIR_DIALOG));
+
 	wclear(win);
+	wclear(bwin);
+
 	wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+	box(bwin, '|', '-');
 
-	mvwprintw(win, 0, w / 2 - (strlen(title) / 2), title);
-	mvwprintw(win, 2, 0, msg);
+	mvwprintw(bwin, 0, w / 2 - (strlen(title) / 2), title);
+	mvwprintw(win, 1, 0, msg_centre);
 
+	redrawwin(bwin);
 	redrawwin(win);
+	wrefresh(bwin);
 	wrefresh(win);
 
-	sleep(5);
+	if (secs)
+		sleep(secs);
+	else
+		wgetch(win);
+
 	delwin(win);
+	delwin(bwin);
+
+	free(msg_centre);
 
 	return (HGD_OK);
 }
@@ -833,6 +884,20 @@ hgd_read_config(char **config_locations)
 }
 
 int
+hgd_show_splash(struct ui *u)
+{
+	char			*msg;
+
+	xasprintf(&msg, "Welcome to nchgdc version %s!\n\n"
+	    "http://hgd.theunixzoo.co.uk    http://github.com/vext01/hgd", HGD_VERSION);
+
+	hgd_show_dialog(u, "[ Welcome to the Land of Forbidden Fruit! ]", msg, 0);
+	free(msg);
+
+	return (HGD_OK);
+}
+
+int
 main(int argc, char **argv)
 {
 	struct ui	u;
@@ -873,7 +938,7 @@ main(int argc, char **argv)
 
 	/* start on the playlist */
 	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
-	hgd_show_dialog(&u, "[ Title ]", "A message here\nnewline");
+	hgd_show_splash(&u);
 	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
 
 	/* main event loop */
