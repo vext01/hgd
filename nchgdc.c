@@ -692,48 +692,63 @@ hgd_show_dialog(struct ui *u, const char *title, const char *msg, int secs)
 	WINDOW			*bwin, *win;
 	int			 x, y, h, w;
 	char			*msg_centre;
+	int			 ch = 0, again = 0;
 
-	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
-	hgd_centre_dialog_text(&msg_centre, msg);
+	/* we will need to redisplay the dialog if we get a resize */
+	do {
+		again = 0;
 
-	DPRINTF(HGD_D_INFO, "Show dialog: '%s'", title);
+		hgd_calc_dialog_win_dims(&y, &x, &h, &w);
+		hgd_centre_dialog_text(&msg_centre, msg);
 
-	if ((bwin = newwin(h + 2, w + 2, y - 1, x - 1)) == NULL) {
-		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
-		return (HGD_FAIL);
-	}
+		DPRINTF(HGD_D_INFO, "Show dialog: '%s'", title);
 
-	if ((win = newwin(h, w, y, x)) == NULL) {
-		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
-		return (HGD_FAIL);
-	}
+		if ((bwin = newwin(h + 2, w + 2, y - 1, x - 1)) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
+			return (HGD_FAIL);
+		}
 
-	wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
-	wattron(bwin, COLOR_PAIR(HGD_CPAIR_DIALOG));
+		if ((win = newwin(h, w, y, x)) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
+			return (HGD_FAIL);
+		}
 
-	wclear(win);
-	wclear(bwin);
+		wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+		wattron(bwin, COLOR_PAIR(HGD_CPAIR_DIALOG));
 
-	wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
-	box(bwin, '|', '-');
+		wclear(win);
+		wclear(bwin);
 
-	mvwprintw(bwin, 0, w / 2 - (strlen(title) / 2), title);
-	mvwprintw(win, 1, 0, msg_centre);
+		wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+		box(bwin, '|', '-');
 
-	redrawwin(bwin);
-	redrawwin(win);
-	wrefresh(bwin);
-	wrefresh(win);
+		mvwprintw(bwin, 0, w / 2 - (strlen(title) / 2), title);
+		mvwprintw(win, 1, 0, msg_centre);
 
-	if (secs)
-		sleep(secs);
-	else
-		wgetch(win);
+		redrawwin(bwin);
+		redrawwin(win);
+		wrefresh(bwin);
+		wrefresh(win);
 
-	delwin(win);
-	delwin(bwin);
+		if (secs)
+			sleep(secs);
+		else
+			ch = wgetch(win);
 
-	free(msg_centre);
+		if (ch == KEY_RESIZE) {
+			DPRINTF(HGD_D_INFO, "redraw dialog");
+			hgd_resize_app(u);
+			again = 1;
+		}
+
+		delwin(win);
+		delwin(bwin);
+
+		free(msg_centre);
+
+	} while(again);
+
+	hgd_refresh_ui(u);
 
 	return (HGD_OK);
 }
@@ -941,7 +956,6 @@ main(int argc, char **argv)
 	/* start on the playlist */
 	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
 	hgd_show_splash(&u);
-	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
 
 	/* main event loop */
 	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
