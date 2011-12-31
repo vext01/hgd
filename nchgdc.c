@@ -660,7 +660,7 @@ hgd_centre_dialog_text(char **dest, const char *src_const)
 	int			 centre_start;
 	int			 dwidth = COLS * HGD_DIALOG_WIN_WRATIO;
 
-	*dest = xstrdup("");
+	*dest = NULL;
 
 	centre_line = malloc(dwidth + 1);
 
@@ -673,12 +673,15 @@ hgd_centre_dialog_text(char **dest, const char *src_const)
 		/* calculate start point and copy in */
 		centre_start = dwidth / 2 - (strlen(tok) / 2);
 		strncpy(&(centre_line[centre_start]), tok, dwidth);
-		xasprintf(dest, "%s\n%s", *dest, centre_line);
+
+		if (*dest == NULL)
+			*dest = xstrdup(centre_line);
+		else
+			xasprintf(dest, "%s\n%s", *dest, centre_line);
 	}
 
 	free(centre_line);
 	free(orig_copy);
-	(*dest)++;
 
 	return (HGD_OK);
 }
@@ -693,7 +696,7 @@ hgd_show_dialog(struct ui *u, const char *title, const char *msg, int secs)
 	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
 	hgd_centre_dialog_text(&msg_centre, msg);
 
-	DPRINTF(HGD_D_INFO, "Queue a track");
+	DPRINTF(HGD_D_INFO, "Show dialog: '%s'", title);
 
 	if ((bwin = newwin(h + 2, w + 2, y - 1, x - 1)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
@@ -734,8 +737,6 @@ hgd_show_dialog(struct ui *u, const char *title, const char *msg, int secs)
 
 	return (HGD_OK);
 }
-
-
 
 int
 hgd_ui_queue_track(struct ui *u)
