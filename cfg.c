@@ -372,7 +372,8 @@ hgd_cfg_c_password(config_t *cf, char **password, char *config_location)
 		if (st.st_mode & (S_IRWXG | S_IRWXO)) {
 			DPRINTF(HGD_D_ERROR,
 				"Config file with your password in is "
-				"readable by other people.  Please chmod it.");
+				"readable by other people. Please chmod it.\n"
+				"# chmod 500 %s", config_location);
 			hgd_exit_nicely();
 		}
 
