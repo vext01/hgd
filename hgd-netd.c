@@ -1439,6 +1439,7 @@ main(int argc, char **argv)
 {
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2, ch;
+	FILE			*hgd_pid;
 
 	/* as early as possible */
 	hgd_register_sig_handlers();
@@ -1612,11 +1613,15 @@ main(int argc, char **argv)
 		hgd_exit_nicely();
 	}
 
+	if (hgd_open_pid_file(&hgd_pid) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't open PID file");
+		return (HGD_FAIL);
+	}
 	/* alright, everything looks good, lets be a daemon and background */
 	if (background)
 		hgd_daemonise();
 
-	if (hgd_write_pid_file() != HGD_OK) {
+	if (hgd_write_pid_file(&hgd_pid) != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Can't write PID away");
 		return (HGD_FAIL);
 	}

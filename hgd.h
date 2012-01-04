@@ -299,7 +299,8 @@ int				 hgd_file_open_and_lock(
 				     char *fname, int type, FILE **file);
 void				 hgd_set_line_colour(char *ansi_code);
 int				 hgd_unlink_pid_file(void);
-int				 hgd_write_pid_file(void);
+int				 hgd_write_pid_file(FILE  **file);
+int				 hgd_open_pid_file(FILE  **file);
 int				 hgd_check_component_status(
 				     char *component, int *running);
 

@@ -550,14 +550,13 @@ hgd_set_line_colour(char *ansi_code)
 }
 
 int
-hgd_write_pid_file()
+hgd_open_pid_file(FILE **pidfile)
 {
 	char			*path;
 	int			 ret = HGD_FAIL, sr;
 	struct stat		 st;
-	FILE			*pidfile;
 
-	DPRINTF(HGD_D_INFO, "Write away pid file for %s", hgd_component);
+	DPRINTF(HGD_D_INFO, "Opening pid file for %s", hgd_component);
 
 	xasprintf(&path, "%s/%s.pid", state_path, hgd_component);
 
@@ -570,18 +569,8 @@ hgd_write_pid_file()
 		goto clean;
 	}
 
-	if (hgd_file_open_and_lock(path, F_WRLCK, &pidfile)) {
+	if (hgd_file_open_and_lock(path, F_WRLCK, pidfile)) {
 		DPRINTF(HGD_D_ERROR, "Cannot lock pid file");
-		goto clean;
-	}
-
-	if (fprintf(pidfile, "%d", getpid()) < 0) {
-		DPRINTF(HGD_D_ERROR, "Can't write out pid: %s", SERROR);
-		goto clean;
-	}
-
-	if (hgd_file_unlock_and_close(pidfile) != HGD_OK) {
-		DPRINTF(HGD_D_ERROR, "Can't close/unlock pid file");
 		goto clean;
 	}
 
@@ -589,6 +578,27 @@ hgd_write_pid_file()
 clean:
 	free(path);
 
+	return (ret);
+}
+int
+hgd_write_pid_file(FILE **pidfile)
+{
+	int			 ret = HGD_FAIL;
+
+	DPRINTF(HGD_D_INFO, "Write away pid file for %s", hgd_component);
+
+	if (fprintf(*pidfile, "%d", getpid()) < 0) {
+		DPRINTF(HGD_D_ERROR, "Can't write out pid: %s", SERROR);
+		goto clean;
+	}
+
+	if (hgd_file_unlock_and_close(*pidfile) != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Can't close/unlock pid file");
+		goto clean;
+	}
+
+	ret = HGD_OK;
+clean:
 	return (ret);
 }
 
