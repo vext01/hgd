@@ -15,6 +15,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* PLEASE DON'T PUT ANY DATABASE CODE HERE -- SQLITE3 LINKAGE FORBIDDEN */
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
