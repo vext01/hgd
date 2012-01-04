@@ -73,9 +73,6 @@ AS_IF([test "x$enable_server" != "xno"], [
 	ALL_TARGETS="${ALL_TARGETS} hgd-netd hgd-playd hgd-admin"
 	INSTALL_TARGETS="${INSTALL_TARGETS} install-hgd-netd install-hgd-playd install-hgd-admin install-example-server"
 
-	AC_CHECK_PROG([MPLAYER], ["mplayer"], ["yes"], ["no"])
-	AS_IF([test "x${MPLAYER}" = "xno"], [AC_MSG_ERROR([mplayer is missing])])
-
 	# server just cant work without sqlite
 	PKG_CHECK_MODULES([SQLITE], [sqlite3 >= 3.6.22])
 
