@@ -15,6 +15,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* PLEASE DON'T PUT ANY DATABASE CODE HERE -- SQLITE3 LINKAGE FORBIDDEN */
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -112,4 +114,38 @@ int
 hgd_skip_track()
 {
 	return (hgd_mplayer_pipe_send("stop\n"));
+}
+
+/*
+ * Check MPlayer seems to be present and sane
+ */
+int
+hgd_check_mplayer_present()
+{
+	FILE			*pipe = NULL;
+	char			 vstr[HGD_MAX_MPLAYER_VSTR];
+
+	if ((pipe = popen("mplayer -v", "r")) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Unable to popen to determine mplayer version");
+		return (HGD_FAIL);
+	}
+
+	/* we should always get a line and never get EOF */
+	if ((fgets(vstr, HGD_MAX_MPLAYER_VSTR, pipe)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "MPlayer did not reply with a version string");
+		return (HGD_FAIL);
+	}
+
+	vstr[strlen(vstr) - 1] = '\0';
+
+	DPRINTF(HGD_D_INFO, "MPlayer version is: '%s'", vstr);
+
+	if (strncmp("MPlayer", vstr, strlen("MPlayer")) != 0) {
+		DPRINTF(HGD_D_ERROR, "MPlayer version string is kinda weird");
+		return (HGD_FAIL);
+	}
+
+	fclose(pipe);
+
+	return (HGD_OK);
 }
