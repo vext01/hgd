@@ -158,7 +158,15 @@ History
 	 - Fixed bug where hud mode kept asking for password.
 	 - Configure CC variable now honored.
  * 0.5.2 - Fix compile issue ubuntu.
- * 0.5.3 - Prevent hgd-admin and hgd-netd from linking Python
+ * 0.5.3 - Prevent hgd-admin and hgd-netd from linking Python.
+	 - Warn about stale PID files prior to daemonising.
+	 - Use daemon() to daemonise.
+	 - Fix weird double HUP fd bugs.
+	 - Check for MPlayer at runtime instead of compile time.
+         - Make pause and skip work when hgd is using a non-standard
+           state path.
+         - Fix build for --as-needed (this has become default on some
+           Linux distros.
 
 Roadmap
 -------
