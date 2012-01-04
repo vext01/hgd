@@ -24,10 +24,12 @@ extern char		*mplayer_fifo_path;
 
 #define HGD_MPLAYER_PIPE_NAME	"mplayer.pipe"
 #define HGD_PLAYING_FILE	"hgd.playing"
+#define HGD_MAX_MPLAYER_VSTR	512
 
 int			 hgd_mplayer_pipe_send(char *what);
 int			 hgd_make_mplayer_input_fifo(void);
 int			 hgd_pause_track(void);
 int			 hgd_skip_track(void);
+int			 hgd_check_mplayer_present(void);
 
 #endif
