@@ -49,6 +49,14 @@
 #include "cfg.h"
 #endif
 
+struct hgd_resp_err {
+	char		*code;
+	char		*meaning;
+};
+
+
+extern struct hgd_resp_err hgd_resp_errs[];
+
 extern char		*user, *host, *password;
 extern int		 port, sock_fd;
 

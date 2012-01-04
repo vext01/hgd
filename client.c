@@ -41,6 +41,7 @@
 #include <readpassphrase.h>
 #endif
 
+#include "client.h"
 #include "config.h"
 #include "hgd.h"
 #include "net.h"
@@ -61,6 +62,26 @@ uint8_t			 server_ssl_capable = 0;
 uint8_t			 authenticated = 0;
 uint8_t			 hud_refresh_speed = 5;
 uint8_t			 colours_on = 1;
+
+struct hgd_resp_err hgd_resp_errs[] = {
+	{ "E_INT",		"Internal error" },
+	{ "E_DENY",		"Access denied" },
+	{ "E_FLSIZE",		"File size invalid" },
+	{ "E_FLOOD",		"Flood protect triggered" },
+	{ "E_NOPLAY",		"No track is playing" },
+	{ "E_WRTRK",		"Wrong track" },
+	{ "E_DUPVOTE",		"Duplicate vote" },
+	{ "E_SSLAGN",		"Duplicate SSL negotiation" },
+	{ "E_SSLNOAVAIL",	"SSL not available" },
+	{ "E_INVCMD",		"Invalid command" },
+	{ "E_SSLREQ",		"SSL required" },
+	{ "E_SHTDWN",		"Server is going down" },
+	{ "E_KICK",		"Client misbehaving" },
+	{ "E_PERMNOCHG",	"Perms did not change" },
+	{ "E_USREXIST",		"User already exists" },
+	{ "E_USRNOEXIST",	"User does not exist" },
+	{ 0,			0 }
+};
 
 int
 hgd_client_edit_config()
