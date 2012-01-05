@@ -88,10 +88,12 @@ struct hgd_ui_log			logs;
 void
 hgd_exit_nicely()
 {
-	endwin();
+	if (endwin() == ERR)
+		DPRINTF(HGD_D_ERROR, "Failed to exit curses");
 
 	if (!exit_ok) {
 		DPRINTF(HGD_D_ERROR, "nchgdc crashed or was interrupted");
+		/* XXX why not printed??? */
 		printf("ERROR: nchgdc crashed or was interrupted!"
 		    " Please examine the log file\n");
 	}
@@ -938,6 +940,7 @@ hgd_ui_connect(struct ui *u)
 
 	if (hgd_setup_socket() != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Cannot setup socket");
+		hgd_show_dialog(u, "[ Error ]", "Failed to connect", 0);
 		return (HGD_FAIL);
 	}
 
@@ -949,8 +952,10 @@ hgd_ui_connect(struct ui *u)
 	hgd_refresh_ui(u);
 
 	/* check protocol matches the server before we continue */
-	if (hgd_check_svr_proto() != HGD_OK)
+	if (hgd_check_svr_proto() != HGD_OK) {
+		hgd_show_dialog(u, "[ Error ]", "Protocol mismatch", 0);
 		return (HGD_FAIL);
+	}
 
 	xasprintf(&status, "Connected, authenticating >>> %s@%s:%d",
 	    user, host, port);
@@ -960,6 +965,7 @@ hgd_ui_connect(struct ui *u)
 	hgd_refresh_ui(u);
 
 	if (hgd_client_login(sock_fd, ssl, user) != HGD_OK) {
+		hgd_show_dialog(u, "[ Error ]", "Authentication Failed", 0);
 		return (HGD_FAIL);
 	}
 
