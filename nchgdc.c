@@ -936,6 +936,33 @@ hgd_ui_connect(struct ui *u)
 	hgd_update_statusbar(u);
 	hgd_refresh_ui(u);
 
+	if (hgd_setup_socket() != HGD_OK) {
+		DPRINTF(HGD_D_ERROR, "Cannot setup socket");
+		return (HGD_FAIL);
+	}
+
+	xasprintf(&status, "Connected, checking server version >>> %s@%s:%d",
+	    user, host, port);
+	hgd_set_statusbar_text(u, status);
+	free(status);
+	hgd_update_statusbar(u);
+	hgd_refresh_ui(u);
+
+	/* check protocol matches the server before we continue */
+	if (hgd_check_svr_proto() != HGD_OK)
+		return (HGD_FAIL);
+
+	xasprintf(&status, "Connected, authenticating >>> %s@%s:%d",
+	    user, host, port);
+	hgd_set_statusbar_text(u, status);
+	free(status);
+	hgd_update_statusbar(u);
+	hgd_refresh_ui(u);
+
+	if (hgd_client_login(sock_fd, ssl, user) != HGD_OK) {
+		return (HGD_FAIL);
+	}
+
 	return (HGD_OK);
 }
 

@@ -66,5 +66,11 @@ extern SSL_CTX		*ctx;
 extern uint8_t		 crypto_pref, server_ssl_capable, authenticated;
 extern uint8_t		 hud_refresh_speed, colours_on;
 
-
 int			 hgd_client_edit_config();
+int			 hgd_client_login(int fd, SSL *ssl, char *username);
+int			 hgd_setup_socket();
+int			 hgd_check_svr_response(char *resp, uint8_t x);
+int			 hgd_negotiate_crypto();
+int			 hgd_encrypt(int fd);
+int			 hgd_print_pretty_server_response(char *resp_line);
+int			 hgd_check_svr_proto();

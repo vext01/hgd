@@ -122,11 +122,12 @@ hgd-admin: common.o db.o hgd.h hgd-admin.c config.h net.o crypto.o \
 
 # XXX configure check for curses and ability to disable the build of this.
 # XXX link to the build when in some useful state
-nchgdc: client.o common.o cfg.o config.h nchgdc.h nchgdc.c
+nchgdc: client.o common.o cfg.o config.h nchgdc.h nchgdc.c net.o
 	@echo "\n--> Building: \"nchgdc\""
 	${CC} nchgdc.c ${CPPFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} ${BSD_CFLAGS} \
-		common.o cfg.o client.o \
+		common.o cfg.o client.o net.o \
 		 ${CONFIG_LDFLAGS} ${CURSES_LDFLAGS} ${BSD_LDFLAGS} \
+		 ${SSL_LDFLAGS} \
 		-o nchgdc
 
 hgd-mk-pydoc: hgd-mk-pydoc.c config.h hgd.h py.o common.o db.o crypto.o
