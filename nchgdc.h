@@ -38,6 +38,7 @@ struct ui {
 	int			 (*content_refresh_handler[HGD_MAX_CONTENT_WINS])(struct ui *);
 	/* current directory in browser */
 	char			*cwd;
+	char			*status_str;
 };
 
 /* We have 2 handles on the UI log, read/write */

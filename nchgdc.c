@@ -170,8 +170,17 @@ hgd_update_statusbar(struct ui *u)
 	wattron(u->status, COLOR_PAIR(HGD_CPAIR_BARS));
 
 	xasprintf(&fmt, "%%-%ds", COLS);
-	wprintw(u->status, fmt,  "User: edd\tHasVote: Yes");
+	wprintw(u->status, fmt, u->status_str);
 	free (fmt);
+}
+
+int
+hgd_set_statusbar_text(struct ui *u, char *txt)
+{
+	free(u->status_str);
+	u->status_str = xstrdup(txt);
+
+	return (HGD_OK);
 }
 
 void
@@ -509,6 +518,8 @@ hgd_init_statusbar(struct ui *u)
 		DPRINTF(HGD_D_ERROR, "Could not initialise statusbar");
 		return (HGD_FAIL);
 	}
+
+	u->status_str = xstrdup("");
 
 	return (HGD_OK);
 }
@@ -915,14 +926,46 @@ hgd_show_splash(struct ui *u)
 }
 
 int
+hgd_ui_connect(struct ui *u)
+{
+	char			*status = NULL;
+
+	xasprintf(&status, "Connecting >>> %s@%s:%d", user, host, port);
+	hgd_set_statusbar_text(u, status);
+	free(status);
+	hgd_update_statusbar(u);
+	hgd_refresh_ui(u);
+
+	return (HGD_OK);
+}
+
+int
 main(int argc, char **argv)
 {
 	struct ui	u;
+	char			*config_path[4] = {NULL, NULL, NULL, NULL};
+	int			 num_config = 2;
 
 	hgd_debug = 3; /* XXX config file or getopt */
 
-	init_log();
+	host = xstrdup(HGD_DFL_HOST);
+#ifdef HAVE_LIBCONFIG
+	config_path[0] = NULL;
+	xasprintf(&config_path[1], "%s",  HGD_GLOBAL_CFG_DIR HGD_CLI_CFG );
+	config_path[2] = hgd_get_XDG_userprefs_location(hgdc);
+#endif
 
+	hgd_read_config(config_path + num_config);
+
+	while(num_config > 0) {
+		if (config_path[num_config] != NULL) {
+			free (config_path[num_config]);
+			config_path[num_config] = NULL;
+		}
+		num_config--;
+	}
+
+	init_log();
 	initscr();
 
 	cbreak();
@@ -956,6 +999,9 @@ main(int argc, char **argv)
 	/* start on the playlist */
 	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
 	hgd_show_splash(&u);
+
+	if (hgd_ui_connect(&u) != HGD_OK)
+		hgd_exit_nicely();
 
 	/* main event loop */
 	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
