@@ -116,6 +116,7 @@ hgd_client_login(int fd, SSL *ssl, char *username)
 	int			 login_ok = -1;
 	char			*prompt;
 
+	/* XXX can't use getpassphrase in curses */
 	if (password == NULL) {
 		xasprintf(&prompt, "Password for %s@%s: ", user, host);
 		if (readpassphrase(prompt, pass, HGD_MAX_PASS_SZ,

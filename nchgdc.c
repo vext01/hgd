@@ -766,6 +766,25 @@ hgd_show_dialog(struct ui *u, const char *title, const char *msg, int secs)
 	return (HGD_OK);
 }
 
+/*
+ * The "standard" statusbar that the user sees 99% of the time
+ */
+int
+hgd_set_standard_statusbar_text(struct ui *u)
+{
+	char			*status;
+
+	asprintf(&status, "%s@%s:%d   Vote: %d", user, host, port, -1);
+	hgd_set_statusbar_text(u, status);
+	free(status);
+	hgd_update_statusbar(u);
+	hgd_refresh_ui(u);
+
+	return (HGD_OK);
+}
+
+
+
 int
 hgd_ui_queue_track(struct ui *u)
 {
@@ -968,6 +987,8 @@ hgd_ui_connect(struct ui *u)
 		hgd_show_dialog(u, "[ Error ]", "Authentication Failed", 0);
 		return (HGD_FAIL);
 	}
+
+	hgd_set_standard_statusbar_text(u);
 
 	return (HGD_OK);
 }
