@@ -524,6 +524,8 @@ hgd_cli_populate_track(struct hgd_playlist_item **it, char *resp)
 	(*it)->tags.samplerate = atoi(tokens[9]);
 	(*it)->tags.channels = atoi(tokens[10]);
 	(*it)->tags.year = atoi(tokens[11]);
+	(*it)->votes_needed = atoi(tokens[12]);
+	(*it)->has_voted = atoi(tokens[13]);
 
 	/* NOTE: votesneeded and voted? are not stored in this struct */
 

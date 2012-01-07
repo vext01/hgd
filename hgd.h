@@ -146,6 +146,8 @@ struct hgd_playlist_item {
 	uint8_t			 playing;
 	uint8_t			 finished;
 	struct hgd_media_tag	 tags;
+	int			 votes_needed;
+	int			 has_voted;
 };
 
 struct hgd_playlist {

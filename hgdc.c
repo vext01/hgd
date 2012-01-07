@@ -300,122 +300,106 @@ hgd_req_queue(int n_args, char **args)
 }
 
 int
-hgd_print_track(char *resp, uint8_t first)
+hgd_print_track(struct hgd_playlist_item *it, uint8_t first)
 {
-	int			n_toks = 0, i, ret = HGD_OK;
-	char			*tokens[HGD_NUM_TRACK_FIELDS];
+	int			 ret = HGD_OK;
 
-	do {
-		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
-	} while ((n_toks++ < HGD_NUM_TRACK_FIELDS) && (resp != NULL));
+	if (first)
+		hgd_set_line_colour(ANSI_GREEN);
+	else
+		hgd_set_line_colour(ANSI_RED);
 
-	if (n_toks == HGD_NUM_TRACK_FIELDS) {
+	printf(" [ #%04d queued by '%s' ]\n", it->id, it->user);
 
-		if (first)
-			hgd_set_line_colour(ANSI_GREEN);
-		else
-			hgd_set_line_colour(ANSI_RED);
+	printf("   Filename: '%s'\n",
+	    hgd_truncate_string(it->filename,
+	    HGD_TERM_WIDTH - strlen("   Filename: ''")));
 
-		printf(" [ #%04d queued by '%s' ]\n",
-		    atoi(tokens[0]), tokens[4]);
-
-		printf("   Filename: '%s'\n",
-		    hgd_truncate_string(tokens[1],
-		    HGD_TERM_WIDTH - strlen("   Filename: ''")));
-
-		printf("   Artist:   ");
-		if (strcmp(tokens[2], "") != 0)
-			printf("'%s'\n", hgd_truncate_string(tokens[2],
+	printf("   Artist:   ");
+	if (strcmp(it->tags.artist, "") != 0)
+		printf("'%s'\n", hgd_truncate_string(it->tags.artist,
 			    HGD_TERM_WIDTH - strlen("   Artist:   ''")));
-		else
-			printf("<unknown>\n");
+	else
+		printf("<unknown>\n");
 
-		printf("   Title:    ");
-		if (strcmp(tokens[3], "") != 0)
-			printf("'%s'\n",
-			    hgd_truncate_string(tokens[3],
-			    HGD_TERM_WIDTH - strlen("   Title:    ''")));
-		else
-			printf("<unknown>\n");
+	printf("   Title:    ");
+	if (strcmp(it->tags.title, "") != 0)
+		printf("'%s'\n",
+		    hgd_truncate_string(it->tags.title,
+		    HGD_TERM_WIDTH - strlen("   Title:    ''")));
+	else
+		printf("<unknown>\n");
 
-		/* thats it for compact entries */
-		if (!first)
-			goto skip_full;
 
-		printf("   Album:    ");
-		if (strcmp(tokens[5], "") != 0)
-			printf("'%s'\n", hgd_truncate_string(tokens[5],
-			    HGD_TERM_WIDTH - strlen("   Album:    ''")));
-		else
-			printf("<unknown>\n");
+	/* thats it for compact entries */
+	if (!first)
+		goto skip_full;
 
-		printf("   Genre:    ");
-		if (strcmp(tokens[6], "") != 0)
-			printf("'%s'\n", hgd_truncate_string(tokens[6],
+	printf("   Album:    ");
+	if (strcmp(it->tags.album, "") != 0)
+		printf("'%s'\n", hgd_truncate_string(it->tags.album,
+		    HGD_TERM_WIDTH - strlen("   Album:    ''")));
+	else
+		printf("<unknown>\n");
+
+	printf("   Genre:    ");
+	if (strcmp(it->tags.genre, "") != 0)
+		printf("'%s'\n", hgd_truncate_string(it->tags.genre,
 			    HGD_TERM_WIDTH - strlen("   Genre:    ''")));
-		else
-			printf("<unknown>\n");
+	else
+		printf("<unknown>\n");
 
-		printf("   Year:     ");
-		if (strcmp(tokens[11], "0") != 0)
-			printf("'%s'\n", hgd_truncate_string(tokens[11],
-			    HGD_TERM_WIDTH - strlen("   Year:     ''")));
-		else
-			printf("<unknown>\n");
+	printf("   Year:     ");
+	if (it->tags.year != 0)
+		printf("%d\n", it->tags.year);
+	else
+		printf("<unknown>\n");
 
-		/* audio properties all on one line */
-		printf("   Audio:    ");
+	/* audio properties all on one line */
+	printf("   Audio:    ");
 
-		if (atoi(tokens[7]) != 0)
-			printf("%4ss", tokens[7]);
-		else
-			printf("%4ss", "????");
+	if (it->tags.duration != 0)
+		printf("%4ds", it->tags.duration);
+	else
+		printf("%4ss", "????");
 
-		if (atoi(tokens[9]) != 0)
-			printf("   %5shz", tokens[9]);
-		else
-			printf("   %5shz", "?");
+	if (it->tags.samplerate != 0)
+		printf("   %5dhz", it->tags.samplerate);
+	else
+		printf("   %5shz", "?");
 
-		if (atoi(tokens[8]) != 0)
-			printf("   %3skbps", tokens[8]);
-		else
-			printf("   %3skbps", "?");
+	if (it->tags.bitrate != 0)
+		printf("   %3dkbps", it->tags.bitrate);
+	else
+		printf("   %3skbps", "?");
 
-		if (atoi(tokens[10]) != 0)
-			printf("   %s channels\n", tokens[10]);
-		else
-			printf("   %s channels\n", "?");
+	if (it->tags.channels != 0)
+		printf("   %d channels\n", it->tags.channels);
+	else
+		printf("   %s channels\n", "?");
 
-		/* vote off info */
-		printf("   Votes needed to skip:    %s\n",
-		    atoi(tokens[12]) == 0 ? "none" : tokens[12]);
+	/* vote off info */
+	printf("   Votes needed to skip:    %d\n", it->votes_needed);
 
-		switch (atoi(tokens[13])) {
-		case 0:
-			printf("   You may vote off this track.\n");
-			break;
-		case 1:
-			hgd_set_line_colour(ANSI_CYAN);
-			printf("   You HAVE voted-off this track.\n");
-			break;
-		case -1:
-			printf("   Could not auhtenticate. "
-			    "Log in to enable vote-off functionality.\n");
-			break;
-		default:
-			DPRINTF(HGD_D_ERROR, "Bogus 'has_voted' field");
-			ret = HGD_FAIL;
-		};
-skip_full:
-		hgd_set_line_colour(ANSI_WHITE);
-
-	} else {
-		DPRINTF(HGD_D_ERROR, "Wrong number of tokens from server");
+	switch (it->has_voted) {
+	case 0:
+		printf("   You may vote off this track.\n");
+		break;
+	case 1:
+		hgd_set_line_colour(ANSI_CYAN);
+		printf("   You HAVE voted-off this track.\n");
+		break;
+	case -1:
+		printf("   Could not auhtenticate. "
+		    "Log in to enable vote-off functionality.\n");
+		break;
+	default:
+		DPRINTF(HGD_D_ERROR, "Bogus 'has_voted' field");
 		ret = HGD_FAIL;
-	}
+	};
 
-	for (i = 0; i < n_toks; i ++)
-		free(tokens[i]);
+skip_full:
+	hgd_set_line_colour(ANSI_WHITE);
 
 	return (ret);
 }
@@ -455,6 +439,7 @@ int
 hgd_req_playlist(int n_args, char **args)
 {
 	struct hgd_playlist		*list;
+	int				 i = 0;
 
 	(void) args;
 	(void) n_args;
@@ -469,9 +454,24 @@ hgd_req_playlist(int n_args, char **args)
 	if (hgd_cli_get_playlist(&list) != HGD_OK)
 		return (HGD_FAIL);
 
-	printf("PLAYLIST CONTAINED %d items\n", list->n_items);
+	if (list->n_items == 0) {
+		printf("Playlist empty.\n");
+	} else {
+		for (i = 0; i < list->n_items; i++) {
 
-	/* XXX free the list */
+			if ((max_playlist_items != 0) &&
+			    (i >= max_playlist_items))
+				break;
+
+			hgd_hline();
+			hgd_print_track(list->items[i], i == 0);
+		}
+	}
+
+	hgd_hline();
+
+	hgd_free_playlist(list);
+	free(list);
 
 	return (HGD_OK);
 }
@@ -759,7 +759,8 @@ hgd_req_np(int n_args, char **args)
 			DPRINTF(HGD_D_ERROR, "Failed to find separator2");
 			goto fail;
 		}
-		hgd_print_track(p + 1, 1);
+		/* needs love XXX */
+		//hgd_print_track(p + 1, 1);
 	}
 
 	ret = HGD_OK;
