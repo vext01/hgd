@@ -372,9 +372,7 @@ hgd_update_files_win(struct ui *u)
 
 			/* jam away the dirent for later use */
 			dirent_copy = xcalloc(1, sizeof(struct dirent));
-			DPRINTF(HGD_D_INFO, "TEST TEST TEST1: %s", dirent->d_name);
 			memcpy(dirent_copy, dirent, sizeof(struct dirent));
-			DPRINTF(HGD_D_INFO, "TEST TEST TEST: %s", dirent_copy->d_name);
 			set_item_userptr(items[cur_index], dirent_copy);
 
 			if (items[cur_index] == NULL)
@@ -808,8 +806,14 @@ hgd_set_standard_statusbar_text(struct ui *u)
 }
 
 int
-hgd_ui_queue_track(struct ui *u)
+hgd_ui_queue_track(struct ui *u, char *filename)
 {
+	char			*full_path = NULL, wibble[16];
+	int			 ret = HGD_FAIL;
+
+	xasprintf(&full_path, "%s/%s", u->cwd, filename);
+
+#if 0
 	WINDOW			*win;
 	int			 x, y, h, w;
 
@@ -834,8 +838,20 @@ hgd_ui_queue_track(struct ui *u)
 
 	sleep(5);
 	delwin(win);
+#endif
+	endwin();
+	if (hgd_cli_queue_track(full_path) != HGD_OK)
+		goto clean;
 
-	return (HGD_OK);
+	printf("Hit enter\n");
+	fgets(wibble, 16, stdin);
+	doupdate();
+
+	ret = HGD_OK;
+clean:
+	if (full_path)
+		free(full_path);
+	return (ret);
 }
 
 /* uh oh, someone hit enter on the files menu! */
@@ -855,8 +871,6 @@ hgd_enter_on_files_menu(struct ui *u)
 
 	dirent = (struct dirent *) item_userptr(item);
 
-	DPRINTF(HGD_D_INFO, "dirent: %s", dirent->d_name);
-
 	switch (dirent->d_type) {
 	case DT_DIR:
 		DPRINTF(HGD_D_INFO, "switch cwd: dirent->d_name");
@@ -871,7 +885,7 @@ hgd_enter_on_files_menu(struct ui *u)
 
 		break;
 	default:
-		hgd_ui_queue_track(u);
+		hgd_ui_queue_track(u, dirent->d_name);
 		break;
 	};
 
