@@ -299,7 +299,6 @@ hgd_req_queue(int n_args, char **args)
 	return (ret);
 }
 
-#define HGD_NUM_TRACK_FIELDS		14
 int
 hgd_print_track(char *resp, uint8_t first)
 {
@@ -455,6 +454,8 @@ hgd_req_vote_off(int n_args, char **args)
 int
 hgd_req_playlist(int n_args, char **args)
 {
+	struct hgd_playlist		*list;
+
 	(void) args;
 	(void) n_args;
 
@@ -465,7 +466,14 @@ hgd_req_playlist(int n_args, char **args)
 	if (!authenticated)
 		hgd_client_login(sock_fd, ssl, user);
 
-	return (hgd_cli_get_playlist());
+	if (hgd_cli_get_playlist(&list) != HGD_OK)
+		return (HGD_FAIL);
+
+	printf("PLAYLIST CONTAINED %d items\n", list->n_items);
+
+	/* XXX free the list */
+
+	return (HGD_OK);
 }
 
 /*

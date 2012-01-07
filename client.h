@@ -49,6 +49,8 @@
 #include "cfg.h"
 #endif
 
+#define HGD_NUM_TRACK_FIELDS		14
+
 struct hgd_resp_err {
 	char		*code;
 	char		*meaning;
@@ -75,4 +77,6 @@ int			 hgd_negotiate_crypto();
 int			 hgd_encrypt(int fd);
 int			 hgd_print_pretty_server_response(char *resp_line);
 int			 hgd_check_svr_proto();
-int			 hgd_cli_get_playlist();
+int			 hgd_cli_get_playlist(struct hgd_playlist **list);
+int			 hgd_cli_populate_track(
+			     struct hgd_playlist_item **it, char *resp);

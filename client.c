@@ -493,7 +493,45 @@ clean:
 }
 
 int
-hgd_cli_get_playlist()
+hgd_cli_populate_track(struct hgd_playlist_item **it, char *resp)
+{
+	char			*tokens[HGD_NUM_TRACK_FIELDS];
+	int			 n_toks = 0;
+
+	do {
+		tokens[n_toks] = xstrdup(strsep(&resp, "|"));
+	} while ((n_toks++ < HGD_NUM_TRACK_FIELDS) && (resp != NULL));
+
+	if (n_toks != HGD_NUM_TRACK_FIELDS) {
+		DPRINTF(HGD_D_ERROR, "Wrong number of tokens from server");
+		return (HGD_OK);
+	}
+
+	/* OK, response looked good, now populate struct */
+	*it = xmalloc(sizeof(struct hgd_playlist_item));
+
+	(*it)->id = atoi(tokens[0]);
+	(*it)->filename = tokens[1];
+	(*it)->user = xstrdup(tokens[4]);
+	(*it)->playing = 0;	/* unused here */
+	(*it)->finished = 0;	/* unused here */
+	(*it)->tags.artist = xstrdup(tokens[2]);
+	(*it)->tags.title = xstrdup(tokens[3]);
+	(*it)->tags.album = xstrdup(tokens[5]);
+	(*it)->tags.genre = xstrdup(tokens[6]);
+	(*it)->tags.duration = atoi(tokens[7]);
+	(*it)->tags.bitrate = atoi(tokens[8]);
+	(*it)->tags.samplerate = atoi(tokens[9]);
+	(*it)->tags.channels = atoi(tokens[10]);
+	(*it)->tags.year = atoi(tokens[11]);
+
+	/* NOTE: votesneeded and voted? are not stored in this struct */
+
+	return (HGD_OK);
+}
+
+int
+hgd_cli_get_playlist(struct hgd_playlist **list)
 {
 	char		*p, *resp, *track_resp;
 	int		 n_items, i;
@@ -505,8 +543,8 @@ hgd_cli_get_playlist()
 		return (HGD_FAIL);
 	}
 
-	/* magic needed here XXX */
-#if 0
+
+	/* find the first pipe */
 	for (p = resp; (*p != 0 && *p != '|'); p ++);
 	if (*p != '|') {
 		DPRINTF(HGD_D_ERROR, "didn't find a argument separator");
@@ -514,26 +552,27 @@ hgd_cli_get_playlist()
 		return (HGD_FAIL);
 	}
 
-	n_items = atoi(++p);
+	/* allocate playlist*/
+	*list = xcalloc(1, sizeof(struct hgd_playlist));
+	(*list)->n_items = atoi(++p);
+	(*list)->items = xcalloc(
+	    (*list)->n_items, sizeof(struct hgd_playlist_item *));
+
 	free(resp);
 
+	/* populate items */
 	DPRINTF(HGD_D_DEBUG, "expecting %d items in playlist", n_items);
-	for (i = 0; i < n_items; i++) {
+	for (i = 0; i < (*list)->n_items; i++) {
 		track_resp = hgd_sock_recv_line(sock_fd, ssl);
 
-		if (max_playlist_items == 0 || max_playlist_items > i) {
-			hgd_hline();
-			hgd_print_track(track_resp, i == 0);
+		if (hgd_cli_populate_track(
+		    &(*list)->items[i], track_resp) != HGD_OK) {
+			free(track_resp);
+			return (HGD_FAIL);
 		}
 
 		free(track_resp);
 	}
-
-	if (n_items)
-		hgd_hline();
-	else
-		printf("Nothing to play!\n");
-#endif
 
 	return (HGD_OK);
 }
