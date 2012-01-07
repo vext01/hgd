@@ -1033,6 +1033,16 @@ main(int argc, char **argv)
 	if (init_log() != HGD_OK)
 		hgd_exit_nicely();
 
+	/* XXX proper dialog box needed */
+	if (password == NULL) {
+		password = xmalloc(HGD_MAX_PASS_SZ);
+		if (readpassphrase("Password: ", password, HGD_MAX_PASS_SZ,
+			    RPP_ECHO_OFF | RPP_REQUIRE_TTY) == NULL) {
+			DPRINTF(HGD_D_ERROR, "Can't read password");
+			hgd_exit_nicely();
+		}
+	}
+
 	initscr();
 
 	cbreak();
