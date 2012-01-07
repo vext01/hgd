@@ -839,6 +839,7 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 	sleep(5);
 	delwin(win);
 #endif
+#if 0
 	endwin();
 	if (hgd_cli_queue_track(full_path) != HGD_OK)
 		goto clean;
@@ -846,6 +847,7 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 	printf("Hit enter\n");
 	fgets(wibble, 16, stdin);
 	doupdate();
+#endif
 
 	ret = HGD_OK;
 clean:

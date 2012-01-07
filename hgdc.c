@@ -150,10 +150,66 @@ hgd_usage()
 	printf("    -v\t\t\tShow version and exit\n");
 }
 
+#define HGD_PROG_BAR_WIDTH	33
+void
+hgd_print_progress(char *filename, float progress)
+{
+	char			*trunc_filename = NULL;
+	char			 bar[HGD_PROG_BAR_WIDTH + 1];
+	int			 upto = HGD_PROG_BAR_WIDTH * progress;
+	int			 i;
+	char			*p;
+
+	if (progress < 1) {
+		/* fill in progress bar */
+		memset(bar, ' ', HGD_PROG_BAR_WIDTH);
+		bar[HGD_PROG_BAR_WIDTH] = '\0';
+		for (i = 0, p = bar; i < upto; i++)
+			*p++ = '*';
+
+		bar[0] = '|';
+		bar[HGD_PROG_BAR_WIDTH - 1] = '|';
+		hgd_set_line_colour(ANSI_YELLOW);
+
+	} else {
+		memset(bar, '*', HGD_PROG_BAR_WIDTH);
+		bar[HGD_PROG_BAR_WIDTH] = '\0';
+
+		bar[0] = '|';
+		bar[HGD_PROG_BAR_WIDTH - 1] = '|';
+		hgd_set_line_colour(ANSI_GREEN);
+	}
+
+	trunc_filename = xstrdup(basename(filename));
+	hgd_truncate_string(trunc_filename, 40);
+
+	printf("\r%s %s %3d%%", bar, trunc_filename, (int) (progress * 100));
+	free(trunc_filename);
+
+	/* reset colours */
+	hgd_set_line_colour(ANSI_WHITE);
+}
+
+int
+hgd_queue_track_cb(void *arg, float progress)
+{
+	char			*filename = (char *) arg;
+
+	hgd_print_progress(filename, progress);
+
+	return (HGD_OK);
+}
+
 int
 hgd_queue_track(char *filename)
 {
-	return (hgd_cli_queue_track(filename));
+	if (hgd_cli_queue_track(filename, hgd_queue_track_cb) != HGD_OK)
+		return (HGD_FAIL);
+
+	hgd_print_progress(filename, 1);
+	printf("\n");
+
+	return (HGD_OK);
 }
 
 /* upload and queue a file to the playlist */

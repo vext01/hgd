@@ -581,21 +581,23 @@ hgd_cli_get_playlist(struct hgd_playlist **list)
 }
 
 
+/*
+ * queue a track, after each HGD_Q_CALLBACK_INTVL chunks are sent,
+ * the callback is fired and client has the ability to update it's ui.
+ */
+#define HGD_Q_CALLBACK_INTVL		50
 int
-hgd_cli_queue_track(char *filename)
+hgd_cli_queue_track(char *filename, int(*cb)(void *arg, float progress))
 {
 	FILE			*f;
 	struct stat		st;
 	ssize_t			written = 0, fsize, chunk_sz;
 	char			chunk[HGD_BINARY_CHUNK];
 	char			*q_req = 0, *resp1 = 0, *resp2 = 0;
-	char			 stars_buf[81], *trunc_filename = 0;
+	char			 stars_buf[81];
 	int			 iters = 0, barspace, percent, ret = HGD_FAIL;
 	float			 n_stars;
 
-	/* maximum length of filename in progress bar */
-	trunc_filename = xstrdup(basename(filename));
-	hgd_truncate_string(trunc_filename, 40);
 
 	DPRINTF(HGD_D_INFO, "Uploading file '%s'", filename);
 
@@ -630,33 +632,14 @@ hgd_cli_queue_track(char *filename)
 		goto clean;
 	}
 
-	/* prepare progress bar */
-	barspace =  (float) (HGD_TERM_WIDTH - strlen(
-	    basename(trunc_filename)) - 2) - 7;
-	memset(stars_buf, ' ', HGD_TERM_WIDTH);
-	stars_buf[HGD_TERM_WIDTH] = 0;
-
 	/*
 	 * start sending the file
 	 */
 	written = 0;
 	while (written != fsize) {
 
-		/* update progress bar */
-		if ((iters % 50 == 0) && (hgd_debug <= 1)) {
-			percent = (float) written/fsize * 100;
-			n_stars = barspace * ((float) written/fsize) + 1;
-			memset(stars_buf, '*', n_stars);
-
-			/* progress bar caps */
-			stars_buf[0] = '|';
-			stars_buf[barspace - 1] = '|';
-			stars_buf[barspace] = 0;
-
-			printf("\r%s: %s %3d%%",
-			    trunc_filename, stars_buf, percent);
-			fflush(stdout);
-		}
+		if (iters % HGD_Q_CALLBACK_INTVL == 0)
+			cb(filename, ((float) written/fsize));
 		iters++;
 
 		if (fsize - written < HGD_BINARY_CHUNK)
@@ -676,6 +659,7 @@ hgd_cli_queue_track(char *filename)
 		    (int)  written, (int) fsize);
 	}
 
+#if 0
 	if (hgd_debug <= 1) {
 		memset(stars_buf, ' ', HGD_TERM_WIDTH);
 
@@ -683,6 +667,7 @@ hgd_cli_queue_track(char *filename)
 		printf("\r%s\r%s: OK\n", stars_buf, basename(trunc_filename));
 		hgd_set_line_colour(ANSI_WHITE);
 	}
+#endif
 
 	fclose(f);
 
@@ -696,8 +681,6 @@ hgd_cli_queue_track(char *filename)
 
 	ret = HGD_OK;
 clean:
-	if (trunc_filename)
-		free(trunc_filename);
 	if (resp1)
 		free(resp1);
 	if (resp2)
