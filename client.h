@@ -80,3 +80,4 @@ int			 hgd_check_svr_proto();
 int			 hgd_cli_get_playlist(struct hgd_playlist **list);
 int			 hgd_cli_populate_track(
 			     struct hgd_playlist_item **it, char *resp);
+int			 hgd_cli_queue_track(char *filename);
