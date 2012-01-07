@@ -64,25 +64,6 @@ const char *window_names[] = {
 	"Debug Console"
 };
 
-const char *test_playlist[] = {
-	"Gunther.ogg",
-	"Crabs.mp3",
-	"Some longer file name with spaces.ogg",
-	"Some track4",
-	"Some track5",
-	"Some track6",
-	"Some track7",
-	"Some track8",
-	"Some track10",
-	"Some track11",
-	"Some track11",
-	"Some track12",
-	"Some track15",
-	"Some track13",
-	"Some track12",
-	NULL
-};
-
 struct hgd_ui_log			logs;
 
 void
@@ -253,7 +234,63 @@ hgd_update_titlebar(struct ui *u)
 int
 hgd_update_playlist_win(struct ui *u)
 {
+	ITEM			**items;
+	int			  i;
+	char			 *item_str;
+	struct hgd_playlist	 *playlist;
+	char			 *track_str;
+
 	DPRINTF(HGD_D_INFO, "Update playlist window");
+
+	if (sock_fd == -1)
+		return (HGD_OK); /* not connected yet */
+
+	/* and now populate the menu */
+	if (hgd_cli_get_playlist(&playlist) != HGD_OK)
+		return (HGD_FAIL);
+
+	items = xcalloc(playlist->n_items + 1, sizeof(ITEM *));
+	for (i = 0; i < playlist->n_items; i++) {
+
+		DPRINTF(HGD_D_DEBUG, "Adding item \"%s\"",
+		    playlist->items[i]->tags.title);
+
+		if ((strcmp(playlist->items[i]->tags.artist, "")) ||
+		    (strcmp(playlist->items[i]->tags.title, ""))) {
+
+			xasprintf(&track_str, "#%03d from %-8s: '%s' by '%s'",
+			    playlist->items[i]->id,
+			    playlist->items[i]->user,
+			    playlist->items[i]->tags.title,
+			    playlist->items[i]->tags.artist);
+		} else  {
+			xasprintf(&track_str, "#%03d from %-8s: '%s'",
+			    playlist->items[i]->id,
+			    playlist->items[i]->user,
+			    playlist->items[i]->filename);
+		}
+
+		hgd_prepare_item_string(&item_str, track_str);
+		free(track_str);
+
+		items[i] = new_item(item_str, NULL);
+		if (items[i] == NULL)
+			DPRINTF(HGD_D_WARN, "Could not make new item: %s", SERROR);
+	}
+
+	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
+	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL)
+			DPRINTF(HGD_D_ERROR, "Could not make menu");
+
+	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST], u->content_wins[HGD_WIN_PLAYLIST]);
+	set_menu_mark(u->content_menus[HGD_WIN_PLAYLIST], "");
+	set_menu_format(u->content_menus[HGD_WIN_PLAYLIST], LINES - 2, 1);
+	set_menu_fore(u->content_menus[HGD_WIN_PLAYLIST], COLOR_PAIR(HGD_CPAIR_SELECTED));
+
+	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
+		DPRINTF(HGD_D_ERROR, "Could not post menu");
+
+
 	/* XXX */
 	return (HGD_OK);
 }
@@ -529,10 +566,6 @@ hgd_init_statusbar(struct ui *u)
 int
 hgd_init_playlist_win(struct ui *u)
 {
-	ITEM			**items;
-	int			  n_items, i;
-	char			 *item_str;
-
 	DPRINTF(HGD_D_INFO, "Initialise playlist window");
 
 	/* make window */
@@ -543,33 +576,6 @@ hgd_init_playlist_win(struct ui *u)
 	}
 
 	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
-
-	/* and now populate the menu */
-	n_items = ARRAY_SIZE(test_playlist);
-
-	items = xcalloc(n_items, sizeof(ITEM *));
-	for (i = 0; i < n_items - 1; i++) {
-		DPRINTF(HGD_D_DEBUG, "Adding item \"%s\"", test_playlist[i]);
-
-		hgd_prepare_item_string(&item_str, (char *) test_playlist[i]);
-
-		items[i] = new_item(item_str, NULL);
-		if (items[i] == NULL)
-			DPRINTF(HGD_D_WARN, "Could not make new item: %s", SERROR);
-	}
-
-	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
-	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL)
-			DPRINTF(HGD_D_ERROR, "Could not make menu");
-
-	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST], u->content_wins[HGD_WIN_PLAYLIST]);
-	set_menu_mark(u->content_menus[HGD_WIN_PLAYLIST], "");
-	set_menu_format(u->content_menus[HGD_WIN_PLAYLIST], LINES - 2, 1);
-	set_menu_fore(u->content_menus[HGD_WIN_PLAYLIST], COLOR_PAIR(HGD_CPAIR_SELECTED));
-
-	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
-		DPRINTF(HGD_D_ERROR, "Could not post menu");
-
 
 	/* refresh handler */
 	u->content_refresh_handler[HGD_WIN_PLAYLIST] = hgd_update_playlist_win;
@@ -933,7 +939,7 @@ hgd_read_config(char **config_locations)
 }
 
 int
-hgd_show_splash(struct ui *u)
+hgd_show_about(struct ui *u)
 {
 	char			*msg;
 
@@ -989,6 +995,8 @@ hgd_ui_connect(struct ui *u)
 	}
 
 	hgd_set_standard_statusbar_text(u);
+	hgd_update_playlist_win(u);
+	hgd_refresh_ui(u);
 
 	return (HGD_OK);
 }
@@ -1052,7 +1060,6 @@ main(int argc, char **argv)
 
 	/* start on the playlist */
 	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
-	hgd_show_splash(&u);
 
 	if (hgd_ui_connect(&u) != HGD_OK)
 		hgd_exit_nicely();

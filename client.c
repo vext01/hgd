@@ -555,6 +555,7 @@ hgd_cli_get_playlist(struct hgd_playlist **list)
 	}
 
 	/* allocate playlist*/
+	/* XXX dont allocate here */
 	*list = xcalloc(1, sizeof(struct hgd_playlist));
 	(*list)->n_items = atoi(++p);
 	(*list)->items = xcalloc(
