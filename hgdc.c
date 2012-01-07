@@ -151,6 +151,7 @@ hgd_usage()
 }
 
 #define HGD_PROG_BAR_WIDTH	33
+#define HGD_PROG_FILE_WIDTH	"40"
 void
 hgd_print_progress(char *filename, float progress)
 {
@@ -183,7 +184,8 @@ hgd_print_progress(char *filename, float progress)
 	trunc_filename = xstrdup(basename(filename));
 	hgd_truncate_string(trunc_filename, 40);
 
-	printf("\r%s %s %3d%%", bar, trunc_filename, (int) (progress * 100));
+	printf("\r%s %-" HGD_PROG_FILE_WIDTH "s %3d%%",
+	    bar, trunc_filename, (int) (progress * 100));
 	free(trunc_filename);
 
 	/* reset colours */
