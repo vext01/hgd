@@ -48,5 +48,7 @@ struct hgd_ui_log {
 };
 
 void			hgd_update_titlebar(struct ui *u);
+int			hgd_set_standard_statusbar_text(struct ui *);
+int			hgd_set_statusbar_text(struct ui *u, char *fmt, ...);
 
 #endif /* __NCHGDC_H */

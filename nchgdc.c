@@ -157,13 +157,11 @@ hgd_update_statusbar(struct ui *u)
 	free (fmt);
 }
 
-int
-hgd_set_statusbar_text(struct ui *u, char *txt)
+void
+hgd_refresh_statusbar(struct ui *u)
 {
-	free(u->status_str);
-	u->status_str = xstrdup(txt);
-
-	return (HGD_OK);
+	hgd_update_statusbar(u);
+	wrefresh(u->status);
 }
 
 void
@@ -175,8 +173,7 @@ hgd_refresh_ui(struct ui *u)
 	hgd_update_titlebar(u);
 	wrefresh(u->title);
 
-	hgd_update_statusbar(u);
-	wrefresh(u->status);
+	hgd_refresh_statusbar(u);
 }
 
 void
@@ -242,6 +239,10 @@ hgd_update_playlist_win(struct ui *u)
 
 	DPRINTF(HGD_D_INFO, "Update playlist window");
 
+	hgd_set_statusbar_text(u, "Connected >>> Fetching playlist");
+	hgd_update_statusbar(u);
+	hgd_refresh_ui(u);
+
 	if (sock_fd == -1)
 		return (HGD_OK); /* not connected yet */
 
@@ -290,8 +291,8 @@ hgd_update_playlist_win(struct ui *u)
 	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
 		DPRINTF(HGD_D_ERROR, "Could not post menu");
 
+	hgd_set_standard_statusbar_text(u);
 
-	/* XXX */
 	return (HGD_OK);
 }
 
@@ -772,24 +773,35 @@ hgd_show_dialog(struct ui *u, const char *title, const char *msg, int secs)
 	return (HGD_OK);
 }
 
+int
+hgd_set_statusbar_text(struct ui *u, char *fmt, ...)
+{
+	va_list			 ap;
+	char			*buf;
+
+	va_start(ap, fmt);
+	if (vasprintf(&buf, fmt, ap) < 0) {
+		DPRINTF(HGD_D_ERROR, "Can't allocate");
+		return (HGD_FAIL);
+	}
+
+	free(u->status_str);
+	u->status_str = xstrdup(buf);
+	hgd_update_statusbar(u);
+	hgd_refresh_statusbar(u);
+
+	return (HGD_OK);
+}
+
 /*
  * The "standard" statusbar that the user sees 99% of the time
  */
 int
 hgd_set_standard_statusbar_text(struct ui *u)
 {
-	char			*status;
-
-	asprintf(&status, "%s@%s:%d   Vote: %d", user, host, port, -1);
-	hgd_set_statusbar_text(u, status);
-	free(status);
-	hgd_update_statusbar(u);
-	hgd_refresh_ui(u);
-
-	return (HGD_OK);
+	return (hgd_set_statusbar_text(u,
+	    "Connected >>> %s@%s:%d   Vote: %d", user, host, port, -1));
 }
-
-
 
 int
 hgd_ui_queue_track(struct ui *u)
@@ -955,13 +967,7 @@ hgd_show_about(struct ui *u)
 int
 hgd_ui_connect(struct ui *u)
 {
-	char			*status = NULL;
-
-	xasprintf(&status, "Connecting >>> %s@%s:%d", user, host, port);
-	hgd_set_statusbar_text(u, status);
-	free(status);
-	hgd_update_statusbar(u);
-	hgd_refresh_ui(u);
+	hgd_set_statusbar_text(u, "Connecting >>> %s@%s:%d", user, host, port);
 
 	if (hgd_setup_socket() != HGD_OK) {
 		DPRINTF(HGD_D_ERROR, "Cannot setup socket");
@@ -969,12 +975,9 @@ hgd_ui_connect(struct ui *u)
 		return (HGD_FAIL);
 	}
 
-	xasprintf(&status, "Connected, checking server version >>> %s@%s:%d",
+	hgd_set_statusbar_text(u,
+	    "Connected, checking server version >>> %s@%s:%d",
 	    user, host, port);
-	hgd_set_statusbar_text(u, status);
-	free(status);
-	hgd_update_statusbar(u);
-	hgd_refresh_ui(u);
 
 	/* check protocol matches the server before we continue */
 	if (hgd_check_svr_proto() != HGD_OK) {
@@ -982,12 +985,8 @@ hgd_ui_connect(struct ui *u)
 		return (HGD_FAIL);
 	}
 
-	xasprintf(&status, "Connected, authenticating >>> %s@%s:%d",
+	hgd_set_statusbar_text(u, "Connected, authenticating >>> %s@%s:%d",
 	    user, host, port);
-	hgd_set_statusbar_text(u, status);
-	free(status);
-	hgd_update_statusbar(u);
-	hgd_refresh_ui(u);
 
 	if (hgd_client_login(sock_fd, ssl, user) != HGD_OK) {
 		hgd_show_dialog(u, "[ Error ]", "Authentication Failed", 0);
