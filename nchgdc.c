@@ -176,7 +176,7 @@ hgd_refresh_ui(struct ui *u)
 	hgd_refresh_statusbar(u);
 }
 
-void
+int
 init_log()
 {
 	char *logfile = NULL;
@@ -187,12 +187,12 @@ init_log()
 	DPRINTF(HGD_D_INFO, "UI logging to '%s'", logfile);
 	if ((logs.wr = fopen(logfile, "w")) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not open write log: %s", SERROR);
-		exit (1); /* XXX */
+		return (HGD_FAIL);
 	}
 
 	if ((logs.rd = fopen(logfile, "r")) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not open read log: %s", SERROR);
-		exit (1); /* XXX */
+		return (HGD_FAIL);
 	}
 
 	free(logfile);
@@ -200,6 +200,8 @@ init_log()
 	/* Redirect stderr here, so that DPRINTF can still work */
 	close(fileno(stderr));
 	dup(fileno(logs.wr));
+
+	return (HGD_OK);
 }
 
 void
@@ -283,10 +285,12 @@ hgd_update_playlist_win(struct ui *u)
 	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL)
 			DPRINTF(HGD_D_ERROR, "Could not make menu");
 
-	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST], u->content_wins[HGD_WIN_PLAYLIST]);
+	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST],
+	    u->content_wins[HGD_WIN_PLAYLIST]);
 	set_menu_mark(u->content_menus[HGD_WIN_PLAYLIST], "");
 	set_menu_format(u->content_menus[HGD_WIN_PLAYLIST], LINES - 2, 1);
-	set_menu_fore(u->content_menus[HGD_WIN_PLAYLIST], COLOR_PAIR(HGD_CPAIR_SELECTED));
+	set_menu_fore(u->content_menus[HGD_WIN_PLAYLIST],
+	    COLOR_PAIR(HGD_CPAIR_SELECTED));
 
 	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
 		DPRINTF(HGD_D_ERROR, "Could not post menu");
@@ -1026,7 +1030,9 @@ main(int argc, char **argv)
 		num_config--;
 	}
 
-	init_log();
+	if (init_log() != HGD_OK)
+		hgd_exit_nicely();
+
 	initscr();
 
 	cbreak();
