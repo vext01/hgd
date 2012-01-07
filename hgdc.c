@@ -724,8 +724,9 @@ hgd_req_user_noadmin(int n_args, char **args)
 int
 hgd_req_np(int n_args, char **args)
 {
-	char			*resp = NULL, *p;
-	int			 ret = HGD_FAIL;
+	char				*resp = NULL, *p;
+	int			 	 ret = HGD_FAIL;
+	struct hgd_playlist_item 	*it = NULL;
 
 	(void) n_args;
 	(void) args;
@@ -759,14 +760,24 @@ hgd_req_np(int n_args, char **args)
 			DPRINTF(HGD_D_ERROR, "Failed to find separator2");
 			goto fail;
 		}
-		/* needs love XXX */
-		//hgd_print_track(p + 1, 1);
+
+		it = xmalloc(sizeof(*it));
+		if (hgd_cli_populate_track(&it, p + 1) != HGD_OK) {
+			ret = HGD_FAIL;
+			goto fail;
+		}
+		hgd_print_track(it, 1);
 	}
 
 	ret = HGD_OK;
 fail:
 	if (resp)
 		free(resp);
+
+	if (it) {
+		hgd_free_playlist_item(it);
+		free(it);
+	}
 
 	return (ret);
 }
