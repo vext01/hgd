@@ -51,7 +51,6 @@
 #endif
 
 const char		*hgd_component = HGD_COMPONENT_HGDC;
-uint8_t			 hud_max_items = 0;
 
 /* protos */
 int			 hgd_check_svr_response(char *resp, uint8_t x);
@@ -456,9 +455,6 @@ hgd_req_vote_off(int n_args, char **args)
 int
 hgd_req_playlist(int n_args, char **args)
 {
-	char			*resp, *track_resp, *p;
-	int			n_items, i;
-
 	(void) args;
 	(void) n_args;
 
@@ -469,41 +465,7 @@ hgd_req_playlist(int n_args, char **args)
 	if (!authenticated)
 		hgd_client_login(sock_fd, ssl, user);
 
-	hgd_sock_send_line(sock_fd, ssl, "ls");
-	resp = hgd_sock_recv_line(sock_fd, ssl);
-	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
-		free(resp);
-		return (HGD_FAIL);
-	}
-
-	for (p = resp; (*p != 0 && *p != '|'); p ++);
-	if (*p != '|') {
-		DPRINTF(HGD_D_ERROR, "didn't find a argument separator");
-		free(resp);
-		return (HGD_FAIL);
-	}
-
-	n_items = atoi(++p);
-	free(resp);
-
-	DPRINTF(HGD_D_DEBUG, "expecting %d items in playlist", n_items);
-	for (i = 0; i < n_items; i++) {
-		track_resp = hgd_sock_recv_line(sock_fd, ssl);
-
-		if (hud_max_items == 0 || hud_max_items > i) {
-			hgd_hline();
-			hgd_print_track(track_resp, i == 0);
-		}
-
-		free(track_resp);
-	}
-
-	if (n_items)
-		hgd_hline();
-	else
-		printf("Nothing to play!\n");
-
-	return (HGD_OK);
+	return (hgd_cli_get_playlist());
 }
 
 /*
@@ -947,7 +909,7 @@ hgd_read_config(char **config_locations)
 
 	hgd_cfg_c_colours(cf, &colours_on);
 	hgd_cfg_crypto(cf, "hgdc", &crypto_pref);
-	hgd_cfg_c_maxitems(cf, &hud_max_items);
+	hgd_cfg_c_maxitems(cf, &max_playlist_items);
 	hgd_cfg_c_hostname(cf, &host);
 	hgd_cfg_c_port(cf, &port);
 	hgd_cfg_c_password(cf, &password, *config_locations);
@@ -1043,9 +1005,9 @@ main(int argc, char **argv)
 			crypto_pref = HGD_CRYPTO_PREF_NEVER;
 			break;
 		case 'm':
-			hud_max_items = atoi(optarg);
+			max_playlist_items = atoi(optarg);
 			DPRINTF(HGD_D_DEBUG, "Set max playlist items to %d",
-			    hud_max_items);
+			    max_playlist_items);
 			break;
 		case 's':
 			DPRINTF(HGD_D_DEBUG, "Set server to %s", optarg);

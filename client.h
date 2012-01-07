@@ -59,6 +59,7 @@ extern struct hgd_resp_err hgd_resp_errs[];
 
 extern char		*user, *host, *password;
 extern int		 port, sock_fd;
+extern uint8_t		 max_playlist_items;
 
 extern SSL		*ssl;
 extern SSL_METHOD	*method;
@@ -74,3 +75,4 @@ int			 hgd_negotiate_crypto();
 int			 hgd_encrypt(int fd);
 int			 hgd_print_pretty_server_response(char *resp_line);
 int			 hgd_check_svr_proto();
+int			 hgd_cli_get_playlist();

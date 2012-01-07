@@ -53,6 +53,7 @@
 char			*user = NULL, *host = NULL, *password = NULL;
 int			 port = HGD_DFL_PORT;
 int			 sock_fd = -1;
+uint8_t			 max_playlist_items = 0;
 
 SSL			*ssl = NULL;
 SSL_METHOD		*method;
@@ -489,4 +490,50 @@ clean:
 		free(resp);
 
 	return (ret);
+}
+
+int
+hgd_cli_get_playlist()
+{
+	char		*p, *resp, *track_resp;
+	int		 n_items, i;
+
+	hgd_sock_send_line(sock_fd, ssl, "ls");
+	resp = hgd_sock_recv_line(sock_fd, ssl);
+	if (hgd_check_svr_response(resp, 0) == HGD_FAIL) {
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	/* magic needed here XXX */
+#if 0
+	for (p = resp; (*p != 0 && *p != '|'); p ++);
+	if (*p != '|') {
+		DPRINTF(HGD_D_ERROR, "didn't find a argument separator");
+		free(resp);
+		return (HGD_FAIL);
+	}
+
+	n_items = atoi(++p);
+	free(resp);
+
+	DPRINTF(HGD_D_DEBUG, "expecting %d items in playlist", n_items);
+	for (i = 0; i < n_items; i++) {
+		track_resp = hgd_sock_recv_line(sock_fd, ssl);
+
+		if (max_playlist_items == 0 || max_playlist_items > i) {
+			hgd_hline();
+			hgd_print_track(track_resp, i == 0);
+		}
+
+		free(track_resp);
+	}
+
+	if (n_items)
+		hgd_hline();
+	else
+		printf("Nothing to play!\n");
+#endif
+
+	return (HGD_OK);
 }

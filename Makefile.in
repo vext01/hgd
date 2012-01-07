@@ -104,10 +104,10 @@ hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o us
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
 		-o hgd-netd
 
-hgdc: client.o common.o net.o cfg.o hgdc.c hgd.h config.h
+hgdc: crypto.o client.o common.o net.o cfg.o hgdc.c hgd.h config.h
 	@echo "\n--> Building: \"hgdc\""
 	${CC} hgdc.c ${CPPFLAGS} ${BSD_CFLAGS} ${CONFIG_CFLAGS} ${CFLAGS} \
-		client.o common.o net.o cfg.o \
+		client.o common.o net.o cfg.o crypto.o \
 		${LDFLAGS} ${SSL_LDFLAGS} ${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
 		-o hgdc 
 
