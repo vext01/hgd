@@ -205,7 +205,8 @@ hgd_queue_track_cb(void *arg, float progress)
 int
 hgd_queue_track(char *filename)
 {
-	if (hgd_cli_queue_track(filename, hgd_queue_track_cb) != HGD_OK)
+	if (hgd_cli_queue_track(filename, filename, hgd_queue_track_cb)
+	    != HGD_OK)
 		return (HGD_FAIL);
 
 	hgd_print_progress(filename, 1);

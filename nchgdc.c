@@ -35,6 +35,7 @@
 #define	HGD_CPAIR_BARS				1
 #define HGD_CPAIR_SELECTED			2
 #define HGD_CPAIR_DIALOG			3
+#define	HGD_CPAIR_PBAR_BG			4
 
 #define HGD_LOG_BACKBUFFER			4096
 
@@ -805,54 +806,107 @@ hgd_set_standard_statusbar_text(struct ui *u)
 	    "Connected >>> %s@%s:%d   Vote: %d", user, host, port, -1));
 }
 
+
+int hgd_ui_q_callback(void *arg, float progress)
+{
+	struct hgd_ui_pbar		*p = (struct hgd_ui_pbar *) arg;
+	int				 fill = p->width * progress;
+	int				 i;
+	char				*buf;
+
+	wclear(p->win);
+
+	buf = xmalloc(p->width + 1);
+	memset(buf, ' ', p->width);
+	buf[p->width] = '\0';
+
+	for (i = 0; i < fill; i++)
+		buf[i] = '#';
+
+	mvwprintw(p->win, 0, 0, "%s", buf);
+	//redrawwin(p->win);
+	wrefresh(p->win);
+
+	free(buf);
+
+	return (HGD_OK);
+}
+
 int
 hgd_ui_queue_track(struct ui *u, char *filename)
 {
-	char			*full_path = NULL, wibble[16];
+	char			*full_path = NULL;
+	char			*title = "[ File Upload ]";
 	int			 ret = HGD_FAIL;
+	WINDOW			*bwin = NULL, *win = NULL, *bar = NULL;
+	int			 x, y, h, w;
+	char			*msg_centre;
+	struct hgd_ui_pbar	 pbar_struct;
+
+	DPRINTF(HGD_D_INFO, "Upload track: %s", filename);
 
 	xasprintf(&full_path, "%s/%s", u->cwd, filename);
 
-#if 0
-	WINDOW			*win;
-	int			 x, y, h, w;
-
 	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
+	hgd_centre_dialog_text(&msg_centre, filename);
 
-	DPRINTF(HGD_D_INFO, "Queue a track");
+	if ((bwin = newwin(h + 2, w + 2, y - 1, x - 1)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
+		goto clean;
+	}
 
 	if ((win = newwin(h, w, y, x)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not initialise progress window");
-		return (HGD_FAIL);
+		goto clean;
+	}
+
+	if ((bar = newwin(1, w - 4, y+3, x+2)) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Could not initialise progress bar");
+		goto clean;
 	}
 
 	wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
+	wattron(bwin, COLOR_PAIR(HGD_CPAIR_DIALOG));
+
 	wclear(win);
+	wclear(bwin);
+	wclear(bar);
+
 	wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
-	box(win, '|', '-');
+	wbkgd(bar, COLOR_PAIR(HGD_CPAIR_PBAR_BG));
+	box(bwin, '|', '-');
 
-	/* XXX progress logic here */
+	mvwprintw(bwin, 0, w / 2 - (strlen(title) / 2), title);
+	mvwprintw(win, 1, 0, msg_centre);
 
+	redrawwin(bwin);
 	redrawwin(win);
+	redrawwin(bar);
+	wrefresh(bwin);
 	wrefresh(win);
+	wrefresh(bar);
 
-	sleep(5);
-	delwin(win);
-#endif
-#if 0
-	endwin();
-	if (hgd_cli_queue_track(full_path) != HGD_OK)
-		goto clean;
+	/* callback args */
+	pbar_struct.width = w - 4; 
+	pbar_struct.win = bar;
 
-	printf("Hit enter\n");
-	fgets(wibble, 16, stdin);
-	doupdate();
-#endif
+	hgd_cli_queue_track(full_path, &pbar_struct, hgd_ui_q_callback);
+
+	/* XXX */
+	//hgd_resize_app(u);
 
 	ret = HGD_OK;
 clean:
 	if (full_path)
 		free(full_path);
+
+	delwin(win);
+	delwin(bwin);
+
+	free(msg_centre);
+
+	hgd_refresh_ui(u);
+
 	return (ret);
 }
 
@@ -1074,6 +1128,7 @@ main(int argc, char **argv)
 	init_pair(HGD_CPAIR_BARS, COLOR_YELLOW, COLOR_BLUE);
 	init_pair(HGD_CPAIR_SELECTED, COLOR_BLACK, COLOR_WHITE);
 	init_pair(HGD_CPAIR_DIALOG, COLOR_BLACK, COLOR_CYAN);
+	init_pair(HGD_CPAIR_PBAR_BG, COLOR_YELLOW, COLOR_BLACK);
 
 	/* initialise top and bottom bars */
 	if (hgd_init_titlebar(&u) != HGD_OK)

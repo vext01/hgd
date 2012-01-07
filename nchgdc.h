@@ -47,6 +47,11 @@ struct hgd_ui_log {
 	FILE		*wr;
 };
 
+struct hgd_ui_pbar {
+	WINDOW		*win;
+	int		 width;
+};
+
 void			hgd_update_titlebar(struct ui *u);
 int			hgd_set_standard_statusbar_text(struct ui *);
 int			hgd_set_statusbar_text(struct ui *u, char *fmt, ...);

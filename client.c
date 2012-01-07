@@ -587,7 +587,8 @@ hgd_cli_get_playlist(struct hgd_playlist **list)
  */
 #define HGD_Q_CALLBACK_INTVL		50
 int
-hgd_cli_queue_track(char *filename, int(*cb)(void *arg, float progress))
+hgd_cli_queue_track(char *filename,
+    void *arg, int(*cb)(void *arg, float progress))
 {
 	FILE			*f;
 	struct stat		st;
@@ -639,7 +640,7 @@ hgd_cli_queue_track(char *filename, int(*cb)(void *arg, float progress))
 	while (written != fsize) {
 
 		if (iters % HGD_Q_CALLBACK_INTVL == 0)
-			cb(filename, ((float) written/fsize));
+			cb(arg, ((float) written/fsize));
 		iters++;
 
 		if (fsize - written < HGD_BINARY_CHUNK)
@@ -658,16 +659,6 @@ hgd_cli_queue_track(char *filename, int(*cb)(void *arg, float progress))
 		DPRINTF(HGD_D_DEBUG, "Progress %d/%d bytes",
 		    (int)  written, (int) fsize);
 	}
-
-#if 0
-	if (hgd_debug <= 1) {
-		memset(stars_buf, ' ', HGD_TERM_WIDTH);
-
-		hgd_set_line_colour(ANSI_GREEN);
-		printf("\r%s\r%s: OK\n", stars_buf, basename(trunc_filename));
-		hgd_set_line_colour(ANSI_WHITE);
-	}
-#endif
 
 	fclose(f);
 
