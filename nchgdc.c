@@ -168,7 +168,7 @@ hgd_refresh_statusbar(struct ui *u)
 void
 hgd_refresh_ui(struct ui *u)
 {
-	//redrawwin(u->content_wins[u->active_content_win]);
+	redrawwin(u->content_wins[u->active_content_win]);
 	wnoutrefresh(u->content_wins[u->active_content_win]);
 
 	hgd_update_titlebar(u);
@@ -794,7 +794,7 @@ hgd_set_statusbar_text(struct ui *u, char *fmt, ...)
 	free(u->status_str);
 	u->status_str = buf;
 	hgd_update_statusbar(u);
-	wrefresh(u->status);
+	hgd_refresh_statusbar(u);
 
 	return (HGD_OK);
 }
