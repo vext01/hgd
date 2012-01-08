@@ -793,7 +793,6 @@ hgd_set_statusbar_text(struct ui *u, char *fmt, ...)
 
 	free(u->status_str);
 	u->status_str = buf;
-	hgd_update_statusbar(u);
 	hgd_refresh_statusbar(u);
 
 	return (HGD_OK);
