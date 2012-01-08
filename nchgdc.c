@@ -842,7 +842,6 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 
 	xasprintf(&full_path, "%s/%s", u->cwd, filename);
 
-#if 0
 	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
 	hgd_centre_dialog_text(&msg_centre, filename);
 
@@ -856,17 +855,19 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 		goto clean;
 	}
 
+#if 0
 	if ((bar = newwin(1, w - 4, y+3, x+2)) == NULL) {
 		DPRINTF(HGD_D_ERROR, "Could not initialise progress bar");
 		goto clean;
 	}
+#endif
 
 	wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
 	wattron(bwin, COLOR_PAIR(HGD_CPAIR_DIALOG));
 
 	wclear(win);
 	wclear(bwin);
-	wclear(bar);
+	//wclear(bar);
 
 	wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
 	wbkgd(bar, COLOR_PAIR(HGD_CPAIR_PBAR_BG));
@@ -877,12 +878,13 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 
 	redrawwin(bwin);
 	redrawwin(win);
-	redrawwin(bar);
+	//redrawwin(bar);
 	wrefresh(bwin);
 	wrefresh(win);
-	wrefresh(bar);
+	//wrefresh(bar);
 
 	/* callback args */
+#if 0
 	pbar_struct.width = w - 4; 
 	pbar_struct.win = bar;
 #endif
@@ -897,18 +899,17 @@ clean:
 	if (full_path)
 		free(full_path);
 
+	/* XXX work out why this flickers -- looks shit */
 	if (ret == HGD_OK) 
 		hgd_set_statusbar_text(u, "Upload of '%s' succesful", filename);
 	else
 		hgd_set_statusbar_text(u, "Upload of '%s' failed", filename);
 
-#if 0
 	delwin(win);
 	delwin(bwin);
-	delwin(bar);
+	//delwin(bar);
 
 	free(msg_centre);
-#endif
 
 	hgd_refresh_ui(u);
 

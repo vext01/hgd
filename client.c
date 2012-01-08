@@ -585,7 +585,7 @@ hgd_cli_get_playlist(struct hgd_playlist **list)
  * queue a track, after each HGD_Q_CALLBACK_INTVL chunks are sent,
  * the callback is fired and client has the ability to update it's ui.
  */
-#define HGD_Q_CALLBACK_INTVL		50
+#define HGD_Q_CALLBACK_INTVL		500
 int
 hgd_cli_queue_track(char *filename,
     void *arg, int(*cb)(void *arg, float progress))
