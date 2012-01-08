@@ -169,12 +169,15 @@ void
 hgd_refresh_ui(struct ui *u)
 {
 	redrawwin(u->content_wins[u->active_content_win]);
-	wrefresh(u->content_wins[u->active_content_win]);
+	wnoutrefresh(u->content_wins[u->active_content_win]);
 
 	hgd_update_titlebar(u);
-	wrefresh(u->title);
+	wnoutrefresh(u->title);
 
-	hgd_refresh_statusbar(u);
+	hgd_update_statusbar(u);
+	wnoutrefresh(u->status);
+
+	doupdate();
 }
 
 int
@@ -562,7 +565,7 @@ hgd_init_statusbar(struct ui *u)
 		return (HGD_FAIL);
 	}
 
-	u->status_str = xstrdup("");
+	u->status_str = xstrdup("***");
 
 	return (HGD_OK);
 }
@@ -789,7 +792,7 @@ hgd_set_statusbar_text(struct ui *u, char *fmt, ...)
 	}
 
 	free(u->status_str);
-	u->status_str = xstrdup(buf);
+	u->status_str = buf;
 	hgd_update_statusbar(u);
 	hgd_refresh_statusbar(u);
 
@@ -809,25 +812,17 @@ hgd_set_standard_statusbar_text(struct ui *u)
 
 int hgd_ui_q_callback(void *arg, float progress)
 {
-	struct hgd_ui_pbar		*p = (struct hgd_ui_pbar *) arg;
-	int				 fill = p->width * progress;
-	int				 i;
-	char				*buf;
+	char				 bar[COLS+1];
+	struct ui 			*u = (struct ui *) arg;
+	int				 i, fill = COLS * progress;
 
-	wclear(p->win);
-
-	buf = xmalloc(p->width + 1);
-	memset(buf, ' ', p->width);
-	buf[p->width] = '\0';
+	memset(bar, ' ', COLS);
+	bar[COLS] = '\0';
 
 	for (i = 0; i < fill; i++)
-		buf[i] = '#';
+		bar[i] = '#';
 
-	mvwprintw(p->win, 0, 0, "%s", buf);
-	//redrawwin(p->win);
-	wrefresh(p->win);
-
-	free(buf);
+	hgd_set_statusbar_text(u, "%s", bar);
 
 	return (HGD_OK);
 }
@@ -847,6 +842,7 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 
 	xasprintf(&full_path, "%s/%s", u->cwd, filename);
 
+#if 0
 	hgd_calc_dialog_win_dims(&y, &x, &h, &w);
 	hgd_centre_dialog_text(&msg_centre, filename);
 
@@ -889,8 +885,9 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 	/* callback args */
 	pbar_struct.width = w - 4; 
 	pbar_struct.win = bar;
+#endif
 
-	hgd_cli_queue_track(full_path, &pbar_struct, hgd_ui_q_callback);
+	hgd_cli_queue_track(full_path, u, hgd_ui_q_callback);
 
 	/* XXX */
 	//hgd_resize_app(u);
@@ -900,10 +897,18 @@ clean:
 	if (full_path)
 		free(full_path);
 
+	if (ret == HGD_OK) 
+		hgd_set_statusbar_text(u, "Upload of '%s' succesful", filename);
+	else
+		hgd_set_statusbar_text(u, "Upload of '%s' failed", filename);
+
+#if 0
 	delwin(win);
 	delwin(bwin);
+	delwin(bar);
 
 	free(msg_centre);
+#endif
 
 	hgd_refresh_ui(u);
 
