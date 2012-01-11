@@ -86,7 +86,7 @@ mplayer.o: mplayer.c mplayer.h
 
 client.o: client.c client.h hgd.h
 	@echo "\n--> Building: \"client.o\""
-	${CC} client.c ${CONFIG_CFLAGS} ${SSL_CFLAGS}  ${BSD_CFLAGS} -c -o client.o
+	${CC} client.c ${CFLAGS} ${CONFIG_CFLAGS} ${SSL_CFLAGS} ${BSD_CFLAGS} -c -o client.o
 
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
 	@echo "\n--> Building: \"hgd-playd\""
