@@ -343,7 +343,7 @@ hgd_update_files_win(struct ui *u)
 	}
 
 	/* make our menu items */
-	items = xcalloc(sizeof(ITEM *), n_files + n_dirs + 1);
+	items = xcalloc(n_files + n_dirs + 1, sizeof(ITEM *));
 
 	/* add dirs */
 	for (i = 0; i < n_dirs; i++) {
