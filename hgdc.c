@@ -404,9 +404,8 @@ hgd_req_playlist(int n_args, char **args)
 			hgd_hline();
 			hgd_print_track(list->items[i], i == 0);
 		}
+		hgd_hline();
 	}
-
-	hgd_hline();
 
 	hgd_free_playlist(list);
 	free(list);
