@@ -246,8 +246,6 @@ hgd_update_playlist_win(struct ui *u)
 	DPRINTF(HGD_D_INFO, "Update playlist window");
 
 	hgd_set_statusbar_text(u, "Connected >>> Fetching playlist");
-	hgd_update_statusbar(u);
-	hgd_refresh_ui(u);
 
 	if (sock_fd == -1)
 		return (HGD_OK); /* not connected yet */
@@ -304,87 +302,98 @@ hgd_update_playlist_win(struct ui *u)
 	return (HGD_OK);
 }
 
+/* filters for scandir() */
+int
+hgd_filter_dirs(struct dirent *d)
+{
+	return (d->d_type == DT_DIR);
+}
+
+int
+hgd_filter_files(struct dirent *d)
+{
+	return (d->d_type != DT_DIR);
+}
+
 int
 hgd_update_files_win(struct ui *u)
 {
 	ITEM			**items = NULL;
-	DIR			 *dir = NULL;
-	int			  cur_index = 0, pass = 0;
-	struct dirent		 *dirent, *dirent_copy = NULL;
-	char			 *copy, *slash_append;
+	char			 *slash_append, *prep_item_str;
+	struct dirent		**dirents_dirs, **dirents_files, *d, *d_copy;
+	int			  n_dirs, n_files;
+	int			  i, cur_item = 0, ret = HGD_FAIL;
+
+	dirents_files = dirents_dirs = NULL;
 
 	wclear(u->content_wins[HGD_WIN_FILES]);
 
 	DPRINTF(HGD_D_INFO, "Update files window");
 
-	if ((dir = opendir(u->cwd)) == NULL) {
-		DPRINTF(HGD_D_WARN, "Could not read dir: '%s'", u->cwd);
-		return (HGD_FAIL);
+	if ((n_dirs = scandir(
+	    u->cwd, &dirents_dirs, hgd_filter_dirs, alphasort)) < 0) {
+		 DPRINTF(HGD_D_WARN, "Failed to scan directory: '%s'", u->cwd);
+		 goto clean;
+	}
+
+	if ((n_files = scandir(
+	    u->cwd, &dirents_files, hgd_filter_files, alphasort)) < 0) {
+		 DPRINTF(HGD_D_WARN, "Failed to scan directory: '%s'", u->cwd);
+		 goto clean;
 	}
 
 	/* make our menu items */
-	items = xcalloc(sizeof(ITEM *), cur_index + 1);
+	items = xcalloc(sizeof(ITEM *), n_files + n_dirs + 1);
 
-	/*
-	 * 2 passes over directory:
-	 *   1 - directories
-	 *   2 - standard files
-	 */
-	for (pass = 0; pass < 2; pass++) {
+	/* add dirs */
+	for (i = 0; i < n_dirs; i++) {
+		d = dirents_dirs[i];
 
-		rewinddir(dir);
+		xasprintf(&slash_append, "%s/", d->d_name);
+		hgd_prepare_item_string(&prep_item_str, slash_append);
+		free(slash_append);
 
-		/* loop over directory adding items for files */
-		while ((dirent = readdir(dir)) != NULL) {
+		items[cur_item] = new_item(prep_item_str, NULL);
 
-			if (dirent < 0) {
-				DPRINTF(HGD_D_WARN,
-				    "readdir failed: %s", SERROR);
-				return (HGD_FAIL);
-			}
-
-			/* skip entries not for this pass */
-			if ((pass == 0) && (dirent->d_type != DT_DIR))
-				continue;
-			else if ((pass == 1) && (dirent->d_type == DT_DIR))
-				continue;
-
-			if (strcmp(dirent->d_name, ".") == 0)
-				continue;
-
-			/* could be more efficient */
-			items = xrealloc(
-			    items, sizeof(ITEM *) * (cur_index + 2));
-			items[cur_index + 1] = NULL;
-
-			/* pretty it up a bit */
-			if (dirent->d_type == DT_DIR) {
-				xasprintf(&slash_append, "%s/", dirent->d_name);
-				hgd_prepare_item_string(&copy, slash_append);
-				free(slash_append);
-			} else {
-				hgd_prepare_item_string(&copy, dirent->d_name);
-			}
-
-			items[cur_index] = new_item(copy, NULL);
-
-			if (items[cur_index] == NULL) {
-				DPRINTF(HGD_D_WARN,
-				    "Could not make new menu item: %s", SERROR);
-				free(copy);
-			}
-
-			/* jam away the dirent for later use */
-			dirent_copy = xcalloc(1, sizeof(struct dirent));
-			memcpy(dirent_copy, dirent, sizeof(struct dirent));
-			set_item_userptr(items[cur_index], dirent_copy);
-
-			if (items[cur_index] == NULL)
-				continue;
-
-			cur_index++;
+		if (items[cur_item] == NULL) {
+			DPRINTF(HGD_D_WARN,
+			    "Could not make new menu item: %s", SERROR);
+			free(prep_item_str);
+			continue;
 		}
+
+		/* jam away the dirent for later use */
+		d_copy = xcalloc(1, sizeof(struct dirent));
+		memcpy(d_copy, d, sizeof(struct dirent));
+		set_item_userptr(items[cur_item], d_copy);
+
+		cur_item++;
 	}
+
+	/* add files */
+	for (i = 0; i < n_files; i++) {
+		d = dirents_files[i];
+
+		hgd_prepare_item_string(&prep_item_str, d->d_name);
+
+		items[cur_item] = new_item(prep_item_str, NULL);
+
+		if (items[cur_item] == NULL) {
+			DPRINTF(HGD_D_WARN,
+			    "Could not make new menu item: %s", SERROR);
+			free(prep_item_str);
+			continue;
+		}
+
+		/* jam away the dirent for later use */
+		d_copy = xcalloc(1, sizeof(struct dirent));
+		memcpy(d_copy, d, sizeof(struct dirent));
+		set_item_userptr(items[cur_item], d_copy);
+
+		cur_item++;
+	}
+
+	items[cur_item] = NULL;
 
 	/* make the menu */
 	if (u->content_menus[HGD_WIN_FILES] != NULL) {
@@ -405,7 +414,16 @@ hgd_update_files_win(struct ui *u)
 	if ((post_menu(u->content_menus[HGD_WIN_FILES])) != E_OK)
 		DPRINTF(HGD_D_WARN, "Could not post menu");
 
-	return (HGD_OK);
+	ret = HGD_OK;
+
+clean:
+	if (dirents_files)
+		free(dirents_files);
+
+	if (dirents_dirs)
+		free(dirents_dirs);
+
+	return (ret);
 
 }
 
@@ -835,7 +853,7 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 	WINDOW			*bwin = NULL, *win = NULL, *bar = NULL;
 	int			 x, y, h, w;
 	char			*msg_centre;
-	struct hgd_ui_pbar	 pbar_struct;
+	//struct hgd_ui_pbar	 pbar_struct;
 
 	DPRINTF(HGD_D_INFO, "Upload track: %s", filename);
 
