@@ -595,9 +595,7 @@ hgd_cli_queue_track(char *filename,
 	ssize_t			written = 0, fsize, chunk_sz;
 	char			chunk[HGD_BINARY_CHUNK];
 	char			*q_req = 0, *resp1 = 0, *resp2 = 0;
-	char			 stars_buf[81];
-	int			 iters = 0, barspace, percent, ret = HGD_FAIL;
-	float			 n_stars;
+	int			 iters = 0, ret = HGD_FAIL;
 
 
 	DPRINTF(HGD_D_INFO, "Uploading file '%s'", filename);
