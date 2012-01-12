@@ -420,6 +420,7 @@ hgd_update_files_win(struct ui *u)
 	ret = HGD_OK;
 
 clean:
+	/* XXX free up properly */
 	if (dirents_files)
 		free(dirents_files);
 
