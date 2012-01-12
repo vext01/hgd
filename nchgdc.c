@@ -378,7 +378,7 @@ hgd_update_files_win(struct ui *u)
 		d_copy->d_reclen = d->d_reclen;
 		d_copy->d_type = d->d_type;
 		d_copy->d_namlen = d->d_namlen;
-		strlcpy(d_copy->d_name, d->d_name, d->d_namlen);
+		strlcpy(d_copy->d_name, d->d_name, d->d_namlen + 1);
 
 		set_item_userptr(items[cur_item], d_copy);
 
@@ -411,7 +411,7 @@ hgd_update_files_win(struct ui *u)
 		d_copy->d_reclen = d->d_reclen;
 		d_copy->d_type = d->d_type;
 		d_copy->d_namlen = d->d_namlen;
-		strlcpy(d_copy->d_name, d->d_name, d->d_namlen);
+		strlcpy(d_copy->d_name, d->d_name, d->d_namlen + 1);
 
 		set_item_userptr(items[cur_item], d_copy);
 
