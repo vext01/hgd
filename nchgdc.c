@@ -203,7 +203,10 @@ init_log()
 
 	/* Redirect stderr here, so that DPRINTF can still work */
 	close(fileno(stderr));
-	dup(fileno(logs.wr));
+	if (dup(fileno(logs.wr)) < 0) {
+		DPRINTF(HGD_D_ERROR, "dup() failed: %s", SERROR);
+		return (HGD_FAIL);
+	}
 
 	return (HGD_OK);
 }
@@ -304,13 +307,13 @@ hgd_update_playlist_win(struct ui *u)
 
 /* filters for scandir() */
 int
-hgd_filter_dirs(struct dirent *d)
+hgd_filter_dirs(const struct dirent *d)
 {
 	return (d->d_type == DT_DIR);
 }
 
 int
-hgd_filter_files(struct dirent *d)
+hgd_filter_files(const struct dirent *d)
 {
 	return (d->d_type != DT_DIR);
 }
@@ -1170,6 +1173,7 @@ main(int argc, char **argv)
 	/* start on the playlist */
 	hgd_switch_content(&u, HGD_WIN_PLAYLIST);
 
+	if (user == NULL) user = getenv("USER"); /* XXX duplicated */
 	if (hgd_ui_connect(&u) != HGD_OK)
 		hgd_exit_nicely();
 
