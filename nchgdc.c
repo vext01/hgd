@@ -307,14 +307,15 @@ hgd_update_playlist_win(struct ui *u)
 }
 
 /* filters for scandir() */
+/* XXX linux consts these */
 int
-hgd_filter_dirs(const struct dirent *d)
+hgd_filter_dirs(struct dirent *d)
 {
 	return (d->d_type == DT_DIR);
 }
 
 int
-hgd_filter_files(const struct dirent *d)
+hgd_filter_files(struct dirent *d)
 {
 	return (d->d_type != DT_DIR);
 }
@@ -368,7 +369,17 @@ hgd_update_files_win(struct ui *u)
 
 		/* jam away the dirent for later use */
 		d_copy = xcalloc(1, sizeof(struct dirent));
-		memcpy(d_copy, d, sizeof(struct dirent));
+
+		/*
+		 * copy manually, do not use memcpy, as scandir does not
+		 * allocate a full struct dirent
+		 */
+		d_copy->d_fileno = d->d_fileno;
+		d_copy->d_reclen = d->d_reclen;
+		d_copy->d_type = d->d_type;
+		d_copy->d_namlen = d->d_namlen;
+		strlcpy(d_copy->d_name, d->d_name, d->d_namlen);
+
 		set_item_userptr(items[cur_item], d_copy);
 
 		cur_item++;
@@ -391,7 +402,17 @@ hgd_update_files_win(struct ui *u)
 
 		/* jam away the dirent for later use */
 		d_copy = xcalloc(1, sizeof(struct dirent));
-		memcpy(d_copy, d, sizeof(struct dirent));
+
+		/*
+		 * copy manually, do not use memcpy, as scandir does not
+		 * allocate a full struct dirent
+		 */
+		d_copy->d_fileno = d->d_fileno;
+		d_copy->d_reclen = d->d_reclen;
+		d_copy->d_type = d->d_type;
+		d_copy->d_namlen = d->d_namlen;
+		strlcpy(d_copy->d_name, d->d_name, d->d_namlen);
+
 		set_item_userptr(items[cur_item], d_copy);
 
 		cur_item++;
