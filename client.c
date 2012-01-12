@@ -536,7 +536,7 @@ int
 hgd_cli_get_playlist(struct hgd_playlist **list)
 {
 	char		*p, *resp, *track_resp;
-	int		 n_items, i;
+	int		 n_items = 0, i;
 
 	hgd_sock_send_line(sock_fd, ssl, "ls");
 	resp = hgd_sock_recv_line(sock_fd, ssl);
