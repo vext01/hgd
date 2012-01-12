@@ -311,6 +311,9 @@ hgd_update_playlist_win(struct ui *u)
 int
 hgd_filter_dirs(struct dirent *d)
 {
+	if (strcmp(".", d->d_name) == 0)
+		return (0);
+
 	return (d->d_type == DT_DIR);
 }
 
