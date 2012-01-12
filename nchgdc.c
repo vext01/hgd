@@ -100,6 +100,7 @@ hgd_empty_menu(MENU *m)
 	return (HGD_OK);
 }
 
+/* XXX this sucks, use memset, strncpy */
 int
 hgd_prepare_item_string(char **ret_p, char *str)
 {
