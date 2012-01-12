@@ -1169,7 +1169,7 @@ hgd_service_client(int cli_fd, struct sockaddr_in *cli_addr)
 	DPRINTF(HGD_D_INFO, "Client connection: '%s'", sess.cli_str);
 
 	/* oh hai */
-	hgd_sock_send_line(cli_fd, sess.ssl, "ok|" HGD_RESP_O_GREET);
+	hgd_sock_send_line(cli_fd, sess.ssl, "ok|" HGD_RESP_O_GREET "\r\n");
 
 	/* main command recieve loop */
 	do {
