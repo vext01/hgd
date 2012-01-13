@@ -1012,10 +1012,14 @@ hgd_event_loop(struct ui *u)
 {
 	int			c;
 
-	/* XXX catch C^c */
-	while (1) {
+
+	while ((!dying) && (!restarting)) {
 
 		c = wgetch(u->content_wins[u->active_content_win]);
+
+		if ((dying) || (restarting))
+		    continue;
+
 		switch(c) {
 		case KEY_DOWN:
 			menu_driver(u->content_menus[u->active_content_win],
@@ -1047,6 +1051,8 @@ hgd_event_loop(struct ui *u)
 		}
 
 	}
+
+	return (HGD_OK);
 }
 
 int
@@ -1172,6 +1178,8 @@ main(int argc, char **argv)
 		}
 	}
 
+	hgd_register_sig_handlers();
+
 	initscr();
 
 	cbreak();
@@ -1212,8 +1220,7 @@ main(int argc, char **argv)
 
 	/* main event loop */
 	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
-	while (1)
-		hgd_event_loop(&u);
+	hgd_event_loop(&u);
 
 	exit_ok = 1;
 	hgd_exit_nicely();
