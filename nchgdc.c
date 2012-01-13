@@ -1100,6 +1100,22 @@ hgd_event_loop(struct ui *u)
 			menu_driver(u->content_menus[u->active_content_win],
 			    REQ_UP_ITEM);
 			break;
+		case KEY_NPAGE:
+			menu_driver(u->content_menus[u->active_content_win],
+			    REQ_SCR_DPAGE);
+			break;
+		case KEY_PPAGE:
+			menu_driver(u->content_menus[u->active_content_win],
+			    REQ_SCR_UPAGE);
+			break;
+		case '1':
+			menu_driver(u->content_menus[u->active_content_win],
+			    REQ_FIRST_ITEM);
+			break;
+		case 'G':
+			menu_driver(u->content_menus[u->active_content_win],
+			    REQ_LAST_ITEM);
+			break;
 		case '\t':
 			/* tab toggles toggle between files and playlist */
 			if (u->active_content_win != HGD_WIN_PLAYLIST)
