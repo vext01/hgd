@@ -362,8 +362,6 @@ hgd_filter_files(const struct dirent *d)
 	return (d->d_type != DT_DIR);
 }
 
-
-
 int
 hgd_update_files_win(struct ui *u)
 {
@@ -474,11 +472,6 @@ hgd_update_files_win(struct ui *u)
 	}
 
 	items[cur_item] = NULL;
-
-	/* make the menu */
-	if (u->content_menus[HGD_WIN_FILES] != NULL) {
-		/* XXX clean up old menu */
-	}
 
 	u->content_menus[HGD_WIN_FILES] = new_menu(items);
 
