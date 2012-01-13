@@ -889,7 +889,6 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 	WINDOW			*bwin = NULL, *win = NULL, *bar = NULL;
 	int			 x, y, h, w;
 	char			*msg_centre;
-	//struct hgd_ui_pbar	 pbar_struct;
 
 	DPRINTF(HGD_D_INFO, "Upload track: %s", filename);
 
@@ -908,19 +907,11 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 		goto clean;
 	}
 
-#if 0
-	if ((bar = newwin(1, w - 4, y+3, x+2)) == NULL) {
-		DPRINTF(HGD_D_ERROR, "Could not initialise progress bar");
-		goto clean;
-	}
-#endif
-
 	wattron(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
 	wattron(bwin, COLOR_PAIR(HGD_CPAIR_DIALOG));
 
 	wclear(win);
 	wclear(bwin);
-	//wclear(bar);
 
 	wbkgd(win, COLOR_PAIR(HGD_CPAIR_DIALOG));
 	wbkgd(bar, COLOR_PAIR(HGD_CPAIR_PBAR_BG));
@@ -931,28 +922,17 @@ hgd_ui_queue_track(struct ui *u, char *filename)
 
 	redrawwin(bwin);
 	redrawwin(win);
-	//redrawwin(bar);
 	wrefresh(bwin);
 	wrefresh(win);
-	//wrefresh(bar);
 
-	/* callback args */
-#if 0
-	pbar_struct.width = w - 4; 
-	pbar_struct.win = bar;
-#endif
-
-	hgd_cli_queue_track(full_path, u, hgd_ui_q_callback);
+	ret = hgd_cli_queue_track(full_path, u, hgd_ui_q_callback);
 
 	/* XXX */
 	//hgd_resize_app(u);
-
-	ret = HGD_OK;
 clean:
 	if (full_path)
 		free(full_path);
 
-	/* XXX work out why this flickers -- looks shit */
 	if (ret == HGD_OK) 
 		hgd_set_statusbar_text(u, "Upload of '%s' succesful", filename);
 	else
@@ -960,7 +940,6 @@ clean:
 
 	delwin(win);
 	delwin(bwin);
-	//delwin(bar);
 
 	free(msg_centre);
 
