@@ -340,7 +340,8 @@ int
 hgd_free_content_menu(struct ui *u, int which)
 {
 	hgd_empty_menu(u->content_menus[which]);
-	free(u->content_menus[which]);
+	if (free_menu(u->content_menus[which]) != OK)
+		DPRINTF(HGD_D_ERROR, "could not free menu");
 
 	return (HGD_OK);
 }
@@ -1139,6 +1140,15 @@ hgd_ui_connect(struct ui *u)
 }
 
 int
+hgd_free_content_win(struct ui *u, int which)
+{
+	hgd_free_content_menu(u, which);
+	delwin(u->content_wins[which]);
+
+	return (HGD_OK);
+}
+
+int
 main(int argc, char **argv)
 {
 	struct ui	u;
@@ -1220,6 +1230,12 @@ main(int argc, char **argv)
 	/* main event loop */
 	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
 	hgd_event_loop(&u);
+
+	hgd_free_content_win(&u, HGD_WIN_PLAYLIST);
+	hgd_free_content_win(&u, HGD_WIN_FILES);
+	hgd_free_content_win(&u, HGD_WIN_CONSOLE);
+	delwin(u.status);
+	delwin(u.title);
 
 	exit_ok = 1;
 	hgd_exit_nicely();
