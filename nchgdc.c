@@ -89,6 +89,9 @@ hgd_empty_menu(MENU *m)
 	ITEM			**items;
 	int			  n_items, i;
 
+	if (m == NULL)
+		return (HGD_OK);
+
 	items = menu_items(m);
 	n_items = item_count(m);
 
@@ -261,6 +264,10 @@ hgd_update_playlist_win(struct ui *u)
 	if (sock_fd == -1)
 		return (HGD_OK); /* not connected yet */
 
+	wclear(u->content_wins[HGD_WIN_PLAYLIST]);
+	hgd_empty_menu(u->content_menus[HGD_WIN_PLAYLIST]);
+	free(u->content_menus[HGD_WIN_PLAYLIST]);
+
 	/* and now populate the menu */
 	if (hgd_cli_get_playlist(&playlist) != HGD_OK)
 		return (HGD_FAIL);
@@ -341,9 +348,11 @@ hgd_update_files_win(struct ui *u)
 
 	dirents_files = dirents_dirs = NULL;
 
-	wclear(u->content_wins[HGD_WIN_FILES]);
-
 	DPRINTF(HGD_D_INFO, "Update files window");
+
+	wclear(u->content_wins[HGD_WIN_FILES]);
+	hgd_empty_menu(u->content_menus[HGD_WIN_FILES]);
+	free(u->content_menus[HGD_WIN_FILES]);
 
 	if ((n_dirs = scandir(
 	    u->cwd, &dirents_dirs, hgd_filter_dirs, alphasort)) < 0) {
@@ -473,6 +482,10 @@ hgd_update_console_win(struct ui *u)
 	int		  cur_index = 0;
 
 	DPRINTF(HGD_D_INFO, "Update console window");
+
+	hgd_empty_menu(u->content_menus[HGD_WIN_CONSOLE]);
+	free(u->content_menus[HGD_WIN_CONSOLE]);
+	wclear(u->content_wins[HGD_WIN_CONSOLE]);
 
 	memset(buf, 0, HGD_LOG_BACKBUFFER + 1);
 
@@ -636,6 +649,7 @@ hgd_init_playlist_win(struct ui *u)
 		return (HGD_FAIL);
 	}
 
+	u->content_menus[HGD_WIN_PLAYLIST] = NULL;
 	keypad(u->content_wins[HGD_WIN_PLAYLIST], TRUE);
 
 	/* refresh handler */
@@ -658,7 +672,7 @@ hgd_init_files_win(struct ui *u)
 
 	keypad(u->content_wins[HGD_WIN_FILES], TRUE);
 
-	u->content_menus[HGD_WIN_FILES] = NULL; /* no menu */
+	u->content_menus[HGD_WIN_FILES] = NULL;
 	u->content_refresh_handler[HGD_WIN_FILES] = hgd_update_files_win;
 
 	u->cwd = xstrdup(getenv("PWD"));
@@ -680,7 +694,7 @@ hgd_init_console_win(struct ui *u)
 	keypad(u->content_wins[HGD_WIN_CONSOLE], TRUE);
 	mvwprintw(u->content_wins[HGD_WIN_CONSOLE], 0, 0, "Insert console here");
 
-	u->content_menus[HGD_WIN_CONSOLE] = NULL; /* no menu */
+	u->content_menus[HGD_WIN_CONSOLE] = NULL;
 	u->content_refresh_handler[HGD_WIN_CONSOLE] = hgd_update_console_win;
 
 	return (HGD_OK);
