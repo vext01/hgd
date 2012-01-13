@@ -319,23 +319,6 @@ hgd_update_playlist_win(struct ui *u)
 	return (HGD_OK);
 }
 
-/* filters for scandir() */
-/* XXX linux consts these */
-int
-hgd_filter_dirs(struct dirent *d)
-{
-	if (strcmp(".", d->d_name) == 0)
-		return (0);
-
-	return (d->d_type == DT_DIR);
-}
-
-int
-hgd_filter_files(struct dirent *d)
-{
-	return (d->d_type != DT_DIR);
-}
-
 int
 hgd_free_content_menu(struct ui *u, int which)
 {
@@ -345,6 +328,34 @@ hgd_free_content_menu(struct ui *u, int which)
 
 	return (HGD_OK);
 }
+
+/* filters for scandir() */
+#if !defined(__linux__)
+int
+hgd_filter_dirs(struct dirent *d)
+#else
+int
+hgd_filter_dirs(const struct dirent *d)
+#endif
+{
+	if (strcmp(".", d->d_name) == 0)
+		return (0);
+
+	return (d->d_type == DT_DIR);
+}
+
+#if !defined(__linux__)
+int
+hgd_filter_files(struct dirent *d)
+#else
+int
+hgd_filter_files(const struct dirent *d)
+#endif
+{
+	return (d->d_type != DT_DIR);
+}
+
+
 
 int
 hgd_update_files_win(struct ui *u)
@@ -394,18 +405,22 @@ hgd_update_files_win(struct ui *u)
 			continue;
 		}
 
-		/* jam away the dirent for later use */
-		d_copy = xcalloc(1, sizeof(struct dirent));
 
 		/*
-		 * copy manually, do not use memcpy, as scandir does not
-		 * allocate a full struct dirent
+		 * jam away the dirent for later use
+		 * Note! scandir does notallocate a full struct dirent
 		 */
-		d_copy->d_fileno = d->d_fileno;
+#if !defined(__linux__)
+		d_copy = xcalloc(1, sizeof(struct dirent));
+		d_copy->d_fileno = d->d_fileno;2
 		d_copy->d_reclen = d->d_reclen;
 		d_copy->d_type = d->d_type;
 		d_copy->d_namlen = d->d_namlen;
 		strlcpy(d_copy->d_name, d->d_name, d->d_namlen + 1);
+#else
+		d_copy = xcalloc(1, d->d_reclen);
+		memcpy(d_copy, d, d->d_reclen);
+#endif
 
 		set_item_userptr(items[cur_item], d_copy);
 
@@ -434,11 +449,17 @@ hgd_update_files_win(struct ui *u)
 		 * copy manually, do not use memcpy, as scandir does not
 		 * allocate a full struct dirent
 		 */
-		d_copy->d_fileno = d->d_fileno;
+#if !defined(__linux__)
+		d_copy = xcalloc(1, sizeof(struct dirent));
+		d_copy->d_fileno = d->d_fileno;2
 		d_copy->d_reclen = d->d_reclen;
 		d_copy->d_type = d->d_type;
 		d_copy->d_namlen = d->d_namlen;
 		strlcpy(d_copy->d_name, d->d_name, d->d_namlen + 1);
+#else
+		d_copy = xcalloc(1, d->d_reclen);
+		memcpy(d_copy, d, d->d_reclen);
+#endif
 
 		set_item_userptr(items[cur_item], d_copy);
 
@@ -756,8 +777,8 @@ hgd_calc_dialog_win_dims(int *y, int *x, int *h, int *w)
 int
 hgd_centre_dialog_text(char **dest, const char *src_const)
 {
-	char			*next = xstrdup(src_const), *orig_copy = next;
-	char			*centre_line, *tok;
+	char			*next = xstrdup(src_const);
+	char			*centre_line, *tok, *trunc = NULL;
 	int			 centre_start;
 	int			 dwidth = COLS * HGD_DIALOG_WIN_WRATIO;
 
@@ -772,8 +793,9 @@ hgd_centre_dialog_text(char **dest, const char *src_const)
 		centre_line[dwidth] = '\0';
 
 		/* calculate start point and copy in */
-		centre_start = dwidth / 2 - (strlen(tok) / 2);
-		strncpy(&(centre_line[centre_start]), tok, dwidth);
+		trunc = hgd_truncate_string(tok, dwidth);
+		centre_start = dwidth / 2 - (strlen(trunc) / 2);
+		strncpy(centre_line + centre_start, trunc, strlen(trunc));
 
 		if (*dest == NULL)
 			*dest = xstrdup(centre_line);
@@ -781,8 +803,8 @@ hgd_centre_dialog_text(char **dest, const char *src_const)
 			xasprintf(dest, "%s\n%s", *dest, centre_line);
 	}
 
+	free(trunc);
 	free(centre_line);
-	free(orig_copy);
 
 	return (HGD_OK);
 }
