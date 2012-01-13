@@ -55,5 +55,6 @@ struct hgd_ui_pbar {
 void			hgd_update_titlebar(struct ui *u);
 int			hgd_set_standard_statusbar_text(struct ui *);
 int			hgd_set_statusbar_text(struct ui *u, char *fmt, ...);
+int			hgd_free_content_menu(struct ui *u, int which);
 
 #endif /* __NCHGDC_H */

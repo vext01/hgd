@@ -265,8 +265,7 @@ hgd_update_playlist_win(struct ui *u)
 		return (HGD_OK); /* not connected yet */
 
 	wclear(u->content_wins[HGD_WIN_PLAYLIST]);
-	hgd_empty_menu(u->content_menus[HGD_WIN_PLAYLIST]);
-	free(u->content_menus[HGD_WIN_PLAYLIST]);
+	hgd_free_content_menu(u, HGD_WIN_PLAYLIST);
 
 	/* and now populate the menu */
 	if (hgd_cli_get_playlist(&playlist) != HGD_OK)
@@ -338,6 +337,15 @@ hgd_filter_files(struct dirent *d)
 }
 
 int
+hgd_free_content_menu(struct ui *u, int which)
+{
+	hgd_empty_menu(u->content_menus[which]);
+	free(u->content_menus[which]);
+
+	return (HGD_OK);
+}
+
+int
 hgd_update_files_win(struct ui *u)
 {
 	ITEM			**items = NULL;
@@ -351,8 +359,7 @@ hgd_update_files_win(struct ui *u)
 	DPRINTF(HGD_D_INFO, "Update files window");
 
 	wclear(u->content_wins[HGD_WIN_FILES]);
-	hgd_empty_menu(u->content_menus[HGD_WIN_FILES]);
-	free(u->content_menus[HGD_WIN_FILES]);
+	hgd_free_content_menu(u, HGD_WIN_FILES);
 
 	if ((n_dirs = scandir(
 	    u->cwd, &dirents_dirs, hgd_filter_dirs, alphasort)) < 0) {
@@ -483,9 +490,8 @@ hgd_update_console_win(struct ui *u)
 
 	DPRINTF(HGD_D_INFO, "Update console window");
 
-	hgd_empty_menu(u->content_menus[HGD_WIN_CONSOLE]);
-	free(u->content_menus[HGD_WIN_CONSOLE]);
 	wclear(u->content_wins[HGD_WIN_CONSOLE]);
+	hgd_free_content_menu(u, HGD_WIN_CONSOLE);
 
 	memset(buf, 0, HGD_LOG_BACKBUFFER + 1);
 
