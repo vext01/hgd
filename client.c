@@ -512,13 +512,13 @@ hgd_cli_populate_track(struct hgd_playlist_item **it, char *resp)
 
 	(*it)->id = atoi(tokens[0]);
 	(*it)->filename = tokens[1];
-	(*it)->user = xstrdup(tokens[4]);
+	(*it)->user = tokens[4];
 	(*it)->playing = 0;	/* unused here */
 	(*it)->finished = 0;	/* unused here */
-	(*it)->tags.artist = xstrdup(tokens[2]);
-	(*it)->tags.title = xstrdup(tokens[3]);
-	(*it)->tags.album = xstrdup(tokens[5]);
-	(*it)->tags.genre = xstrdup(tokens[6]);
+	(*it)->tags.artist = tokens[2];
+	(*it)->tags.title = tokens[3];
+	(*it)->tags.album = tokens[5];
+	(*it)->tags.genre = tokens[6];
 	(*it)->tags.duration = atoi(tokens[7]);
 	(*it)->tags.bitrate = atoi(tokens[8]);
 	(*it)->tags.samplerate = atoi(tokens[9]);
