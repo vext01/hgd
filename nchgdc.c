@@ -97,6 +97,8 @@ hgd_empty_menu(MENU *m)
 
 	for (i = 0; i < n_items; i++) {
 		free((char *) item_name(items[i]));
+		free((char *) item_description(items[i]));
+		free(item_userptr(items[i]));
 		free_item(items[i]);
 	}
 
@@ -304,6 +306,7 @@ hgd_update_playlist_win(struct ui *u)
 	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL)
 			DPRINTF(HGD_D_ERROR, "Could not make menu");
 
+
 	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST],
 	    u->content_wins[HGD_WIN_PLAYLIST]);
 	set_menu_mark(u->content_menus[HGD_WIN_PLAYLIST], "");
@@ -315,6 +318,10 @@ hgd_update_playlist_win(struct ui *u)
 		DPRINTF(HGD_D_ERROR, "Could not post menu");
 
 	hgd_set_standard_statusbar_text(u);
+
+	hgd_free_playlist(playlist);
+	free(items);
+	free(playlist);
 
 	return (HGD_OK);
 }
@@ -550,7 +557,7 @@ hgd_update_console_win(struct ui *u)
 	if (*start == '\n')
 		start++;
 
-	items = xcalloc(sizeof(ITEM*), 1);
+	items = xcalloc(sizeof(ITEM *), 1);
 
 	/* scan for lines and add them as menu items */
 	end = start;
