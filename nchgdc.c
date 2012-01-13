@@ -70,6 +70,8 @@ struct hgd_ui_log			logs;
 void
 hgd_exit_nicely()
 {
+	DPRINTF(HGD_D_INFO, "EXIT!");
+
 	if (endwin() == ERR)
 		DPRINTF(HGD_D_ERROR, "Failed to exit curses");
 
@@ -84,7 +86,7 @@ hgd_exit_nicely()
 }
 
 int
-hgd_empty_menu(MENU *m)
+hgd_empty_menu(MENU *m, ITEM ***r_items)
 {
 	ITEM			**items;
 	int			  n_items, i;
@@ -95,12 +97,16 @@ hgd_empty_menu(MENU *m)
 	items = menu_items(m);
 	n_items = item_count(m);
 
+	DPRINTF(HGD_D_INFO, "Freeing %d menu items", n_items);
+
 	for (i = 0; i < n_items; i++) {
 		free((char *) item_name(items[i]));
 		free((char *) item_description(items[i]));
 		free(item_userptr(items[i]));
 		free_item(items[i]);
 	}
+
+	*r_items = items; /* XXX right, free later, free_menu() needs this? */
 
 	return (HGD_OK);
 }
@@ -253,25 +259,34 @@ hgd_update_titlebar(struct ui *u)
 int
 hgd_update_playlist_win(struct ui *u)
 {
-	ITEM			**items;
-	int			  i;
+	ITEM			**items = NULL;
+	int			  i, ret = HGD_FAIL;
 	char			 *item_str;
-	struct hgd_playlist	 *playlist;
+	struct hgd_playlist	 *playlist = NULL;
 	char			 *track_str;
 
 	DPRINTF(HGD_D_INFO, "Update playlist window");
 
 	hgd_set_statusbar_text(u, "Connected >>> Fetching playlist");
 
-	if (sock_fd == -1)
-		return (HGD_OK); /* not connected yet */
+	if (sock_fd == -1) {
+		ret = HGD_OK;
+		goto clean;
+	}
 
 	wclear(u->content_wins[HGD_WIN_PLAYLIST]);
-	hgd_free_content_menu(u, HGD_WIN_PLAYLIST);
+	hgd_unpost_and_free_content_menu(u, HGD_WIN_PLAYLIST);
 
 	/* and now populate the menu */
-	if (hgd_cli_get_playlist(&playlist) != HGD_OK)
-		return (HGD_FAIL);
+	if (hgd_cli_get_playlist(&playlist) != HGD_OK) {
+		goto clean;
+	}
+
+	if (playlist->n_items == 0) {
+		ret = HGD_OK;
+		mvwprintw(u->content_wins[HGD_WIN_PLAYLIST], 0, 0, "Playlist Empty - Saddest of times!");
+		goto clean;
+	}
 
 	items = xcalloc(playlist->n_items + 1, sizeof(ITEM *));
 	for (i = 0; i < playlist->n_items; i++) {
@@ -303,9 +318,10 @@ hgd_update_playlist_win(struct ui *u)
 	}
 
 	u->content_menus[HGD_WIN_PLAYLIST] = new_menu(items);
-	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL)
+	if (u->content_menus[HGD_WIN_PLAYLIST] == NULL) {
 			DPRINTF(HGD_D_ERROR, "Could not make menu");
-
+			goto clean;
+	}
 
 	set_menu_win(u->content_menus[HGD_WIN_PLAYLIST],
 	    u->content_wins[HGD_WIN_PLAYLIST]);
@@ -314,24 +330,48 @@ hgd_update_playlist_win(struct ui *u)
 	set_menu_fore(u->content_menus[HGD_WIN_PLAYLIST],
 	    COLOR_PAIR(HGD_CPAIR_SELECTED));
 
-	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK)
+	if ((post_menu(u->content_menus[HGD_WIN_PLAYLIST])) != E_OK) {
 		DPRINTF(HGD_D_ERROR, "Could not post menu");
+		goto clean;
+	}
 
 	hgd_set_standard_statusbar_text(u);
 
-	hgd_free_playlist(playlist);
-	free(items);
-	free(playlist);
+	ret = HGD_OK;
+clean:
+	if (playlist)
+		hgd_free_playlist(playlist);
+#if 0
+	if (items)
+		free(items);
+#endif
+	if (playlist)
+		free(playlist);
 
-	return (HGD_OK);
+	return (ret);
 }
 
 int
-hgd_free_content_menu(struct ui *u, int which)
+hgd_unpost_and_free_content_menu(struct ui *u, int which)
 {
-	hgd_empty_menu(u->content_menus[which]);
-	if (free_menu(u->content_menus[which]) != OK)
+	ITEM			**items;
+
+	if (u->content_menus[which] == NULL)
+		return (HGD_OK);
+
+	DPRINTF(HGD_D_INFO, "free menu: %s", window_names[which]);
+
+	if (unpost_menu(u->content_menus[which]) != E_OK)
+		DPRINTF(HGD_D_ERROR, "could not unpost menu %d", errno);
+
+	hgd_empty_menu(u->content_menus[which], &items);
+
+	if (free_menu(u->content_menus[which]) != E_OK)
 		DPRINTF(HGD_D_ERROR, "could not free menu");
+
+	free(items);
+
+	u->content_menus[which] = NULL;
 
 	return (HGD_OK);
 }
@@ -367,16 +407,14 @@ hgd_update_files_win(struct ui *u)
 {
 	ITEM			**items = NULL;
 	char			 *slash_append, *prep_item_str;
-	struct dirent		**dirents_dirs, **dirents_files, *d, *d_copy;
-	int			  n_dirs, n_files;
+	struct dirent		**dirents_dirs = 0, **dirents_files = 0, *d, *d_copy;
+	int			  n_dirs = 0, n_files = 0;
 	int			  i, cur_item = 0, ret = HGD_FAIL;
-
-	dirents_files = dirents_dirs = NULL;
 
 	DPRINTF(HGD_D_INFO, "Update files window");
 
 	wclear(u->content_wins[HGD_WIN_FILES]);
-	hgd_free_content_menu(u, HGD_WIN_FILES);
+	hgd_unpost_and_free_content_menu(u, HGD_WIN_FILES);
 
 	if ((n_dirs = scandir(
 	    u->cwd, &dirents_dirs, hgd_filter_dirs, alphasort)) < 0) {
@@ -391,6 +429,7 @@ hgd_update_files_win(struct ui *u)
 	}
 
 	/* make our menu items */
+	DPRINTF(HGD_D_INFO, "allocating %d menu items", n_files + n_dirs);
 	items = xcalloc(n_files + n_dirs + 1, sizeof(ITEM *));
 
 	/* add dirs */
@@ -409,7 +448,6 @@ hgd_update_files_win(struct ui *u)
 			free(prep_item_str);
 			continue;
 		}
-
 
 		/*
 		 * jam away the dirent for later use
@@ -471,6 +509,7 @@ hgd_update_files_win(struct ui *u)
 		cur_item++;
 	}
 
+	DPRINTF(HGD_D_INFO, "Actually allocated %d menu items", cur_item);
 	items[cur_item] = NULL;
 
 	u->content_menus[HGD_WIN_FILES] = new_menu(items);
@@ -490,12 +529,22 @@ hgd_update_files_win(struct ui *u)
 	ret = HGD_OK;
 
 clean:
-	/* XXX free up properly */
-	if (dirents_files)
+	if (dirents_files) {
+		for (i = 0; i < n_files; i ++)
+			free(dirents_files[i]);
 		free(dirents_files);
+	}
 
-	if (dirents_dirs)
+	if (dirents_dirs) {
+		for (i = 0; i < n_dirs; i ++)
+			free(dirents_dirs[i]);
 		free(dirents_dirs);
+	}
+
+#if 0
+	if (items)
+		free(items);
+#endif
 
 	return (ret);
 
@@ -513,7 +562,7 @@ hgd_update_console_win(struct ui *u)
 	DPRINTF(HGD_D_INFO, "Update console window");
 
 	wclear(u->content_wins[HGD_WIN_CONSOLE]);
-	hgd_free_content_menu(u, HGD_WIN_CONSOLE);
+	hgd_unpost_and_free_content_menu(u, HGD_WIN_CONSOLE);
 
 	memset(buf, 0, HGD_LOG_BACKBUFFER + 1);
 
@@ -1164,8 +1213,15 @@ hgd_ui_connect(struct ui *u)
 int
 hgd_free_content_win(struct ui *u, int which)
 {
-	hgd_free_content_menu(u, which);
+	DPRINTF(HGD_D_INFO, "free window: %s", window_names[which]);
+
+	if (u->content_wins[which] == NULL)
+		return (HGD_OK);
+
+	hgd_unpost_and_free_content_menu(u, which);
 	delwin(u->content_wins[which]);
+
+	u->content_wins[which] = NULL;
 
 	return (HGD_OK);
 }
@@ -1173,9 +1229,11 @@ hgd_free_content_win(struct ui *u, int which)
 int
 main(int argc, char **argv)
 {
-	struct ui	u;
+	struct ui		 u;
 	char			*config_path[4] = {NULL, NULL, NULL, NULL};
 	int			 num_config = 2;
+
+	memset(&u, 0, sizeof(u));
 
 	hgd_debug = 3; /* XXX config file or getopt */
 
@@ -1253,6 +1311,7 @@ main(int argc, char **argv)
 	DPRINTF(HGD_D_INFO, "nchgdc event loop starting");
 	hgd_event_loop(&u);
 
+	DPRINTF(HGD_D_INFO, "Closing down");
 	hgd_free_content_win(&u, HGD_WIN_PLAYLIST);
 	hgd_free_content_win(&u, HGD_WIN_FILES);
 	hgd_free_content_win(&u, HGD_WIN_CONSOLE);
