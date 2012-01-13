@@ -150,12 +150,19 @@ void
 hgd_update_statusbar(struct ui *u)
 {
 	char			*fmt;
+	int			 i;
 
-	wclear(u->status);
-	wattron(u->status, COLOR_PAIR(HGD_CPAIR_BARS));
+	/* do not use wclear(), causes flickery screen */
+	wmove(u->status, 0, 0);	
+	for (i = 0; i < COLS; i++)
+		wprintw(u->status, " ");
 
 	xasprintf(&fmt, "%%-%ds", COLS);
+
+	wattron(u->status, COLOR_PAIR(HGD_CPAIR_BARS));
+	wmove(u->status, 0, 0);	
 	wprintw(u->status, fmt, u->status_str);
+
 	free (fmt);
 }
 
