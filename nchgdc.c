@@ -116,6 +116,8 @@ hgd_prepare_item_string(char **ret_p, char *str)
 			break; /* that is all we would be able to cram in */
 
 		if (sz == 1) { /* thus a non-tab */
+			if ((*p == '\n') || (*p == '\r'))
+				*p = '^';
 			*c++ = *p;
 			written++;
 		} else { /* thus a tab, which expands to 4 spaces */
@@ -610,7 +612,7 @@ hgd_update_console_win(struct ui *u)
 
 		if (items[cur_index] == NULL) {
 			DPRINTF(HGD_D_WARN,
-			    "Could not make new menu item (%s): %s", start, SERROR);
+			    "Could not make new menu item '%s'", start);
 			free(copy);
 		}
 
