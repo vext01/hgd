@@ -85,32 +85,6 @@ hgd_exit_nicely()
 	_exit(!exit_ok);
 }
 
-int
-hgd_empty_menu(MENU *m, ITEM ***r_items)
-{
-	ITEM			**items;
-	int			  n_items, i;
-
-	if (m == NULL)
-		return (HGD_OK);
-
-	items = menu_items(m);
-	n_items = item_count(m);
-
-	DPRINTF(HGD_D_INFO, "Freeing %d menu items", n_items);
-
-	for (i = 0; i < n_items; i++) {
-		free((char *) item_name(items[i]));
-		free((char *) item_description(items[i]));
-		free(item_userptr(items[i]));
-		free_item(items[i]);
-	}
-
-	*r_items = items; /* XXX right, free later, free_menu() needs this? */
-
-	return (HGD_OK);
-}
-
 /* XXX this sucks, use memset, strncpy */
 int
 hgd_prepare_item_string(char **ret_p, char *str)
@@ -355,22 +329,39 @@ int
 hgd_unpost_and_free_content_menu(struct ui *u, int which)
 {
 	ITEM			**items;
+	int			  n_items, i;
 
 	if (u->content_menus[which] == NULL)
 		return (HGD_OK);
 
 	DPRINTF(HGD_D_INFO, "free menu: %s", window_names[which]);
 
+	if ((n_items = item_count(u->content_menus[which])) == ERR) {
+		DPRINTF(HGD_D_ERROR, "Couldn't get item count");
+		return (HGD_FAIL);
+	}
+
+	if ((items = menu_items(u->content_menus[which])) == NULL) {
+		DPRINTF(HGD_D_ERROR, "Got NULL items array");
+		return (HGD_FAIL);
+	}
+
 	if (unpost_menu(u->content_menus[which]) != E_OK)
 		DPRINTF(HGD_D_ERROR, "could not unpost menu %d", errno);
 
-	hgd_empty_menu(u->content_menus[which], &items);
-
+	/* must come before freeing items */
 	if (free_menu(u->content_menus[which]) != E_OK)
 		DPRINTF(HGD_D_ERROR, "could not free menu");
 
-	free(items);
+	for (i = 0; i < n_items; i++) {
+		free((char *) item_name(items[i]));
+		free((char *) item_description(items[i]));
+		free(item_userptr(items[i]));
+		if (free_item(items[i]) != OK)
+			DPRINTF(HGD_D_ERROR, "can't free item");
+	}
 
+	free(items);
 	u->content_menus[which] = NULL;
 
 	return (HGD_OK);
