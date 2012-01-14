@@ -476,9 +476,6 @@ hgd_update_files_win(struct ui *u)
 			continue;
 		}
 
-		/* jam away the dirent for later use */
-		d_copy = xcalloc(1, sizeof(struct dirent));
-
 		/*
 		 * copy manually, do not use memcpy, as scandir does not
 		 * allocate a full struct dirent
