@@ -102,7 +102,7 @@ Rolling a Release
       been added or changed since the last release.
  2.   Bump version macro.
  3.   Check README has history updated.
- 4.   Run "make pydoc" and remove the FILE sections from the output (sigh).
+ 4.   Run "make pydoc" and remove the FILENAME sections from the output (sigh).
  5.   Run (on an OpenBSD host) 'make lint-mans'. Fix any man bugs.
  6.   Commit and push to git.
  7.   If this is a major version, make a branch in git. Eg. "0.4.x". Push it.
