@@ -90,7 +90,8 @@ client.o: client.c client.h hgd.h
 
 hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.o
 	@echo "\n--> Building: \"hgd-playd\""
-	${CC} hgd-playd.c ${CPPFLAGS} ${SQL_CFLAGS} ${PY_CFLAGS} ${CFLAGS} \
+	${CC} hgd-playd.c ${CPPFLAGS} ${SQL_CFLAGS} ${CONFIG_CFLAGS} \
+		${PY_CFLAGS} ${CFLAGS} \
 		db.o common.o crypto.o py.o mplayer.o cfg.o \
 		${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} ${PY_LDFLAGS} \
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
@@ -98,7 +99,8 @@ hgd-playd: common.o db.o py.o hgd-playd.c hgd.h config.h crypto.o mplayer.o cfg.
 
 hgd-netd: cfg.o common.o net.o mplayer.o hgd-netd.c hgd.h db.o cfg.o crypto.o user.o
 	@echo "\n--> Building: \"hgd-netd\""
-	${CC} hgd-netd.c ${TAG_CFLAGS} ${CPPFLAGS} ${SQL_CFLAGS} ${CFLAGS} ${PY_CFLAGS} \
+	${CC} hgd-netd.c ${TAG_CFLAGS} ${CPPFLAGS} ${CONFIG_CFLAGS} \
+		${SQL_CFLAGS} ${CFLAGS} ${PY_CFLAGS} \
 		mplayer.o cfg.o common.o db.o net.o crypto.o user.o \
 		${TAG_LDFLAGS} ${SQL_LDFLAGS} ${SSL_LDFLAGS} ${LDFLAGS} \
 		${BSD_LDFLAGS} ${CONFIG_LDFLAGS} \
