@@ -242,7 +242,7 @@ enum SERVICE {
 #elif defined (__OpenBSD__) || defined(__FreeBSD__) || defined(__APPLE__)
 	#define RESET_GETOPT() do {optind = 1;optreset = 1;} while (0)
 #else
-	#define RESET_GETOPT() do {optind = 1;} while (0
+	#define RESET_GETOPT() do {optind = 1;} while (0)
 	#warning "RESET_GETOPT() has not been tested on your system"
 #endif
 
